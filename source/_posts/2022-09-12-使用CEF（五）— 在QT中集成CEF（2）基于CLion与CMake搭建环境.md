@@ -1,5 +1,5 @@
 ---
-title: 使用CEF（五）— 在QT中集成CEF（2）基于CLion+CMake搭建环境
+title: 使用CEF（五）— 在QT中集成CEF（2）基于CLion与CMake搭建环境
 date: 2022-09-12
 tags:
  - qt

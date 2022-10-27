@@ -1,5 +1,5 @@
 ---
-title: 从零搭建react+ts组件库（一）项目搭建与封装antd组件
+title: 从零搭建基于react与ts的组件库（一）项目搭建与封装antd组件
 date: 2022-05-27
 tags:
  - react
