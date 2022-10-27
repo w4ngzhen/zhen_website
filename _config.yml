@@ -10,7 +10,12 @@ keywords:
 author: w4ngzhen
 language: en
 timezone: ''
-
+  # Search Config
+search:
+  path: search.json
+  field: post
+  format: html
+  limit: 100
 # URL
 ## Set your site url here. For example, if you use GitHub Page, set url as 'https://username.github.io/project'
 url: http://example.com
