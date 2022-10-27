@@ -1,5 +1,5 @@
 ---
-title: 【个人笔记】基于VirtualBox7+Debian11基础环境搭建
+title: 【个人笔记】基于VirtualBox7的Debian11基础环境搭建
 date: 2022-10-27
 tags:
  - debian11
