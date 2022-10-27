@@ -1,5 +1,5 @@
 ---
-title: 从零搭建react+ts组件库（二）less模块化与svg引入配置
+title: 从零搭建react与ts组件库（二）less模块化与svg引入配置
 date: 2022-08-11
 tags:
  - react
