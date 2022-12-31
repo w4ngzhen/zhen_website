@@ -121,7 +121,7 @@ HtmlWebpackPlugin插件**基础**功能：
 
 ![040-raw-indexhtml-script](https://src-1252109805.cos.ap-chengdu.myqcloud.com/images/post/2022-12-31/040-raw-indexhtml-script.png)
 
-> PS：这里有同学可能会认为是script节点在body以前加载的，所以会报错。但是实际不是这样的，这里script节点中有一个`defer`属性，这个属性表明，文档加载完毕以后才会执行main.js（[MDN - defer](<script> - HTML（超文本标记语言） | MDN (mozilla.org))），所以，我们不用担心由于DOM未加载完就执行js代码而造成报错。
+> PS：这里有同学可能会认为是script节点在body以前加载的，所以会报错。但是实际不是这样的，这里script节点中有一个`defer`属性，这个属性表明，文档加载完毕以后才会执行main.js（[MDN - defer](https://developer.mozilla.org/zh-CN/docs/Web/HTML/Element/script#attr-defer)），所以，我们不用担心由于DOM未加载完就执行js代码而造成报错。
 
 **这个地方的问题在于：我们的main.js中会执行查找id为app的元素，但是实际生成的html是没有这个元素的。**
 
