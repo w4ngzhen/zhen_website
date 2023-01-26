@@ -1,5 +1,5 @@
 ---
-title: 【个人笔记】2023年搭建基于webpack5+typescript的react项目
+title: 【个人笔记】2023年搭建基于webpack5与typescript的react项目
 date: 2023-01-26
 tags:
  - note
