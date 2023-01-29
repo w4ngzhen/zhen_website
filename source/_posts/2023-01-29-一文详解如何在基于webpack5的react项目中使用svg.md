@@ -1,5 +1,5 @@
 ---
-title: 2023年在基于webpack5的react项目中使用svg
+title: 一文详解如何在基于webpack5的react项目中使用svg
 date: 2023-01-29
 tags:
  - webpack
