@@ -5,17 +5,17 @@ tags:
  - lowcode
 ---
 
-上一篇文章，我们分析并设计了关于构建引擎BuildEngine的切面设计。本文我们将基于BuildEngine所提供的切面处理能力，在ComponentBuildAspectHandler中通过一些逻辑，来完成一个轻量级的设计器画布。
+上一篇文章，我们分析并设计了关于构建引擎BuildEngine的切面设计。本文我们将基于BuildEngine所提供的切面处理能力，在CustomCreateElementHandle中通过一些逻辑，来完成一个轻量级的设计器画布。
+
+<!-- more -->
 
 这个画布能够实现如下的一个简单的效果。对于所有渲染出来的元素，都会有一个灰色的边框，当我们选中某个元素的时候，就会高亮显示。
 
 ![010-wrapper-show](https://src-1252109805.cos.ap-chengdu.myqcloud.com/images/post/2023-02-04/010-wrapper-show.gif)
 
-<!-- more -->
+# ComponentNodeDesignWrapper
 
-# ElementNodeDesignWrapper
-
-要做到上述效果，对于通过ElementNode创建出来的组件，我们可以使用一个元素来进行包裹，我们暂时对这个组件取名为`ElementNodeDesignWrapper`，它的作用就是能够给每一个元素添加边框。
+要做到上述效果，对于通过ComponentNode创建出来的组件，我们可以使用一个元素来进行包裹，我们暂时对这个组件取名为`ComponentNodeDesignWrapper`，它的作用就是能够给每一个元素添加边框。
 
 这个wrapper组件，我们至少会设计以下几个属性：
 
@@ -26,7 +26,7 @@ tags:
 有了`isSelected`和`onClick`以后，我们就可以让上层代码来控制多个元素究竟是哪个元素需要高亮。
 
 ```typescript
-export type ElementNodeDesignWrapperProps = {
+export type ComponentNodeDesignWrapperProps = {
     /**
      * 标识当前节点path
      */
@@ -61,7 +61,7 @@ export type ElementNodeDesignWrapperProps = {
 综合以上的分析，我们Wrapper div最终的样式核心代码：
 
 ```typescript
-export const ElementNodeDesignWrapper: FC<PropsWithChildren<ElementNodeDesignWrapperProps>> = (props) => {
+export const ComponentNodeDesignWrapper: FC<PropsWithChildren<ComponentNodeDesignWrapperProps>> = (props) => {
 
     const {
         nodePath,
@@ -122,14 +122,14 @@ export const ElementNodeDesignWrapper: FC<PropsWithChildren<ElementNodeDesignWra
 ```typescript
 interface DesignCanvasProps {
     /**
-     * Schema JSON字符串
+     * 传入的合法 ComponentNode
      */
-    rootNodeSchemaJson: string;
+    componentNode: ComponentNode;
 }
 
 export const DesignCanvas = (props: DesignCanvasProps) => {
     const {
-        rootNodeSchemaJson
+        componentNode
     } = props;
 
     // 1. 存储单机选中的path的state
@@ -158,98 +158,110 @@ export const DesignCanvas = (props: DesignCanvasProps) => {
 （2）buildEngine的代码具体如下：
 
 ```typescript
-		// 经过切面绑定的buildEngine
+		// 我们用useMemo来缓存一个无状态的BuildEngine
     const buildEngine = useMemo(() => {
-        const engine = new BuildEngine();
-        engine.componentBuildAspectHandler = (reactNode, ctx) => {
-            const {path} = ctx;
-
-            const wrapperProps: ElementNodeDesignWrapperProps = {
-                nodePath: path,
-                isSelected: path === selectedNodePath,
-                onClick: () => {
-                    console.debug('wrapper onClick')
-                    setSelectedNodePath(path)
-                }
-            }
-
-            return (
-                <ElementNodeDesignWrapper {...wrapperProps}>
-                    {reactNode}
-                </ElementNodeDesignWrapper>
-            )
-        }
-        return engine;
-    }, [selectedNodePath]);
-
+        return new BuildEngine();
+    }, []);
 ```
 
-上面的buildEngine中的componentBuildAspectHandler切面处理，我们编写了我们自己的实现，原本默认返回的组件，我们使用ElementNodeDesignWrapper进行包裹返回。其中：
+（3）renderComponent的实现（**重点**）：
+
+```tsx
+    const renderComponent = useMemo(() => {
+        try {
+            return buildEngine.build(componentNode, {
+                onCustomCreateElement: ctx => {
+                    const {componentNode, 
+                           path, ComponentConstructor, props, children} = ctx;
+
+                    // 不加Wrapper的原始构造后的组件
+                    const originReactComp = (
+                        <ComponentConstructor {...props}>
+                            {children}
+                        </ComponentConstructor>
+                    )
+
+                    const wrapperProps: ComponentNodeDesignWrapperProps = {
+                        nodePath: path,
+                        isSelected: path === selectedNodePath,
+                        onClick: () => {
+                            console.debug('wrapper onClick')
+                            setSelectedNodePath(path)
+                        }
+                    }
+                    return (
+                        <ComponentNodeDesignWrapper {...wrapperProps}>
+                            {originReactComp}
+                        </ComponentNodeDesignWrapper>
+                    )
+                }
+            });
+        } catch (e) {
+            return <div>构建出错：{e.message}</div>
+        }
+    }, [componentNode, selectedNodePath]);
+```
+
+对于这个渲染React组件，主要是将schema解析为ComponentNode结构，并交给构建引擎build，同时，我们还传入了自定义的创建过程：
 
 1. isSelected属性来自于当前正处理节点path与第1点DesignCanvas组件存储的path的比对，如果当前正在处理及的几点就是已经选中的节点path，那么这个wrapper组件则被“选中”。
 
 2. onClick属性的实现代码则是当wrapper组件点击后，更新selectedNodePath。
 
-（3）renderComponent的实现：
-
-```typescript
-  // 经过buildEngine + schema 创建的React组件（已经考虑的基本的异常处理）
-    const renderComponent = useMemo(() => {
-        try {
-            const eleNode = JSON.parse(rootNodeSchemaJson);
-            return buildEngine.build(eleNode);
-        } catch (e) {
-            return <div>构建出错：{e.message}</div>
-        }
-    }, [rootNodeSchemaJson, selectedNodePath]);
-```
-
-对于这个渲染React组件，主要是将schema解析为ElementNode结构，并交给构建引擎build；如果报错则返回一个异常组件。
-
 # 样例
 
-在编写样例之前，我们先导出DesignCanvas，然后适当修改样例代码：
+在编写样例之前，我们先导出DesignCanvas，然后编写一份测试代码DesignCanvasExample：
 
 ```tsx
-import {ChangeEvent, useState} from "react";
+import {ChangeEvent, useMemo, useState} from "react";
 import {Input} from 'antd';
-import {DesignCanvas} from "@lite-lc/core";
+import {ComponentNode, DesignCanvas} from "@lite-lc/core";
 
-export function SimpleExample() {
+export function DesignCanvasExample() {
 
     // 使用state存储一个schema的字符串
-    const [elementNodeJson, setElementNodeJson] = useState(JSON.stringify({
-        "type": "page",
-        "props": {
-            "backgroundColor": "pink", // page的 backgroundColor 配置
-        },
+    const [componentNodeJson, setComponentNodeJson] = useState(JSON.stringify({
+        "componentName": "page",
         "children": [
             {
-                "type": "button",
+                "componentName": "button",
                 "props": {
-                    "size": "blue" // button的size配置
+                    "size": "small",
+                    "type": "primary"
                 },
+                "children": [
+                    {
+                        "componentName": "text",
+                        "props": {
+                            "value": "hello, my button."
+                        }
+                    }
+                ]
             },
             {
-                "type": "input"
+                "componentName": "input"
             }
         ]
     }, null, 2))
+
+    const componentNode = useMemo(() => {
+        return JSON.parse(componentNodeJson) as ComponentNode;
+    }, [componentNodeJson])
 
     return (
         <div style={{width: '100%', height: '100%', padding: '10px'}}>
             <div style={{width: '100%', height: 'calc(50%)'}}>
                 <Input.TextArea
                     autoSize={{minRows: 2, maxRows: 10}}
-                    value={elementNodeJson}
+                    value={componentNodeJson}
                     onChange={(e: ChangeEvent<HTMLTextAreaElement>) => {
                         const value = e.target.value;
                         // 编辑框发生修改，重新设置JSON
-                        setElementNodeJson(value);
+                        setComponentNodeJson(value);
                     }}/>
             </div>
             <div style={{width: '100%', height: 'calc(50%)', border: '1px solid gray'}}>
-                <DesignCanvas rootNodeSchemaJson={elementNodeJson}/>
+                <DesignCanvas componentNode={componentNode}/>
             </div>
         </div>
     );
@@ -258,10 +270,12 @@ export function SimpleExample() {
 
 效果：
 
-![010-wrapper-show](https://src-1252109805.cos.ap-chengdu.myqcloud.com/images/post/2023-02-04/010-wrapper-show.gif)
+![050-DesignCanvasExample-effect](https://src-1252109805.cos.ap-chengdu.myqcloud.com/images/post/2023-02-04/050-DesignCanvasExample-effect.gif)
+
+当然，细心的伙伴已经发现了问题了。因为在我们的框架中，文本也是一个ComponentNode，会导致这个文本组件节点也被Wrapper包裹了。这个我们后续会通过对Wrapper进行优化来完成。这里不再赘述。
 
 # 附录
 
-本次相关代码已经提交至github，对应分支为chapter_03：
+本次相关代码已经提交至github，对应tag为chapter_03：
 
 [w4ngzhen/lite-lc at chapter_03 (github.com)](https://github.com/w4ngzhen/lite-lc/tree/chapter_03)

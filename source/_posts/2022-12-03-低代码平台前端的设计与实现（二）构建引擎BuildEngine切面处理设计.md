@@ -13,7 +13,7 @@ tags:
 
 ![010-border-show](https://src-1252109805.cos.ap-chengdu.myqcloud.com/images/post/2022-12-03/010-border-show.png)
 
-在上一篇文章我们介绍了创建的整个流程：由一个构建引擎（BuildEngine）通过读取JSON Schema的节点来匹配对应的节点类型来生成UI元素。
+在上一篇文章我们介绍了创建的整个流程：由一个构建引擎（BuildEngine）通过读取JSON DSL的组件节点ComponentNode来匹配对应的节点类型来生成UI元素。
 
 为了实现设计器画布选中边框的需求，首先想到的一个解决方案就是仿照BuildEngine做一个类似的DesignerBuildEngine，里面的流程和BuildEngine大致相同，只是在生成最终的ReactNode节点的时候，在其外围使用某个元素进行包裹，具备边框等功能：
 
@@ -23,7 +23,7 @@ class DesignerBuileEngine {
    innerBuild() {
      // 在返回某个ReactNode前，使用一个div包裹
      const reactNode = xxx;
-     return createElement(
+     return React.createElement(
        'div', { 
        // 边框样式等数据 
        }, 
@@ -32,220 +32,247 @@ class DesignerBuileEngine {
 }
 ```
 
-但是这并不是一个很优雅的设计，因为如果我们衍生出一个新的DesignerRenderEngine，那么我们需要同时维护一个设计态一个云形态两个Engine，尽管他们的处理流程大致相同。
+但是这并不是一个很优雅的设计，因为如果我们衍生出一个新的DesignerRenderEngine，那么我们需要同时维护一个设计态一个运行态两个Engine，尽管他们的处理流程大致相同。
 
 # 切面设计
 
-## 组件构建切面处理
+## 组件构建处理
 
-为了避免功能代码的冗余，也更方便后续的扩展性。我们考虑采用切面的设计方案。将整个处理流程的某些环节加入切面，以达到灵活处理的目的。切面的实现可以有很多种形式，例如一个回调函数，又或者传入一个对象实例（本质上还是回调）。作为一个轻量级低开模块，我们暂时设计一个简单的函数ComponentBuildAspectHandler（组件构建切面处理器）来进行切面处理。
+为了避免功能代码的冗余，也更方便后续的扩展性。我们考虑采用切面的设计方案。将整个处理流程的某些环节加入切面，以达到灵活处理的目的。切面的实现可以有很多种形式，例如一个回调函数，又或者传入一个对象实例（本质上还是回调）。作为一个轻量级低开模块，我们暂时设计一个简单的回调customCreateElement（createElement自定义实现），来完成build过程中，最后一步生成ReactNode的自定义处理：
 
-![020-BuildEngine-handle-flow-with-build-aspect](https://src-1252109805.cos.ap-chengdu.myqcloud.com/images/post/2022-12-03/020-BuildEngine-handle-flow-with-build-aspect.png)
+![020-BuildEngine-customCreateElement](https://src-1252109805.cos.ap-chengdu.myqcloud.com/images/post/2022-12-03/020-BuildEngine-customCreateElement.png)
 
-该切面方法作为BuildEngine的一个实例属性存在，在BuildEngine进行构建的时候，我们切入进行处理：
+该自定义创建方法将作为build的一个参数传入到构造过程中来进行调用，形如：
 
-```diff
+````js
 // 伪代码
-class BuildEngin {
-// 新增的属性
-+   componentBuildAspectHandle: ComponentBuildAspectHandler;
-
-    innerBuild() {
-        const reactNode = build()
-        
-+       // 在返回生成的React UI节点之前，调用切面处理器进行处理
-+		    // const finalReactNode = ComponentBuildAspectHandler(reactNode, context);
-        
-        return reactNode;
+class BuildEngine {
+  // customCreateElement作为参数传入
+  build(componentNode, customCreateElement) {
+    this.innerBuild(componentNode, '/' + componentNode.componentName, customCreateElement);
+  }
+  // innerBuild对应也需要将参数传入
+  private innerBuild(componentNode, path, customCreateElement) {
+    // ... ...
+    if (typeof customCreateElement === 'function') {
+      // 如果存在外部传入的customCreateElement，则调用之
+      return customCreateElement(CompConstructor, {...props}, children);
     }
+    // 否则，走默认的React.createElement
+    return React.createElement(CompConstructor, {...props}, children);
+  }
 }
-```
+````
 
-正如上图的黄色部分的，我们首先编写一个类型ComponentBuildAspectHandler，就是一个函数类型的处理方法。同时，为了封装一些处理的上下文，我们额外定义一个ComponentBuildAspectHandleContext来承载上下文数据。
+根据上述的流程，我们先定义CustomCreateElement：
 
 ```typescript
-export interface ComponentBuildAspectHandleContext {
-    /**
-     * 当前构建的节点的path
-     */
-    path: string;
-    /**
-     * 当前构建的元素节点数据
-     */
-    elementNode: Omit<ElementNode, ''>;
-}
+import {ReactNode} from "react";
+import {ComponentNode, ComponentNodePropType} from "../../meta/ComponentNode";
+
+
 /**
- * 构建切面
- * @param reactNode 通过typeBuilder构建出的reactNode
- * @param handleContext 封装的一些支持切面处理的上下文
+ * CreateElement自定义实现方法参数上下文
+ * @field componentNode 组件节点数据
+ * @field path 组件节点的路径
+ * @field ComponentConstructor 已知匹配到的组件构造器
+ * @field props 从ComponentNode中取到的props
+ * @field children 已经创建完成的ReactNode数组或undefined
  */
-export type ComponentBuildAspectHandler =
-    (reactNode: ReactNode,
-     handleContext: ComponentBuildAspectHandleContext) => ReactNode
+interface CustomCreateElementHandleContext {
+    componentNode: ComponentNode;
+    path: string;
+    ComponentConstructor: any;
+    props: {
+        [propName: string]: ComponentNodePropType
+    };
+    children?: ReactNode[];
+}
+
+/**
+ * 函数接口 CreateElement自定义实现方法类型定义
+ */
+export interface CustomCreateElementHandle {
+
+    /**
+     * CreateElement自定义实现方法类型定义
+     * @param context
+     */
+    (context: CustomCreateElementHandleContext): ReactNode | undefined;
+}
 ```
 
-然后，我们为构建引擎添加一个实例字段并支持外部配置该handler：
+这里我们使用TS的函数接口，参数context包含的字段目前有：
+
+1. componentNode 组件节点数据。将该值传入，可以在后续的处理中，根据对应的ComponentNode原始数据方便的进行自定义扩展处理。
+2. path 组件节点的路径。将该值传入，可以在后续的处理中，根据对应的path方便的进行扩展处理。
+3. ComponentConstructor 已知匹配到的组件构造器。这里专门使用大驼峰，就是想指明是一个组件的构造器。
+4. props 从ComponentNode中取到的props。注意，这里是从ComponentNode中取到的未经任何处理的原始props。
+5. children 已经创建完成的ReactNode数组或undefined。
+
+如此，我们将构建引擎的中对于ReactNode节点的处理通过切面的方式，允许交给外部调用者方便进行灵活的定制开发。
+
+回顾整个构建的流程，假设在运行时模式下（RuntimeMode），我们可以都是按照JSON DSL通过映射到默认的组件构造器来直接创建对应的ReactNode；而当处于设计态（DesginMode）的时候，就可以通过`CustomCreateElementHandle`机制，让上一层进行一定的包裹，进而产生出设计态的效果。
+
+## BuildEngine集成
+
+接下来，我们将上述的CustomCreateElementHandle集成到我们的BuildEngine中，考虑到后续还可能会有新的构建过程的一些上下文，我们先定义一个BuildOptions接口类型，方便后续构建过程中，扩展更多的功能。当然，现阶段定义如下：
+
+```typescript
+/**
+ * 构建参数
+ */
+export interface BuildOptions {
+    /**
+     * 允许外部使用者自定义组件的构建过程
+     */
+    onCustomCreateElement?: CustomCreateElementHandle;
+}
+```
+
+然后，我们适当修改原来的BuildEngine.build方法的入参，暴露buildOptions：
 
 ```diff
- /**
-  * 构建引擎
-  */
- export class BuildEngine {
+// build方法和innerBuild均需要暴露
+-    build(componentNode: ComponentNode) {
++    build(componentNode: ComponentNode, buildOptions?: BuildOptions) {
 
-+    /**
-+     * 引擎所持有的“组件构建切面处理器”
-+     * @private
-+     */
-+    private _componentBuildAspectHandler?: ComponentBuildAspectHandler;
-+
-+    set componentBuildAspectHandler(value: ComponentBuildAspectHandler | undefined) {
-+        this._componentBuildAspectHandler = value;
-+    }
+-    private innerBuild(componentNode: ComponentNode, path: string) {
++    private innerBuild(componentNode: ComponentNode, path: string, buildOptions?: BuildOptions) {
+```
 
-    ... ...
-    ... ...
-    
-    private innerBuild(rootEleNode: ElementNode, rootPath: string): ReactNode | undefined  {
+对于innerBuild内部的实现，关于最后返回ReactNode的部分，适配onCustomCreateElement：
 
-    ... ...
-+
-+        if (this._componentBuildAspectHandler) {
-+            // BuildEngine使用者可以定义ReactNode切面处理，实现定制化
-+            console.debug('进入组件构建切面处理')
-+            return this._componentBuildAspectHandler(reactNode, {
-+                path: rootPath,
-+                elementNode: rootEleNode
+```diff
+// innerBuild内容
+
++        if (typeof buildOptions?.onCustomCreateElement === 'function') {
++            // 如果外部提供了对应的自定义创建实现，则使用之
++            return buildOptions.onCustomCreateElement({
++                componentNode,
++                path,
++                ComponentConstructor: componentConstructor,
++                props: {...props},
++                children: childrenReactNode.length > 0 ? childrenReactNode : undefined
 +            })
 +        }
-+
-         return reactNode;
-     }
- }
-
+				// 否则使用默认实现
+        return React.createElement(
+            componentConstructor,
+            {...props, key: path},
+            childrenReactNode.length > 0 ? childrenReactNode : undefined
+        )
 ```
 
-如此，我们将构建引擎的中对于ReactNode节点的处理通过切面的方式，交给了外部调用者，方便进行灵活的定制开发。
-
-回顾整个构建的流程，在运行时模式下（RuntimeMode），都是按照JSON Schema 节点（ElementNode）通过各种类型build处到一个又一个的ReactNode这个过程进行的；而当处于设计态（DesginMode）的时候，就可以通过`ComponentBuildAspectHandler`来进行一定的包裹，进而产生出设计态的效果。
-
-## 元素节点解析切面处理
-
-同样的，当进入到innerBuild的时候，我们就会解析JSON Schema节点，考虑到可能会存在希望在讲解析处的Schema节点交给TypeBuilder进行处理前，能够对节点进行一些编程开发，我们在此基础上再做一个扩展，设计暴露对该ElementNode节点处理的切面（ElementNodeResolveAspectHandler）。这样一来，就可以为后续可能存在的对于ElementNode需要进行特殊处理的场景进行支持。
-
-同样的，我们暂时设计一个简单的函数ElementNodeResolveAspectHandler（组件构建切面处理器）来进行切面处理。
-
-![030-BuildEngine-handle-flow-with-node-resolve-aspect.png](https://src-1252109805.cos.ap-chengdu.myqcloud.com/images/post/2022-12-03/030-BuildEngine-handle-flow-with-node-resolve-aspect.png.png)
-
-正如上图中的读取ElementNode切面处理部分，我们首先编写一个类型ElementNodeResolveAspectHandler，就是一个函数类型的处理方法。同时，为了封装一些处理的上下文，我们额外定义一个ElementNodeResolveAspectHandleContext来承载上下文数据。
-
-```typescript
-export interface ElementNodeResolveAspectHandleContext {
-    /**
-     * 当前构建的节点的path
-     */
-    path: string;
-}
-
-/**
- * 元素节点解析切面处理
- */
-export type ElementNodeResolveAspectHandler =
-    (elementNode: ElementNode, context: ElementNodeResolveAspectHandleContext) => ElementNode | undefined;
-```
-
-该方法也同样作为BuildEngine的一个实例属性，BuildEngine的持有者配置该handler：
-
-```diff
-export class BuildEngine {
-+    /**
-+    * 引擎所持有的"元素节点解析切面处理"
-+    * @private
-+    */
-+   private _elementNodeResolveAspectHandler?: ElementNodeResolveAspectHandler;
-+
-+   set elementNodeResolveAspectHandler(value: ElementNodeResolveAspectHandler) {
-+       this._elementNodeResolveAspectHandler = value;
-+   }
-    private innerBuild(rootEleNode: ElementNode, rootPath: string): ReactNode {
-    
-+       let resolvedRootEleNode: ElementNode;
-+       if (this._elementNodeResolveAspectHandler) {
-+           // BuildEngine使用者可以定义元素节点解析切面处理，实现定制化
-+           console.debug('进入元素节点解析切面处理');
-+           resolvedRootEleNode =
-+               this._elementNodeResolveAspectHandler(rootEleNode, {
-+                   path: rootPath
-+               })
-+       } else {
-+           resolvedRootEleNode = rootEleNode;
-+       }
-    
-        // innerBuild余下内容 ... ...
-        // 需要注意的是，后续操作的ElementNode都需要使用resolvedRootEleNode
-    
-    }
-
-}
-```
-
-至此，我们针对构建引擎BuildEngine设计了两个关键点的切面处理，为后续构建引擎支撑开发设计态提供了技术上的可能性。接下来，我们将屏蔽BuildEngine实例，不再直接暴露给用户进行使用，而是分别封装一个RuntimeBuildEngine以及DesignBuildEngine，在其内部会构造我们目前设计出的BuildEngine，并通过切面定制节点解析以及创建ReactNode的过程，来满足两种类型的差异。
-
-对于本文来说，我们先编写一个RuntimeBuildEngine，用以展示切面的效果：
-
-```typescript
-import {BuildEngine} from "./BuildEngine";
-import {ElementNode} from "../meta/ElementNode";
-
-/**
- * 运行时BuildEngine
- */
-export class RuntimeBuildEngine {
-    private readonly _buildEngine: BuildEngine;
-
-    constructor() {
-        this._buildEngine = new BuildEngine();
-        this._buildEngine.elementNodeResolveAspectHandler =
-            (eleNode, ctx) => {
-                console.debug(`[elementNodeResolveAspectHandler] current elementNode: ${eleNode.type}, path: ${ctx.path}`)
-                // 务必返回节点
-                return eleNode
-            }
-        this._buildEngine.componentBuildAspectHandler =
-            (reactNode, ctx) => {
-                console.debug(`[componentBuildAspectHandler] current reactNode: `, reactNode);
-                // 务必返回节点
-                return reactNode;
-            }
-    }
-
-    /**
-     * 内部代理BuildEngine.build
-     * @param rootEleNode
-     */
-    build(rootEleNode: ElementNode) {
-        return this._buildEngine.build(rootEleNode);
-    }
-}
-```
-
-注意我们当前RuntimeBuildEngine，对于切面处理的部分，我们只是通过console打印了信息到控制台。
-
-最后，我们修改core模块的导出内容，不再到处BuildEngine，而是导出RuntimeBuildEngine供测试代码使用。
-
-```diff
-// core/src/index.ts
-export {
--    BuildEngine
--} from './engine/BuildEngine';
-+    RuntimeBuildEngine
-+} from './engine/RuntimeBuildEngine';
-```
+至此，我们针对构建引擎BuildEngine设计了一个关键点的切面处理，为后续构建引擎支撑开发设计态提供了技术上的可能性。
 
 # 基本测试
 
-完成上述的切面处理代码以后，我们回到example项目中，重新使用RuntimeBuildEngine，通过打印的方式来验证切面的可行性。
+接下来，我在样例代码的地方，我们编写一个添加了onCustomCreateElement构建参数的Demo，来展示切面的效果。首先照旧，核心库里面导出对应的类型：
 
-![040-runtime-build-engine-aspect-output](https://src-1252109805.cos.ap-chengdu.myqcloud.com/images/post/2022-12-03/040-runtime-build-engine-aspect-output.png)
+```diff
+  export * from './meta/ComponentNode';
+  export * from './engine/BuildEngine';
++ export * from './engine/aspect/CustomCreateElementHandle';
+```
+
+然后在，在样例工程中添加了一个新的样例页面CustomCreateElementExample：
+
+```tsx
+import {BuildEngine} from "@lite-lc/core";
+import {ChangeEvent, createElement, useState} from "react";
+import {Input} from 'antd';
+
+export function CustomCreateElementExample() {
+
+    // 使用构建引擎
+    const [buildEngine] = useState(new BuildEngine());
+
+    // 使用state存储一个schema的字符串
+    const [componentNodeJson, setComponentNodeJson] = useState(JSON.stringify({
+        "componentName": "page",
+        "children": [
+            {
+                "componentName": "button",
+                "props": {
+                    "size": "small",
+                    "type": "primary"
+                },
+                "children": [
+                    {
+                        "componentName": "text",
+                        "props": {
+                            "value": "hello, my button."
+                        }
+                    }
+                ]
+            },
+            {
+                "componentName": "input"
+            }
+        ]
+    }, null, 2))
+
+    let reactNode;
+    try {
+        const eleNode = JSON.parse(componentNodeJson);
+        reactNode = buildEngine.build(eleNode, {
+            onCustomCreateElement: (ctx) => {
+                const {ComponentConstructor, props, path, children} = ctx;
+                console.debug('path: ', path)
+                console.debug('props: ', props)
+                return createElement(ComponentConstructor, {
+                    ...props,
+                    key: path
+                }, children)
+            }
+        });
+    } catch (e) {
+        // 序列化出异常，返回JSON格式出错
+        reactNode = <div>JSON格式出错</div>
+    }
+
+    return (
+        <div style={{width: '100%', height: '100%', padding: '10px'}}>
+            <div style={{width: '100%', height: 'calc(50%)'}}>
+                <Input.TextArea
+                    rows={4}
+                    value={componentNodeJson}
+                    onChange={(e: ChangeEvent<HTMLTextAreaElement>) => {
+                        const value = e.target.value;
+                        // 编辑框发生修改，重新设置JSON
+                        setComponentNodeJson(value);
+                    }}/>
+            </div>
+            <div style={{width: '100%', height: 'calc(50%)', border: '1px solid gray'}}>
+                {reactNode}
+            </div>
+        </div>
+    );
+}
+```
+
+这段代码和上一章中的SimpleExample的核心差别在于：
+
+```diff
+        const eleNode = JSON.parse(componentNodeJson);
+-       reactNode = buildEngine.build(eleNode);
++       reactNode = buildEngine.build(eleNode, {
++           onCustomCreateElement: (ctx) => {
++               const {ComponentConstructor, props, path, children} = ctx;
++               console.debug('path: ', path)
++               console.debug('props: ', props)
++               return createElement(ComponentConstructor, {
++                   ...props,
++                   key: path
++               }, children)
++           }
++       });
+```
+
+原本直接调用buildEngine.build的地方，我们加入我们自定义的实现，并进行了打印。从下面的效果也能看出：
+
+![030-customCreateElement-effect](https://src-1252109805.cos.ap-chengdu.myqcloud.com/images/post/2022-12-03/030-customCreateElement-effect.png)
 
 # 附录
 
@@ -253,4 +280,4 @@ export {
 
 [w4ngzhen/lite-lc (github.com)](https://github.com/w4ngzhen/lite-lc)
 
-本章对应分支chapter_02
+本章对应tag为chapter_02
