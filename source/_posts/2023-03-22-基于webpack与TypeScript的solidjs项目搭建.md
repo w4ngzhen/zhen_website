@@ -1,5 +1,5 @@
 ---
-title: 基于webpack与TypeScript的solidjs项目搭建
+title: 基于webpack与TypeScript的SolidJS项目搭建
 date: 2023-03-22
 tags:
  - solidjs
