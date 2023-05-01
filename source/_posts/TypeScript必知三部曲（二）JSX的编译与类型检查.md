@@ -1,5 +1,9 @@
 ---
 title: TypeScript必知三部曲（二）JSX的编译与类型检查
+date: 2023-04-18
+tags:
+ - typescript
+ - jsx
 ---
 
 在本三部曲系列的第一部中，我们介绍了TypeScript编译的两种方案(tsc编译、babel编译）以及二者的重要差异，同时分析了IDE是如何对TypeScript代码进行类型检查的。该部分基本涵盖了TypeScript代码编译的细节，但主要是关于TS代码本身的编译与类型检查。而本文，我们将着重讨论含有JSX的TypeScript代码（又称TSX）如何进行类型检查与代码编译的。
