@@ -165,6 +165,16 @@ nvim-lspconfig通过插件管理器安装以后，我们就可以通过require�
 
 除此之外，还有像是查看引用：`Lspsaga peek_definition`等指令供我们使用，这里就不再演示了，读者完成配置以后，可以自行测试。
 
+另外需要注意的是Lspsaga官方提到了nvim-treesitter是可选的依赖，但事实体验上强烈要求安装nvim-treesitter插件，因为像是用于像是代码大纲的`"Lspsaga outlint"`命令，或是用于查看代码定义的`"Lspsaga  peek_definition"`命令，都会用到treesitter来进行代码块的解析处理，如果不安装会有报错的情况，影响体验。所以，接下来我们再补充介绍一下nvim-treesitter插件。
+
+## nvim-treesitter
+
+在介绍[nvim-treesitter](https://github.com/nvim-treesitter/nvim-treesitter)之前，我们需要了解[tree-sitter](https://github.com/tree-sitter/tree-sitter)这个工具。tree-sitter是一款主要通过Rust编写的跨平台的代码解析器生成工具和增量解析库，它可以为源代码文件构建一颗具体语法树。也就是说，**它能从源代码中解析出代码结构，比如哪些是变量，哪些是方法，基本代码结构是怎样的**。正式由于该能力，支持代码高亮的编辑器基本上都会直接或间接使用到该工具。而nvim-treesitter则是tree-sitter和nvim之前的封装桥接插件。在nvim中要想体验代码高亮，基本上都离不开该插件。
+
+当然，nvim-treesitter并不严格属于LSP体系。它的主要作用是对代码解析出各种符号、结构，以便呈现nvim中文本的高亮。但是，我们使用nvim想要搭建一套趁手的代码编写环境，基本上是离不开nvim-treesitter的，像上面的nvim-lspsaga在使用的过程中，也是会调用nvim-treesitter相关的API来提升插件体验，所以也一并安装吧。
+
+对于nvim-treesitter，它同样将不同的语言进行了解耦拆分。你可以通过setup配置，来定义哪些文件要高亮。需要注意的是，配置对应语言启用高亮，nvim-treesitter会在第一次加载的时候，在你的机器上通过C/C++编译工具链编译对应语言的parser，并存放到插件所在目录/parser目录下，读者在安装遍以后，可以自行查看。
+
 ## nvim的LSP、lspconfig与lspsaga之间的关系
 
 看到这里，可能有的小伙伴对目前介绍的nvim内置的LSP模块、nvim-lspconfig与nvim-lspsaga插件的关系还有些疑惑，这里我们用一个关系图做一个简单的总结：
@@ -175,7 +185,7 @@ nvim-lspconfig通过插件管理器安装以后，我们就可以通过require�
 
 但是，配置语言服务如果仅使用nvim原生的方式是比较复杂的，于是nvim官方提供了一个插件nvim-lspconfig，来帮助用户以更加简单快捷的方式来配置语言服务。
 
-最后，由于nvim内置的LSP模块提供的接口在调用后的交互等比较简陋，于是有了nvim-lspsaga这个插件，实际上它的底层也是调用的nvim内置的vim.lsp相关的接口获得数据，只是经过封装以用户体验更好的方式展示了出来。
+最后，由于nvim内置的LSP模块提供的接口在调用后的交互等比较简陋，于是有了nvim-lspsaga这个插件，实际上它的底层也是调用的nvim内置的vim.lsp相关的接口获得数据，只是经过封装以用户体验更好的方式展示了出来，同时，使用nvim-lspsaga的时候，最好也安装好了nvim-treesitter，一方面它可以完成代码的语法高亮，另一方面，lspsaga也会用到该插件的能力提升各种代码解析的体验。
 
 有了上述关系，我们一般都不配置快捷键来映射`vim.lsp.buf.code_actions()`等这些原生API调用，而是安装lspsaga插件，然后使用经过Lspsaga封装后的`Lspsaga code_action`等指令调用。
 
