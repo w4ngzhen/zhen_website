@@ -1,5 +1,5 @@
 ---
-title: 2023-07-12-详解nvim内建LSP体系与基于nvim-cmp的代码补全体系
+title: 详解nvim内建LSP体系与基于nvim-cmp的代码补全体系
 date: 2023-07-12
 tags:
  - nvim
