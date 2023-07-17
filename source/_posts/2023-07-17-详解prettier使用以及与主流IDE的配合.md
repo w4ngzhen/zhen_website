@@ -1,5 +1,5 @@
 ---
-title: 详解prettier在主流IDE的运行体系
+title: 详解prettier使用以及与主流IDE的配合
 date: 2023-07-17
 tags:
  - prettier
