@@ -101,6 +101,19 @@ ignore:
 
 # Extensions
 ## Plugins: https://hexo.io/plugins/
+plugins:
+  hexo-generator-feed
+feed:
+  type:
+    - atom
+  path:
+    - atom.xml
+  limit: 20
+  hub:
+  content:
+  content_limit: 140
+  content_limit_delim: ' '
+  order_by: -date
 ## Themes: https://hexo.io/themes/
 theme: next
 
