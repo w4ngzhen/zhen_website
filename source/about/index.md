@@ -3,7 +3,7 @@ title: about me
 date: 2022-10-27
 ---
 
-# Zhen Wang
+# Zhen WANG
 
 ID：w4ngzhen
 
@@ -17,13 +17,13 @@ TypeScript、Less、C/C++、Java
 
 ## 技术栈
 
-- 游戏开发：原生
+- 游戏开发：Godot（GDScript）
 
-- 桌面应用开发：QT、FLTK、Electron
+- 桌面应用开发：QT、SDL、FLTK、Electron
 
-- 前端PC端应用开发：React、Vue
+- 前端PC端应用开发：React
 
-- 后端应用开发：Java SpringBoot
+- 后端应用开发：Java SpringBoot、nodejs NestJS
 
 ## 最爱的一本书
 
