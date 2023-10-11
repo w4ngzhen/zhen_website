@@ -190,7 +190,7 @@ endif()
 
 该文件实际上也分为两个部分。第一部分就是通过变量来存储cefsimple的相关源码、头文件：
 
-![080-add-source-for-simple-demo](https://src-1252109805.cos.ap-chengdu.myqcloud.com/images/post/2023-10-11/080-add-source-for-simple-demo.png)![f6d6a8ad510615b601eeb909284a7c48](../../../../var/folders/0r/665kgxj97n508m86dltf9p840000gn/T/utools.notes/f6d6a8ad510615b601eeb909284a7c48.png)
+![080-add-source-for-simple-demo](https://src-1252109805.cos.ap-chengdu.myqcloud.com/images/post/2023-10-11/080-add-source-for-simple-demo.png)
 
 这一块我们挑一个比较典型的处理：
 
@@ -218,7 +218,7 @@ endmacro()
 
 这段宏的逻辑实际上就是通过判断操作系统平台，使用CMake提供的list APPEND机制，将入参`name_of_list`和`name_of_list_平台标识`合成为一个list列表。比较trick的就是，在调用`APPEND_PLATFORM_SOURCES(CEFSIMPLE_SRCS)`，内部比如`${${name_of_list}_MAC}` 就是`${CEFSIMPLE_SRCS_MAC}`，即获取这个变量的数据。后面剩下关于配置源文件的方式类似，这里就请读者自行分析了。
 
-现在，让我们回到对cefsimple/CMakeLists.txt本身的分析，接下来我们分析比较重要的一个部分：可执行程序的生成：
+现在，让我们回到对cefsimple/CMakeLists.txt本身的分析，接下来我们分析比较重要的第2个部分：可执行程序的生成：
 
 ![100-os-target](https://src-1252109805.cos.ap-chengdu.myqcloud.com/images/post/2023-10-11/100-os-target.png)
 
