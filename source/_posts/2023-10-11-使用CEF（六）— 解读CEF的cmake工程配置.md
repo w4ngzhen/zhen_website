@@ -218,7 +218,7 @@ endmacro()
 
 这段宏的逻辑实际上就是通过判断操作系统平台，使用CMake提供的list APPEND机制，将入参`name_of_list`和`name_of_list_平台标识`合成为一个list列表。比较trick的就是，在调用`APPEND_PLATFORM_SOURCES(CEFSIMPLE_SRCS)`，内部比如`${${name_of_list}_MAC}` 就是`${CEFSIMPLE_SRCS_MAC}`，即获取这个变量的数据。后面剩下关于配置源文件的方式类似，这里就请读者自行分析了。
 
-现在，让我们回到对cefsimple/CMakeLists.txt本身的分析，接下来我们分析比较重要的第2个部分：可执行程序的生成：
+现在，让我们回到对cefsimple/CMakeLists.txt本身的分析，接下来我们分析比较重要的第二部分：可执行程序的生成：
 
 ![100-os-target](https://src-1252109805.cos.ap-chengdu.myqcloud.com/images/post/2023-10-11/100-os-target.png)
 
