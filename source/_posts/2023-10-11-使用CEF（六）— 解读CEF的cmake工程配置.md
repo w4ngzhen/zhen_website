@@ -339,3 +339,5 @@ int main(int argc, char* argv[]) {
 通过顶层CMakeLists.txt的说明，不难发现，cef_binary_xxx本身既是包含了了libcef_dll_wrapper源码构建的工程，同时也是一个比较标准的，想要使用libcef+libcef_dll_wrapper的CMake工程，所以，你才会在顶层CMakeLists.txt看到官方介绍了几种基于cef_binary_xxx的CMake工程结构的项目集成案例：
 
 ![130-how-to-intergate](https://src-1252109805.cos.ap-chengdu.myqcloud.com/images/post/2023-10-11/130-how-to-intergate.png)
+
+我的博客即将同步至腾讯云开发者社区，邀请大家一同入驻：https://cloud.tencent.com/developer/support-plan?invite_code=3d9bi2yhvncwk
