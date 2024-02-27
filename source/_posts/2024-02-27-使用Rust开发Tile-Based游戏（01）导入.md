@@ -7,7 +7,7 @@ tags:
  - rust
 ---
 
-关于使用Rust开发Tile-Based游戏系列文章介绍
+关于使用Rust开发Tile-Based游戏系列文章。
 
 <!-- more -->
 
