@@ -7,24 +7,23 @@ date: 2022-10-27
 
 ID：w4ngzhen
 
-Birth：1996 Spring
+生日：1996年春
 
 现居地：成都
 
-## 常用语言
+## 社交
 
-TypeScript、Less、C/C++、Java
+[w4ngzhen - 知乎 (zhihu.com)](https://www.zhihu.com/people/w4ngzhen)
+
+[w4ngzhen (Zhen WANG) (github.com)](https://github.com/w4ngzhen)
 
 ## 技术栈
 
-- 游戏开发：Godot（GDScript）
-
-- 桌面应用开发：QT、SDL、FLTK、Electron
-
-- 前端PC端应用开发：React
-
-- 后端应用开发：Java SpringBoot、nodejs NestJS
+- 前端应用开发：Typescript、React、Less
+- 游戏开发：Godot（GDScript）、Rust
+- 桌面应用开发：Rust、SDL2、Electron、~~Qt~~
+- 后端应用开发：nodejs NestJS、~~Java SpringBoot~~
 
 ## 最爱的一本书
 
-《DOOM启示录》
+[《DOOM启世录》](https://book.douban.com/subject/1152971/)
