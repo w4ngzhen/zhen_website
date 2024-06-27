@@ -104,10 +104,12 @@ ignore:
 plugins:
   hexo-generator-feed
 feed:
-  type:
+  type: 
     - atom
+    - rss2
   path:
     - atom.xml
+    - rss2.xml
   limit: 20
   hub:
   content:
