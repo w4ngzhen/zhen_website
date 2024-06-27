@@ -18,7 +18,7 @@ search:
   limit: 100
 # URL
 ## Set your site url here. For example, if you use GitHub Page, set url as 'https://username.github.io/project'
-url: http://example.com
+url: https://compilemind.com
 permalink: :year/:month/:day/:title/
 permalink_defaults:
 pretty_urls:
@@ -111,10 +111,6 @@ feed:
     - atom.xml
     - rss2.xml
   limit: 20
-  hub:
-  content:
-  content_limit: 140
-  content_limit_delim: ' '
   order_by: -date
 ## Themes: https://hexo.io/themes/
 theme: next
