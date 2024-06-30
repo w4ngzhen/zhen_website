@@ -574,6 +574,7 @@ comments:
   # Choose a comment system to be displayed by default.
   # Available values: disqus | disqusjs | changyan | livere | gitalk | utterances
   active:
+    gitalk
   # Setting `true` means remembering the comment system selected by the visitor.
   storage: true
   # Lazyload all comment systems.
@@ -583,8 +584,8 @@ comments:
     #disqus:
     #  text: Load Disqus
     #  order: -1
-    #gitalk:
-    #  order: -2
+    gitalk:
+      order: -1
 
 # Disqus
 # For more information: https://disqus.com
@@ -621,15 +622,15 @@ livere_uid: # <your_uid>
 # Gitalk
 # For more information: https://gitalk.github.io
 gitalk:
-  enable: false
-  github_id: # GitHub repo owner
-  repo: # Repository name to store issues
-  client_id: # GitHub Application Client ID
-  client_secret: # GitHub Application Client Secret
-  admin_user: # GitHub repo owner and collaborators, only these guys can initialize gitHub issues
+  enable: true
+  github_id: w4ngzhen
+  repo: 'HexoBlog'
+  client_id: Ov23licnW3eL1RiVvRld
+  client_secret: 76e9d391e9bf589a0bdaf69e37cef82daaf40ecf 
+  admin_user: w4ngzhen
   distraction_free_mode: true # Facebook-like distraction free mode
   # When the official proxy is not available, you can change it to your own proxy address
-  proxy: https://cors-anywhere.azm.workers.dev/https://github.com/login/oauth/access_token # This is official proxy address
+  # proxy: https://cors-anywhere.azm.workers.dev/https://github.com/login/oauth/access_token # This is official proxy address
   # Gitalk's display language depends on user's browser or system environment
   # If you want everyone visiting your site to see a uniform language, you can set a force language value
   # Available values: en | es-ES | fr | ru | zh-CN | zh-TW
