@@ -624,7 +624,7 @@ livere_uid: # <your_uid>
 gitalk:
   enable: true
   github_id: w4ngzhen
-  repo: 'HexoBlog'
+  repo: 'blog'
   client_id: Ov23licnW3eL1RiVvRld
   client_secret: 76e9d391e9bf589a0bdaf69e37cef82daaf40ecf 
   admin_user: w4ngzhen
