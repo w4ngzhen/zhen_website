@@ -524,7 +524,7 @@ hexo-generator-feed@^3.0.0:
     hexo-util "^2.1.0"
     nunjucks "^3.0.0"
 
-hexo-generator-index@^4:
+hexo-generator-index@^4.0.0:
   version "4.0.0"
   resolved "https://registry.npmmirror.com/hexo-generator-index/-/hexo-generator-index-4.0.0.tgz#2f20cf9d231db30edbccd5be32c92c8aeb5d6d63"
   integrity sha512-KeM7mOCKWINGFAk1E+CkjMMgqFIv8oaRbGxR7ipkQAp44o4aopkVftma4sdIplOq9WQEWfVYDUK5gEv9J3nzUg==
