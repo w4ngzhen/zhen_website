@@ -1,0 +1,35 @@
+menus:
+  home: / || fa fa-home
+  about: /about/ || fa fa-user
+  tags: /tags/ || fa fa-tags
+  archives: /archives/ || fa fa-archive
+menus-config:
+  enable-icon: true
+
+avatar:
+  url: /images/tiger400.jpg
+
+site-state: true
+
+social:
+  GitHub: https://github.com/w4ngzhen || fa fa-github
+  RSS: /atom.xml || fa fa-rss
+
+favicon:
+  small: /images/compilemind_16x16.png
+  medium: /images/compilemind_32x32.png
+  apple_touch_icon: /images/compilemind_32x32.png
+  safari_pinned_tab: /images/compilemind_32x32.png
+
+comments:
+  # Gitalk
+  # For more information: https://gitalk.github.io
+  gitalk:
+    enable: true
+    owner: 'w4ngzhen'
+    admin_user: 'w4ngzhen'
+    repo: 'blog'
+    client_id: 'Ov23licnW3eL1RiVvRld'
+    client_secret: '76e9d391e9bf589a0bdaf69e37cef82daaf40ecf'
+    distraction_free_mode: false
+    language:
