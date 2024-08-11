@@ -3,8 +3,8 @@
 ## Source: https://github.com/hexojs/hexo/
 
 # Site
-title: CompileMind
-subtitle: 'compile code, compile mind'
+title: '真 一'
+subtitle: '始 真 如 一 '
 description: ''
 keywords:
 author: w4ngzhen
@@ -18,7 +18,7 @@ search:
   limit: 100
 # URL
 ## Set your site url here. For example, if you use GitHub Page, set url as 'https://username.github.io/project'
-url: https://compilemind.com
+url: https://zhen.one
 permalink: :year/:month/:day/:title/
 permalink_defaults:
 pretty_urls:

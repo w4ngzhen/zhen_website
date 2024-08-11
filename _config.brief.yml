@@ -16,10 +16,10 @@ social:
   RSS: /atom.xml || fa fa-rss
 
 favicon:
-  small: /images/compilemind_16x16.png
-  medium: /images/compilemind_32x32.png
-  apple_touch_icon: /images/compilemind_32x32.png
-  safari_pinned_tab: /images/compilemind_32x32.png
+  small: /images/icon_16x16.png
+  medium: /images/icon_32x32.png
+  apple_touch_icon: /images/icon_32x32.png
+  safari_pinned_tab: /images/icon_32x32.png
 
 comments:
   # Gitalk

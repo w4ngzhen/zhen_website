@@ -1,6 +1,6 @@
 ---
 title: about me
-date: 2022-10-27
+date: 2024-08-11
 ---
 
 # Zhen WANG
@@ -27,3 +27,7 @@ ID：w4ngzhen
 ## 最爱的一本书
 
 [《DOOM启世录》](https://book.douban.com/subject/1152971/)
+
+### 关于compilemind.com与zhen.one
+
+一次机缘巧合，我购入了`zhen.one`这个域名，比起CompileMind，本人可能更加喜欢这个域名，同时也觉得更加有意义。因此，本博客今后（2024年08月11日）将会使用[https://zhen.one](https://zhen.one)作为域名。当然，原先[https://compilemind.com](https://compilemind.com)不会关闭解析，而是通过中间页面跳转至本博客。
