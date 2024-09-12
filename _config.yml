@@ -3,8 +3,8 @@
 ## Source: https://github.com/hexojs/hexo/
 
 # Site
-title: '真 一'
-subtitle: '始 真 如 一 '
+title: 'zhen的博客'
+subtitle: ''
 description: ''
 keywords:
 author: w4ngzhen
@@ -18,7 +18,7 @@ search:
   limit: 100
 # URL
 ## Set your site url here. For example, if you use GitHub Page, set url as 'https://username.github.io/project'
-url: https://zhen.one
+url: https://zhen.blog
 permalink: :year/:month/:day/:title/
 permalink_defaults:
 pretty_urls:
