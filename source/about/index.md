@@ -30,4 +30,4 @@ ID：w4ngzhen
 
 ### 关于compilemind.com与zhen.one
 
-一次机缘巧合，我购入了`zhen.one`这个域名，比起CompileMind，本人可能更加喜欢这个域名，同时也觉得更加有意义。因此，本博客今后（2024年08月11日）将会使用[https://zhen.one](https://zhen.one)作为域名。当然，原先[https://compilemind.com](https://compilemind.com)不会关闭解析，而是通过中间页面跳转至本博客。
+一次机缘巧合，我购入了`zhen.blog`这个域名，比起CompileMind，本人可能更加喜欢这个域名，同时也觉得更加有意义。因此，本博客今后将会使用[https://zhen.blog](https://zhen.blog)作为域名。当然，原先[https://compilemind.com](https://compilemind.com)不会关闭解析，而是通过中间页面跳转至本博客。
