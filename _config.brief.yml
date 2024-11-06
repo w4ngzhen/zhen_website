@@ -16,10 +16,10 @@ social:
   RSS: /atom.xml || fa fa-rss
 
 favicon:
-  small: /images/icon_16x16.png
-  medium: /images/icon_32x32.png
-  apple_touch_icon: /images/icon_32x32.png
-  safari_pinned_tab: /images/icon_32x32.png
+  small: /images/blog-site-icon.svg
+  medium: /images/blog-site-icon.svg
+  apple_touch_icon: /images/blog-site-icon.svg
+  safari_pinned_tab: /images/blog-site-icon.svg
 
 comments:
   # Gitalk
