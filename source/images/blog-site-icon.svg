@@ -1,19 +1,12 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
 <svg width="100%" height="100%" viewBox="0 0 200 200" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" xml:space="preserve" xmlns:serif="http://www.serif.com/" style="fill-rule:evenodd;clip-rule:evenodd;stroke-linejoin:round;stroke-miterlimit:2;">
-    <rect id="画板1" x="0" y="0" width="200" height="200" style="fill:none;"/>
+    <rect id="画板1" x="0" y="0" width="200" height="200"/>
     <g id="画板11" serif:id="画板1">
-        <g transform="matrix(1.49059,1.00164e-16,4.01661e-16,1.50051,-33.691,-42.6391)">
-            <path d="M29.311,123.827L29.311,46.123C29.311,40.029 34.305,35.081 40.455,35.081L118.873,35.081L29.311,123.827Z" style="fill:rgb(51,51,51);"/>
-        </g>
-        <g transform="matrix(1.49075,1.00174e-16,4.01704e-16,1.50067,-70.7894,-79.1945)">
-            <path d="M174.938,90.636L174.938,168.34C174.938,174.434 169.945,179.382 163.794,179.382L85.377,179.382L174.938,90.636Z" style="fill:rgb(51,51,51);"/>
-        </g>
-        <g transform="matrix(0.767275,0.765352,-1.06066,1.058,-167.47,-417.288)">
-            <path d="M496.684,57.998L496.684,44.565L497.89,43.693C501.81,40.857 506.951,39.44 512.093,39.44C517.234,39.44 522.376,40.857 526.295,43.693L527.501,44.565L527.501,57.998L496.684,57.998Z" style="fill:rgb(143,21,21);"/>
-        </g>
-        <g transform="matrix(0,-5.10406,5.11688,0,-618.049,512.409)">
-            <path d="M88.59,152.785L63.167,127.362L63.167,123.552C63.167,123.104 63.531,122.741 63.979,122.741L67.788,122.741L93.211,148.163L88.59,152.785Z" style="fill:rgb(255,191,2);"/>
+        <g transform="matrix(1.27507,0,0,1.43693,-48.352,-9.23925)">
+            <g transform="matrix(50,0,0,50,192.273,92.0478)">
+            </g>
+            <text x="39.473px" y="92.048px" style="font-family:'Cochin-Bold', 'Cochin';font-weight:700;font-size:50px;fill:white;">ZHEN</text>
         </g>
     </g>
 </svg>
