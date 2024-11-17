@@ -1,0 +1,20 @@
+<div class="header-content">
+    <div class="brand">
+        <a class="title" href="<%- url_for("/"); %>"><%- config.title; %></a>
+        <p class="subtitle"><%= config.subtitle; %></p>
+    </div>
+    <div class="right">
+        <div class="menus">
+            <% for ( menu in theme.menus ) { %>
+                <%
+                    const menuInfo = theme.menus[menu];
+                    const [menuPath, _icon] = menuInfo.split("||").map(e => e?.trim());
+                %>
+                <div class="menu-item" data-path="<%- menuPath; %>">
+                    <a href="<%- url_for(menuPath); %>"><%- menu; %></a>
+                </div>
+            <% } %>
+        </div>
+    </div>
+</div>
+

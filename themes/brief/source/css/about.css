@@ -1,0 +1,16 @@
+#about {
+    width: 100%;
+
+    a {
+        color: var(--theme-color);
+        text-decoration: underline;
+    }
+
+    ul {
+        list-style-type: circle;
+
+        li {
+            margin: 5px;
+        }
+    }
+}
