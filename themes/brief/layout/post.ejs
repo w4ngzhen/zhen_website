@@ -16,4 +16,14 @@
         <%- page.content; %>
     </div>
 </div>
+<!-- medium zoom -->
+<%- js("lib/medium-zoom@1.1.0/medium-zoom.min.umd.js"); %>
+<%- css("lib/medium-zoom@1.1.0/style.min.css"); %>
+<script>
+  // 获取文章中所有的img
+  mediumZoom('#article img', {
+    background: 'rgba(186,218,85,0.5)',
+    margin: 24,
+  })
+</script>
 <%- partial("_partial/comment/gitalk.ejs"); %>
