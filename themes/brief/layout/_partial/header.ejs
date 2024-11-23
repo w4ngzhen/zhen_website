@@ -4,6 +4,18 @@
         <p class="subtitle"><%= config.subtitle; %></p>
     </div>
     <div class="right">
+        <% if(theme['social']) { %>
+            <div class="social">
+                <% for (item in theme['social']) {
+                    const [url, icon] = (theme['social'][item] || '').split('||').map(e => e.trim());
+                %>
+                <div class="social-item">
+                    <i class="icon <%- icon %>"></i>
+                    <a class="name" href="<%- url_for(url) %>"><%- item %></a>
+                </div>
+                <% } %>
+            </div>
+        <% } %>
         <div class="menus">
             <% for ( menu in theme.menus ) { %>
                 <%
