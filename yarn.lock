@@ -613,10 +613,10 @@ hexo-server@^3.0.0:
     picocolors "^1.0.0"
     serve-static "^1.14.1"
 
-hexo-theme-brief@0.1.0-beta.6:
-  version "0.1.0-beta.6"
-  resolved "https://registry.npmmirror.com/hexo-theme-brief/-/hexo-theme-brief-0.1.0-beta.6.tgz#ceffa8a52295193980735614279e13d4206baa05"
-  integrity sha512-LGhx+YmjmpNqJ8hxd1eio1Txy28HyVL8cC1uxAztU5hg1i2aEYlndC2qCZixRtVlbMAhIYIqzSu/FHiqMUWEhw==
+hexo-theme-brief@0.1.0-beta.7:
+  version "0.1.0-beta.7"
+  resolved "https://registry.npmmirror.com/hexo-theme-brief/-/hexo-theme-brief-0.1.0-beta.7.tgz#4e629b41e026193fcca9434a4d140a72c6be1c06"
+  integrity sha512-7c9sQJAOXwDhpLxXBaDDC859mBt6+poK+Rul7HXIQGpMvnA3ckztHjo0iD8+7S2aLL3P+w0TT6mkWxgfVRYvVw==
 
 hexo-util@^2.1.0:
   version "2.7.0"
