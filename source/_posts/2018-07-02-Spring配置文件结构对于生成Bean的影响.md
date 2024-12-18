@@ -5,7 +5,8 @@ date: 2018-07-02
 tags: 
 - Spring
 - Bean
-
+categories:
+  - 技术
 ---
 
 由于前段时间忙于毕设，导致Spring学习的东西忘了很多，所以最近又开始从头看Spring的基础。基础的Bean的装配不再多说了。这一次，主要是深入一点了解Spring配置文件结构搭配对于Bean装配的影响。

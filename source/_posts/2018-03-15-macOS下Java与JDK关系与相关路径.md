@@ -1,12 +1,12 @@
 ---
-
 layout: post
 title: macOS下Java与JDK关系与相关路径
 date: 2018-03-15
 tags: 
 - macOS
 - Java
-
+categories: 
+- 技术
 ---
 
 macOS下的Java与JDK的路径曾经困扰过我一段时间，今天稍有些忘记，故记下笔记，整理一下。Java与JDK的关系不在本文笔记之内，Javaer常识。

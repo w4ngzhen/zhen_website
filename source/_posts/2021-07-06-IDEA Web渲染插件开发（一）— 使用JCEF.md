@@ -1,11 +1,12 @@
 ---
-
 title: IDEA Web渲染插件开发（一）— 使用JCEF
 date: 2021-07-16
 tags:
  - jcef
  - idea plugin
-
+categories: 
+- 技术
+- IDEA Web渲染插件开发
 ---
 
 目前网上已经有了很多关于IDEA（IntelliJ平台）的插件开发教程了，本人觉得简书上这位作者[秋水畏寒 ](https://www.jianshu.com/u/3adf83c26b4e)的关于插件开发的文章很不错，在我进行插件开发的过程中指导了我很多。但是综合下来看，在IDEA上加载网页的插件的教程还不是特别多，官方文档也不是那么的完整。本系列将会从这个角度出发，探讨如何编写加载Web页面的插件。

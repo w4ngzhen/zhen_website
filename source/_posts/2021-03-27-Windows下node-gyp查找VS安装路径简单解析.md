@@ -1,12 +1,11 @@
 ---
-
 title: Windows下node-gyp查找VS安装路径简单解析
 date: 2021-03-27
 tags:
 - node-gyp
+categories: 
+- 技术
 ---
-
-
 
 node-gyp的作用我已经不想赘述了，这里给一个我之前文章的链接：[cnblogs看这里](https://www.cnblogs.com/w4ngzhen/p/14086497.html)，[知乎看这里](https://zhuanlan.zhihu.com/p/330468774)。本文主要从源码入手，介绍node-gyp查找VisualStudio的过程
 

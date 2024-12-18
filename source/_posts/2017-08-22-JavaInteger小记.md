@@ -1,12 +1,12 @@
 ---
-
 layout: post
 title: Java中的Integer
 date: 2017-08-22
 tags: 
 - Java
 - Integer
-
+categories: 
+- 技术
 ---
 
 <!-- more -->

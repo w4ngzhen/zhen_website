@@ -6,6 +6,8 @@ tags:
  - babel
  - react
  - solidjs
+categories:
+  - 技术
 ---
 
 React将JSX这一概念深入人心。但，并非只有React利用了JSX，VUE、SolidJS等JS库或者框架都使用了JSX这一概念。网上已经有大量关于JSX的概念与形式的讲述文章，不在本文的讨论范围。

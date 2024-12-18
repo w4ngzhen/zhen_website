@@ -1,11 +1,12 @@
 ---
-
 title: Rust工作空间（workspace）实践
 date: 2024-05-10
 tags:
  - rust
  - workspace
-
+categories:
+  - 技术
+  - Rust
 ---
 
 本文将介绍如何使用cargo workspace来管理多个package，并通过实践介绍workspace的一些基础场景下的使用、配置方式。

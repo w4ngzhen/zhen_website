@@ -1,13 +1,14 @@
 ---
-
 layout: post
 title: IntelliJ中Spring识别BUG
 date: 2018-03-07
 tags: 
 - Spring
 - IntelliJ
-
+categories: 
+- 技术
 ---
+
 最近开始学习Spring，在看《Spring实战4th》3.3“处理自动装配的歧义性”那一部分时，书上提到（也从网上看到了类似的用法）:
 通过在一个类上加注@Component以及@Qualifier("x")可以为其配置限定符来标识区分同一个接口下的不同实现类，用以在需要进行@Autowired自动装配的地方使用@Qualifier("x")来指定特定的实现类对象bean。
 

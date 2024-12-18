@@ -1,11 +1,11 @@
 ---
-
 title: node-gyp项目命名BUG
 date: 2021-06-25
 tags:
  - node-gyp
  - C/C++
-
+categories: 
+- 技术
 ---
 
 当我们编写node原生模块的时候，免不了对node-gyp项目进行命名，在node-gyp进行build的时候，会跟binding.gyp配置文件中的target_name生成对应的原生模块。但是，如果target_name填写不规范，会触发编译问题。

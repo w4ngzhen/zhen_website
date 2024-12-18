@@ -1,11 +1,12 @@
 ---
-
 title: 极简SpringBoot指南-Chapter02-Spring依赖注入的方式
 date: 2021-08-10
 tags:
  - Java
  - SpringBoot
-
+categories:
+  - 技术
+  - 极简SpringBoot指南 
 ---
 
 ## 仓库地址

@@ -1,13 +1,14 @@
 ---
-
 layout: post
 title: Spring Bean装配笔记
 date: 2018-03-10
 tags: 
 - Spring
 - Bean
-
+categories: 
+- 技术
 ---
+
 Spring中的Bean是一个很重要的概念。Spring作为一个Bean容器，它可以管理对象和对象之间的依赖关系，我们不需要自己建立对象，把这部分工作全部转交给容器完成，具有低耦合，对代码没有侵略性。
 
 <!-- more -->

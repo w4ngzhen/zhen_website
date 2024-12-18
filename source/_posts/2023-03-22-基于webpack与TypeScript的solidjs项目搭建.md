@@ -4,6 +4,8 @@ date: 2023-03-22
 tags:
  - solidjs
  - javascript
+categories:
+  - 技术
 ---
 
 本文将讲述如何基于webpack与TypeScript搭建一个基础的支持less模块的solidjs项目。方便后续涉及到solidjs相关分析与讨论都可以基于本文的成果之上进行。

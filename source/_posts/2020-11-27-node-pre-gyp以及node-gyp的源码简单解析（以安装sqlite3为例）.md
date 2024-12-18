@@ -1,12 +1,12 @@
 ---
-
 title: node-pre-gyp以及node-gyp的源码简单解析（以安装sqlite3为例）
 date: 2020-11-27
 tags:
 - node
 - native
 - sqlite3
-
+categories: 
+- 技术
 ---
 
 # 前言

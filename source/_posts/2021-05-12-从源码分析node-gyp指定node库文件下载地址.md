@@ -1,10 +1,10 @@
 ---
-
 title: 从源码分析node-gyp指定node库文件下载地址
 date: 2021-05-12
 tags:
  - node-gyp
-
+categories: 
+- 技术
 ---
 
 当我们安装node的C/C++原生模块时，涉及到使用node-gyp对C/C++原生模块的编译工作（configure、build）。这个过程，需要nodejs的**头文件**以及**静态库**参与（后续称库文件）对C/C++项目编译和链接。库文件从哪里下载，会有一定逻辑进行处理，本文将从源码入手进行分析。

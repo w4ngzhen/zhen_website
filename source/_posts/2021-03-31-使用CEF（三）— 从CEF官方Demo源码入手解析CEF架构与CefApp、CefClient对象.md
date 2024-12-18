@@ -1,10 +1,11 @@
 ---
-
 title: 使用CEF（三）— 从CEF官方Demo源码入手解析CEF架构与CefApp、CefClient对象
 date: 2021-03-31
 tags:
 - CEF
-
+categories: 
+- 技术
+- 使用CEF
 ---
 
 在上文《使用CEF（2）— 基于VS2019编写一个简单CEF样例》中，我们介绍了如何编写一个CEF的样例，在文章中提供了一些代码清单，在这些代码清单中提到了一些CEF的定义的类，例如`CefApp`、`CefClient`等等。它们具体有什么作用，和CEF的进程架构有什么关系呢？本文将逐一进行介绍。

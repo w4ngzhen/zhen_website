@@ -1,11 +1,11 @@
 ---
-
 layout: post
 title: 修改MySql Root密码（包含忘记密码的方式）
 date: 2017-04-04
 tags: 
 - Mysql
-
+categories: 
+- 技术
 ---
 曾几何时，我也是记得MySQL root密码的人，想要修改root密码还不是轻而易举的事？下面前三种修改改方式都是在记得密码的情况下进行修改，如果你忘记了原本的root，请直接跳至 **终极**
 

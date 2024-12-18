@@ -1,12 +1,12 @@
 ---
-
 layout: post
 title: WebXml文件与SpringMVC的联系
 date: 2018-08-26
 tags: 
 - SpringMVC
 - Servlet
-
+categories: 
+- 技术
 ---
 
 无论采用何种框架来进行Java Web的开发，只要是Web项目必须在WEB-INF下有web.xml，这是java规范。 当然，我们最早接触到Java Web容器通常是tomcat，但这并不意味着web.xml是属于Tomcat的，同样，Servlet本身也不属于Tomcat，它与JSP等是Java Web的基础规范。而Servlet的运行需要有Servlet容器的支持，常见的容器有Tomcat、Jetty、JBoss等。

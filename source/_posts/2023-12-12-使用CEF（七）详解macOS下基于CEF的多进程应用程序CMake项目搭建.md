@@ -5,6 +5,9 @@ tags:
  - cef
  - macOS
  - cmake
+categories:
+  - 技术
+  - 使用CEF
 ---
 
 由于macOS下的应用程序结构导致了CEF这样的多进程架构程序在项目结构、运行架构上有很多细节需要关注，这一块的内容比起Windows要复杂的多，所以本文将会聚焦macOS下基于CEF的多进程应用架构的环境配置，并逐一说明了CMake的相关用法和CEF应用配置细节。

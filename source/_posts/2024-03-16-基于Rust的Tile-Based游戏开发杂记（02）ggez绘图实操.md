@@ -4,6 +4,10 @@ date: 2024-03-16
 tags: 
  - rust
  - game-dev
+categories:
+  - 技术
+  - Rust
+  - 游戏开发
 ---
 
 尽管ggez提供了很多相关特性的[demo](https://github.com/ggez/ggez/tree/master/examples)供运行查看，但笔者第一次使用的时候还是有很多疑惑不解。经过仔细阅读demo代码并结合自己的实践，逐步了解了ggez在不同场景下的绘图方式，在此篇文章进行一定的总结，希望能够帮助到使用ggez的读者。

@@ -3,6 +3,8 @@ title: 掌握webpack（一）一张图让你明白webpack中output的filename、
 date: 2022-12-31
 tags:
  - webpack
+categories:
+  - 技术
 ---
 
 webpack的核心概念，放到2022年相信很多的小伙伴都已经非常清楚了。但是，对于webpack配置中的output.path、output.filename以及output.publicPath，还有很多小伙伴还不理解。本文讲围绕output.filename、output.path与output.publicPath，讲解它们的功能，并分析这些配置与webpack中常使用到的MiniCssExtractPlugin、HtmlWebpackPlugin等插件的关系。

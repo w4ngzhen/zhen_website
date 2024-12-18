@@ -3,6 +3,9 @@ title: 低代码平台前端的设计与实现（三）设计态画布DesignCanv
 date: 2023-02-04
 tags: 
  - lowcode
+categories:
+  - 技术
+  - 低代码
 ---
 
 上一篇文章，我们分析并设计了关于构建引擎BuildEngine的切面设计。本文我们将基于BuildEngine所提供的切面处理能力，在CustomCreateElementHandle中通过一些逻辑，来完成一个轻量级的设计器画布。

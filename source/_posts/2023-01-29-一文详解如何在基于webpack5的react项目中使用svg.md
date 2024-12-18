@@ -4,6 +4,8 @@ date: 2023-01-29
 tags:
  - webpack
  - svg
+categories:
+  - 技术
 ---
 
 本文主要讨论基于webpack5+TypeScript的React项目（cra、craco底层本质都是使用webpack，所以同理）在2023年的今天是如何在项目中使用svg资源的。

@@ -1,11 +1,13 @@
 ---
-
 title: VirtualBox上安装Debian10
 date: 2020-09-29
 tags:
 - Linux
 - Debian
+categories: 
+- 技术
 ---
+
 本文将介绍如何使用VBox进行Debian10的安装
 <!-- more -->
 # 准备

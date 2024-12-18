@@ -4,6 +4,8 @@ date: 2022-10-19
 tags:
  - fltk
  - gui
+categories:
+  - 技术
 ---
 
 最近因为一些学习的原因，需要使用一款跨平台的轻量级的GUI+图像绘制 C/C++库。经过一番调研以后，最终从GTK+、FLTK中选出了FLTK，跨平台、够轻量。本文将在Windows、macOS以及Linux Debian三套操作系统环境，对FLTK进行编译，并搭建简单Demo。这其中也有少许的坑，也在此文进行记录。

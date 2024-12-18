@@ -5,6 +5,8 @@ tags:
  - nestjs
  - http
  - websocket
+categories:
+  - 技术
 ---
 
 最近在做一款轻量级IM产品，后端技术栈框架使用了nodejs + nestjs作为服务端。同时，还需要满足一个服务同时支持HTTP服务调用以及WebSocket服务调用，此文主要记录本次搭建过程，以及基本的服务端设计。

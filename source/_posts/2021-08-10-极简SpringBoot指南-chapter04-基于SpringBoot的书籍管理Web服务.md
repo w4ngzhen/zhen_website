@@ -1,11 +1,12 @@
 ---
-
 title: 极简SpringBoot指南-Chapter04-基于SpringBoot的书籍管理Web服务
 date: 2021-08-10
 tags:
  - Java
  - SpringBoot
-
+categories:
+  - 技术
+  - 极简SpringBoot指南 
 ---
 
 ## 仓库地址

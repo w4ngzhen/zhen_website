@@ -5,6 +5,9 @@ tags:
  - rust
  - bevy
  - game
+categories:
+ - 技术
+ - 游戏开发
 ---
 
 [Bevy](https://github.com/bevyengine/bevy)，一个用Rust构建的令人耳目一新的简单数据驱动游戏引擎。如果你是一名Rust开发者，同时又对游戏开发比较感兴趣，那么Bevy一定是你会接触甚至是使用的游戏引擎。当然，本文关注的重点并不是来介绍Bevy，以及它的一些基本概念，关于这块的内容读者完全可以到Bevy的官网、Github主页进行学习；同时，本文也不是一篇介绍Rust编程细节的文章，因此，本文面向的对象是有Rust开发经验（至少是要入门）的小伙伴。接下来就让我们开始本文的主要内容：Bevy在2D场景下的Camera实践。

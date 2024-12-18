@@ -1,11 +1,12 @@
 ---
-
 title: 极简SpringBoot指南-Chapter05-SpringBoot中的AOP面向切面编程简介
 date: 2021-08-10
 tags:
  - Java
  - SpringBoot
-
+categories:
+  - 技术
+  - 极简SpringBoot指南 
 ---
 
 ## 仓库地址

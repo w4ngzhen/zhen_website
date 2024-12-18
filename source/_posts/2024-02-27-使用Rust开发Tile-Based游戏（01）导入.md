@@ -5,6 +5,10 @@ tags:
  - game-dev
  - tile-based
  - rust
+categories:
+  - 技术
+  - Rust
+  - 游戏开发
 ---
 
 关于使用Rust开发Tile-Based游戏系列文章。

@@ -3,6 +3,8 @@ title: Windows下的程序及热键监视神器——Spyxx
 date: 2021-03-09
 tags:
  - Windows
+categories:
+  - 技术
 ---
 
 # Windows下的程序及热键监视神器——Spy++

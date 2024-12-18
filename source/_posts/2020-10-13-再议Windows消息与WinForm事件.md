@@ -1,10 +1,10 @@
 ---
-
 title: 再议Windows消息与WinForm事件
 date: 2020-10-13
 tags: 
 - WinForm
-
+categories: 
+- 技术
 ---
 
 # 前言

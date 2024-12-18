@@ -2,14 +2,18 @@
 title: TypeScript必知三部曲（一）TypeScript编译方案以及IDE对TS的类型检查
 date: 2023-04-08
 tags:
- - ts
- - babel
- - webpack
+  - ts
+  - babel
+  - webpack
+categories:
+  - 技术
+  - TypeScript必知三部曲 
 ---
 
 TypeScript代码的编译过程一直以来会给很多小伙伴造成困扰，typescript官方提供tsc对ts代码进行编译，babel也表示能够编译ts代码，它们二者的区别是什么？我们应该选择哪种方案？为什么IDE打开ts项目的时候，就能有这些ts代码的类型定义？为什么明明IDE对代码标红报错，但代码有能够编译出来？
 
-带着这些问题，我们由浅入深介绍**TypeScript**代码编译的两种方案以及**我们日常使用IDE进行ts文件类型检查**的关系，让你今后面对基于ts的工程能够做到游刃有余。
+带着这些问题，我们由浅入深介绍**TypeScript**代码编译的两种方案以及**我们日常使用IDE进行ts文件类型检查**
+的关系，让你今后面对基于ts的工程能够做到游刃有余。
 
 <!-- more -->
 
@@ -92,7 +96,8 @@ yarn add typescript
 简单介绍上述tsconfig.json配置：
 
 1. module：指定ts代码编译生成何种模块方案的js代码，这里暂时写的commonjs，后续会介绍其它值的差异；
-2. rootDir：指定ts代码存放的根目录，这里就是当前目录（项目根目录）下的src文件夹，能够匹配到我们编写的`项目根目录/src/index.ts`；
+2. rootDir：指定ts代码存放的根目录，这里就是当前目录（项目根目录）下的src文件夹，能够匹配到我们编写的
+   `项目根目录/src/index.ts`；
 3. outDir：指定ts代码经过编译后，生成的js代码的存放目录。
 
 当然，为了方便执行命令，我们在package.json中添加名为`build`的脚本：
@@ -117,7 +122,8 @@ yarn add typescript
 
 对于index.js的内容，熟悉js模块化规范的小伙伴应该很容易看出这是commonjs的规范：给exports对象上添加属性字段，exports对象会作为模块导出，被其他模块使用。
 
-之所以产生的js代码是符合commonjs模块规范的代码，源于我们在tsconfig.json中配置的module值为`commonjs`。倘若我们将module字段改为`es6`：
+之所以产生的js代码是符合commonjs模块规范的代码，源于我们在tsconfig.json中配置的module值为`commonjs`。倘若我们将module字段改为
+`es6`：
 
 ```diff
 {
@@ -134,7 +140,9 @@ yarn add typescript
 
 ![050-simple-tsc-compile-result-es6](https://src-1252109805.cos.ap-chengdu.myqcloud.com/images/post/2023-04-08/050-simple-tsc-compile-result-es6.png)
 
-对于tsc编译方案，按照TypeScript编译三要素模型简单总结一下：我们准备了ts源码、tsc编译器以及tsconfig.json配置。通过**tsc编译器**读取**tsconfig.json编译配置**，将ts源码编译为了js代码。此外，在tsconfig.json中，我们配置了生成的js代码的两种模块规范：`"module": "commonjs"`与`"module": "es6"`，并验证了其结果符合对应的模块规范。
+对于tsc编译方案，按照TypeScript编译三要素模型简单总结一下：我们准备了ts源码、tsc编译器以及tsconfig.json配置。通过**tsc编译器
+**读取**tsconfig.json编译配置**，将ts源码编译为了js代码。此外，在tsconfig.json中，我们配置了生成的js代码的两种模块规范：
+`"module": "commonjs"`与`"module": "es6"`，并验证了其结果符合对应的模块规范。
 
 对于编译器这部分来说，除了上面我们尝试过的tsc编译器，是否还存在其他的编译器呢？答案是肯定的：babel。
 
@@ -142,19 +150,23 @@ yarn add typescript
 
 本文并不是一篇专门讲babel的文章，但是为了让相关知识能够比较好的衔接，还是需要介绍这块内容的。当然如果读者有时间，我推荐这篇深入了解babel的文章：[一口（很长的）气了解 babel - 知乎 (zhihu.com)](https://zhuanlan.zhihu.com/p/43249121)。
 
->babel 总共分为三个阶段：解析，转换，生成。
+> babel 总共分为三个阶段：解析，转换，生成。
 >
 >babel 本身不具有任何转化功能，它把转化的功能都分解到一个个 plugin 里面。因此当我们不配置任何插件时，经过 babel 的代码和输入是相同的。
 >
 >插件总共分为两种：
 >
->- 当我们添加 **语法插件** 之后，在解析这一步就使得 babel 能够解析更多的语法。(顺带一提，babel 内部使用的解析类库叫做 babylon，并非 babel 自行开发)
+>- 当我们添加 **语法插件** 之后，在解析这一步就使得 babel 能够解析更多的语法。(顺带一提，babel 内部使用的解析类库叫做
+   babylon，并非 babel 自行开发)
 >
->举个简单的例子，当我们定义或者调用方法时，最后一个参数之后是不允许增加逗号的，如 `callFoo(param1, param2,)` 就是非法的。如果源码是这种写法，经过 babel 之后就会提示语法错误。但最近的 JS 提案中已经允许了这种新的写法(让代码 diff 更加清晰)。为了避免 babel 报错，就需要增加语法插件 `babel-plugin-syntax-trailing-function-commas`
+>举个简单的例子，当我们定义或者调用方法时，最后一个参数之后是不允许增加逗号的，如 `callFoo(param1, param2,)`
+> 就是非法的。如果源码是这种写法，经过 babel 之后就会提示语法错误。但最近的 JS 提案中已经允许了这种新的写法(让代码 diff
+> 更加清晰)。为了避免 babel 报错，就需要增加语法插件 `babel-plugin-syntax-trailing-function-commas`
 >
 >- 当我们添加 **转译插件** 之后，在转换这一步把源码转换并输出。这也是我们使用 babel 最本质的需求。
 >
->比起语法插件，转译插件其实更好理解，比如箭头函数 `(a) => a` 就会转化为 `function (a) {return a}`。完成这个工作的插件叫做 `babel-plugin-transform-es2015-arrow-functions`。
+>比起语法插件，转译插件其实更好理解，比如箭头函数 `(a) => a` 就会转化为 `function (a) {return a}`。完成这个工作的插件叫做
+`babel-plugin-transform-es2015-arrow-functions`。
 >
 >同一类语法可能同时存在语法插件版本和转译插件版本。**如果我们使用了转译插件，就不用再使用语法插件了。**
 
@@ -180,7 +192,8 @@ babel插件2处理代码，例如将形如() => {}的箭头函数，转换成fun
 
 > babel提倡一个插件专注做一个事情，比如某个插件只进行箭头函数转换工作，某个插件只处理将const转var代码，这样设计的好处是可以灵活的组合各种插件完成代码转换。
 >
-> 但又因为babel的插件处理的力度很细，JS代码的语法规范有很多，为了处理这些语法，可能需要配置一大堆的插件。为了解决这个问题，babel设计preset（预置集）概念，preset组合了一堆插件。于是，我们只需要引入一个插件组合包preset，就能处理代码的各种语法。
+>
+但又因为babel的插件处理的力度很细，JS代码的语法规范有很多，为了处理这些语法，可能需要配置一大堆的插件。为了解决这个问题，babel设计preset（预置集）概念，preset组合了一堆插件。于是，我们只需要引入一个插件组合包preset，就能处理代码的各种语法。
 >
 > PS：官方收编的插件包通常以 “@babel/plugin-” 开头的，而预置集包通常以 “@babel/preset-” 开头。
 
@@ -221,9 +234,14 @@ yarn add -D @babel/plugin-proposal-object-rest-spread
 
 - `@babel/cli`：支持我们可以在控制台使用babel命令；
 
-- `@babel/preset-`开头的就是预置组件包合集，其中`@babel/preset-env`表示使用了可以根据实际的浏览器运行环境，会选择相关的转义插件包，通过配置得知目标环境的特点只做必要的转换。如果不写任何配置项，env 等价于 latest，也等价于 es2015 + es2016 + es2017 三个相加(不包含 stage-x 中的插件)；`@babel/preset-typescript`会处理所有ts的代码的语法和语义规则，并转换为js代码。
+- `@babel/preset-`开头的就是预置组件包合集，其中`@babel/preset-env`
+  表示使用了可以根据实际的浏览器运行环境，会选择相关的转义插件包，通过配置得知目标环境的特点只做必要的转换。如果不写任何配置项，env
+  等价于 latest，也等价于 es2015 + es2016 + es2017 三个相加(不包含 stage-x 中的插件)；`@babel/preset-typescript`
+  会处理所有ts的代码的语法和语义规则，并转换为js代码。
 
-- plugin开头的就是插件，这里我们引入：`@babel/plugin-proposal-object-rest-spread`（[对象展开](https://babel.docschina.org/docs/en/7.0.0/babel-plugin-proposal-object-rest-spread/)），它会处理我们在代码中使用的`...`运算符转换为普通的js调用。
+- plugin开头的就是插件，这里我们引入：
+  `@babel/plugin-proposal-object-rest-spread`（[对象展开](https://babel.docschina.org/docs/en/7.0.0/babel-plugin-proposal-object-rest-spread/)
+  ），它会处理我们在代码中使用的`...`运算符转换为普通的js调用。
 
 介绍完以后，是不是有了一些清晰的认识了呢。让我们继续三要素的最后一个：编译配置。
 
@@ -255,7 +273,8 @@ yarn add -D @babel/plugin-proposal-object-rest-spread
 }
 ```
 
-编译指令指定了babel要读取的源代码所在目录（`src`）、babel配置文件地址（`--config-file ./.babelrc`）、babel需要处理的文件扩展（`-x .ts`）、编译代码生成目录（`-d dist`）。
+编译指令指定了babel要读取的源代码所在目录（`src`）、babel配置文件地址（`--config-file ./.babelrc`）、babel需要处理的文件扩展（
+`-x .ts`）、编译代码生成目录（`-d dist`）。
 
 完成项目搭建以后，整体如下：
 
@@ -265,7 +284,9 @@ yarn add -D @babel/plugin-proposal-object-rest-spread
 
 ![080-simple-babel-compile-result-commonjs](https://src-1252109805.cos.ap-chengdu.myqcloud.com/images/post/2023-04-08/080-simple-babel-compile-result-commonjs.png)
 
-这段代码，与上面tsc基于commonjs编译的js代码差别不大。也就是说，babel基于`@babel/preset-env`+`@babel/preset-typescript`就能将TS代码编译为commonjs代码。那么我们如何使用babel将ts代码编译器es6的代码呢？从babel配置下手，实际上，我们只需要将babelrc的`@babel/preset-env`移除即可：
+这段代码，与上面tsc基于commonjs编译的js代码差别不大。也就是说，babel基于`@babel/preset-env`+`@babel/preset-typescript`
+就能将TS代码编译为commonjs代码。那么我们如何使用babel将ts代码编译器es6的代码呢？从babel配置下手，实际上，我们只需要将babelrc的
+`@babel/preset-env`移除即可：
 
 ```diff
 {
@@ -283,13 +304,15 @@ yarn add -D @babel/plugin-proposal-object-rest-spread
 
 ![090-simple-babel-compile-result-es6](https://src-1252109805.cos.ap-chengdu.myqcloud.com/images/post/2023-04-08/090-simple-babel-compile-result-es6.png)
 
-对于babel编译，同样简单总结一下，对应TypeScript编译三要素模型，我们准备了ts源码、babel与相关preset和plugin作为编译器，以及babelrc作为编译配置。babel处理代码的流程启动以后，根据编译配置知道需要加载哪些plugin、preset，将代码以及相关信息交给plugin、preset处理，最终编译为js代码。此外，在babelrc中，我们通过是否配置`@babel/preset-env`控制生成满足commonjs或es6模块规范的js代码。
+对于babel编译，同样简单总结一下，对应TypeScript编译三要素模型，我们准备了ts源码、babel与相关preset和plugin作为编译器，以及babelrc作为编译配置。babel处理代码的流程启动以后，根据编译配置知道需要加载哪些plugin、preset，将代码以及相关信息交给plugin、preset处理，最终编译为js代码。此外，在babelrc中，我们通过是否配置
+`@babel/preset-env`控制生成满足commonjs或es6模块规范的js代码。
 
 ## 编译总结
 
 不难看出，**ts无论有多么庞大的语法体系，多么强大的类型检查，最终的产物都是js**。
 
-此外还要注意的一点是，ts中的模块化不能和js中的模块化混为一谈。js中的模块化方案很多（es6、commonjs、umd等等），所以ts本身在编译过程中，需要指定一种js的模块化表达，才能编译为对应的代码。在ts中的`import/export`，不能认为和es6的`import/export`是一样的，他们是完全不同的两个体系！只是语法上相似而已。
+此外还要注意的一点是，ts中的模块化不能和js中的模块化混为一谈。js中的模块化方案很多（es6、commonjs、umd等等），所以ts本身在编译过程中，需要指定一种js的模块化表达，才能编译为对应的代码。在ts中的
+`import/export`，不能认为和es6的`import/export`是一样的，他们是完全不同的两个体系！只是语法上相似而已。
 
 # tsc编译与babel编译的差异
 
@@ -329,7 +352,8 @@ export const userToString = (u: User) => `${u.id}/${u.name}`
 export const userToString = u => `${u.id}/${u.myName}`;
 ```
 
-从js代码角度来看，这段代码没有任何的问题，此时的`u`参数变量在js层面，并没有明确的类型定义，js作为动态语言，运行的时候，`myName`也可能就存在，这谁也无法确定。
+从js代码角度来看，这段代码没有任何的问题，此时的`u`参数变量在js层面，并没有明确的类型定义，js作为动态语言，运行的时候，
+`myName`也可能就存在，这谁也无法确定。
 
 为什么babel编译会这样处理代码？这不得不提到babel中的`@babel/preset-typescript`是如何编译TS代码的：
 
@@ -343,13 +367,17 @@ export const userToString = u => `${u.id}/${u.myName}`;
 >
 > 第一个优势：️⚡️**闪电般快速**⚡️。
 >
-> 大多数 Typescript 开发人员在开发/监视模式下经历过编译时间长的问题。你正在编写代码，保存一个文件，然后...它来了...再然后...**最后**，你看到了你的变更。哎呀，错了一个字，修复，保存，然后...啊。它**只是**慢得令人烦恼并打消你的势头。
+> 大多数 Typescript 开发人员在开发/监视模式下经历过编译时间长的问题。你正在编写代码，保存一个文件，然后...它来了...再然后...
+**最后**，你看到了你的变更。哎呀，错了一个字，修复，保存，然后...啊。它**只是**慢得令人烦恼并打消你的势头。
 >
-> 很难去指责 TypeScript 编译器，它在做很多工作。它在扫描那些包括 `node_modules` 在内的类型定义文件（`*.d.ts`），并确保你的代码正确使用。这就是为什么许多人将 Typescript 类型检查分到一个单独的进程。然而，Babel + TypeScript 组合仍然提供更快的编译，这要归功于 Babel 的高级缓存和单文件发射架构。
+> 很难去指责 TypeScript 编译器，它在做很多工作。它在扫描那些包括 `node_modules` 在内的类型定义文件（`*.d.ts`
+> ），并确保你的代码正确使用。这就是为什么许多人将 Typescript 类型检查分到一个单独的进程。然而，Babel + TypeScript
+> 组合仍然提供更快的编译，这要归功于 Babel 的高级缓存和单文件发射架构。
 
 具体的内容小伙伴可以查看： [TypeScript 和 Babel：美丽的结合 - 知乎 (zhihu.com)](https://zhuanlan.zhihu.com/p/59614089)。
 
-也就是说，**babel处理TypeScript代码的时候，并不进行任何的类型检查！**那小伙伴可能会说，那如果我使用babel编译方案，怎么进行类型检查以确保ts代码的正确性呢？答案则是：**引入tsc，但仅仅进行类型检查**。
+也就是说，**babel处理TypeScript代码的时候，并不进行任何的类型检查！**那小伙伴可能会说，那如果我使用babel编译方案，怎么进行类型检查以确保ts代码的正确性呢？答案则是：
+**引入tsc，但仅仅进行类型检查**。
 
 回到我们之前的simple-babel-example。在之前的基础上，我们依旧安装typescript从而获得tsc：
 
@@ -378,7 +406,8 @@ export const userToString = u => `${u.id}/${u.myName}`;
 }
 ```
 
-比起tsc编译方案里面的配置有所不同，在babel编译方案中的类型检查的tsconfig.json需要我们配置`noEmit`为`true`，表明**tsc读取到了ts源代码以后，不会生成任何的文件，仅仅会进行类型检查**。
+比起tsc编译方案里面的配置有所不同，在babel编译方案中的类型检查的tsconfig.json需要我们配置`noEmit`为`true`，表明*
+*tsc读取到了ts源代码以后，不会生成任何的文件，仅仅会进行类型检查**。
 
 于是，在babel编译方案中，整个体系如下：
 
@@ -399,7 +428,8 @@ VSCode同样也会有：
 1. 每个IDE默认情况下自带的typescript中的tsc
 2. 当前项目安装的typescript的tsc
 
-例如，上图本人机器上的IDEA，因为检测到了项目安装了`"typescript": "^5.0.3"`，所以自动切换为了项目安装的TypeScript；而VSCode似乎没有检测到，所以使用VSCode自带的。
+例如，上图本人机器上的IDEA，因为检测到了项目安装了`"typescript": "^5.0.3"`
+，所以自动切换为了项目安装的TypeScript；而VSCode似乎没有检测到，所以使用VSCode自带的。
 
 当然，你也可以在IDE中手动切换：
 
@@ -421,7 +451,8 @@ VSCode同样也会有：
 
 在这套方案中，ts项目的代码本身的编译，会走项目安装的typescript，并加载项目本身的tsconfig.json配置。同时，IDE也会利用项目本身的typescript以及读取相同配置的tsconfig.json来完成项目代码的类型检查。
 
-于是，无论是代码编译还是IDE呈现的类型检查，都是走的一套逻辑，当IDE提示了某些ts代码的编译问题，那么ts代码编译一定会出现相同的问题。**不会存在**这样的情况：代码有编译问题，但是IDE不会红色显示类型检查问题。
+于是，无论是代码编译还是IDE呈现的类型检查，都是走的一套逻辑，当IDE提示了某些ts代码的编译问题，那么ts代码编译一定会出现相同的问题。
+**不会存在**这样的情况：代码有编译问题，但是IDE不会红色显示类型检查问题。
 
 再来看babel编译方案：
 

@@ -4,6 +4,9 @@ date: 2022-10-27
 tags:
  - debian11
  - virtualbox7
+categories:
+  - 技术
+  - 笔记
 ---
 
 本文主要是对在最新的VirtualBox7上搭建Debian11的笔记记录，方便后续个人回顾，同时搭配对配置的浅析。

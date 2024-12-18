@@ -1,12 +1,12 @@
 ---
-
 layout: post
 title: Linux Bash命令杂记(tr col join paste expand)
 date: 2018-03-13
 tags: 
 - Linux
 - Bash
-
+categories: 
+- 技术
 ---
 
 <!-- more -->

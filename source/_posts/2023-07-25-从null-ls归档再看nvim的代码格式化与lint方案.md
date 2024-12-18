@@ -5,6 +5,9 @@ tags:
  - nvim
  - prettier
  - eslint
+categories:
+  - 技术
+  - nvim
 ---
 
 由于null-lsp的归档和暂停更新，我们需要重新审视并思考还有哪些架构简单易于理解的插件配置方案。本文将介绍脱离null-ls插件体系下的代码格式化和lint的插件配置方案。

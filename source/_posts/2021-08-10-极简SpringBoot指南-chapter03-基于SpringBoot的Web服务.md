@@ -1,11 +1,12 @@
 ---
-
 title: 极简SpringBoot指南-Chapter03-基于SpringBoot的Web服务
 date: 2021-08-10
 tags:
  - Java
  - SpringBoot
-
+categories:
+  - 技术
+  - 极简SpringBoot指南 
 ---
 
 ## 仓库地址

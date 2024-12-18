@@ -1,13 +1,12 @@
 ---
-
 title: electron-builder进行DEBUG输出的正确方式
 date: 2021-04-18
 tags:
  - electron
  - electron-builder
+categories: 
+- 技术
 ---
-
-
 
 # 前言
 

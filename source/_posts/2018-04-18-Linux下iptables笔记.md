@@ -1,12 +1,12 @@
 ---
-
 layout: post
 title: Linux下iptables学习笔记
 date: 2018-04-18
 tags: 
 - Linux
 - iftables
-
+categories: 
+- 技术
 ---
 
 在Centos7版本之后，防火墙应用已经由从前的iptables转变为firewall这款应用了。但是，当今绝大多数的Linux版本（特别是企业中）还是使用的6.x以下的Centos版本，所以对iptables的了解还是很有必要的。此外，需要说明的是iptables自身并不具备防火墙的功能，它需要通过内核netfilter（网络过滤器）来实现，与firewalld一样，他们的作用都是用于维护规则，而真正使用规则干活的是内核的netfilter，只不过firewalld和iptables的结构以及使用方法不一样，他们都只是一个外壳应用罢了。打个比方，就好像有一本书，同样的内容，一种是纸质的，另一种是电子的，我们翻阅它的方式不同，给它做笔记的方式不同，但是内容（内核）一样。

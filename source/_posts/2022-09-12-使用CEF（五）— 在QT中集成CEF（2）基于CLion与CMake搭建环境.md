@@ -5,6 +5,9 @@ tags:
  - qt
  - cef
  - cmake
+categories:
+  - 技术
+  - 使用CEF
 ---
 
 在前文《使用CEF（四）— 在QT中集成CEF（1）：基本集成》中，我们使用VS+QT的插件搭建了一个基于QT+CEF的项目。时过境迁，笔者目前用的最多的就是CLion+CMake搭建C/C++项目，并且CLion提供了对C/C++强大的开发环境。此外，也想将CMake搭建QT项目作为一次实践，故由此文。

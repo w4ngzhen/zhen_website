@@ -1,12 +1,12 @@
 ---
-
 layout: post
 title: CSharpEntityFramework与CodeFirst实践
 date: 2018-09-13
 tags: 
 - C#
 - EF
-
+categories: 
+- 技术
 ---
 
 ### 前言

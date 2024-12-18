@@ -1,10 +1,10 @@
 ---
-
 title: 基于Tesseract组件的OCR识别
 date: 2020-02-04
 tags: 
 - OCR
-
+categories: 
+- 技术
 ---
 
 ## 背景以及介绍

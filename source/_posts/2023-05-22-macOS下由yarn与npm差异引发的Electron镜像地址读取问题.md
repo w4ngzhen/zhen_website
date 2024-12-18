@@ -4,6 +4,8 @@ date: 2023-05-22
 tags:
  - yarn
  - npm
+categories:
+  - 技术
 ---
 
 记录macOS下由yarn与npm差异引发的Electron镜像地址读取问题

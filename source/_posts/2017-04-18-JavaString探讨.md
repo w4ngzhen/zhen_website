@@ -1,12 +1,12 @@
 ---
-
 layout: post
 title: Java String的探讨
 date: 2017-04-18
 tags: 
 - Java
 - String
-
+categories: 
+- 技术
 ---
 
 关于String相关内容的学习，历来都是Java学习必不可少的一个经历。

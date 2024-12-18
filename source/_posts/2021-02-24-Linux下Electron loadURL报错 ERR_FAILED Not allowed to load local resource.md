@@ -1,11 +1,12 @@
 ---
-
 title: Linux下Electron loadURL报错 ERR_FAILED Not allowed to load local resource
 date: 2021-02-24
 tags:
- - electron
-
+  - electron
+categories:
+  - 技术
 ---
+
 # Linux下Electron loadURL报错 ERR_FAILED(-2) Not allowed to load local resource
 
 Linux Electron打包后页面无法加载，报错：Not allowed to load local resource
@@ -73,11 +74,12 @@ webpack配置文件中的node节点，当打包的时候需要防止webpack处�
 
 ### 4、使用loadFile而不是loadURL
 
-使用loadFile接口来加载本地的路径，loadFile('path/to/index.html')，这个路径是以app.asar根路径为base的。例如，loadFile('dir_path1/dir_path2/index.html')，那么你的index.html在app.asar是如下的结构：
+使用loadFile接口来加载本地的路径，loadFile('path/to/index.html')，这个路径是以app.asar根路径为base的。例如，loadFile('
+dir_path1/dir_path2/index.html')，那么你的index.html在app.asar是如下的结构：
 
 ```
 app.asar
 |-dir_path1
   |-dir_path2
     |-index.html
-```
+```~~

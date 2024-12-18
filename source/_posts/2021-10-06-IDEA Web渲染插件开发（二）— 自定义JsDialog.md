@@ -4,6 +4,9 @@ date: 2021-10-06
 tags: 
  - IDEA
  - Plugins 
+categories:
+  - 技术
+  - IDEA Web渲染插件开发
 ---
 
 《IDEA Web渲染插件开发（一）》中，我们了解到了如何编写一款用于显示网页的插件，所需要的核心知识点就是**IDEA插件开发**和**JCEF**，在本文中，我们将继续插件的开发，为该插件的JS Dialog显示进行自定义处理。

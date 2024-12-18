@@ -5,6 +5,8 @@ tags:
  - nestjs
  - typeorm
  - note
+categories:
+  - 技术
 ---
 
 在Nestjs使用TypeORM还是有一些注意点。

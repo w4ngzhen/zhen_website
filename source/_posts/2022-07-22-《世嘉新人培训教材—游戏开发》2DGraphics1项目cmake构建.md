@@ -4,6 +4,9 @@ date: 2022-07-22
 tags: 
  - game
  - sega
+categories:
+  - 技术
+  - 游戏开发
 ---
 
 《世嘉新人培训教材—游戏开发》作为经典的游戏开发教程，提供了相关样例代码供我们进行开发使用。但是该样例是基于VS进行编写构建的，而本人日常喜欢CLion进行C/C++开发，于是准备使用cmake重新组织该书籍的样例项目：2DGraphics1中的NimotsuKunBox和drawPixels。当然，这个过程不仅是移植，也是对cmake组织项目一个深入的实践。

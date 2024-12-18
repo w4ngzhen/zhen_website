@@ -1,12 +1,12 @@
 ---
-
 layout: post
 title: Linux Bash命令杂记(cut sort uniq wc tee)
 date: 2018-03-12
 tags: 
 - Linux
 - Bash
-
+categories: 
+- 技术
 ---
 
 <!-- more -->

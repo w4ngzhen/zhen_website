@@ -4,6 +4,8 @@ date: 2023-07-17
 tags:
  - prettier
  - IDE
+categories:
+  - 技术
 ---
 
 很多前端小伙伴在日常使用prettier的时候都或多或少有一点疑惑，prettier在每一个IDE中究竟是怎样工作起来的，为什么配置有时候生效，有时又毫无效果。为了让我们的前端小伙伴更加熟悉这块，本文将对prettier在主流IDE中的使用过程一探究竟。
