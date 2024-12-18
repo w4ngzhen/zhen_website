@@ -74,12 +74,11 @@ webpack配置文件中的node节点，当打包的时候需要防止webpack处�
 
 ### 4、使用loadFile而不是loadURL
 
-使用loadFile接口来加载本地的路径，loadFile('path/to/index.html')，这个路径是以app.asar根路径为base的。例如，loadFile('
-dir_path1/dir_path2/index.html')，那么你的index.html在app.asar是如下的结构：
+使用loadFile接口来加载本地的路径，loadFile('path/to/index.html')，这个路径是以app.asar根路径为base的。例如，loadFile('dir_path1/dir_path2/index.html')，那么你的index.html在app.asar是如下的结构：
 
 ```
 app.asar
 |-dir_path1
   |-dir_path2
     |-index.html
-```~~
+```
