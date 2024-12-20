@@ -5,11 +5,6 @@ menus:
   标签: /tags/
   友情链接: /links/
 
-avatar:
-  url: /images/tiger400.jpg
-
-site-state: true
-
 social:
   GitHub: https://github.com/w4ngzhen || fa fa-github
   RSS: /atom.xml || fa fa-rss
