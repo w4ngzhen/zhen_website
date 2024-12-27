@@ -1,0 +1,29 @@
+:root {
+    --theme-color: #ff6666;
+    --body-bg-color: #FFF;
+    --text-color: #555;
+    --border-color: #E1E1E1;
+    /* Brand */
+    --brand-color: #FFF;
+    --brand-bg-color: #333;
+    /* menus */
+    --menu-item-color-pc: #999;
+    --menu-item-color-pc-active: #EEE;
+    --menu-item-color-mobile: #999;
+    --menu-item-color-mobile-active: #333;
+    /* social */
+    --social-item-color-pc: #EEE;
+    --social-item-color-mobile: #111;
+    /* post color */
+    --post-primary-text-color: #333;
+    --post-code-color: #444;
+    --post-code-bg-color: #F3F3F3;
+    --post-code-line-number-bg-color: #E1E1E1;
+    --post-blockquote-color: #666;
+    --post-blockquote-bg-color: #F9F9F9;
+    --post-blockquote-border-color: #DDD;
+    --post-h1-color: ;
+    --post-h2-color: ;
+    --post-h3-color: ;
+    --post-img-border-shadow: #666;
+}

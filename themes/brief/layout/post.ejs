@@ -1,0 +1,28 @@
+<div id="article">
+    <header class="article-header">
+        <p class="title"><%- page.title; %></p>
+    </header>
+    <p class="article-date">
+        <%- date(page.date, "YYYY-MM-DD"); %>
+    </p>
+    <div class="article-toc">
+        <label class="toc-title" for="toc-trigger">目录</label>
+        <input id="toc-trigger" type="checkbox" checked />
+        <div class="toc-content">
+            <%- toc(page.content, { max_depth: 3 }); %>
+        </div>
+    </div>
+    <div class="article-content markdown-content">
+        <%- page.content; %>
+    </div>
+</div>
+<!-- medium zoom -->
+<%- js("lib/medium-zoom@1.1.0/medium-zoom.min.umd.js"); %>
+<%- css("lib/medium-zoom@1.1.0/style.min.css"); %>
+<script>
+  // 获取文章中所有的img
+  mediumZoom("#article img", {
+    background: "rgba(170,170,170,0.5)",
+    margin: 24
+  });
+</script>
