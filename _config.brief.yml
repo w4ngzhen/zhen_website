@@ -14,3 +14,9 @@ favicon:
   medium: /images/blog-site-icon.svg
   apple_touch_icon: /images/blog-site-icon.svg
   safari_pinned_tab: /images/blog-site-icon.svg
+
+comments:
+  comment_box:
+    enable: true
+    repo: blog
+    owner: w4ngzhen

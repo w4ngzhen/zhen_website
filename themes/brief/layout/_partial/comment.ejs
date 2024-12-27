@@ -1,5 +1,23 @@
-<!--
-本主题没有内置任何的评论模块
-如果需要评论模块，可以在该ejs内添加评论模块代码，
-并在任意需要评论的地方使用使用该partial ejs
--->
+<%
+if(theme.comments?.comment_box?.enable) {
+    const {owner, repo} = theme.comments.comment_box;
+%>
+<div id="comment-box" style="margin-bottom: 24px"></div>
+<%- js("lib/md5/md5.min.js"); %>
+<%- js("https://comment-box.pages.dev/comment-box-lite.js"); %>
+<%- css("https://comment-box.pages.dev/comment-box-lite.css"); %>
+<script>
+  (function run() {
+    if (!window.CommentBoxLite) {
+      console.error('cannot find CommentBoxLite');
+      return;
+    }
+    CommentBoxLite.init('#comment-box', {
+      issueLabel: md5(location.pathname),
+      owner: '<%- owner; %>',
+      repo: '<%- repo; %>',
+      commentLatestSize: 5,
+    });
+  })();
+</script>
+<% } %>
