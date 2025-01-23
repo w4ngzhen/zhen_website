@@ -6,8 +6,9 @@ menus:
   友情链接: /links/
 
 social:
-  GitHub: https://github.com/w4ngzhen || fa fa-github
-  RSS: /atom.xml || fa fa-rss
+  GitHub: https://github.com/w4ngzhen || icon-github
+  知乎: https://www.zhihu.com/people/w4ngzhen || icon-zhihu
+  RSS: /atom.xml || icon-rss
 
 favicon:
   small: /images/blog-site-icon.svg
