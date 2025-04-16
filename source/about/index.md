@@ -4,8 +4,6 @@ layout: about
 
 # Zhen WANG
 
-ID：w4ngzhen
-
 生日：1996年春
 
 现居地：成都
@@ -18,19 +16,11 @@ ID：w4ngzhen
 
 ## 技术栈
 
-- 前端应用开发：Typescript、React、Less
-- 游戏开发：Godot（GDScript）、Rust
-- 桌面应用开发：Rust、SDL2、Electron、~~Qt~~
+- 前端应用开发：Typescript、React
+- 游戏开发：Bevy Engine（Rust）Godot（GDScript）
+- 桌面应用开发：Rust、~~SDL2~~SDL3、Electron、~~Qt~~
 - 后端应用开发：nodejs NestJS、~~Java SpringBoot~~
 
 ## 最爱的一本书
 
 [《DOOM启世录》](https://book.douban.com/subject/1152971/)
-
-## 其他
-
-### 关于compilemind.com与zhen.blog
-
-一次机缘巧合，我购入了`zhen.blog`
-这个域名，比起CompileMind，本人可能更加喜欢这个域名，同时也觉得更加有意义。因此，本博客今后将会使用[https://zhen.blog](https://zhen.blog)
-作为域名。当然，原先[https://compilemind.com](https://compilemind.com)不会关闭解析，而是通过中间页面跳转至本博客
