@@ -20,7 +20,7 @@ categories:
 
 笔者在以前的文章中曾介绍过CEF中提供的样例cefsimple在Windows操作系统上的构建流程，我们发现这个cefsimple项目在编译后会最终只生成了一个exe可执行程序，而在运行时为了达到多进程的目的，该exe首先作为主进程入口启动，内部在准备启动子进程的时候，其做法是调用该exe本身，并通过命令行参数的形式来区分主进程和其他子进程。也就是说，该exe应用内部不仅包含了主进程代码，也包含了子进程代码，源代码中会根据命令行参数（`--type=xxx`）通过分支让主进程和子进程走到不同的逻辑：
 
-![010-cef-exe-excute-flow](https://src-1252109805.cos.ap-chengdu.myqcloud.com/images/post/2023-12-12/010-cef-exe-excute-flow.png)
+![010-cef-exe-excute-flow](https://res.zhen.blog/images/post/2023-12-12/010-cef-exe-excute-flow.png)
 
 而在macOS下，由于macOS本身对于应用程序的权限管理与Windows存在差异，它具备有一套特殊的沙盒机制来保证应用程序彼此独立和安全。所以，我们不建议像Windows那样最终通过编译生成一个App Bundle，来多次启动自己。一个很直观的例子可以解释这一点：假设我们现在基于CEF的应用程序编译并构建了一个App Bundle，这个app内将主进程代码和子进程代码写在了一起，通过运行时逻辑来区分。此时，假设主进程需要macOS的“钥匙串”权限，读取用户的一些配置。由于macOS权限是给到Bundle应用层面的，所以尽管我们只想让主进程得到“钥匙串”访问权限，但因为主进程和子进程都是同一个Bundle，无形中导致了子进程也同样拥有了这个权限，而像渲染进程这样的子进程，里面会运行js代码、wasm等第三方代码逻辑，一旦出现了BUG，就会存在权限泄漏风险。如果我们把主进程和子进程分离到两个Bundle，主进程所在Bundle获取某些系统权限，而渲染进程获取某些必要权限，就能做到主进程和子进程权限分离的目的，为安全性提供了一定保证。
 
@@ -46,7 +46,7 @@ categories:
 
 4）在项目根目录下创建`cmake`目录，并将步骤1中`cef_binary_xxx/cmake/FindCef.cmake`文件复制到`cmake`目录中：
 
-![020-copy-FindCEF](https://src-1252109805.cos.ap-chengdu.myqcloud.com/images/post/2023-12-12/020-copy-FindCEF.png)
+![020-copy-FindCEF](https://res.zhen.blog/images/post/2023-12-12/020-copy-FindCEF.png)
 
 ## 项目根目录CMake配置
 
@@ -95,27 +95,27 @@ add_subdirectory(${CEF_LIBCEF_DLL_WRAPPER_PATH} libcef_dll_wrapper)
 
 在`find_package`以后，我们调用了`add_subdirectory`指令，该指令第一个参数`${CEF_LIBCEF_DLL_WRAPPER_PATH}`就使用了来自`cef_variables.cmake`中定义值，指代了libcef_dll_wrapper代码工程的目录：
 
-![030-libcef_dll_wrapper_var_path](https://src-1252109805.cos.ap-chengdu.myqcloud.com/images/post/2023-12-12/030-libcef_dll_wrapper_var_path.png)
+![030-libcef_dll_wrapper_var_path](https://res.zhen.blog/images/post/2023-12-12/030-libcef_dll_wrapper_var_path.png)
 
 因此，这里的逻辑就是将`cef_binary_xxx/libcef_dll`目录作为了我们的CMake子模块工程，于是CMake会进一步加载`cef_binary_xxx/libcef_dll/CMakeLists.txt`文件并进行CMake相关文件的生成。细心的读者会注意到，这里还存在第二个参数`libcef_dll_wrapper`：
 
-![040-pin-add_subdir_param](https://src-1252109805.cos.ap-chengdu.myqcloud.com/images/post/2023-12-12/040-pin-add_subdir_param.png)
+![040-pin-add_subdir_param](https://res.zhen.blog/images/post/2023-12-12/040-pin-add_subdir_param.png)
 
 这里需要这个参数值的原因在于，`libcef_dll_wrapper`所在目录是一个**外部路径**，所以需要提供一个**目录名**作为的CMake文件二进制生成的路径。如果不提供，则会收到错误：
 
-![050-add_subdir_no-param-error](https://src-1252109805.cos.ap-chengdu.myqcloud.com/images/post/2023-12-12/050-add_subdir_no-param-error.png)
+![050-add_subdir_no-param-error](https://res.zhen.blog/images/post/2023-12-12/050-add_subdir_no-param-error.png)
 
 那么第二个参数具体影响了什么呢？如果读者使用CLion+CMake，会看到CLion会在项目根目录下生成`cmake-build-debug`目录，这个就是CMake生成文件目录，编译后的结果、CMake的过程文件都会在这个目录下找到（该目录其实就是cmake命令行的`-B`参数指定的路径，CLion默认指定的`项目根目录下/cmake-build-debug`目录）。在这里，当我们`add_subdirectory`添加了`libcef_dll_wrapper`子模块，经过CMake的初始化以后，会看到`cmake-build-debug/libcef_wrapper_dll`路径的产生：
 
-![060-cmake-bin-dir-generate.png](https://src-1252109805.cos.ap-chengdu.myqcloud.com/images/post/2023-12-12/060-cmake-bin-dir-generate.png)
+![060-cmake-bin-dir-generate.png](https://res.zhen.blog/images/post/2023-12-12/060-cmake-bin-dir-generate.png)
 
 至此，我们添加了对CEF的libcef_dll_wrapper子模块的引入，为了验证模块引入的正确性，我们尝试在当前`cef_app_macos_project`这个项目中对引入的子模块进行编译。有两种操作方式，方式1就是进入`cmake-build-debug`这个目录下使用命令：`cmake --build .`；当然，我们还可以使用IDE提供的更加便利的方式2：CLion直接使用GUI即可。
 
-![070-build-dll-wrapper](https://src-1252109805.cos.ap-chengdu.myqcloud.com/images/post/2023-12-12/070-build-dll-wrapper.png)
+![070-build-dll-wrapper](https://res.zhen.blog/images/post/2023-12-12/070-build-dll-wrapper.png)
 
 如果一切没有问题的情况下，我们可以在output目录中找到`libcef_dll_wrapper`的生成出来的库文件：
 
-![080-libcef_dll_wrapper-build-ok](https://src-1252109805.cos.ap-chengdu.myqcloud.com/images/post/2023-12-12/080-libcef_dll_wrapper-build-ok.png)
+![080-libcef_dll_wrapper-build-ok](https://res.zhen.blog/images/post/2023-12-12/080-libcef_dll_wrapper-build-ok.png)
 
 在继续后面的讲解前，我们先放慢脚步，对项目环境做一个总结。我们首先准备了两个目录，一个是我们自己的`cef_app_macos_project`目录，我们会在这个项目中“引入”CEF相关库，后续还会在里面编写我们自己的应用程序；另一个则是在外部的`cef_binary_xxx`目录，我们不会改动其中的内容。
 
@@ -225,7 +225,7 @@ add_executable(
 
 `add_executable`部分定义最终生成的target，除了包含编写的源码路径（`process_main.mm`），这里还有一个很重要的参数`MACOS_BUNDLE`，配置该参数后，在macOS下，我们最终生成的可执行程序就不再是一个简单的命令行程序，而是macOS下的App Bundle。下图是没有配置该值前后的对比：
 
-![090-MACOS_BUNDLE-param-diff](https://src-1252109805.cos.ap-chengdu.myqcloud.com/images/post/2023-12-12/090-MACOS_BUNDLE-param-diff.png)
+![090-MACOS_BUNDLE-param-diff](https://res.zhen.blog/images/post/2023-12-12/090-MACOS_BUNDLE-param-diff.png)
 
 可以看到，没有配置`MACOSX_BUNDLE`时，最终项目会在输出目录（`${CMAKE_CURRENT_BINARY_DIR}`）下生成名为`cef_app`的可执行命令行程序；而配置以后，项目会在输出目录下生成`target名.app`，这里就是`cef_app.app`。
 
@@ -292,15 +292,15 @@ add_custom_command(
 
 所以，在了解了App Bundle运行逻辑以后，关于`add_custom_command`作用就显而易见了，其逻辑就是配置在构建完成以后，通过CMake的工具指令（`-E copy_directories`）将`Chromium Embedded Framework.framework`整个内容复制到生成的Bundle的`/Contents/Frameworks`目录下：
 
-![100-copy-CEF-framework](https://src-1252109805.cos.ap-chengdu.myqcloud.com/images/post/2023-12-12/100-copy-CEF-framework.png)
+![100-copy-CEF-framework](https://res.zhen.blog/images/post/2023-12-12/100-copy-CEF-framework.png)
 
 在上面的讲解中我们大致理解了macOS的App Bundle的应用程序组织结构，细心的读者会发现，在构建后的Bundle中的根目录下有一个文件`Info.plist`：
 
-![110-info-plist-file](https://src-1252109805.cos.ap-chengdu.myqcloud.com/images/post/2023-12-12/110-info-plist-file.png)
+![110-info-plist-file](https://res.zhen.blog/images/post/2023-12-12/110-info-plist-file.png)
 
 该文件的核心作用是定义macOS下App Bundle的基础应用程序配置，包括不限于该应用的名称、应用ID、图标资源等。因为我们将主进程target定义为了`MACOS_BUNDLE`，CMake会在构建的时候，默认为我们的Bundle生成了一份plist并写入到Bundle中。同时我们会发现，`Info.plist`配置中关于`CFBundleName`、`CFBundleIdentifier`等值就是我们现在的target的名称：
 
-![120-info-plist-content](https://src-1252109805.cos.ap-chengdu.myqcloud.com/images/post/2023-12-12/120-info-plist-content.png)
+![120-info-plist-content](https://res.zhen.blog/images/post/2023-12-12/120-info-plist-content.png)
 
 原因在于配置文件中紧接着`add_custom_command`后面的`set_target_properties`：
 
@@ -354,7 +354,7 @@ int main(int argc, char *argv[]) {
 
 此时，我们的项目结构如下：
 
-![130-sub-process-new-file](https://src-1252109805.cos.ap-chengdu.myqcloud.com/images/post/2023-12-12/130-sub-process-new-file.png)
+![130-sub-process-new-file](https://res.zhen.blog/images/post/2023-12-12/130-sub-process-new-file.png)
 
 > 为了阅读的方便，我们都将子进程叫做helper
 
@@ -588,7 +588,7 @@ endforeach ()
 
 基于现在完成的配置，我们可以通过对cef_app进行构建，检查最终构建的产物来验证项目的正确性。笔者使用CLion的GUI生成cef_app，最终会在输出目录中找到cef_app.app，同时会看到会生成多个helper的App Bundle，并已经成功复制到了对应目录中：
 
-![140-build-result](https://src-1252109805.cos.ap-chengdu.myqcloud.com/images/post/2023-12-12/140-build-result.png)
+![140-build-result](https://res.zhen.blog/images/post/2023-12-12/140-build-result.png)
 
 # 写在最后
 

@@ -487,7 +487,7 @@ yarn run build
 
 此时，可以直接使用浏览器打开index.html查看效果：
 
-![010](https://src-1252109805.cos.ap-chengdu.myqcloud.com/images/post/2022-05-27-webpack-ts-react/010.gif)
+![010](https://res.zhen.blog/images/post/2022-05-27-webpack-ts-react/010.gif)
 
 ### 处理样式（less编译与css导出）
 
@@ -624,7 +624,7 @@ index 54fc0e5..9db43b8 100644
 
 刷新页面后，可以看到按钮的文字颜色已经生效
 
-![020](https://src-1252109805.cos.ap-chengdu.myqcloud.com/images/post/2022-05-27-webpack-ts-react/020.jpg)
+![020](https://res.zhen.blog/images/post/2022-05-27-webpack-ts-react/020.jpg)
 
 ### 引入AntDesign
 
@@ -692,7 +692,7 @@ index 3070d07..09ca792 100644
 
 通过上述的代码修改以后，我们直接进行编译，然后检查效果即可：
 
-![030](https://src-1252109805.cos.ap-chengdu.myqcloud.com/images/post/2022-05-27-webpack-ts-react/030.gif)
+![030](https://res.zhen.blog/images/post/2022-05-27-webpack-ts-react/030.gif)
 
 ## 写在最后
 

@@ -327,7 +327,7 @@ render(() => <HelloWorld/>, document.querySelector('#app')!)
 
 # 项目运行效果
 
-![010-example-show](https://src-1252109805.cos.ap-chengdu.myqcloud.com/images/post/2023-03-22/010-example-show.png)
+![010-example-show](https://res.zhen.blog/images/post/2023-03-22/010-example-show.png)
 
 # 附录
 

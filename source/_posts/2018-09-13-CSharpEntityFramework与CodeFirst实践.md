@@ -25,7 +25,7 @@ categories:
 
 创建一个项目，并利用Nuget引入EntityFramework6
 
-![nugetef6](https://cdn.jsdelivr.net/gh/w4ngzhen/CDN/images/post/2018-09-13-EF/nugetef6.png)
+![nugetef6](https://res.zhen.blog/images/post/2018-09-13-EF/nugetef6.png)
 
 当我们引入EF时，我们发现项目下app.config其中的配置会发生更改，这个配置文件**更改的内容**就是EF为我们创建的，也是我们配置数据库连接的地方。
 
@@ -58,8 +58,8 @@ namespace CodeFirstDemo
 
 接下来，我们需要使用继承EF的DbContext来构建数据库上下文类，我们直接使用VS自带生成工具即可生成对应的数据库上下文模型：
 
-![bookdbdemo](https://cdn.jsdelivr.net/gh/w4ngzhen/CDN/images/post/2018-09-13-EF/bookdbdemo.png)
-![genguide](https://cdn.jsdelivr.net/gh/w4ngzhen/CDN/images/post/2018-09-13-EF/genguide.png)
+![bookdbdemo](https://res.zhen.blog/images/post/2018-09-13-EF/bookdbdemo.png)
+![genguide](https://res.zhen.blog/images/post/2018-09-13-EF/genguide.png)
 
 点击完成后我们就得到了如下的一个配置类
 
@@ -142,8 +142,8 @@ MySql.Web.dll；
 
 这里，为了我们机器环境的纯净，我们使用nuget安装对应项目需要的库（MySql.Fabric.Plugin.dll和MySql.Web.dll这两个库如果没有需要不用安装）到项目中：
 
-![mysqldata](https://cdn.jsdelivr.net/gh/w4ngzhen/CDN/images/post/2018-09-13-EF/mysqldata.png)
-![mysqldataentity](https://cdn.jsdelivr.net/gh/w4ngzhen/CDN/images/post/2018-09-13-EF/mysqldataentity.png)
+![mysqldata](https://res.zhen.blog/images/post/2018-09-13-EF/mysqldata.png)
+![mysqldataentity](https://res.zhen.blog/images/post/2018-09-13-EF/mysqldataentity.png)
 
 **务必注意！MySql.Data和MySql.Data.Entity必须要保持相同的版本！否则会出现 “找到的程序集清单定义与程序集引用不匹配。 (异常来自 HRESULT:0x80131040)” 的错误，所以这里的Mysql.Data版本我并没有选择最新的**
 
@@ -196,7 +196,7 @@ PS：实际上本人在实践过程中发现，引入Mysql.Data后写如的节�
 
 完成EF的Mysql连接环境配置后，最基础的数据库还是需要建立的，所以去数据库创建一个名为bookdbdemo的数据库，按道理来说，我们只需要在这个地方触碰到数据库，况且这还是DBA的事情。创建好的数据库如下：
 
-![mysqldb](https://cdn.jsdelivr.net/gh/w4ngzhen/CDN/images/post/2018-09-13-EF/mysqldb.png)
+![mysqldb](https://res.zhen.blog/images/post/2018-09-13-EF/mysqldb.png)
 
 于是，我们将其中的连接字符串connectionString内容修改为我们当前的数据库连接字符串：
 ```xml
@@ -254,7 +254,7 @@ PM> add-migration InitDb
 ```
 注意后面的命名，InitDb只是我们取的名字，为了区分对数据库进行的变更，这里是我们第一次构建，所以我取名为InitDb，完成该命令后，你会发现Migrations文件夹下出现了一个以你迁移模块创建时刻+下划线+刚刚迁移模块的命名的类文件：
 
-![InitDb](https://cdn.jsdelivr.net/gh/w4ngzhen/CDN/images/post/2018-09-13-EF/InitDb.png)
+![InitDb](https://res.zhen.blog/images/post/2018-09-13-EF/InitDb.png)
 
 其类文件内容如下：
 
@@ -312,8 +312,8 @@ INSERT INTO `__MigrationHistory`(
 
 完成了迁移之后，查看数据库：
 
-![initcomplete](https://cdn.jsdelivr.net/gh/w4ngzhen/CDN/images/post/2018-09-13-EF/initcomplete.png)
-![tabledetail](https://cdn.jsdelivr.net/gh/w4ngzhen/CDN/images/post/2018-09-13-EF/tabledetail.png)
+![initcomplete](https://res.zhen.blog/images/post/2018-09-13-EF/initcomplete.png)
+![tabledetail](https://res.zhen.blog/images/post/2018-09-13-EF/tabledetail.png)
 
 我们可以看到，表及其结构按照我们预期创建成功了。
 
@@ -370,23 +370,23 @@ PM> add-migration AddEBookEntity
 ```
 此时Migrations文件夹下面又增加了新的类文件：
 
-![addebookentity](https://cdn.jsdelivr.net/gh/w4ngzhen/CDN/images/post/2018-09-13-EF/addebookentity.png)
+![addebookentity](https://res.zhen.blog/images/post/2018-09-13-EF/addebookentity.png)
 
 其内容和前面大致，创建表以及回滚，这里不再展示。之后我们再次使用update-database命令将变更更新到数据库中，得到当前的数据库内容：
 
-![afteraddtable](https://cdn.jsdelivr.net/gh/w4ngzhen/CDN/images/post/2018-09-13-EF/afteraddtable.png)
+![afteraddtable](https://res.zhen.blog/images/post/2018-09-13-EF/afteraddtable.png)
 
 此时我们将book表中填充一些数据：
 
-![booktablecontent](https://cdn.jsdelivr.net/gh/w4ngzhen/CDN/images/post/2018-09-13-EF/booktablecontent.png)
+![booktablecontent](https://res.zhen.blog/images/post/2018-09-13-EF/booktablecontent.png)
 
 然后，我们将DbContext中的DbSet<EBook>属性删除，再次进行迁移：
 
-![delebook](https://cdn.jsdelivr.net/gh/w4ngzhen/CDN/images/post/2018-09-13-EF/delebook.png)
+![delebook](https://res.zhen.blog/images/post/2018-09-13-EF/delebook.png)
 
 进行更新以后，我们可以看到Ebook表已经删除了，但是book表内容没有发生任何变化：
 
-![afterdelebook](https://cdn.jsdelivr.net/gh/w4ngzhen/CDN/images/post/2018-09-13-EF/afterdelebook.png)
+![afterdelebook](https://res.zhen.blog/images/post/2018-09-13-EF/afterdelebook.png)
 
 #### 变更属性
 
@@ -447,11 +447,11 @@ INSERT INTO `__MigrationHistory`(
 ```
 重点看到这句SQL：“alter table `Book` add column `Abstract` longtext ”，这句SQL就是对我们表添加了一个字段，类型为longtext。我们进入数据库中，看一看变化：
 
-![afteraddprop](https://cdn.jsdelivr.net/gh/w4ngzhen/CDN/images/post/2018-09-13-EF/afteraddprop.png)
+![afteraddprop](https://res.zhen.blog/images/post/2018-09-13-EF/afteraddprop.png)
 
 可以看到数据库中其他字段的值都没有发生变化，仅仅多出了这个字段，同时符合我们设置的可以为空的预期
 
-![addpropdetail](https://cdn.jsdelivr.net/gh/w4ngzhen/CDN/images/post/2018-09-13-EF/addpropdetail.png)
+![addpropdetail](https://res.zhen.blog/images/post/2018-09-13-EF/addpropdetail.png)
 
 ##### 删除属性
 
@@ -474,7 +474,7 @@ public partial class RemoveProp : DbMigration
 ```
 得到如下的结果：
 
-![afterdel2prop](https://cdn.jsdelivr.net/gh/w4ngzhen/CDN/images/post/2018-09-13-EF/afterdel2prop.png)
+![afterdel2prop](https://res.zhen.blog/images/post/2018-09-13-EF/afterdel2prop.png)
 
 ##### 重命名属性
 
@@ -506,7 +506,7 @@ namespace CodeFirstDemo
 }
 ```
 对应数据库为
-![beforerename](https://cdn.jsdelivr.net/gh/w4ngzhen/CDN/images/post/2018-09-13-EF/beforerename.png)
+![beforerename](https://res.zhen.blog/images/post/2018-09-13-EF/beforerename.png)
 
 此时如果我们想要修改属性名，我们将Book中的Title属性改为Name属性：
 ```c#
@@ -561,4 +561,4 @@ Fatal error encountered during command execution. ---> MySql.Data.MySqlClient.My
 ```
 这样一来，再次运行，不报错。查看数据库：
 
-![afterrename](https://cdn.jsdelivr.net/gh/w4ngzhen/CDN/images/post/2018-09-13-EF/afterrename.png)
+![afterrename](https://res.zhen.blog/images/post/2018-09-13-EF/afterrename.png)

@@ -20,15 +20,15 @@ categories:
 iptables中的规则（rule）。在我看来，规则是iptables中进行数据包检查的基本单元。每一条规则都定义了对于数据包的条件验证，譬如网络地址的验证、端口验证、协议验证等。
 
 iptables中的链（chain）。链是数据包传播的路径，每一条链其实就是众多规则中的一个检查清单，每一条链中可以有一条或数条规则。就像这里，我们有一个INPUT链（INPUT概念之后再作解释），数据包来到这条链时，就会根据该链中的规则进行检查，譬如源、目的地址是否符合规则；源、目的端口是否符合规则等等。当一个数据包到达一个**链**时，iptables就会从INPUT链中规则1开始检查，看该数据包是否满足规则所定义的条件——如果满足，系统就会根据该条规则所定义的方法处理该数据包；否则iptables将继续检查下一条规则2，如果该数据包不符合链中任一条规则，iptables就会根据该链预先定义的默认策略来处理数据包。
-![inputchain](https://cdn.jsdelivr.net/gh/w4ngzhen/CDN/images/post/2018-04-18-iptables/inputchain.png)
+![inputchain](https://res.zhen.blog/images/post/2018-04-18-iptables/inputchain.png)
 
 iptables中的表（table）。表是一组链的集合，在iptables中默认定义了四张表：filter、nat、mangle和raw，分别用于实现包过滤（最常用去配置的表），网络地址转换、包重构(修改)和数据跟踪处理。如下图：
-![alltables](https://cdn.jsdelivr.net/gh/w4ngzhen/CDN/images/post/2018-04-18-iptables/alltables.png)
+![alltables](https://res.zhen.blog/images/post/2018-04-18-iptables/alltables.png)
 当然，上图只是一个大致示意，并不意味着每个表中的例如想PREROUTING这样的链是独自在各个表中的，实际上表与链之间是一种交叉的关系，为什么这么说呢？这需要我们理解在iptables中传输数据包的流程（请结合下图慢慢阅读）。
 （1）当一个数据包进入网卡时，它首先进入PREROUTING链，根据该链中的规则判定数据包的处理方式（ACCEPT？DROP？REJECT？），一旦通过规则检测，Linux内核根据数据包的IP地址决定是将数据包留下传入进入内部，还是转发出去。
 1）如果数据包就是进入本机的（IP地址表明），它就会到达INPUT链。数据包到了INPUT链后，便开始根据INPUT链中的规则来检查数据包是否满足一系列的条件，满足之后，完全进入主机，任何进程都会收到它。同时，主机中的任何程序都可以发送数据包，发送出来的数据包会走到OUTPUT链，再根据里面的规则判定处理，最后到POSTROUTING链，再判定处理。
 2）如果数据包是准备转发的，他就会到达FORWARD链，再根据FORWARD链中的规则进行检查判定决定接下来的处理。如果通过了FORWARD链，说明内核允许该数据包转发，那么数据包就会到POSTROUTING链进行最后的判断。
-![flow](https://cdn.jsdelivr.net/gh/w4ngzhen/CDN/images/post/2018-04-18-iptables/flow.png)
+![flow](https://res.zhen.blog/images/post/2018-04-18-iptables/flow.png)
 同时我们可以看到，这里的角度并不是以table来看的，而是以chain来看的，这就是为什么我在上面提到的，尽管table是chain的集合，但并不意味着当我们定义防火墙的时候是按照table角度来定义，而是要根据chain角度来定义。我们要根据上图来决定我们要在何处怎样处理进入的数据包。这个flow在我看来必须要非常熟悉，对之后的命令行配置也有很大的帮助，因为iptables的命令行配置十分复杂。
 
 #### iptables命令行配置
@@ -101,7 +101,7 @@ MASQUERADE IP伪装，即是常说的NAT技术
 LOG 日志功能，将符合规则的数据包的相关信息记录在日志中，以便管理员的分析和排错
 ```
 这里大致整理一下iptables命令的格式：
-![fullformat](https://cdn.jsdelivr.net/gh/w4ngzhen/CDN/images/post/2018-04-18-iptables/fullformat.png)
+![fullformat](https://res.zhen.blog/images/post/2018-04-18-iptables/fullformat.png)
 
 接下来详细的讲解一下实际使用命令的要点：
 
@@ -116,7 +116,7 @@ iptables [-t表名] <-P> <链名> <动作>
 <链名>：指默认策略将应用于哪个链，可以使用INPUT、OUTPUT、FORWARD、PREROUTING、OUTPUT和POSTROUTING。
 <动作>：处理数据包的动作，可以使用ACCEPT（接受数据包）和DROP（丢弃数据包）。
 ```
-![defaultPolicy](https://cdn.jsdelivr.net/gh/w4ngzhen/CDN/images/post/2018-04-18-iptables/defaultPolicy.png)
+![defaultPolicy](https://res.zhen.blog/images/post/2018-04-18-iptables/defaultPolicy.png)
 **2、增加、插入、删除和替换规则**
 ```
 相关规则定义的格式为：
@@ -137,7 +137,7 @@ iptables [-t表名] <-A | I | R | D> 链名 [规则编号] [-i | o 网卡名称]
 [--dport目标端口号]：数据包的IP的目标端口号。
 <-j动作>：处理数据包的动作，各个动作的详细说明可以参考前面的说明。
 ```
-![modifyRule](https://cdn.jsdelivr.net/gh/w4ngzhen/CDN/images/post/2018-04-18-iptables/modifyRule.png)
+![modifyRule](https://res.zhen.blog/images/post/2018-04-18-iptables/modifyRule.png)
 
 **3、查看iptables规则**
 ```
@@ -252,7 +252,7 @@ $ systemctl mask firewalld
 #查看iptables现有规则
 $ iptables -L -n
 ```
-![iptables-L-n](https://cdn.jsdelivr.net/gh/w4ngzhen/CDN/images/post/2018-04-18-iptables/iptables-L-n.png)
+![iptables-L-n](https://res.zhen.blog/images/post/2018-04-18-iptables/iptables-L-n.png)
 可以看到显示的INPUT、FORWARD、OUTPUT上没有任何规则配置且默认策略均为ACCEPT
 ```shell
 # 务必先配置INPUT链的默认规则为ACCEPT，这样一来，避免误配置导致我们无法进入
@@ -291,7 +291,7 @@ $ iptables -P OUTPUT ACCEPT
 $ iptables -P FORWARD DROP
 ```
 最终我们可以看到我们目前定义的配置表：
-![finalConfig](https://cdn.jsdelivr.net/gh/w4ngzhen/CDN/images/post/2018-04-18-iptables/finalConfig.png)
+![finalConfig](https://res.zhen.blog/images/post/2018-04-18-iptables/finalConfig.png)
 
 #### 保存规则设定、开启iptables服务
 ```shell
@@ -306,6 +306,6 @@ $ systemctl start iptables.service
 # 查看状态
 $ systemctl status iptables.service
 ```
-![enableAndStart](https://cdn.jsdelivr.net/gh/w4ngzhen/CDN/images/post/2018-04-18-iptables/enableAndStart.png)
+![enableAndStart](https://res.zhen.blog/images/post/2018-04-18-iptables/enableAndStart.png)
 防火墙配置完成！
 

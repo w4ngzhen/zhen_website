@@ -287,7 +287,7 @@ export class UserModule {}
 
 完成上述操作以后，我们就可以启动服务进行验证了：
 
-![010-http-api-origin-output](https://src-1252109805.cos.ap-chengdu.myqcloud.com/images/post/2022-11-22/010-http-api-origin-output.png)
+![010-http-api-origin-output](https://res.zhen.blog/images/post/2022-11-22/010-http-api-origin-output.png)
 
 ## 成功响应拦截器
 
@@ -339,7 +339,7 @@ export class HttpServiceResponseInterceptor implements NestInterceptor {
 
 完成配置以后，我们可以再次调用API来查看结果：
 
-![020-http-api-success-wrapper-output](https://src-1252109805.cos.ap-chengdu.myqcloud.com/images/post/2022-11-22/020-http-api-success-wrapper-output.png)
+![020-http-api-success-wrapper-output](https://res.zhen.blog/images/post/2022-11-22/020-http-api-success-wrapper-output.png)
 
 可以看到，尽管我们的Controller返回的是一个实际数据结构（Promise也适用），但是经过响应拦截器的处理，我们完成了对响应体的包裹封装。
 
@@ -377,7 +377,7 @@ export class HttpServiceResponseInterceptor implements NestInterceptor {
 
 完成上述修改后，我们尝试发请求时候，故意不填写userId，得到如下的结果：
 
-![030-http-api-error-origin-output](https://src-1252109805.cos.ap-chengdu.myqcloud.com/images/post/2022-11-22/030-http-api-error-origin-output.png)
+![030-http-api-error-origin-output](https://res.zhen.blog/images/post/2022-11-22/030-http-api-error-origin-output.png)
 
 可以看到，尽管nestjs帮助我们进行一定的封装，但是结构体与我们一开始定义的ServerResponseWrapper是不一致的。为了保持一致，我们需要接管nestjs的异常处理，并转换为我们自己的wrapper结构，而接管的方式则是创建一个实现ExceptionFilter接口的类（按照路径划分，我们将这个类所在文件`http-service.exception.filter.ts`存放于src/base/filter目录下）：
 
@@ -452,7 +452,7 @@ export class HttpServiceExceptionFilter implements ExceptionFilter {
 
 完成开发配置以后，我们重启服务，通过调用接口可以看到对应异常返回：
 
-![040-http-api-error-wrapper-output](https://src-1252109805.cos.ap-chengdu.myqcloud.com/images/post/2022-11-22/040-http-api-error-wrapper-output.png)
+![040-http-api-error-wrapper-output](https://res.zhen.blog/images/post/2022-11-22/040-http-api-error-wrapper-output.png)
 
 # WebSocket服务
 
@@ -566,19 +566,19 @@ export class MyWebSocketGateway {
 
 测试WebSocket，可以使用postman来进行，只需要创建个一WebSocket的请求，在postman中按下CTRL+N（macOS为command+N），可以选择WebSocket请求：
 
-![050-create-websocket](https://src-1252109805.cos.ap-chengdu.myqcloud.com/images/post/2022-11-22/050-create-websocket.png)
+![050-create-websocket](https://res.zhen.blog/images/post/2022-11-22/050-create-websocket.png)
 
 创建后，需要注意，由于我们nestjs集成的WebSocket实现使用的socket.io，所以客户端需要匹配对应的实现（这点主要是为了匹配”请求-响应“一来一回机制）
 
-![060-choose-socketio](https://src-1252109805.cos.ap-chengdu.myqcloud.com/images/post/2022-11-22/060-choose-socketio.png)
+![060-choose-socketio](https://res.zhen.blog/images/post/2022-11-22/060-choose-socketio.png)
 
 完成配置后，我们可以采用如下的步骤进行事件发送：
 
-![070-postman-websocket-send](https://src-1252109805.cos.ap-chengdu.myqcloud.com/images/post/2022-11-22/070-postman-websocket-send.png)
+![070-postman-websocket-send](https://res.zhen.blog/images/post/2022-11-22/070-postman-websocket-send.png)
 
 发送完成后，就会看到postman的打印和nodejs服务控制台的打印，符合我们的预期：
 
-![080-websocket-event-origin-output](https://src-1252109805.cos.ap-chengdu.myqcloud.com/images/post/2022-11-22/080-websocket-event-origin-output.png)
+![080-websocket-event-origin-output](https://res.zhen.blog/images/post/2022-11-22/080-websocket-event-origin-output.png)
 
 当然，我前面提到过socket.io支持事件一来一回的请求响应模式。在nestjs中的WebSocket网关，只需要在对应的请求返回值即可：
 
@@ -595,11 +595,11 @@ export class MyWebSocketGateway {
 
 在postman的地方，我们需要发送的时候勾选上`Acknowledgement`：
 
-![090-set-acknowledgement](https://src-1252109805.cos.ap-chengdu.myqcloud.com/images/post/2022-11-22/090-set-acknowledgement.png)
+![090-set-acknowledgement](https://res.zhen.blog/images/post/2022-11-22/090-set-acknowledgement.png)
 
 完成以后，我们重新连接服务并发送数据，就可以看到一条完整的事件处理链路了：
 
-![100-send-and-receive-origin](https://src-1252109805.cos.ap-chengdu.myqcloud.com/images/post/2022-11-22/100-send-and-receive-origin.png)
+![100-send-and-receive-origin](https://res.zhen.blog/images/post/2022-11-22/100-send-and-receive-origin.png)
 
 至此，我们就完成了在Nestjs集成一个基础的WebSocket服务了。
 
@@ -654,17 +654,17 @@ export class WsServiceResponseInterceptor implements NestInterceptor {
 
 配置完成以后，我们重启服务，再次使用postman进行WebSocket事件请求，则会看到经过包装后的响应体：
 
-![110-send-and-receive-success-wrapper](https://src-1252109805.cos.ap-chengdu.myqcloud.com/images/post/2022-11-22/110-send-and-receive-success-wrapper.png)
+![110-send-and-receive-success-wrapper](https://res.zhen.blog/images/post/2022-11-22/110-send-and-receive-success-wrapper.png)
 
 ## 异常过滤器
 
 当然，我们尝试不发送任何的数据。理论上，则会进入校验流程不通过的场景，抛出BizException。在实际的发送中，我们会看到，postman无法接受到异常：
 
-![120-send-and-receive-error-origin](https://src-1252109805.cos.ap-chengdu.myqcloud.com/images/post/2022-11-22/120-send-and-receive-error-origin.png)
+![120-send-and-receive-error-origin](https://res.zhen.blog/images/post/2022-11-22/120-send-and-receive-error-origin.png)
 
 在服务端会看到一个异常报错：
 
-![130-send-and-receive-error-server-output](https://src-1252109805.cos.ap-chengdu.myqcloud.com/images/post/2022-11-22/130-send-and-receive-error-server-output.png)
+![130-send-and-receive-error-server-output](https://res.zhen.blog/images/post/2022-11-22/130-send-and-receive-error-server-output.png)
 
 对于这个问题，我们的需求是无论是否有异常，都需要使用ServerResponseWrapper进行包裹。与HTTP不同的是，WebSocket的异常过滤器需要实现`WsExceptionFilter`接口，实现该接口的catch方法：
 
@@ -737,7 +737,7 @@ export class WsServiceExceptionFilter implements WsExceptionFilter {
 
 完成该配置后，我们再次重启服务，使用postman，可以看到wrapper包装后的效果：
 
-![140-send-and-receive-error-wrapper](https://src-1252109805.cos.ap-chengdu.myqcloud.com/images/post/2022-11-22/140-send-and-receive-error-wrapper.png)
+![140-send-and-receive-error-wrapper](https://res.zhen.blog/images/post/2022-11-22/140-send-and-receive-error-wrapper.png)
 
 # 附录
 

@@ -20,7 +20,7 @@ categories:
 
 安装首选需要选择完整镜像：
 
-![](https://src-1252109805.cos.ap-chengdu.myqcloud.com/images/post/2022-11-06/010-use-complete-image.png)
+![](https://res.zhen.blog/images/post/2022-11-06/010-use-complete-image.png)
 
 安装过程中的步骤的`Configure the package manager`中，需要确保两件事：
 
@@ -28,11 +28,11 @@ categories:
 
 2. 手动关闭了网络连接。如此配置以后，安装的过程就一定无法从网络上下载了。
 
-![](https://src-1252109805.cos.ap-chengdu.myqcloud.com/images/post/2022-11-06/020-close-net-connection.png)
+![](https://res.zhen.blog/images/post/2022-11-06/020-close-net-connection.png)
 
 上述步骤操作完成以后，进入下一步，会提示是否使用网络镜像（`Use a network mirror？`），**此时一定要选择No不使用**。
 
-![](https://src-1252109805.cos.ap-chengdu.myqcloud.com/images/post/2022-11-06/030-dont-use-net-mirrors.png)
+![](https://res.zhen.blog/images/post/2022-11-06/030-dont-use-net-mirrors.png)
 
 上述操作完成后，Debian接下来的安装就会从离线包中去安装软件。我们稍后进入系统以后再更新软件包即可。
 

@@ -24,7 +24,7 @@ categories:
 
 从下载页面可以看到有两个介质的下载，如果你希望最大限度的离线安装的话，可以选择DVD版本
 
-![](https://cdn.jsdelivr.net/gh/w4ngzhen/CDN/images/post/2020-09-29-install-debian/download-debian.png)
+![](https://res.zhen.blog/images/post/2020-09-29-install-debian/download-debian.png)
 
 这里本人选择CD介质中的amd64，进入后会看到下方有一系列的ISO，到底该下载哪个呢？其实在DVD介质页面里面已经给了说明：
 
@@ -43,31 +43,31 @@ Initially, you will only need to download and use the first image of a set (labe
 
 VirtualBox的安装没有什么特殊的处理，Python的支持可以去掉，然后安装路径按需放置。
 
-![](https://cdn.jsdelivr.net/gh/w4ngzhen/CDN/images/post/2020-09-29-install-debian/install-vbox.png)
+![](https://res.zhen.blog/images/post/2020-09-29-install-debian/install-vbox.png)
 
 安装完成后，进入VirtualBox创建一个新的虚拟机：**Machine -> New**
 
-![](https://cdn.jsdelivr.net/gh/w4ngzhen/CDN/images/post/2020-09-29-install-debian/new-vm.png)
+![](https://res.zhen.blog/images/post/2020-09-29-install-debian/new-vm.png)
 
-![](https://cdn.jsdelivr.net/gh/w4ngzhen/CDN/images/post/2020-09-29-install-debian/new-vm-disk.png)
+![](https://res.zhen.blog/images/post/2020-09-29-install-debian/new-vm-disk.png)
 
 接下来的进行`Create`，等待VirtualBox进行虚拟机的磁盘存储等初始化操作。这个过程的处理时间取决于工作电脑的处理器和磁盘类型。
 
-![](https://cdn.jsdelivr.net/gh/w4ngzhen/CDN/images/post/2020-09-29-install-debian/create-over.png)
+![](https://res.zhen.blog/images/post/2020-09-29-install-debian/create-over.png)
 
 ## Debian
 
 ### 启动并选择镜像
 
-![](https://cdn.jsdelivr.net/gh/w4ngzhen/CDN/images/post/2020-09-29-install-debian/pre-choose-image.png)
+![](https://res.zhen.blog/images/post/2020-09-29-install-debian/pre-choose-image.png)
 
-![](https://cdn.jsdelivr.net/gh/w4ngzhen/CDN/images/post/2020-09-29-install-debian/choose-image.png)
+![](https://res.zhen.blog/images/post/2020-09-29-install-debian/choose-image.png)
 
 ### 一系列的安装过程
 
 由于步骤很多，详情可以参考这篇很有用的知乎文章：[图解 Debian 10（Buster）安装步骤 - 知乎 (zhihu.com)](https://zhuanlan.zhihu.com/p/73122221)
 
-![](https://cdn.jsdelivr.net/gh/w4ngzhen/CDN/images/post/2020-09-29-install-debian/install-debian-step01.png)
+![](https://res.zhen.blog/images/post/2020-09-29-install-debian/install-debian-step01.png)
 
 # 环境初始化
 

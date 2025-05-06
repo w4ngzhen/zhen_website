@@ -46,31 +46,31 @@ Spy++能够对当前的热键占用进行检测并给出占用该热键的应用
 
 1、打开Spy++，选择**日志消息（log message）**
 
-![](https://cdn.jsdelivr.net/gh/w4ngzhen/CDN/images/post/2021-03-09-spyxx/log-message.jpg)
+![](https://res.zhen.blog/images/post/2021-03-09-spyxx/log-message.jpg)
 
 2、选择**All Windows in System**
 
-![](https://cdn.jsdelivr.net/gh/w4ngzhen/CDN/images/post/2021-03-09-spyxx/set-all-windows-in-system.jpg)
+![](https://res.zhen.blog/images/post/2021-03-09-spyxx/set-all-windows-in-system.jpg)
 
 这一步的目的是保证拦截到当前Windows系统中的所有窗体的有关消息
 
 3、进入message页签，筛选热键消息
 
-![](https://cdn.jsdelivr.net/gh/w4ngzhen/CDN/images/post/2021-03-09-spyxx/filter-message.jpg)
+![](https://res.zhen.blog/images/post/2021-03-09-spyxx/filter-message.jpg)
 
 4、保存配置后，会看到界面有一个空白窗口，然后按下快捷键，会发现窗口中会出现对应的热键消息
 
-![](https://cdn.jsdelivr.net/gh/w4ngzhen/CDN/images/post/2021-03-09-spyxx/message.gif)
+![](https://res.zhen.blog/images/post/2021-03-09-spyxx/message.gif)
 
 本例中，本人使用了`alt+space`快捷键呼出了uTools（另一款本人特别喜欢的工具）。通过Spy++监听到了快捷键的按下。我们可以右键该条消息，查看Properties检查该热键是由哪个程序捕获的：
 
-![](https://cdn.jsdelivr.net/gh/w4ngzhen/CDN/images/post/2021-03-09-spyxx/prop1.jpg)
+![](https://res.zhen.blog/images/post/2021-03-09-spyxx/prop1.jpg)
 
-![](https://cdn.jsdelivr.net/gh/w4ngzhen/CDN/images/post/2021-03-09-spyxx/prop2.jpg)
+![](https://res.zhen.blog/images/post/2021-03-09-spyxx/prop2.jpg)
 
-![](https://cdn.jsdelivr.net/gh/w4ngzhen/CDN/images/post/2021-03-09-spyxx/prop3.jpg)
+![](https://res.zhen.blog/images/post/2021-03-09-spyxx/prop3.jpg)
 
-![](https://cdn.jsdelivr.net/gh/w4ngzhen/CDN/images/post/2021-03-09-spyxx/prop4.jpg)
+![](https://res.zhen.blog/images/post/2021-03-09-spyxx/prop4.jpg)
 
 ### 窗体所属程序检测
 
@@ -78,8 +78,8 @@ Spy++能够对当前的热键占用进行检测并给出占用该热键的应用
 
 1、Spy菜单中选择`Find Window`
 
-![](https://cdn.jsdelivr.net/gh/w4ngzhen/CDN/images/post/2021-03-09-spyxx/find-window.jpg)
+![](https://res.zhen.blog/images/post/2021-03-09-spyxx/find-window.jpg)
 
 2、拖动FinderTool到你想要识别的窗口上，松开它。剩下的请看下面的gif。
 
-![](https://cdn.jsdelivr.net/gh/w4ngzhen/CDN/images/post/2021-03-09-spyxx/how-to-find-window.gif)
+![](https://res.zhen.blog/images/post/2021-03-09-spyxx/how-to-find-window.gif)
