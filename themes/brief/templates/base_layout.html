@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover"
+          name="viewport">
+    {% set small_icon_url = config.extra.site_icon.16x16 | default(value="images/site_icon.png")%}
+    {% set normal_icon_url = config.extra.site_icon.32x32 | default(value="images/site_icon.png")%}
+    <link rel="icon" type="image/png" sizes="16x16" href="{{ get_url(path=small_icon_url) }}">
+    <link rel="icon" type="image/png" sizes="32x32" href="{{ get_url(path=normal_icon_url) }}">
+    <title>{% block title %}{{ config.title }}{% endblock title %}</title>
+    <link rel="stylesheet" href="{{ get_url(path='style.css') }}">
+    {% block extra_head %} {% endblock extra_head %}
+</head>
+<body>
+{% block content %} {% endblock content %}
+</body>
+</html>

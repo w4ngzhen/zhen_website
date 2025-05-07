@@ -1,0 +1,29 @@
+{% extends "base_layout.html" %}
+
+{% block content %}
+<header>
+    <h1>{{ config.title }}</h1>
+    {% if config.extra.links %}
+    <nav class="header-links">
+        {% for link in config.extra.links %}
+        <a href="{{ link.href }}" target="{{ link.target | default(value='_blank')}}">{{ link.title }}</a>
+        {% endfor %}
+    </nav>
+    {% endif %}
+</header>
+{% set article_section = get_section(path="article/_index.md") %}
+<main>
+    {% if article_section.pages %}
+    <h2>recent posts</h2>
+    <ul class="article-list">
+        {% for post in article_section.pages | slice(end=15) %}
+        <li class="article-item">
+            <a href="{{ post.permalink }}">{{ post.title }}</a>
+            <span class="article-date">{{post.date}}</span>
+        </li>
+        {% endfor %}
+    </ul>
+    <p><a href="{{ article_section.permalink }}">all posts.</a></p>
+    {% endif %}
+</main>
+{% endblock content %}

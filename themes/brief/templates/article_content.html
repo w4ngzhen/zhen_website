@@ -1,0 +1,61 @@
+{% extends "base_layout.html" %}
+{% import "macros/base_title.html" as base_title %}
+
+{% block extra_head %}
+<link rel="stylesheet" href="{{ get_url(path='article_content.css') }}">
+<link rel="stylesheet" href="{{ get_url(path='article_markdown.css') }}">
+<!-- mediumZoom image viewer -->
+<script src="{{ get_url(path='libs/medium-zoom@1.1.0/medium-zoom.min.umd.js') }}"></script>
+<link rel="stylesheet" href="{{ get_url(path='libs/medium-zoom@1.1.0/style.min.css') }}">
+{% endblock extra_head %}
+
+{% block content %}
+<div id="article">
+    <header class="article-header">
+        {{ base_title::title_with_back(title=page.title)}}
+    </header>
+    <p class="article-date">{{ page.date }}</p>
+    {% if not page.extra.hide_toc and page.toc %}
+    <!-- toc -->
+    <div class="article-toc">
+        <label class="toc-title" for="toc-trigger">目录</label>
+        <input id="toc-trigger" type="checkbox" checked/>
+        <div class="toc-content">
+            <ol class="toc">
+                {% for h1 in page.toc %}
+                <li class="toc-item toc-level-1">
+                    <a class="toc-link" href="{{ h1.permalink | safe }}">{{ h1.title }}</a>
+                    {% if h1.children %}
+                    <ol class="toc-child">
+                        {% for h2 in h1.children %}
+                        <li class="toc-item toc-level-2">
+                            <a href="{{ h2.permalink | safe }}">{{ h2.title }}</a>
+                        </li>
+                        {% endfor %}
+                    </ol>
+                    {% endif %}
+                </li>
+                {% endfor %}
+            </ol>
+        </div>
+    </div>
+    {% endif %}
+    <!-- real content -->
+    <div class="article-content markdown-content">
+        {{ page.content | safe }}
+    </div>
+</div>
+<script>
+  // == mediumZoom ==
+  // handle all images in article.
+  // make sure that "medium-zoom" load successfully.
+  if (typeof window.mediumZoom === 'function') {
+    mediumZoom("#article img", {
+      background: "rgba(170,170,170,0.5)",
+      margin: 24
+    });
+  } else {
+    console.error('cannot find \'mediumZoon\' in window');
+  }
+</script>
+{% endblock content %}

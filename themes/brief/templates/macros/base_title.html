@@ -1,0 +1,8 @@
+{% macro title_with_back(title='') %}
+<div class="base-title">
+    <a href="#" onclick="history.back(); return false;">&LeftArrow; Back</a>
+    <h1>
+        {{ title }}
+    </h1>
+</div>
+{% endmacro title_with_back %}
