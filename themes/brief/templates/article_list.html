@@ -1,0 +1,14 @@
+{% import "macros/base_title.html" as base_title %}
+{% import "macros/gen_article_list.html" as gen_article_list %}
+
+{% extends "base_layout.html" %}
+
+{% block content %}
+<!-- set below variables -->
+{% set title = section.title %}
+{% set pages = section.pages %}
+{% set group_by_year = true %}
+
+{{ base_title::title_with_back(title=title)}}
+{{ gen_article_list::create_list(description=section.extra.description | default(value=''), pages=pages, group_by_year=group_by_year)}}
+{% endblock %}

@@ -1,0 +1,33 @@
+theme = "brief"
+
+base_url = "https://zhen.blog"
+
+title = "zhen's blog"
+
+# Whether to automatically compile all Sass files in the sass directory
+compile_sass = true
+
+# Whether to build a search index to be used later on by a JavaScript library
+build_search_index = false
+
+generate_feeds = true
+
+[slugify]
+paths = "safe"
+
+[markdown]
+# Whether to do syntax highlighting
+# Theme can be customised by setting the `highlight_theme` variable to a theme supported by Zola
+highlight_code = true
+# markdown中的链接编译后的a标签target设置为"_blank"
+external_links_target_blank = true
+
+[extra]
+links = [
+    { title = "关于", href = "/about", target = '_self' },
+    { title = "思绪", href = "/thinking", target = '_self' },
+    { title = "收藏", href = "/collection", target = '_self' },
+    { title = "Feed", href = "/atom.xml", target = '_blank' },
+]
+
+site_icon = { 16x16 = 'images/blog-site-icon.svg', 32x32 = 'images/blog-site-icon.svg' }

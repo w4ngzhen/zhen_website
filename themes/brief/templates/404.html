@@ -1,0 +1,11 @@
+{% extends "base_layout.html" %}
+{% import "macros/base_title.html" as base_title %}
+
+{% block title %}Page Not Found{% endblock title %}
+
+{% block content %}
+<main>
+    {{ base_title::title_with_back(title='页面未找到')}}
+    <p>The page you were looking for could not be found.</p>
+</main>
+{% endblock content %}

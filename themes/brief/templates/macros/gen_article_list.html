@@ -1,0 +1,35 @@
+{% macro create_list(description, pages, group_by_year=true) %}
+<!-- extra description -->
+{% if description %}
+<p>{{description}}</p>
+{% endif %}
+
+<!-- create list -->
+{% if pages %}
+{% if group_by_year %}
+<!-- post list group by year -->
+{% for year, posts in pages | group_by(attribute="year") %}
+<h2>{{ year }}</h2>
+<ul class="article-list">
+    {% for post in posts %}
+    <li class="article-item">
+        <a href="{{ post.permalink }}">{{ post.title }}</a>
+        <span class="article-date">{{post.date}}</span>
+    </li>
+    {% endfor %}
+</ul>
+{% endfor %}
+{% else %}
+<ul class="article-list">
+    {% for post in pages %}
+    <li class="article-item">
+        <a href="{{ post.permalink }}">{{ post.title }}</a>
+        <span class="article-date">{{post.date}}</span>
+    </li>
+    {% endfor %}
+</ul>
+{% endif %}
+{% else %}
+<p>No posts yet.</p>
+{% endif %}
+{% endmacro create_list %}
