@@ -23,7 +23,7 @@
         </li>
         {% endfor %}
     </ul>
-    <p><a href="{{ article_section.permalink }}">all posts.</a></p>
+    <p><a href="{{ article_section.permalink }}">all posts({{ article_section.pages | length }}).</a></p>
     {% endif %}
 </main>
 {% endblock content %}
