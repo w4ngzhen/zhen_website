@@ -113,7 +113,7 @@ public class SimpleServlet extends HttpServlet {
 }
 ```
 在doPost方法中，我们按照前面说的方式获取ServletContext对象，然后再通过getInitParameter方法获取"test-param"键对应的字符串，然后输出到网页上：
-![print.png](https://res.zhen.blog/images/post/2018-08-26-JavaWeb/print.png)
+![print.png](https://res.zhen.wang/images/post/2018-08-26-JavaWeb/print.png)
 
 ##### listener节点
 

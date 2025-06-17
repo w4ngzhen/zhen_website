@@ -16,22 +16,22 @@ Bevy是基于ECS（Entity-Component-System）架构的游戏引擎，其中的**
 
 例如，创建一个包含生命值（Health）、位置（Position）的敌人角色，我们并不会定义一个名为Enemy的类型去继承某些对象，为其添加生命值数据和位置数据，而是定义3个组件：Enemy、Health以及Position，他们都是组件，当我们同时生成一个包含这3个组件的合集的时候，从概念上它就成为了一个包含生命值以及位置的敌人角色实体：
 
-![010](https://res.zhen.blog/images/post/2025-04-26/010.png)
+![010](https://res.zhen.wang/images/post/2025-04-26/010.png)
 
 针对上述实体的表现形式，从底层存储的角度来看，我们可以先假设通过**表格table**的每一行记录来表达实体：
 
-![020](https://res.zhen.blog/images/post/2025-04-26/020.png)
+![020](https://res.zhen.wang/images/post/2025-04-26/020.png)
 
 > 上图表示游戏世界中的两个敌人实体，每个实体包含独立的`Position`和`Health`组件数据。
 
 接下来让我们加入一个“玩家”角色，我们首先需要新增一个Player组件，然后在游戏世界中创建包含Player、Postion以及Health三个组件的合集，该实体从概念上就视为一个“玩家”角色，同时按照之前表格的数据表现形式，我们需要给对应的表格再增加一列Player，游戏世界对应的实体情况如下：
 
 
-![030](https://res.zhen.blog/images/post/2025-04-26/030.png)
+![030](https://res.zhen.wang/images/post/2025-04-26/030.png)
 
 我们可以很显然想到上述table存在一个问题：随着后续实体增多，这些实体包含的组件千变万化，会造成这个table表格每一行记录是不连续的，且列会越来越多。
 
-![040](https://res.zhen.blog/images/post/2025-04-26/040.png)
+![040](https://res.zhen.wang/images/post/2025-04-26/040.png)
 
 此时如果我们想写向量化的代码来算法优化处理这些数组记录，那么上述结构中不连续处的空值将会影响其效果。
 
@@ -41,7 +41,7 @@ Bevy是基于ECS（Entity-Component-System）架构的游戏引擎，其中的**
 
 为了解决上述的数组元素不连续的问题，Bevy将包含不同组件的实体拆分到不同的记录表中：
 
-![050](https://res.zhen.blog/images/post/2025-04-26/050.png)
+![050](https://res.zhen.wang/images/post/2025-04-26/050.png)
 
 可以看到，原本包含所有实体记录的单个table拆分为**两种**table，同时其每一行记录是连续的。在Bevy中，会将这两种表（组件类型构成）视为两种**原型（Archetype）**。
 
@@ -67,7 +67,7 @@ fn handle_not_player_position(
 
 对于拆分的table，我们可以很容易的完成并行计算，因为系统1只会查询table1的记录，而系统2则肯定只会查询table2的记录，而不会查询到table1中：
 
-![060](https://res.zhen.blog/images/post/2025-04-26/060.png)
+![060](https://res.zhen.wang/images/post/2025-04-26/060.png)
 
 ## 关于原型的创建
 
@@ -75,17 +75,17 @@ fn handle_not_player_position(
 
 > Bevy通过惰性初始化边的映射关系，仅在首次遇到组件变更时创建新原型并记录边，后续直接复用。
 
-![070](https://res.zhen.blog/images/post/2025-04-26/070.png)
+![070](https://res.zhen.wang/images/post/2025-04-26/070.png)
 
 ## 关于原型的更新
 
 注意，这里说的是原型的更新，而非原型下面的某个组件数据的更新，所谓原型的更新发生在其对应实体内组件的增删。比如，对于某个实体具有一个名为`Visibilty`的组件来标记一个实体是否能被看到，我们想要隐藏该实体时，只需要将`Visibility`组件从这个实体中移除即可：
 
-![080](https://res.zhen.blog/images/post/2025-04-26/080.png)
+![080](https://res.zhen.wang/images/post/2025-04-26/080.png)
 
 注意，此时该实体id并不会发生变化，只是该实体所包含的组件少了`Visibility`组件，进而导致该实体所对应的原型发生了变化：
 
-![090](https://res.zhen.blog/images/post/2025-04-26/090.png)
+![090](https://res.zhen.wang/images/post/2025-04-26/090.png)
 
 上图中，实体原本属于原型`(Enemy, Position, Health, Visibility)`，移除`Visibility`组件后，会被迁移到原型`(Enemy, Position, Health)`，这个过程会引发上述原型创建的流程，选择已有的原型或建立新的原型。
 
@@ -93,7 +93,7 @@ fn handle_not_player_position(
 
 以上面移除`Visibility`组件为例，改变前的原型`(Enemy, Position, Health, Visibility)`我们假设称其为`AT1`，当我们**首次**将某个实体的`Visibility`组件移除时，由于此刻运行时内部没有其他的原型，所以Bevy会创建一个新的原型`(Enemy, Position, Health)`（我们假设称其为`AT2`）；之后，Bevy会生成这样一条上下文信息：“移除`Visibility`时，指向`AT2`”，将其存储到`AT1`中，这条上下文信息在Bevy内部实现被定义为一条**边（Edge）**。如此一来，在后续再次出现同样原型的“敌人角色”实体移除`Visibility`的时候，可以通过`AT1`中的存储的“移除`Visibility`时，指向`AT2`”来快速索引到`AT2`中。
 
-![100](https://res.zhen.blog/images/post/2025-04-26/100.png)
+![100](https://res.zhen.wang/images/post/2025-04-26/100.png)
 
 > 类似状态机的设计
 

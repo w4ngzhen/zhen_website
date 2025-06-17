@@ -196,7 +196,7 @@ export const COMPONENT_MAP = {
 
 接下来是实现我们的构建引擎（`BuildEngine`，叫引擎高大上）。构建引擎的核心功能是读取由DSL转为的ComponentNode，然后以递归深度遍历的方式不断读取ComponentNode及其子节点，根据ComponentNode对应的数据（譬如）`componentName`，从前面我们编写的`COMPONENT_MAP`中获取对应组件构造方法来将ComponentNode构建为一个又一个ReactNode。
 
-![010-ComponentNode-build-flow](https://res.zhen.blog/images/post/2022-09-18/010-ComponentNode-build-flow.png)
+![010-ComponentNode-build-flow](https://res.zhen.wang/images/post/2022-09-18/010-ComponentNode-build-flow.png)
 
 代码如下：
 
@@ -315,7 +315,7 @@ export function SimpleExample() {
 }
 ```
 
-![020-base-effect](https://res.zhen.blog/images/post/2022-09-18/020-base-effect.gif)
+![020-base-effect](https://res.zhen.wang/images/post/2022-09-18/020-base-effect.gif)
 
 ## 设计优化
 

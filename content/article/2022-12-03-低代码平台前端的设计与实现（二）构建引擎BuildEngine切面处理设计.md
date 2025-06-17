@@ -14,7 +14,7 @@ categories:
 
 只要接触过低开平台的朋友都见过这样的场景，在设计器的画布中点击已经拖拉拽好的UI元素，会有一个边框，高亮显示当前的元素，还支持操作：
 
-![010-border-show](https://res.zhen.blog/images/post/2022-12-03/010-border-show.png)
+![010-border-show](https://res.zhen.wang/images/post/2022-12-03/010-border-show.png)
 
 在上一篇文章我们介绍了创建的整个流程：由一个构建引擎（BuildEngine）通过读取JSON DSL的组件节点ComponentNode来匹配对应的节点类型来生成UI元素。
 
@@ -43,7 +43,7 @@ class DesignerBuileEngine {
 
 为了避免功能代码的冗余，也更方便后续的扩展性。我们考虑采用切面的设计方案。将整个处理流程的某些环节加入切面，以达到灵活处理的目的。切面的实现可以有很多种形式，例如一个回调函数，又或者传入一个对象实例（本质上还是回调）。作为一个轻量级低开模块，我们暂时设计一个简单的回调customCreateElement（createElement自定义实现），来完成build过程中，最后一步生成ReactNode的自定义处理：
 
-![020-BuildEngine-customCreateElement](https://res.zhen.blog/images/post/2022-12-03/020-BuildEngine-customCreateElement.png)
+![020-BuildEngine-customCreateElement](https://res.zhen.wang/images/post/2022-12-03/020-BuildEngine-customCreateElement.png)
 
 该自定义创建方法将作为build的一个参数传入到构造过程中来进行调用，形如：
 
@@ -275,7 +275,7 @@ export function CustomCreateElementExample() {
 
 原本直接调用buildEngine.build的地方，我们加入我们自定义的实现，并进行了打印。从下面的效果也能看出：
 
-![030-customCreateElement-effect](https://res.zhen.blog/images/post/2022-12-03/030-customCreateElement-effect.png)
+![030-customCreateElement-effect](https://res.zhen.wang/images/post/2022-12-03/030-customCreateElement-effect.png)
 
 # 附录
 

@@ -85,7 +85,7 @@ function App() {
 
 第二种模式的核心在于，编译出来的代码与React库本身进行了解耦，只将JSX转换为了与React无关的JS形式的调用描述，没有直接使用`React.createElement`。
 
-![010-react-jsx-runtime](https://res.zhen.blog/images/post/2023-04-05/010-react-jsx-runtime.png)
+![010-react-jsx-runtime](https://res.zhen.wang/images/post/2023-04-05/010-react-jsx-runtime.png)
 
 上图描述了一个前端React工程里JSX代码转换为浏览器能够运行的JS代码的基本过程。当然，Babel在这个转换过程中承担了重要角色。
 
@@ -145,7 +145,7 @@ Babel的v7.9.0版本之前，只能转换为`React.createElement`形式。在v7.
 
 可以直接从页面上看到渲染效果：
 
-![020-react-cdn-createElement](https://res.zhen.blog/images/post/2023-04-05/020-react-cdn-createElement.png)
+![020-react-cdn-createElement](https://res.zhen.wang/images/post/2023-04-05/020-react-cdn-createElement.png)
 
 这种方式则是最直接的，使用了最原生的写法。具备JS基础的同学应该都能理解。如果我们在script中编写了jsx代码：
 
@@ -161,7 +161,7 @@ Babel的v7.9.0版本之前，只能转换为`React.createElement`形式。在v7.
 
 毫无疑问会报错：
 
-![030-react-cdn-jsx-without-babel](https://res.zhen.blog/images/post/2023-04-05/030-react-cdn-jsx-without-babel.png)
+![030-react-cdn-jsx-without-babel](https://res.zhen.wang/images/post/2023-04-05/030-react-cdn-jsx-without-babel.png)
 
 严格意义上讲，浏览器没法解析JSX代码（前面已经提到了），但是我们可以通过Babel提供的`standalone`模块库（[@babel/standalone · Babel (babeljs.io)](https://babeljs.io/docs/babel-standalone.html)）来完成这一任务。该库不仅仅支持JSX，同时还支持ES6语法直接在浏览器上运行，而无需对代码进行预编译，其初衷是支持一些浏览器（说的就是你IE）能够编写ES6的代码。
 
@@ -189,7 +189,7 @@ Babel的v7.9.0版本之前，只能转换为`React.createElement`形式。在v7.
 
 完成上述的配置以后，我们就能在浏览器中看到源自JSX渲染而来的React组件了：
 
-![040-react-cdn-jsx-with-babelstandalone](https://res.zhen.blog/images/post/2023-04-05/040-react-cdn-jsx-with-babelstandalone.png)
+![040-react-cdn-jsx-with-babelstandalone](https://res.zhen.wang/images/post/2023-04-05/040-react-cdn-jsx-with-babelstandalone.png)
 
 这个过程主要为`@babel/standalone`的js在加载的过程中，会读取HTML上的`type="text/babel"`的节点，然后对其内容进行编译转换。不难想到， 这个过程会十分消耗性能。所以Babel官方也强调了，[只能在某些场景下使用](https://babeljs.io/docs/babel-standalone#when-not-to-use-babelstandalone)。
 
@@ -219,7 +219,7 @@ function Counter() {
 }
 ```
 
-![050-solidjs-jsx-compile-result](https://res.zhen.blog/images/post/2023-04-05/050-solidjs-jsx-compile-result.png)
+![050-solidjs-jsx-compile-result](https://res.zhen.wang/images/post/2023-04-05/050-solidjs-jsx-compile-result.png)
 
 在本文中，我们主要分析JSX的处理过程，暂不涉及响应式的实现方式。
 
@@ -233,7 +233,7 @@ function Counter() {
 
 那么这个`template`方法是什么呢？通过查找类型定义，可以找到其来源于`solid-js/web`包中，`client.ts`导出的`template`的定义：
 
-![060-where-is-template-func](https://res.zhen.blog/images/post/2023-04-05/060-where-is-template-func.png)
+![060-where-is-template-func](https://res.zhen.wang/images/post/2023-04-05/060-where-is-template-func.png)
 
 通过查看`client.ts`的源码，会发现`solid-js/web`关于`client.ts`的整个部分都来自`dom-expression/src/client`导出的内容：
 
@@ -267,11 +267,11 @@ export function template(html, check, isSVG) {
 
 比如我们编写一个demo：
 
-![070-simple-demo-solidjs](https://res.zhen.blog/images/post/2023-04-05/070-simple-demo-solidjs.png)
+![070-simple-demo-solidjs](https://res.zhen.wang/images/post/2023-04-05/070-simple-demo-solidjs.png)
 
 经过编译后，查看编译代码，能够看到相关的实现：
 
-![080-simple-demo-dist](https://res.zhen.blog/images/post/2023-04-05/080-simple-demo-dist.png)
+![080-simple-demo-dist](https://res.zhen.wang/images/post/2023-04-05/080-simple-demo-dist.png)
 
 与React一样，SolidJS同样用到了Babel对SolidJS的代码进行编译。核心的则是`babel-preset-solid`，与之前一些标准的preset（比如`@babel/preset-typescript`或是`@babel/preset-react`）命名不同，因为SolidJS还没有成为Babel官方预置集（还是比较小众的）。
 

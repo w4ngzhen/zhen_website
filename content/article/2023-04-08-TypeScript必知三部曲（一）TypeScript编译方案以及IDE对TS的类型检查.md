@@ -37,7 +37,7 @@ TypeScript代码的编译过程一直以来会给很多小伙伴造成困扰，t
 2. ts编译器
 3. ts编译配置
 
-![010-ts-code-compile-flow](https://res.zhen.blog/images/post/2023-04-08/010-ts-code-compile-flow.png)
+![010-ts-code-compile-flow](https://res.zhen.wang/images/post/2023-04-08/010-ts-code-compile-flow.png)
 
 上述过程为：**ts编译器**读取**ts源代码**，并通过指定的**编译配置**，将ts源代码编译为指定形式的js代码。
 
@@ -58,7 +58,7 @@ TypeScript代码的编译过程一直以来会给很多小伙伴造成困扰，t
 2. ts编译器：**tsc**
 3. ts编译配置：**tsconfig.json**
 
-![020-ts-code-compile-by-tsc](https://res.zhen.blog/images/post/2023-04-08/020-ts-code-compile-by-tsc.png)
+![020-ts-code-compile-by-tsc](https://res.zhen.wang/images/post/2023-04-08/020-ts-code-compile-by-tsc.png)
 
 让我们通过一个simple-tsc-demo，实践这一过程。
 
@@ -114,11 +114,11 @@ yarn add typescript
 
 完成搭建以后，项目整体如下：
 
-![030-simple-tsc-example-full](https://res.zhen.blog/images/post/2023-04-08/030-simple-tsc-example-full.png)
+![030-simple-tsc-example-full](https://res.zhen.wang/images/post/2023-04-08/030-simple-tsc-example-full.png)
 
 运行build脚本，能够看到在项目根目录产生`dist/index.js`：
 
-![040-simple-tsc-compile-result-commonjs](https://res.zhen.blog/images/post/2023-04-08/040-simple-tsc-compile-result-commonjs.png)
+![040-simple-tsc-compile-result-commonjs](https://res.zhen.wang/images/post/2023-04-08/040-simple-tsc-compile-result-commonjs.png)
 
 对于index.js的内容，熟悉js模块化规范的小伙伴应该很容易看出这是commonjs的规范：给exports对象上添加属性字段，exports对象会作为模块导出，被其他模块使用。
 
@@ -138,7 +138,7 @@ yarn add typescript
 
 再一次编译以后，会看到编译后的js代码则是符合es6模块规范的代码：
 
-![050-simple-tsc-compile-result-es6](https://res.zhen.blog/images/post/2023-04-08/050-simple-tsc-compile-result-es6.png)
+![050-simple-tsc-compile-result-es6](https://res.zhen.wang/images/post/2023-04-08/050-simple-tsc-compile-result-es6.png)
 
 对于tsc编译方案，按照TypeScript编译三要素模型简单总结一下：我们准备了ts源码、tsc编译器以及tsconfig.json配置。通过**tsc编译器
 **读取**tsconfig.json编译配置**，将ts源码编译为了js代码。此外，在tsconfig.json中，我们配置了生成的js代码的两种模块规范：
@@ -203,7 +203,7 @@ babel插件2处理代码，例如将形如() => {}的箭头函数，转换成fun
 2. ts编译器：**babel+相关preset、plugin**
 3. ts编译配置：**.babelrc**
 
-![060-ts-code-compile-by-babel](https://res.zhen.blog/images/post/2023-04-08/060-ts-code-compile-by-babel.png)
+![060-ts-code-compile-by-babel](https://res.zhen.wang/images/post/2023-04-08/060-ts-code-compile-by-babel.png)
 
 同样的，让我们通过一个simple-babel-demo，实践这一过程。
 
@@ -278,11 +278,11 @@ yarn add -D @babel/plugin-proposal-object-rest-spread
 
 完成项目搭建以后，整体如下：
 
-![070-simple-babel-example-full](https://res.zhen.blog/images/post/2023-04-08/070-simple-babel-example-full.png)
+![070-simple-babel-example-full](https://res.zhen.wang/images/post/2023-04-08/070-simple-babel-example-full.png)
 
 运行build脚本，能够看到在项目根目录产生`dist/index.js`：
 
-![080-simple-babel-compile-result-commonjs](https://res.zhen.blog/images/post/2023-04-08/080-simple-babel-compile-result-commonjs.png)
+![080-simple-babel-compile-result-commonjs](https://res.zhen.wang/images/post/2023-04-08/080-simple-babel-compile-result-commonjs.png)
 
 这段代码，与上面tsc基于commonjs编译的js代码差别不大。也就是说，babel基于`@babel/preset-env`+`@babel/preset-typescript`
 就能将TS代码编译为commonjs代码。那么我们如何使用babel将ts代码编译器es6的代码呢？从babel配置下手，实际上，我们只需要将babelrc的
@@ -302,7 +302,7 @@ yarn add -D @babel/plugin-proposal-object-rest-spread
 
 再次编译后，可以看到生成的index.js符合es6规范：
 
-![090-simple-babel-compile-result-es6](https://res.zhen.blog/images/post/2023-04-08/090-simple-babel-compile-result-es6.png)
+![090-simple-babel-compile-result-es6](https://res.zhen.wang/images/post/2023-04-08/090-simple-babel-compile-result-es6.png)
 
 对于babel编译，同样简单总结一下，对应TypeScript编译三要素模型，我们准备了ts源码、babel与相关preset和plugin作为编译器，以及babelrc作为编译配置。babel处理代码的流程启动以后，根据编译配置知道需要加载哪些plugin、preset，将代码以及相关信息交给plugin、preset处理，最终编译为js代码。此外，在babelrc中，我们通过是否配置
 `@babel/preset-env`控制生成满足commonjs或es6模块规范的js代码。
@@ -338,13 +338,13 @@ export const userToString = (u: User) => `${u.id}/${u.name}`
 
 ## tsc编译错误代码
 
-![100-tsc-compile-error-code](https://res.zhen.blog/images/post/2023-04-08/100-tsc-compile-error-code.png)
+![100-tsc-compile-error-code](https://res.zhen.wang/images/post/2023-04-08/100-tsc-compile-error-code.png)
 
 可以从结果很清楚的看到，使用tsc编译错误代码的时候，tsc类型检查帮助我们找到了代码的错误点，符合我们的预期。
 
 ## babel编译错误代码
 
-![110-babel-compile-error-code](https://res.zhen.blog/images/post/2023-04-08/110-babel-compile-error-code.png)
+![110-babel-compile-error-code](https://res.zhen.wang/images/post/2023-04-08/110-babel-compile-error-code.png)
 
 从结果来看，babel编译居然可以直接成功！查看生成的index.js代码：
 
@@ -411,17 +411,17 @@ export const userToString = u => `${u.id}/${u.myName}`;
 
 于是，在babel编译方案中，整个体系如下：
 
-![120-babel-compile-flow-with-type-check](https://res.zhen.blog/images/post/2023-04-08/120-babel-compile-flow-with-type-check.png)
+![120-babel-compile-flow-with-type-check](https://res.zhen.wang/images/post/2023-04-08/120-babel-compile-flow-with-type-check.png)
 
 # 主流IDE对TS项目如何进行类型检查
 
 不知道有没有细心的读者在使用IDEA的时候，会发现如果是IDE当前打开的TS文件，IDEA右下角会展示一个typescript：
 
-![130-idea-typescript-service](https://res.zhen.blog/images/post/2023-04-08/130-idea-typescript-service.png)
+![130-idea-typescript-service](https://res.zhen.wang/images/post/2023-04-08/130-idea-typescript-service.png)
 
 VSCode同样也会有：
 
-![140-vscode-typescript-service](https://res.zhen.blog/images/post/2023-04-08/140-vscode-typescript-service.png)
+![140-vscode-typescript-service](https://res.zhen.wang/images/post/2023-04-08/140-vscode-typescript-service.png)
 
 在同一台电脑上，甚至发现IDEA和VSCode的typescript版本都还不一样（5.0.3和4.9.5）。这是怎么一回事呢？实际上，IDE检测到你所在的项目是一个ts项目的时候（或当前正在编辑ts文件），就会自动的启动一个ts的检测服务，专门用于当前ts代码的类型检测。这个ts类型检测服务，同样使用tsc来完成，但这个tsc来源于两个途径：
 
@@ -433,11 +433,11 @@ VSCode同样也会有：
 
 当然，你也可以在IDE中手动切换：
 
-![150-IDEA-and-VSCode-switch-typescript](https://res.zhen.blog/images/post/2023-04-08/150-IDEA-and-VSCode-switch-typescript.png)
+![150-IDEA-and-VSCode-switch-typescript](https://res.zhen.wang/images/post/2023-04-08/150-IDEA-and-VSCode-switch-typescript.png)
 
 最后，我们简单梳理下IDE是如何在对应的代码位置展示代码的类型错误，流程如下：
 
-![160-IDE-ts-check-flow](https://res.zhen.blog/images/post/2023-04-08/160-IDE-ts-check-flow.png)
+![160-IDE-ts-check-flow](https://res.zhen.wang/images/post/2023-04-08/160-IDE-ts-check-flow.png)
 
 但是，同样是IDE中的ts类型检查也要有一定的依据。譬如，外部库的类型定义的文件从哪里查找，是否允许较新的语法等，这些配置依然是由tsconfig.json来提供的，但若未提供，则IDE会使用一份默认的配置。如果要进行类型检测的自定义配置，则需要提供tsconfig.json。
 
@@ -447,7 +447,7 @@ VSCode同样也会有：
 
 首先是tsc编译方案：
 
-![170-tsc-compile-and-type-check](https://res.zhen.blog/images/post/2023-04-08/170-tsc-compile-and-type-check.png)
+![170-tsc-compile-and-type-check](https://res.zhen.wang/images/post/2023-04-08/170-tsc-compile-and-type-check.png)
 
 在这套方案中，ts项目的代码本身的编译，会走项目安装的typescript，并加载项目本身的tsconfig.json配置。同时，IDE也会利用项目本身的typescript以及读取相同配置的tsconfig.json来完成项目代码的类型检查。
 
@@ -456,7 +456,7 @@ VSCode同样也会有：
 
 再来看babel编译方案：
 
-![180-babel-compile-and-type-check](https://res.zhen.blog/images/post/2023-04-08/180-babel-compile-and-type-check.png)
+![180-babel-compile-and-type-check](https://res.zhen.wang/images/post/2023-04-08/180-babel-compile-and-type-check.png)
 
 很显然，babel编译方案，代码编译与IDE的类型检查是两条路线。也就是说，有可能你的IDE提示了错误，但是babel编译是没有问题。这也是很多小伙伴拿到基于babel编译的TS项目容易出现IDE有代码异常问题的UI显示，但是编译代码有没有问题的原因所在。
 

@@ -57,45 +57,45 @@ Demo编写完成后，我们修改其中的target_name，使其带有中横线�
 
 修改为该target_name后，我们进行`node-gyp configure && node-gyp build`，会发现编译器报错：
 
-![](https://res.zhen.blog/images/post/2021-06-25-node-gyp-target-name-bug/compile-error.jpg)
+![](https://res.zhen.wang/images/post/2021-06-25-node-gyp-target-name-bug/compile-error.jpg)
 
 ## 使用IDE分析
 
 我们曾经讲过，node-gyp实际上只是构建工具，他会根据各个操作平台，生成对应平台的项目。在Windows上，它最终会帮你生成一个解决方案。查看项目目录下，我们就能看到一个build文件夹，这个文件夹下面会有解决方案：
 
-![](https://res.zhen.blog/images/post/2021-06-25-node-gyp-target-name-bug/node-gyp-build-sln.jpg)
+![](https://res.zhen.wang/images/post/2021-06-25-node-gyp-target-name-bug/node-gyp-build-sln.jpg)
 
 我们使用VS打开，开始进行分析：
 
-![](https://res.zhen.blog/images/post/2021-06-25-node-gyp-target-name-bug/demo-sln-in-vs.jpg)
+![](https://res.zhen.wang/images/post/2021-06-25-node-gyp-target-name-bug/demo-sln-in-vs.jpg)
 
 通过IDE的智能提示，我们看到在下面的宏使用报错了：
 
-![](https://res.zhen.blog/images/post/2021-06-25-node-gyp-target-name-bug/compile-err-in-vs.jpg)
+![](https://res.zhen.wang/images/post/2021-06-25-node-gyp-target-name-bug/compile-err-in-vs.jpg)
 
 通常，对于宏报错，我们需要的第一步是进行宏展开，查看到底是什么导致了编译错误的。在VS中，我们进行进行如下的配置，让编译器首先生成宏展开的源码：
 
-![](https://res.zhen.blog/images/post/2021-06-25-node-gyp-target-name-bug/gen-i-file.jpg)
+![](https://res.zhen.wang/images/post/2021-06-25-node-gyp-target-name-bug/gen-i-file.jpg)
 
 然后，我们重新进行编译，可以看到在对应的生成目录下，产生了一个`.i`后缀的文件。
 
-![](https://res.zhen.blog/images/post/2021-06-25-node-gyp-target-name-bug/i-file-generated.jpg)
+![](https://res.zhen.wang/images/post/2021-06-25-node-gyp-target-name-bug/i-file-generated.jpg)
 
 这个宏展开后的源码文件，可以更见方便的便于我们分析。我们直接定位到这个文件的最下方，可以看到我们已经经过宏展开的代码：
 
-![](https://res.zhen.blog/images/post/2021-06-25-node-gyp-target-name-bug/i-file-content.jpg)
+![](https://res.zhen.wang/images/post/2021-06-25-node-gyp-target-name-bug/i-file-content.jpg)
 
 我们67404这行宏展开的代码拷贝到VS对应宏使用的地方，通过IDE来更加智能的检查这段有何问题：
 
-![](https://res.zhen.blog/images/post/2021-06-25-node-gyp-target-name-bug/replace-macro-to-code.jpg)
+![](https://res.zhen.wang/images/post/2021-06-25-node-gyp-target-name-bug/replace-macro-to-code.jpg)
 
 因为改行很长，这里我进行一下格式化代码的操作：
 
-![](https://res.zhen.blog/images/post/2021-06-25-node-gyp-target-name-bug/macro-unfold-error-point.jpg)
+![](https://res.zhen.wang/images/post/2021-06-25-node-gyp-target-name-bug/macro-unfold-error-point.jpg)
 
 可以看到，宏展开里面模块名为"hello-world"，在上图指出的部分，被分割为了"hello - world"，而分割开来后，导致了语法错误。如果target_name使用的"hello_world"，则不会有这个问题：
 
-![](https://res.zhen.blog/images/post/2021-06-25-node-gyp-target-name-bug/macro-unfold-with-underline.jpg)
+![](https://res.zhen.wang/images/post/2021-06-25-node-gyp-target-name-bug/macro-unfold-with-underline.jpg)
 
 实际上被`"-"`分割，是因为在宏展开的时候，作为了函数名的一部分，而函数名标识符是不能有`"-"`的。这里举例：
 

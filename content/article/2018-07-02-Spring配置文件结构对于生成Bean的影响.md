@@ -157,17 +157,17 @@ public class CDPlayerConfig {
 </beans>
 ```
 目前配置文件搞定了，并且我们现在的配置以来结构如下：
-![dependency](https://res.zhen.blog/images/post/2018-07-02-Spring/dependency.png)
+![dependency](https://res.zhen.wang/images/post/2018-07-02-Spring/dependency.png)
 
 当然，目前还是有一定的问题的，因为很显然，我们的配置文件都独立与彼此。尽管在CDPlayer中的配置文件通过相关的语法制定了CD Bean的选择（@Qualifier和ref），但是我们可以看到文件本身并没有明确的引入另外的配置文件，所以在IDEA中通常会有这样的提示：
-![norefinjava](https://res.zhen.blog/images/post/2018-07-02-Spring/norefinjava.png)
-![norefinxml](https://res.zhen.blog/images/post/2018-07-02-Spring/norefinxml.png)
+![norefinjava](https://res.zhen.wang/images/post/2018-07-02-Spring/norefinjava.png)
+![norefinxml](https://res.zhen.wang/images/post/2018-07-02-Spring/norefinxml.png)
 同时打开，IDEA的项目结构Project Structs（win默认ctrl+shift+alt+s），点击左侧的Modules，可以看到Spring项目上右下角IDEA提示我们“Unmapped Spring configuration files”并列举除了上述的四个文件。
 
 我们点击上面的+将所有的配置文件追踪上，刚刚所有的索引问题都OK了。此时，我们任意找到一个xml文件，可以看到左上方有一个小标志，点击并选择第一个：
-![clickdpdiagram](https://res.zhen.blog/images/post/2018-07-02-Spring/clickdpdiagram.png)
+![clickdpdiagram](https://res.zhen.wang/images/post/2018-07-02-Spring/clickdpdiagram.png)
 打开之后就能够看到整个项目对于配置文件的依赖：
-![dpdiagram](https://res.zhen.blog/images/post/2018-07-02-Spring/dpdiagram.png)
+![dpdiagram](https://res.zhen.wang/images/post/2018-07-02-Spring/dpdiagram.png)
 可以看到我们的项目（springdemo）具有一个是上下文应用模块，这个应用上下文包含了四份配置文件。但一定要注意，在后续我们加载配置文件的时候，必须要将有依赖关系的配置文件全部加载进来才能够读取到对应的Bean。这里我们进行一个简单的测试：
 ```java
 @RunWith(SpringJUnit4ClassRunner.class)
@@ -186,7 +186,7 @@ public class CDPlayerTest {
 }
 ```
 这个测试是可以直接通过的，因为这里我们加载的是cdconfig.xml配置文件，里面我们定义了名为onTheRun的Bean，所以打印还有非空测试也通过：
-![cdxmltest](https://res.zhen.blog/images/post/2018-07-02-Spring/cdxmltest.png)
+![cdxmltest](https://res.zhen.wang/images/post/2018-07-02-Spring/cdxmltest.png)
 然而接下来我们更换配置文件为cdplayerconfig.xml，相关注入如下：
 ```java
 @RunWith(SpringJUnit4ClassRunner.class)
@@ -249,4 +249,4 @@ public class CDPlayerTest {
     }
 }
 ```
-![passed](https://res.zhen.blog/images/post/2018-07-02-Spring/passed.png)
+![passed](https://res.zhen.wang/images/post/2018-07-02-Spring/passed.png)

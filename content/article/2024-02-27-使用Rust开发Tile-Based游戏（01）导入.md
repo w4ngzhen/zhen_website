@@ -21,7 +21,7 @@ Tile-based游戏是一种使用tile（译为：瓦片，瓷砖）作为基本构
 
 设计者通过组合不同的tile，能够快速创造出多样化的游戏地图，这在许多类型的游戏如角色扮演游戏（RPG）、策略游戏、冒险游戏、解谜游戏以及一些独立游戏和roguelike游戏中尤为常见。Tile-Based游戏和ASCII游戏有一定的关联，比如经典的CDDA大灾变，无论是是使用ascii字符进行渲染，还是使用图片进行渲染，对应坐标位置上的元素总是一致的：
 
-![010-ascii-tile-based-game](https://res.zhen.blog/images/post/2024-02-27/010-ascii-tile-based-game.png)
+![010-ascii-tile-based-game](https://res.zhen.wang/images/post/2024-02-27/010-ascii-tile-based-game.png)
 
 那么从技术层面出发，想要开发出类似这样的游戏，我们需要准备哪些东西呢？
 
@@ -113,7 +113,7 @@ impl EventHandler for MyGame {
 
 按照官方文档，我们编写上述示例代码，运行以后会看到如下效果：
 
-![020-ggez-demo](https://res.zhen.blog/images/post/2024-02-27/020-ggez-demo.gif)
+![020-ggez-demo](https://res.zhen.wang/images/post/2024-02-27/020-ggez-demo.gif)
 
 > 具体代码仓库会在文章末尾给出
 
@@ -138,7 +138,7 @@ impl EventHandler for MyGame {
 
 在原有ggez代码的基础上，我们添加ggegui库，并增加相关的代码后，能够看到如下效果：
 
-![](https://res.zhen.blog/images/post/2024-02-27/030-ggez-with-egui.gif)
+![](https://res.zhen.wang/images/post/2024-02-27/030-ggez-with-egui.gif)
 
 > 由于GIF录制原因导致不清晰，读者可以自行运行Demo代码查看效果
 
@@ -161,7 +161,7 @@ impl EventHandler for MyGame {
 
 specs的代码逻辑细节就不在本文中进行展示了，烦请读者自行阅读specs的[官方文档](https://specs.amethyst.rs/docs/tutorials/01_intro)，以及笔者的仓库代码进行学习。
 
-![040-ggez-egui-specs](https://res.zhen.blog/images/post/2024-02-27/040-ggez-egui-specs.gif)
+![040-ggez-egui-specs](https://res.zhen.wang/images/post/2024-02-27/040-ggez-egui-specs.gif)
 
 # 最后
 

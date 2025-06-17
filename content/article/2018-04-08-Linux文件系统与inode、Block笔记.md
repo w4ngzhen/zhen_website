@@ -70,7 +70,7 @@ inode具体包含了哪些东西？
 7、文件数据block的位置
 ```
 1-5点不难理解，第6点在后面的软硬连接再叙，第七点这里要提一下。上面说过inode本身128 Bytes，还是能记录很多信息的，这里1-6点不至于花光128 Bytes，而对于第7点，inode本身能够记录12个block，如果采用4KB block显然，我们只能存储12 * 4KB大小的文件，这显然是不现实的。为了解决这个问题，inode中在第12个记录block编号之后，还能动态的增加二级、甚至三级间接指向，这里我们使用如下的图更为形象的说明：
-![inode-block](https://res.zhen.blog/images/post/2018-04-08-inode-block/inode-block.png)
+![inode-block](https://res.zhen.wang/images/post/2018-04-08-inode-block/inode-block.png)
 在上图的情况下，我们可以知道假设我们使用4KB大小的block，并且刚好使用满二次间接，能够存储的数据大小为：
 ```
 12*4KB + 1024*4KB + 1024*1024*4KB
@@ -82,7 +82,7 @@ inode具体包含了哪些东西？
 上面讨论inode与block我们都是以一个普通文件的角度来看待的。然而，文件夹inode与block与普通文件是有一定的差别的。对于一个文件夹来说，inode与普通文件类似，包含了关于文件夹的属性、读写执行权限、时间戳等。然而，文件夹inode中的直接block通常不会超过12个直接的。为什么呢？因为文件夹所指向的block只会存储这个文件夹拥有的文件的inode编号，并不会存储实际的文件内容。
 
 例如，当我们拥有一个文件夹dir，这个文件夹下面只有一份文件大小为4GB的inode为1234的文件，那么实际上，文件夹inode中存储的block中只会存储类似inode=1234这样的信息。下图能够更加形象的展示：
-![dir-inode-block](https://res.zhen.blog/images/post/2018-04-08-inode-block/dir-inode-block.png)
+![dir-inode-block](https://res.zhen.wang/images/post/2018-04-08-inode-block/dir-inode-block.png)
 总结一下，文件夹的block只会存储对应文件夹下面的文件的inode。所以当我们访问某一个文件的时候，譬如我问需要查看/root/test.txt的时候，流程如下：
 ```
 首先检查根目录下的权限“/”，符合权限

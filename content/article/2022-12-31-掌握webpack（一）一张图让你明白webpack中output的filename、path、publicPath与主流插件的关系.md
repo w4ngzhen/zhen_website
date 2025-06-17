@@ -13,7 +13,7 @@ webpack的核心概念，放到2022年相信很多的小伙伴都已经非常清
 
 直接上总结图
 
-![160-v3-path-filename-publicPath](https://res.zhen.blog/images/post/2022-12-31/160-v3-path-filename-publicPath.png)
+![160-v3-path-filename-publicPath](https://res.zhen.wang/images/post/2022-12-31/160-v3-path-filename-publicPath.png)
 
 # 基础环境搭建
 
@@ -67,7 +67,7 @@ yarn build
 
 运行以后，就会在项目根目录下的dist目录下生成main.js。
 
-![010-base-config](https://res.zhen.blog/images/post/2022-12-31/010-base-config.png)
+![010-base-config](https://res.zhen.wang/images/post/2022-12-31/010-base-config.png)
 
 *注意：这里并没有配置关于js的解析，因为webpack默认就会处理js文件。*
 
@@ -111,17 +111,17 @@ HtmlWebpackPlugin插件**基础**功能：
 
 让我们再次运行构建脚本后，我们会发现，dist目录中，不仅仅生成了main.js，还生成一个index.html：
 
-![020-a-new-indexhtml](https://res.zhen.blog/images/post/2022-12-31/020-a-new-indexhtml.png)
+![020-a-new-indexhtml](https://res.zhen.wang/images/post/2022-12-31/020-a-new-indexhtml.png)
 
 通过检查这个index.html的内容可以看到，这个插件不仅仅帮我们生成了一个html，还在这个html中的head节点中创建了一个script节点，并且src属性填写的是main.js。
 
-![030-check-new-indexhtml](https://res.zhen.blog/images/post/2022-12-31/030-check-new-indexhtml.png)
+![030-check-new-indexhtml](https://res.zhen.wang/images/post/2022-12-31/030-check-new-indexhtml.png)
 
 
 
 此时，我们使用浏览器直接打开这个index.html，尽管是在文件系统，但浏览器还是可以通过script节点中的属性`src="main.js"，从index.html所在同级目录中加载main.js。然而，运行起来有报错：
 
-![040-raw-indexhtml-script](https://res.zhen.blog/images/post/2022-12-31/040-raw-indexhtml-script.png)
+![040-raw-indexhtml-script](https://res.zhen.wang/images/post/2022-12-31/040-raw-indexhtml-script.png)
 
 > PS：这里有同学可能会认为是script节点在body以前加载的，所以会报错。但是实际不是这样的，这里script节点中有一个`defer`属性，这个属性表明，文档加载完毕以后才会执行main.js（[MDN - defer](https://developer.mozilla.org/zh-CN/docs/Web/HTML/Element/script#attr-defer)），所以，我们不用担心由于DOM未加载完就执行js代码而造成报错。
 
@@ -159,11 +159,11 @@ HtmlWebpackPlugin插件**基础**功能：
 
 我们再次运行构建，可以看到在dist目录下的index.html是基于我们提供的模板生成：
 
-![050-indexhtml-by-custom](https://res.zhen.blog/images/post/2022-12-31/050-indexhtml-by-custom.png)
+![050-indexhtml-by-custom](https://res.zhen.wang/images/post/2022-12-31/050-indexhtml-by-custom.png)
 
 此时，我们再次打开这个html，可以看到正确的处理后的结果：
 
-![060-right-handle](https://res.zhen.blog/images/post/2022-12-31/060-right-handle.png)
+![060-right-handle](https://res.zhen.wang/images/post/2022-12-31/060-right-handle.png)
 
 
 
@@ -193,7 +193,7 @@ js最终生成的路径是：
 
 重新经过构建以后，我们会看到`my-dist`目录被创建，并且这个目录下面还会创建`js`目录，`js`目录中会有main.js，正好匹配了`output.path（项目根目录/my-dist） + output.filename（js/main.js）`。
 
-![070-new-output-path-and-filename](https://res.zhen.blog/images/post/2022-12-31/070-new-output-path-and-filename.png)
+![070-new-output-path-and-filename](https://res.zhen.wang/images/post/2022-12-31/070-new-output-path-and-filename.png)
 
 但是，output.filename与output.path仅仅影响js的生成吗？不然，让我看看这两个参数对于HtmlWebpackPlugin的关联关系。
 
@@ -201,7 +201,7 @@ js最终生成的路径是：
 
 对于上述生成结果，我们会注意到，在webpack配置中的HtmlWebpackPlugin插件部分，我们没有编写过任何关于index.html的生成路径的配置，但这个index.html最终也生成到了`"my-dist"`目录下（与output.path一致）；此外，我们还可以发现，生成的index.html里面的script节点的src属性，是`"js/mian.js"`（与output.filename一致）。
 
-我们可以整理一个图，来描述相关配置与js构建、HtmlWebpackPlugin插件的关联关系：![080-v1-path-filename](https://res.zhen.blog/images/post/2022-12-31/080-v1-path-filename.png)
+我们可以整理一个图，来描述相关配置与js构建、HtmlWebpackPlugin插件的关联关系：![080-v1-path-filename](https://res.zhen.wang/images/post/2022-12-31/080-v1-path-filename.png)
 
 总结来说，output.path与output.filename不能单纯只作为输出js的配置，HtmlWebpackPlugin也会使用它们：
 
@@ -233,15 +233,15 @@ configuration.output.filename: A relative path is expected. However, the provide
 
 只是因为output.publicPath默认是空字符串，所以我们前面生成出来的只是`src="js/main.js"`。这里，我们可以做一个简单的实验，配置publicPath为`"/"`，则生成的节点就会成为：`<script src="/js/main.js">`
 
-![090-publicPath-root](https://res.zhen.blog/images/post/2022-12-31/090-publicPath-root.png)
+![090-publicPath-root](https://res.zhen.wang/images/post/2022-12-31/090-publicPath-root.png)
 
 output.publicPath: "abc"（尾部没有"/"），src="abc/js/main.js"：
 
-![100-publicPath-abc](https://res.zhen.blog/images/post/2022-12-31/100-publicPath-abc.png)
+![100-publicPath-abc](https://res.zhen.wang/images/post/2022-12-31/100-publicPath-abc.png)
 
 output.publicPath: "/abc"（尾部依然没有"/"），src="/abc/js/main.js"：
 
-![110-publicPath-root-abc](https://res.zhen.blog/images/post/2022-12-31/110-publicPath-root-abc.png)
+![110-publicPath-root-abc](https://res.zhen.wang/images/post/2022-12-31/110-publicPath-root-abc.png)
 
 仔细观察这几种场景，就可以知道HtmlWebpackPlugin插件，在生成html中的script标签时候，其中的src属性依赖output.filename以及output.publicPath，并且规则为：
 
@@ -253,11 +253,11 @@ output.publicPath: "/abc"（尾部依然没有"/"），src="/abc/js/main.js"：
 
 于是乎，我们重新整理前面的关系图，把output.publicPath配置引入：
 
-![120-v2-path-filename-publicPath](https://res.zhen.blog/images/post/2022-12-31/120-v2-path-filename-publicPath.png)
+![120-v2-path-filename-publicPath](https://res.zhen.wang/images/post/2022-12-31/120-v2-path-filename-publicPath.png)
 
 细心的读者已经想到了，假如publicPath配置成了"/static/"，影响了HtmlWebpackPlugin中的script节点的src属性路径；而js文件实际生成路径仅受到output.path+output.filename，势必造成js访问路径不匹配的问题：
 
-![130-path-not-match.png](https://res.zhen.blog/images/post/2022-12-31/130-path-not-match.png)
+![130-path-not-match.png](https://res.zhen.wang/images/post/2022-12-31/130-path-not-match.png)
 
 所以，日常对于webpack的配置一定要注意这种路径问题，保持匹配，否则使用webpack-dev-server就会出现问题～
 
@@ -285,7 +285,7 @@ yarn add -D css-loader mini-css-extract-plugin
 
 内容主要是新增了css-loader与mini-css-extract-plugin。
 
-![140-project-content](https://res.zhen.blog/images/post/2022-12-31/140-project-content.png)
+![140-project-content](https://res.zhen.wang/images/post/2022-12-31/140-project-content.png)
 
 接下来，我们编写一个简单的css样式文件存放于src目录下（src/my-style.css）：
 
@@ -343,11 +343,11 @@ module.exports = {
 
 完成配置以后，我们再次启动webpack的构建，会看到dist目录下，又会产生一个css目录，里面存放的就是mian.js，并且，检查index.html会发现这一次除了script标签外，还插入了link标签：
 
-![150-css-output](https://res.zhen.blog/images/post/2022-12-31/150-css-output.png)
+![150-css-output](https://res.zhen.wang/images/post/2022-12-31/150-css-output.png)
 
 有的读者可能已经能够推断出，这个link标签的href路径，也是根据output.publicPath+MiniCssExtractPlugin插件的filename组合而来。这里直接给出结论，就是这样的。我们再次更新图表，把导出css样式文件的MiniCssExtractPlugin插件与相关的配置关系也总结进去，得到如下最终版关系图：
 
-![160-v3-path-filename-publicPath](https://res.zhen.blog/images/post/2022-12-31/160-v3-path-filename-publicPath.png)
+![160-v3-path-filename-publicPath](https://res.zhen.wang/images/post/2022-12-31/160-v3-path-filename-publicPath.png)
 
 # 关于关系图的补充
 

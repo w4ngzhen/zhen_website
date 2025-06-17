@@ -16,7 +16,7 @@ categories:
 ## 项目结构
 
 Tesseract本身由C++编写并开源在[Github](https://github.com/tesseract-ocr/tesseract)，在3.X版本中，Tesseract的识别模式为字符识别，该种识别方式识别能力较低，所以在后来的4.X版本中，引入了LSTM（Long short-term memory，长短期记忆神经网络），极大的提升了识别率。为了让不同的语言均能够使用Tesseract进行OCR识别，Tesseract也是开放了API并产生了诸如Java、C#、Python等主流语言在内的封装版本。而本次C#端的封装版也开源在了[Github](https://github.com/charlesw/tesseract)，目前已知的C#封装版已发布在nuget上，封装了对应Tesseract的版本为3.05.02。所以目前的项目结构如下：
-![版本封装](https://res.zhen.blog/images/post/2020-02-04-tesseract/版本封装.png)
+![版本封装](https://res.zhen.wang/images/post/2020-02-04-tesseract/版本封装.png)
 
 ## Demo实验
 
@@ -32,14 +32,14 @@ https://tesseract-ocr.github.io/tessdoc/Data-Files
 the third set in tessdata is the only one that supports the legacy recognizer. The 4.00 files from November 2016 have both legacy and older LSTM models. The current set of files in tessdata have the legacy models and newer LSTM models (integer versions of 4.00.00 alpha models in tessdata_best).
 >
 
-![数据包下载](https://res.zhen.blog/images/post/2020-02-04-tesseract/数据包下载.png)
+![数据包下载](https://res.zhen.wang/images/post/2020-02-04-tesseract/数据包下载.png)
 
 为了Demo，我下载了中文简体和英文的数据包作为实验对象
 
 #### 开发环境准备
 
 为了实验并对比上面两个封装版本的识别效果，这里在同一解决方案中创建了两个项目：
-![项目创建](https://res.zhen.blog/images/post/2020-02-04-tesseract/项目创建.png)
+![项目创建](https://res.zhen.wang/images/post/2020-02-04-tesseract/项目创建.png)
 
 BaseNewBeta使用的是封装了4.1版本Tesseract的C#封装版Tesseract.4.1.0-beta1，因为该版本还还没有上传只Nuget，所以只能从github上下载，放到本地，然后把对应的C++的底层库（leptonica-1.78.0.dll，tesseract41.dll）放置到了x86和x64文件夹下面且需要输出。
 
@@ -78,17 +78,17 @@ BaseNuget是已经上传至Nuget的封装了底层库3.05.20版本的C#封装版
 ##### 英文识别效果
 
 先是3.X版本识别：
-![EnNuget](https://res.zhen.blog/images/post/2020-02-04-tesseract/EnNuget.png)
+![EnNuget](https://res.zhen.wang/images/post/2020-02-04-tesseract/EnNuget.png)
 可以看到文本中还有很多识别的错误的，特别是把英文字符C识别为了括号（。
 而封装了新版本的识别结果比起之前更好：
-![EnNewBeta](https://res.zhen.blog/images/post/2020-02-04-tesseract/EnNewBeta.png)
+![EnNewBeta](https://res.zhen.wang/images/post/2020-02-04-tesseract/EnNewBeta.png)
 
 ##### 中文识别效果
 
 先是3.X版本识别：
-![CNNuget](https://res.zhen.blog/images/post/2020-02-04-tesseract/CNNuget.png)
+![CNNuget](https://res.zhen.wang/images/post/2020-02-04-tesseract/CNNuget.png)
 然后是封装的版本：
-![CNNewBeta](https://res.zhen.blog/images/post/2020-02-04-tesseract/CNNewBeta.png)
+![CNNewBeta](https://res.zhen.wang/images/post/2020-02-04-tesseract/CNNewBeta.png)
 看的出来，官方的数据包对于中文的识别还是有很大问题的，不过庆幸的是，4.X版本的后的Tesseract支持我们使用的自己的数据进行识别训练。这样一来，虽然该组件还比不上市面上大多数的商业OCR识别，但是我们可以使用训练数据，来训练适用于我们特定业务的文字识别（比如XX码的提取之类）
 
 

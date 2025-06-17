@@ -36,7 +36,7 @@ yarn add -D electron
 
 运行启动以后，在Electron安装的环境一直卡住了很久很久。
 
-![010-electron-install-pending](https://res.zhen.blog/images/post/2023-05-22/010-electron-install-pending.gif)
+![010-electron-install-pending](https://res.zhen.wang/images/post/2023-05-22/010-electron-install-pending.gif)
 
 咦，难道镜像配置写错了吗？仔细对比以后，没有问题。难道因为我的网络访问很慢吗？等到访问超时以后，发现一个IP地址超时了，心想国内镜像再怎么也不应该超时，盲猜镜像地址没有生效。于是乎，准备尝试对下载Electron二进制文件的过程进行debug。
 
@@ -44,7 +44,7 @@ yarn add -D electron
 
 首先定位到`node_module/electron`包，能够看到有一段安装后脚本执行命令（`postinstall`）：
 
-![020-node_module-electron-scripts](https://res.zhen.blog/images/post/2023-05-22/020-node_module-electron-scripts.png)
+![020-node_module-electron-scripts](https://res.zhen.wang/images/post/2023-05-22/020-node_module-electron-scripts.png)
 
 > 关于postinstall的详细说明：[scripts | npm Docs (npmjs.com)](https://docs.npmjs.com/cli/v6/using-npm/scripts#pre--post-scripts)
 
@@ -52,15 +52,15 @@ yarn add -D electron
 
 定位进入了`node_module/electron`包下的`install.js`，该脚本内部主要逻辑是先检查Electron的二进制缓存，如果不存在缓存，则使用来自`@electron/get`包中提供的`downloadArtifact`方法从远端下载Electron二进制制品文件。
 
-![030-installjs-flow](https://res.zhen.blog/images/post/2023-05-22/030-installjs-flow.png)
+![030-installjs-flow](https://res.zhen.wang/images/post/2023-05-22/030-installjs-flow.png)
 
 我们暂时先不看缓存读写的逻辑，着重了解远端下载的逻辑，所以我们进入`@electron/get`包中的`downloadArtifact`：
 
-![040-@electron-get-npm](https://res.zhen.blog/images/post/2023-05-22/040-@electron-get-npm.png)
+![040-@electron-get-npm](https://res.zhen.wang/images/post/2023-05-22/040-@electron-get-npm.png)
 
 查看`@electron/get`包下的index.js内容：
 
-![050-@electron-get-core-download-script](https://res.zhen.blog/images/post/2023-05-22/050-@electron-get-core-download-script.png)
+![050-@electron-get-core-download-script](https://res.zhen.wang/images/post/2023-05-22/050-@electron-get-core-download-script.png)
 
 前面我们提到，怀疑镜像地址没有生效导致下载超时，所以我们重点关注一下这里通过`getArtifactRemoteURL`方法得到的`url`值，
 
@@ -68,25 +68,25 @@ yarn add -D electron
 
 1. 找到这个包的缓存（macOS上的路径为：`～/Library/Caches/Yarn/v6/npm-@electron-get-xxxx`）：
 
-![060-@electron-get-cache-location](https://res.zhen.blog/images/post/2023-05-22/060-@electron-get-cache-location.png)
+![060-@electron-get-cache-location](https://res.zhen.wang/images/post/2023-05-22/060-@electron-get-cache-location.png)
 
 2. 找到上述indexjs代码，并添加一段日志打印：
 
-![070-modify-cached-@electron-get-indexjs](https://res.zhen.blog/images/post/2023-05-22/070-modify-cached-@electron-get-indexjs.png)
+![070-modify-cached-@electron-get-indexjs](https://res.zhen.wang/images/post/2023-05-22/070-modify-cached-@electron-get-indexjs.png)
 
 3. 准备完毕以后，我们重新在demo项目下执行`yarn add -D electron`。执行以后，等到超时以后，发现控制台日志打印如下：
 
-![080-remote-url-is-github](https://res.zhen.blog/images/post/2023-05-22/080-remote-url-is-github.png)
+![080-remote-url-is-github](https://res.zhen.wang/images/post/2023-05-22/080-remote-url-is-github.png)
 
 Why！？为什么这个下载的Electron二进制文件地址依然是github的？于是，我们有必要进一步查看这个URL是如何得到。
 
 继续查看代码，这个`url`来源于`artifact-utils`中的`getArtifactRemoteURL`方法，而这个方法里面关于最终返回的`url`最重要的部分是下图所示的`base`的值：
 
-![090-@electron-get-artifact-utils-getArtifactRemoteURL](https://res.zhen.blog/images/post/2023-05-22/090-@electron-get-artifact-utils-getArtifactRemoteURL.png)
+![090-@electron-get-artifact-utils-getArtifactRemoteURL](https://res.zhen.wang/images/post/2023-05-22/090-@electron-get-artifact-utils-getArtifactRemoteURL.png)
 
 而这个`base`值来源于`mirrorVar`这个方法：
 
-![100-@electron-get-artifact-utils-mirrorVar](https://res.zhen.blog/images/post/2023-05-22/100-@electron-get-artifact-utils-mirrorVar.png)
+![100-@electron-get-artifact-utils-mirrorVar](https://res.zhen.wang/images/post/2023-05-22/100-@electron-get-artifact-utils-mirrorVar.png)
 
 根据上面代码的逻辑，name值为`"mirror"`，options未使用，defaultValue为：
 
@@ -109,9 +109,9 @@ Why！？为什么这个下载的Electron二进制文件地址依然是github的
 
 那我们在`.npmrc`中配置的`ELECTRON_MIRROR`，在`process.env`中变成了什么呢？通过添加日志打印，我们会看到：
 
-![110-ProcessEnv-consolelog](https://res.zhen.blog/images/post/2023-05-22/110-ProcessEnv-consolelog.png)
+![110-ProcessEnv-consolelog](https://res.zhen.wang/images/post/2023-05-22/110-ProcessEnv-consolelog.png)
 
-![120-ProcessEnv-npm_config_ELECTRON_MIRROR](https://res.zhen.blog/images/post/2023-05-22/120-ProcessEnv-npm_config_ELECTRON_MIRROR.png)
+![120-ProcessEnv-npm_config_ELECTRON_MIRROR](https://res.zhen.wang/images/post/2023-05-22/120-ProcessEnv-npm_config_ELECTRON_MIRROR.png)
 
 可以看到，在`process.env`中，这个键为`"npm_config_ELECTRON_MIRROR"`（`npm_config`小写，`ELECTORN_MIRROR`大写）。我们知道，nodejs中object对象的属性值是大小写敏感的！所以，当上面的`mirrorVar`代码运行，尝试获取`process.env`中的值的时候，根本找不到了，因为没有`"NPM_CONFIG_ELECTRON_MIRROR"`、`"npm_config_electron_mirror"`、`"npm_package_config_electron_mirror"`、`"ELECTRON_MIRROR"`这些属性。
 
@@ -144,7 +144,7 @@ console.log("process.env['npm_config_ELECTRON_MIRROR']", process.env['npm_config
 
 最后，我们分别使用yarn（`yarn start`）和npm（`npm run start`）来运行脚本：
 
-![130-yarn-and-npm-diff](https://res.zhen.blog/images/post/2023-05-22/130-yarn-and-npm-diff.png)
+![130-yarn-and-npm-diff](https://res.zhen.wang/images/post/2023-05-22/130-yarn-and-npm-diff.png)
 
 在yarn运行上下文中，`.npmrc`中的`"ELECTRON_MIRROR"`直接拼接到了`"npm_config_"`后边，作为`process.env`的一个属性，所以你只能访问`process.env["npm_config_ELECTRON_MIRROR"]`得到值；
 
@@ -175,7 +175,7 @@ console.log(env.test);
 
 也就是说，在Windows机器上，即使`process.env`中的key为`"npm_config_ELECTRON_MIRROR"`，你也可以通过`"npm_config_electron_mirror"`或者是`"NPM_CONFIG_ELECTRON_MIRROR"`来访问这个值：
 
-![140-windows-npmrc](https://res.zhen.blog/images/post/2023-05-22/140-windows-npmrc.png)
+![140-windows-npmrc](https://res.zhen.wang/images/post/2023-05-22/140-windows-npmrc.png)
 
-![150-process-env-Windows-output](https://res.zhen.blog/images/post/2023-05-22/150-process-env-Windows-output.png)
+![150-process-env-Windows-output](https://res.zhen.wang/images/post/2023-05-22/150-process-env-Windows-output.png)
 

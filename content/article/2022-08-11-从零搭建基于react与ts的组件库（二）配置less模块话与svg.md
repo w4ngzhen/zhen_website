@@ -236,7 +236,7 @@ import styles from './index.module.less';
 
 编译r-ui后打开样例界面，可以看到如下效果：
 
-![010-less-module](https://res.zhen.blog/images/post/2022-08-11/010-less-module.gif)
+![010-less-module](https://res.zhen.wang/images/post/2022-08-11/010-less-module.gif)
 
 # svg引入配置
 
@@ -323,4 +323,4 @@ declare module '*.svg' {
 
 ## 效果演示
 
-![020-use-svg](https://res.zhen.blog/images/post/2022-08-11/020-use-svg.png)
+![020-use-svg](https://res.zhen.wang/images/post/2022-08-11/020-use-svg.png)

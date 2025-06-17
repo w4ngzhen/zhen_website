@@ -31,7 +31,7 @@ $ cargo init
 
 该命令执行完成后，我们会在当前目录下生成一个名为workspace-demo的目录，并在该目录下生成一个名为Cargo.toml的文件，该文件包含了当前工程的基本信息，包括工程名、版本、依赖等：
 
-![010-basic-project](https://res.zhen.blog/images/post/2024-05-10/010-basic-project.png)
+![010-basic-project](https://res.zhen.wang/images/post/2024-05-10/010-basic-project.png)
 
 接着，我们在项目根目录执行如下命令，分别创建两个package：
 
@@ -42,7 +42,7 @@ $ cargo init my_lib --lib
 
 执行完成以后，cargo帮助我们在项目根目录下创建了两个package：
 
-![020-init-2-packages](https://res.zhen.blog/images/post/2024-05-10/020-init-2-packages.png)
+![020-init-2-packages](https://res.zhen.wang/images/post/2024-05-10/020-init-2-packages.png)
 
 并且，cargo贴心的帮助我们在项目根目录下的Cargo.toml加入下这段配置：
 
@@ -56,7 +56,7 @@ $ cargo init my_lib --lib
 
 执行命令后会发现一个报错：
 
-![030-no-package-err](https://res.zhen.blog/images/post/2024-05-10/030-no-package-err.png)
+![030-no-package-err](https://res.zhen.wang/images/post/2024-05-10/030-no-package-err.png)
 
 ```
 Caused by:
@@ -68,7 +68,7 @@ Caused by:
 
 报错原因在于：首先，项目根目录下的Cargo.toml存在`[package]`字段：
 
-![040-package-field](https://res.zhen.blog/images/post/2024-05-10/040-package-field.png)
+![040-package-field](https://res.zhen.wang/images/post/2024-05-10/040-package-field.png)
 
 这个字段的存在意味着根目录包含的内容是一个package包，那么这个目录需要符合rust的package结构：目录下存在`src/main.rs`（bin类型包），或存在`src/lib.rs`（lib类型包），或是通过`[[bin]]`、`[[lib]]`字段配置指定该package的入口代码文件。
 
@@ -90,7 +90,7 @@ workspace = { members = ["my_app", "my_lib"] }
 
 再次进行`cargo build`，会发现新的报错：
 
-![050-dep-section-err](https://res.zhen.blog/images/post/2024-05-10/050-dep-section-err.png)
+![050-dep-section-err](https://res.zhen.wang/images/post/2024-05-10/050-dep-section-err.png)
 
 ```
 Caused by:
@@ -107,7 +107,7 @@ Caused by:
 
 在本例中，我们希望整个项目下，所有的package都存放到crates目录下，而根目录下不需要放任何的src文件。所以，我们也需要将根目录下的Cargo.toml中的`[dependencies]`字段也一并移除。于是，现在的项目状态如下：
 
-![060-simple-virtual-manifest](https://res.zhen.blog/images/post/2024-05-10/060-simple-virtual-manifest.png)
+![060-simple-virtual-manifest](https://res.zhen.wang/images/post/2024-05-10/060-simple-virtual-manifest.png)
 
 最后，我们再次执行`cargo build`，会发现编译成功。
 
@@ -116,7 +116,7 @@ Caused by:
 
 当然，目前我们仅仅是创建了两个不相干的package。但是实际的场景下，`my_app`会依赖`my_lib`这个crate。为了达到这个目的，我们只需要在`my_app`下的Cargo.toml按照如下方式来定义对`my_lib`的依赖：
 
-![070-workspace-lib-dep-path](https://res.zhen.blog/images/post/2024-05-10/070-workspace-lib-dep-path.png)
+![070-workspace-lib-dep-path](https://res.zhen.wang/images/post/2024-05-10/070-workspace-lib-dep-path.png)
 
 为了让子package依赖到工作空间中其他的package，只需要提供一个文件路径即可，该路径是相对于当前package的路径。
 
@@ -124,7 +124,7 @@ Caused by:
 
 除了workspace内部之间的依赖以外，我们还可能面临这样的场景：`my_app`和`my_lib`都用到了一个相同的外部依赖库（例如，[serde库](https://docs.rs/serde/latest/serde/)）。为了让这两个库都能依赖到。一种方式是将`my_app`和`my_lib`下的Cargo.toml都按如下方式定义：
 
-![080-simple-dep-serde](https://res.zhen.blog/images/post/2024-05-10/080-simple-dep-serde.png)
+![080-simple-dep-serde](https://res.zhen.wang/images/post/2024-05-10/080-simple-dep-serde.png)
 
 这种方式虽然简单，但是存在一个问题：如果我们将`my_lib`的`serde`升级为一个新的版本，那么我们需要将`my_app`下的`serde`库也升级为新的版本。随着子package的增多，这样的维护方式心智负担会越来越大。那么有没有更优雅的方式呢？答案是肯定的。workspace为我们提供了依赖共享的能力，具体方式如下：
 
@@ -148,7 +148,7 @@ members = ["my_app", "my_lib"]
 
 整体如下：
 
-![090-workspace-dep](https://res.zhen.blog/images/post/2024-05-10/090-workspace-dep.png)
+![090-workspace-dep](https://res.zhen.wang/images/post/2024-05-10/090-workspace-dep.png)
 
 按照上述配置以后，`my_app`和`my_lib`不仅都依赖到了`serde`库，而且他们的版本始终保持了一致。如果我们将`serde`升级为一个新的版本，那么`my_app`和`my_lib`都会自动升级。
 
@@ -156,7 +156,7 @@ members = ["my_app", "my_lib"]
 
 实际上，除了上述的依赖共享外，还有其他很多的属性可以共享。例如，上述的`my_app`和`my_lib`都是各自在维护自己的版本：
 
-![independent-version](https://res.zhen.blog/images/post/2024-05-10/100-independent-version.png)
+![independent-version](https://res.zhen.wang/images/post/2024-05-10/100-independent-version.png)
 
 有的场景下，我们希望它们的版本能够保持一致。这个时候，我们同样可以在根目录下的Cargo.toml定义工作空间的版本信息：
 
@@ -190,7 +190,7 @@ name = "my_lib"
 
 整体如下：
 
-![share-package-config](https://res.zhen.blog/images/post/2024-05-10/110-share-package-config.png)
+![share-package-config](https://res.zhen.wang/images/post/2024-05-10/110-share-package-config.png)
 
 
 # 写在最后

@@ -164,7 +164,7 @@ In TrMid 2's f.
 首先我们可以确定，我们按照上面的类层级结构混入了两个带有同名方法f的特质，并没有像上面那样出现二义性错误；为什么会这样？让我们再次理解这一段话“特质是对我们要**被继承**的类的补充，是要混入我们要继承的类的，不是我们本身类”。也就是说，报错的那个二义性，是由于我们想要将两个同名的f方法混入AnyRef这个类中，然而，我们没有override关键字（也无法加上），那么混入过程只是单纯的向AnyRef类中添加两个签名一样的方法f，而语法上我们无法向同一个类中添加连个签名完全一样的方法，故报错；解决方法就是在我们的子类中override这个f方法，重写覆盖它，消除二选一。
 
 而后者，我们能够编译运行还是像上面这样理解，由于我们是要向AbTop这个类中去混入特质，而我们每一个特质都是继承了AbTop类的，故我们应当重写覆盖顶层抽象类中的f方法，所以，在混入的过程中，从左到右每混入一次，他就加上一层外壳，所以这就是为什么，输出的结果是打印的第二个特质中f方法的输出，因为逐渐混入加壳的过程是从左到右的，先对AbTop加了壳，混入TrMid1特质，然后又对这一个结构加壳过程，混入TrMid2特质，就像下图：
-![wrap](https://res.zhen.blog/images/post/2018-04-24-trait/wrap.png)
+![wrap](https://res.zhen.wang/images/post/2018-04-24-trait/wrap.png)
 这样一来，不难理解混入特质的过程（加壳的过程）本身就像一个一层一层继承的过程。还是上面那段带有AbTop的代码中，这一次我们添加一个新的抽象类AbNewTop，但是其中包含一个抽象方法其名称依然为f，然我们修改Bottom的定义：
 ```scala
 abstract class AbNewTop {
@@ -183,7 +183,7 @@ Error:(19, 36) illegal inheritance; superclass AbNewTop
 class Bottom extends AbNewTop with TrMid2 with TrMid1 {
 ```
 英语有点绕口，我们这里翻译并分割一下：“非法的继承；_超类AbNewTop_ 不是 混入特质的TrMid2的 _超类AbTop_ 的子类”。再次对应这个结构：[ class A ] extends [ S with T1 with T2 ...] 那么错误就在与后面的 S 与 T1、T2 对应不上了，及要实现正确的混入，S必须是T1、T2的超类的子类，当然，隐含的，本身也可以。转化为类图应该要满足如下的情形：
-![class_map](https://res.zhen.blog/images/post/2018-04-24-trait/class_map.png)
+![class_map](https://res.zhen.wang/images/post/2018-04-24-trait/class_map.png)
 可能有些人有疑惑，为什么特质不继承自任何其他的类的时候，依然可以被混入到其他的类中，就像如下的形式：
 ```scala
 trait T1 {}
@@ -191,7 +191,7 @@ class Animal {}
 class Dog extends Animal with T1 {}
 ```
 因为在Scala任何的非值类（或特质）有默认的继承了scala.AnyRef类！这里的类图是如下的情形：
-![animal_class](https://res.zhen.blog/images/post/2018-04-24-trait/animal_class.png)
+![animal_class](https://res.zhen.wang/images/post/2018-04-24-trait/animal_class.png)
 
 ### 使用特质来做可堆叠的改动——过滤
 
@@ -235,9 +235,9 @@ object Run {
 }
 ```
 在前面的讨论中我们知道，如果是一个类混入了多个特质，这多个特质含有同名的方法，会从左到右包装出来，即最终调用的是靠近右侧的实现了的方法。首先要实现筛选偶数，再除以2，最终添加到容器中。所以最先发挥作用的Even特质放在了最右侧。为什么这里，不仅能够筛选出偶数，同时还能除以2呢？答案就在super这个关键点。super.add即调用超类的add方法。这里再次用图来说明：
-![evendivide](https://res.zhen.blog/images/post/2018-04-24-trait/evendivide.png)
+![evendivide](https://res.zhen.wang/images/post/2018-04-24-trait/evendivide.png)
 我想这个图足以说明了吧。调用过程就是先调用最右侧的Even.add方法，进行偶数筛选；然后调用超类super.add(x)；超类即从右到左开始Even左侧是Divide，Divide.add(x)，Divide.add内部对x除以2，传入super.add()方法，即再次向左侧，是Container.add()，此时接收到的数已经是除以2的数了：
-![flow](https://res.zhen.blog/images/post/2018-04-24-trait/flow.png)
+![flow](https://res.zhen.wang/images/post/2018-04-24-trait/flow.png)
 还有一种情况是更为复杂的：
 ```scala
 class A {
@@ -258,7 +258,7 @@ trait C extends B {
 class T extends A with C
 ```
 关系图对应如下：
-![classrelation](https://res.zhen.blog/images/post/2018-04-24-trait/classrelation.png)
+![classrelation](https://res.zhen.wang/images/post/2018-04-24-trait/classrelation.png)
 输出：
 ```scala
 object Run {

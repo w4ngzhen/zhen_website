@@ -26,7 +26,7 @@ nvim的代码格式化有一个比较经典的插件：[mhartington/formatter.nv
 
 其次，formatter这个插件的思路也很简单：你可以为每一种文件类型（filetype）配置想要调用外部的格式化工具，然后一旦使用插件提供的指令（譬如：`Format`），它就会调用你所配置的外部格式化工具。
 
-![010-formatter-plugin-runtime-arch](https://res.zhen.blog/images/post/2023-07-25/010-formatter-plugin-runtime-arch.png)
+![010-formatter-plugin-runtime-arch](https://res.zhen.wang/images/post/2023-07-25/010-formatter-plugin-runtime-arch.png)
 
 
 
@@ -46,17 +46,17 @@ require("formatter").setup {
 
 那么这个`'formatter.filetypes.javascript'`是什么呢？翻阅formatter插件代码，可以看到路径`lua/formatter/filetypes/javascript.lua`代码：
 
-![020-formatter-repo-filetypes-js](https://res.zhen.blog/images/post/2023-07-25/020-formatter-repo-filetypes-js.png)
+![020-formatter-repo-filetypes-js](https://res.zhen.wang/images/post/2023-07-25/020-formatter-repo-filetypes-js.png)
 
 而该代码中的`local defaults = require "formatter.default"`就来源于`lua/formatter/defaults`目录下的模块，像prettier就来自于对应文件preitter.lua：
 
-![030-formatter-repo-default-prettier](https://res.zhen.blog/images/post/2023-07-25/030-formatter-repo-default-prettier.png)
+![030-formatter-repo-default-prettier](https://res.zhen.wang/images/post/2023-07-25/030-formatter-repo-default-prettier.png)
 
 这里也能很清晰的看到，formatter调用prettier的时候，就是调用的命令行环境中的`prettier`，所以我们才在一开始的时候提到，需要安装对应外部格式化工具，并且能在命令行形式被访问调用。
 
 那么，再次回到笔者自己的配置：
 
-![035-my-formatter-plugin-setup](https://res.zhen.blog/images/post/2023-07-25/035-my-formatter-plugin-setup.png)
+![035-my-formatter-plugin-setup](https://res.zhen.wang/images/post/2023-07-25/035-my-formatter-plugin-setup.png)
 
 主要分为了两个部分：
 
@@ -66,7 +66,7 @@ require("formatter").setup {
 
 需要注意的是，这里的格式化要和nvim的lsp格式化（`vim.lsp.buf.format()`）区别开来。formatter插件的格式化，主要是使用外部格式化工具进行，往往更加专注代码格式化本身；而lsp的格式化是通过语言服务（往往伴随更加复杂的代码分析）完成的。它们的各有各的侧重点，但在笔者看来，如果一门语言有更加专业的格式化方案（譬如本例中js使用prettier这种成熟方案），那么笔者建议使用formatter插件配合对应的专业格式化工具来完成代码格式化，而之前文章《[详解nvim内建LSP体系与基于nvim-cmp的代码补全体系 - 知乎 (zhihu.com)](https://zhuanlan.zhihu.com/p/643033884)》中提到的监听`LspAttach`事件，然后注册keymap映射`<cmd>lua vim.lsp.buf.format()<CR>`可以用来兜底哪些暂时不使用专门的格式化工具的场景：
 
-![040-LspAttach-format](https://res.zhen.blog/images/post/2023-07-25/040-LspAttach-format.png)
+![040-LspAttach-format](https://res.zhen.wang/images/post/2023-07-25/040-LspAttach-format.png)
 
 于是，在笔者的配置下，如果本人正打开的是有prettier规范的前端项目的时候，总是会使用`<leader>+f/F`来调用prettier来进行代码格式化；而假设正在编辑一段lua代码，那么会使用ctrl+alt+L来通过lua的语言服务进行代码格式化。读者在理解了这两种格式化机制以后，自行涉及方案了。
 
@@ -74,7 +74,7 @@ require("formatter").setup {
 
 lint方案和上面的格式化会有所差别。在不使用null-ls的情况下，lint方案实际上完全可以通过nvim自己的lsp模块配置外部工具完成。翻阅lspconfig目前已经支持的语言服务，会看到eslint也在其中，同时你也能看到很多其他语言的lint都在这个语言服务的说明文件里面。
 
-![050-lint-eslint-by-ls](https://res.zhen.blog/images/post/2023-07-25/050-lint-eslint-by-ls.png)
+![050-lint-eslint-by-ls](https://res.zhen.wang/images/post/2023-07-25/050-lint-eslint-by-ls.png)
 
 也就是说，至少对于lspconfig插件，它将各种lint也都视为了语言服务（至于格式化为什么没有作为语言服务，个人觉得格式化的功能比较单一）。同样的，我们只需要安装lint外部的命令行工具或者已经包含了lint功能的语言服务工具（说到底还是要在机器上安装对应的命令行工具），就能够获得lint的能力了。 
 

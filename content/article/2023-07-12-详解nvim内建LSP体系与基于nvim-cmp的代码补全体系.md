@@ -41,7 +41,7 @@ console.log(user.age); // error
 
 上述这段代码首先定义了一个名为`User`的接口（`interface User`），该接口拥有一个字段`name`；然后，我们创建了一个基于`User`接口的user实例；最后，我们打印了user的age属性。user并不具备age字段，所以按照严格的TypeScript语言规范来讲，代码编译肯定会有错误：
 
-![010-ts-type-error](https://res.zhen.blog/images/post/2023-07-12/010-ts-type-error.png)
+![010-ts-type-error](https://res.zhen.wang/images/post/2023-07-12/010-ts-type-error.png)
 
 基于LSP的模型，我们可以将这个过程描述出来：
 
@@ -50,7 +50,7 @@ console.log(user.age); // error
 3. TS语言服务读取TS代码，进行语法检查，得到了编译错误信息（包含行列数，基本的建议提示信息）返回给编辑器；
 4. 编辑器接收到错误信息，通过自己的方式展示在编辑器UI上。
 
-![020-lang-server-error-check-workflow](https://res.zhen.blog/images/post/2023-07-12/020-lang-server-error-check-workflow.png)
+![020-lang-server-error-check-workflow](https://res.zhen.wang/images/post/2023-07-12/020-lang-server-error-check-workflow.png)
 
 现在，我们已经了解了基于LSP的代码分析处理流程，那么这个语言服务器在什么地方呢？首先，不要看到服务器三个字，就认为它一定是一个在远端的Web应用服务，语言服务器一般就是一个软件程序，只不过它能够处理专门解析你编写的程序代码，并做出响应。
 
@@ -73,7 +73,7 @@ console.log(user.age); // error
 
 但需要注意，上述这些都是接口方法，它只是一个封装后的壳子方法，不具备具体的实现。具体的实现，需要为每一个编程语言单独配置。也就是说，nvim内置的lsp模块的运行架构如下：
 
-![030-nvim-lsp-arch](https://res.zhen.blog/images/post/2023-07-12/030-nvim-lsp-arch.png)
+![030-nvim-lsp-arch](https://res.zhen.wang/images/post/2023-07-12/030-nvim-lsp-arch.png)
 
 面对不同的语言，我们按照对应的语言服务的要求来配置nvim的内置LSP模块。在官方的文档中给了如下的示例来启动一个LSP：
 
@@ -95,7 +95,7 @@ vim.lsp.start({
 
 nvim-lspconfig通过插件管理器安装以后，我们就可以通过require的方式获取它，并通过它来配置某个编程语言的语言服务客户端。在lazy.nvim插件管理器下，配置如下：
 
-![040-nvim-lspconfig-demo-config](https://res.zhen.blog/images/post/2023-07-12/040-nvim-lspconfig-demo-config.png)
+![040-nvim-lspconfig-demo-config](https://res.zhen.wang/images/post/2023-07-12/040-nvim-lspconfig-demo-config.png)
 
 > 本人使用lazy.nvim来管理插件。上述第一行的`"neovim/nvim-lspconfig"`代表要安装该插件；紧接着的config需要编写一个函数，代表插件安装后的配置阶段的自定义运行过程（详见lazy.nvim的文档），这个方法在nvim每次启动后，会被lazy.nvim调用，我们一般会在这个config的回调方法中获取插件实例调用其相关API进行配置。
 
@@ -106,7 +106,7 @@ nvim-lspconfig通过插件管理器安装以后，我们就可以通过require�
 
 当然， 如果setup里面什么都不传，它会使用默认配置进行setup。像上面的`lspconfig['tsserver']`，它其实就是针对TypeScript代码的语言服务配置，[默认配置](https://github.com/neovim/nvim-lspconfig/blob/master/doc/server_configurations.md#tsserver)如下：
 
-![050-nvim-lspconfig-tsserver-default-config](https://res.zhen.blog/images/post/2023-07-12/050-nvim-lspconfig-tsserver-default-config.png)
+![050-nvim-lspconfig-tsserver-default-config](https://res.zhen.wang/images/post/2023-07-12/050-nvim-lspconfig-tsserver-default-config.png)
 
 `cmd`代表了在我们机器上安装的语言服务器的命令行启动方式，比如在我们机器上启动TypeScript的语言服务，则会调用命令：`typescript-language-server --stdio`。
 
@@ -114,7 +114,7 @@ nvim-lspconfig通过插件管理器安装以后，我们就可以通过require�
 
 为了真的能启动语言服务器，我们按照[文档](https://github.com/neovim/nvim-lspconfig/blob/master/doc/server_configurations.md)提到的方式手动安装TypeScript和lua的语言服务器。在我的机器上，安装好以后，能够通过命令行方式访问得到：
 
-![060-ts-and-lua-ls-location](https://res.zhen.blog/images/post/2023-07-12/060-ts-and-lua-ls-location.png)
+![060-ts-and-lua-ls-location](https://res.zhen.wang/images/post/2023-07-12/060-ts-and-lua-ls-location.png)
 
 让我们来梳理下上述demo的现状：
 
@@ -126,7 +126,7 @@ nvim-lspconfig通过插件管理器安装以后，我们就可以通过require�
 
 此时，当我们打开一个TS代码的时候，命令模式下键入`LspInfo`，就会看到如下的信息：
 
-![070-ts-ls-attach-to-demo](https://res.zhen.blog/images/post/2023-07-12/070-ts-ls-attach-to-demo.png)
+![070-ts-ls-attach-to-demo](https://res.zhen.wang/images/post/2023-07-12/070-ts-ls-attach-to-demo.png)
 
 弹出信息告诉我们，有一个`tsserver`关联到了当前buffer（也就是这个demo.ts文件）。另外，在最后一行还能看到nvim-lspconfig显示了当前已经经过配置的语言服务有前面提到的lua_ls和tsserver。
 
@@ -136,19 +136,19 @@ nvim-lspconfig通过插件管理器安装以后，我们就可以通过require�
 
 同时，我们可以测试一下LSP功能。譬如，将光标移动到`user: User`的接口`User`上时候，在命令模式下输入`lua vim.lsp.buf.hover()`，就能出现一个接口描述描述：
 
-![080-lsp-hover-test](https://res.zhen.blog/images/post/2023-07-12/080-lsp-hover-test.gif)
+![080-lsp-hover-test](https://res.zhen.wang/images/post/2023-07-12/080-lsp-hover-test.gif)
 
 亦或是，在错误代码的地方，调用`lua vim.lsp.buf.code_action()`，来让语言服务器给出一定的建议操作：
 
-![090-lsp-code-action-test](https://res.zhen.blog/images/post/2023-07-12/090-lsp-code-action-test.gif)
+![090-lsp-code-action-test](https://res.zhen.wang/images/post/2023-07-12/090-lsp-code-action-test.gif)
 
 当然，我们不需要每一次想要使用LSP提供的功能的时候都调用命令行方式进行，你可以在setup每一个语言服务**之前**，添加对事件`"LspAttach"`的回调，以便在打开代码文件的时候触发该回调，设置对应buffer的keymap。
 
-![100-lsp-ts-config-format-by-keymap](https://res.zhen.blog/images/post/2023-07-12/100-lsp-ts-config-format-by-keymap.png)
+![100-lsp-ts-config-format-by-keymap](https://res.zhen.wang/images/post/2023-07-12/100-lsp-ts-config-format-by-keymap.png)
 
 上面的例子，我们就配置了`CTRL+ALT+l（L小写）`键来触发代码格式化（format），在我的mac机器上效果如下：
 
-![110-lsp-ts-format-by-keymap-test](https://res.zhen.blog/images/post/2023-07-12/110-lsp-ts-format-by-keymap-test.gif)
+![110-lsp-ts-format-by-keymap-test](https://res.zhen.wang/images/post/2023-07-12/110-lsp-ts-format-by-keymap-test.gif)
 
 > mac机器上CTRL显示为"^"；ALT（meta）键显示为"⌥"。
 
@@ -160,11 +160,11 @@ nvim-lspconfig通过插件管理器安装以后，我们就可以通过require�
 
 安装完成该插件以后，我们就可以通过Lspsaga暴露出的指令来使用经过Lspsaga封装的LSP的接口了。例如，在上面的例子中，我们在一段错误代码上使用命令：`lua vim.lsp.buf.code_action()`，调用nvim内置的LSP的原生的API来获取代码建议操作：
 
-![120-ts-lsp-native-code-action](https://res.zhen.blog/images/post/2023-07-12/120-ts-lsp-native-code-action.png)
+![120-ts-lsp-native-code-action](https://res.zhen.wang/images/post/2023-07-12/120-ts-lsp-native-code-action.png)
 
 但是，如果我们使用Lspsaga的code_action，就会发现一个非常舒服的UI：
 
-![130-lsp-saga-code-action-test](https://res.zhen.blog/images/post/2023-07-12/130-lsp-saga-code-action-test.png)
+![130-lsp-saga-code-action-test](https://res.zhen.wang/images/post/2023-07-12/130-lsp-saga-code-action-test.png)
 
 除此之外，还有像是查看引用：`Lspsaga peek_definition`等指令供我们使用，这里就不再演示了，读者完成配置以后，可以自行测试。
 
@@ -182,7 +182,7 @@ nvim-lspconfig通过插件管理器安装以后，我们就可以通过require�
 
 看到这里，可能有的小伙伴对目前介绍的nvim内置的LSP模块、nvim-lspconfig与nvim-lspsaga插件的关系还有些疑惑，这里我们用一个关系图做一个简单的总结：
 
-![140-nvim-LSP-lspconfig-and-lspsaga](https://res.zhen.blog/images/post/2023-07-12/140-nvim-LSP-lspconfig-and-lspsaga.png)
+![140-nvim-LSP-lspconfig-and-lspsaga](https://res.zhen.wang/images/post/2023-07-12/140-nvim-LSP-lspconfig-and-lspsaga.png)
 
 首先，nvim内置的LSP模块提供了诸如`vim.lsp.buf.format()`、`vim.lsp.buf.code_action()`等API，只要你配置好了对应编程语言的语言服务模块，那么调用这些指令就能看到效果。
 
@@ -233,7 +233,7 @@ console.log(user);
 
 然后，我们需要安装prettier.nvim和eslint.nvim和插件。这两个插件都是利用了null-ls的关于LSP的接口，来和外部安装的prettier、eslint命令行工具进行调用。用一个图来解释如下：
 
-![150-prettier-and-eslint-by-null-ls](https://res.zhen.blog/images/post/2023-07-12/150-prettier-and-eslint-by-null-ls.png)
+![150-prettier-and-eslint-by-null-ls](https://res.zhen.wang/images/post/2023-07-12/150-prettier-and-eslint-by-null-ls.png)
 
 # nvim的代码补全
 
@@ -291,7 +291,7 @@ nvim-cmp是一款通过lua编写的，nvim中的代码补全引擎框架插件�
 
 实际上，nvim-cmp不负责具体的**补全操作**，它的核心能力是根据各种源搜集供补全的文本片段，并提供了对这些片段的访问能力。而上述的一套插件，以`'L3MON4D3/LuaSnip'`配合`'saadparwaiz1/cmp_luasnip'`为例，`LuaSnip`是核心的代码补全操作引擎插件，他提供补全过程中UI操作等能力；而`cmp_luasnip`则是作为了nvim-cmp和`LuaSnip`之间的桥梁，就像适配器一样。这个架构如下：
 
-![160-nvim-cmp-arch](https://res.zhen.blog/images/post/2023-07-12/160-nvim-cmp-arch.png)
+![160-nvim-cmp-arch](https://res.zhen.wang/images/post/2023-07-12/160-nvim-cmp-arch.png)
 
 此外，我们一般还会添加两个插件`'rafamadriz/friendly-snippets'`和`'onsails/lspkind-nvim'`来扩展补全体验。前者会提供我们编写代码的时候，大多数常见代码的snippet（就像trycatch等），这块的加载下面单独介绍；而后者则是在代码补全的后选项添加图标。
 
@@ -301,11 +301,11 @@ nvim-cmp是一款通过lua编写的，nvim中的代码补全引擎框架插件�
 
 按照前面插件的介绍，我们安装如下的插件：
 
-![170-nvim-cmp-plugin-list](https://res.zhen.blog/images/post/2023-07-12/170-nvim-cmp-plugin-list.png)
+![170-nvim-cmp-plugin-list](https://res.zhen.wang/images/post/2023-07-12/170-nvim-cmp-plugin-list.png)
 
 对于nvim-cmp的setup，配置如下：
 
-![180-nvim-cmp-config-macro](https://res.zhen.blog/images/post/2023-07-12/180-nvim-cmp-config-macro.png)
+![180-nvim-cmp-config-macro](https://res.zhen.wang/images/post/2023-07-12/180-nvim-cmp-config-macro.png)
 
 主要分为4个字段：
 
@@ -346,7 +346,7 @@ nvim-cmp是一款通过lua编写的，nvim中的代码补全引擎框架插件�
 
 该字段主要用于配置补全的源，这里需要和前面的cmp补全源插件一一对应。例如，当配置了cmp-path的path源的时候，键入“/”就能看到候选的路径补全项：
 
-![190-nvim-cmp-source-path](https://res.zhen.blog/images/post/2023-07-12/190-nvim-cmp-source-path.png)
+![190-nvim-cmp-source-path](https://res.zhen.wang/images/post/2023-07-12/190-nvim-cmp-source-path.png)
 
 3. formatting字段：
 
@@ -367,7 +367,7 @@ nvim-cmp是一款通过lua编写的，nvim中的代码补全引擎框架插件�
 
 这里主要是依赖插件`'onsails/lspkind-nvim'`，代码补全时，会展示对应来源的图标：
 
-![200-nvim-cmp-formatting-by-lspkind](https://res.zhen.blog/images/post/2023-07-12/200-nvim-cmp-formatting-by-lspkind.png)
+![200-nvim-cmp-formatting-by-lspkind](https://res.zhen.wang/images/post/2023-07-12/200-nvim-cmp-formatting-by-lspkind.png)
 
 4. mapping：
 
@@ -412,7 +412,7 @@ require("luasnip.loaders.from_vscode").lazy_load()
 
 整体来说如下：
 
-![210-luasnip-load-external-snippets](https://res.zhen.blog/images/post/2023-07-12/210-luasnip-load-external-snippets.png)
+![210-luasnip-load-external-snippets](https://res.zhen.wang/images/post/2023-07-12/210-luasnip-load-external-snippets.png)
 
 也就是说，在我们使用luasnip引擎的场景下，我们会调用上述的api来完成对外部snippets的加载工作。这里`lazy_load`没有填写任何的参数，则会使用runtimepath下进行寻找，而我们的插件就能通过runtimepath进行访问到，所以会把friendly-snippets插件目录下的的snippets搜并加载到。
 

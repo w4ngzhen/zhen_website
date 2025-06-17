@@ -30,7 +30,7 @@ categories:
 
 就像TypeScript编译一样，只要涉及到了编译环节，我们总是离不开编译三要素模型：源代码、编译器以及编译配置：
 
-![010-code-compile-flow](https://res.zhen.blog/images/post/2023-04-18/010-code-compile-flow.png)
+![010-code-compile-flow](https://res.zhen.wang/images/post/2023-04-18/010-code-compile-flow.png)
 
 接下来将分别详细介绍这两种编译体系的编译过程。
 
@@ -87,7 +87,7 @@ function App() {
 
 第二种模式的核心在于：JSX编译出来的代码与React库本身进行了解耦，只将JSX转换为了与React无关的JS形式的调用描述，没有直接使用`React.createElement`。**引入了jsx-runtime这一层，屏蔽具体的调用细节，只专注JSX到JS代码最基础的映射。**至于这个`_jsx`的具体实现，就是内部调用的是`React.createElement`还是另一种`createElement`，则可以由库内部来进行实现。
 
-![020-react-jsx-runtime](https://res.zhen.blog/images/post/2023-04-18/020-react-jsx-runtime.png)
+![020-react-jsx-runtime](https://res.zhen.wang/images/post/2023-04-18/020-react-jsx-runtime.png)
 
 > PS：可能有小伙伴会说，_jsx不还是从`react/jsx-runtime`这个React相关库导出的吗？实际上，这个包仅仅是由react团队在维护的原因。
 
@@ -159,11 +159,11 @@ yarn add -D @babel/plugin-transform-react-jsx
 
 搭建完成以后，整体如下：
 
-![030-jsx-babel-compile-project](https://res.zhen.blog/images/post/2023-04-18/030-jsx-babel-compile-project.png)
+![030-jsx-babel-compile-project](https://res.zhen.wang/images/post/2023-04-18/030-jsx-babel-compile-project.png)
 
 项目结构并不复杂，编译的过程我们也不再赘述。当我们运行`yarn build`的时候可以看到在dist目录下能够生成对应js代码：
 
-![040-jsx-babel-compile-result](https://res.zhen.blog/images/post/2023-04-18/040-jsx-babel-compile-result.png)
+![040-jsx-babel-compile-result](https://res.zhen.wang/images/post/2023-04-18/040-jsx-babel-compile-result.png)
 
 从上图可以看到，我们的代码直接转换为了`React.createElement`。但是注意的是，编译结果中，babel是没有替我们插入`import React from 'react'`这一句代码的！如果你的代码本身没有添加`import React from 'react'`，那么最终编译到了js代码（无论是commonjs还是esmodule），也不会引入React，然而代码却调用的是：`React.createElement`。正是因为如此，所以才会有我们日常小伙伴会发现，项目能够编译通过，但是运行起来的时候，会提示：
 
@@ -188,7 +188,7 @@ yarn add -D @babel/plugin-transform-react-jsx
 
 新增上述配置以后，重新编译代码，能够看到生产的js代码：
 
-![050-jsx-babel-compile-with-automatic](https://res.zhen.blog/images/post/2023-04-18/050-jsx-babel-compile-with-automatic.png)
+![050-jsx-babel-compile-with-automatic](https://res.zhen.wang/images/post/2023-04-18/050-jsx-babel-compile-with-automatic.png)
 
 对于重新编译好的代码，此时可以看到`React.createElement`调用变为了来源于`"react/jsx-runtime"`中的`jsx`方法。同时，由于这一段引入是由**编译器自动加入**的，因此代码进行后续的babel编译的时候，由于有`react/jsx-runtime`的引入，所以就不再会有所谓的`React is not defined`的问题。
 
@@ -232,11 +232,11 @@ yarn add -D typescript
 
 搭建完成后，整体如下：
 
-![060-jsx-tsc-compile-project](https://res.zhen.blog/images/post/2023-04-18/060-jsx-tsc-compile-project.png)
+![060-jsx-tsc-compile-project](https://res.zhen.wang/images/post/2023-04-18/060-jsx-tsc-compile-project.png)
 
 当我们运行`yarn build`的时候可以看到在dist目录下能够生成对应js代码：
 
-![070-jsx-tsc-compile-result-by-jsxreact](https://res.zhen.blog/images/post/2023-04-18/070-jsx-tsc-compile-result-by-jsxreact.png)
+![070-jsx-tsc-compile-result-by-jsxreact](https://res.zhen.wang/images/post/2023-04-18/070-jsx-tsc-compile-result-by-jsxreact.png)
 
 读者应该能够看到由tsc编译出来的js代码，JSX相关的代码编译为了`React.createElement`形式的调用。对于这个编译结果，tsconfig.json里面的配置起到了决定性作用。现在，我们着重讲一下两个配置项：`jsx`、`allowJs`。
 
@@ -262,7 +262,7 @@ error TS18003: No inputs were found in config file '/Users/w4ngzhen/projects/web
 
 下图展示了当`"jsx"`的配置分别为：`"react"`、`"react-jsx"`的结果：
 
-![080-tsconfig-jsx-result](https://res.zhen.blog/images/post/2023-04-18/080-tsconfig-jsx-result.png)
+![080-tsconfig-jsx-result](https://res.zhen.wang/images/post/2023-04-18/080-tsconfig-jsx-result.png)
 
 不难发现，`"react"`与`"react-jsx"`配置的编译结果，与前面babel编译中插件`@babel/plugin-transform-react-jsx`的`"runtime"`的配置分别为`"classic"`（或默认不配置）、`"automatic"`的编译结果能够相对应。
 
@@ -321,13 +321,13 @@ export function App() {
 
 准备后整体如下：
 
-![090-tsx-tsc-example-project](https://res.zhen.blog/images/post/2023-04-18/090-tsx-tsc-example-project.png)
+![090-tsx-tsc-example-project](https://res.zhen.wang/images/post/2023-04-18/090-tsx-tsc-example-project.png)
 
 ## 类型问题
 
 在上述的项目搭建完成后，我们会发现一个问题：在index.tsx代码中，我们用到了两个jsx基础标签：`<button>`、`<h1>`以及我们自己编写的React组件`<MyButton>`，但IDE替我们显示了红色，鼠标悬浮以后，会看到报错提示：
 
-![100-tsx-jsxreact-error-result](https://res.zhen.blog/images/post/2023-04-18/100-tsx-jsxreact-error-result.png)
+![100-tsx-jsxreact-error-result](https://res.zhen.wang/images/post/2023-04-18/100-tsx-jsxreact-error-result.png)
 
 - **Cannot find name 'React'.**
 
@@ -337,11 +337,11 @@ export function App() {
 
 第二，IDE进行TS的类型检查流程如下：
 
-![110-IDE-ts-check-flow](https://res.zhen.blog/images/post/2023-04-18/110-IDE-ts-check-flow.png)
+![110-IDE-ts-check-flow](https://res.zhen.wang/images/post/2023-04-18/110-IDE-ts-check-flow.png)
 
 基于上述两点，我们可以解释这个出错的过程为：IDE识别到了tsconfig.json中的`"jsx": "react"`配置，调用了形如`tsc --noEmit`的指令，又因为我们的项目没有添加对`react`的依赖（类型文件也没有），因此出现了这个地方的IDE报错提示。不难想到，我们实际运行脚本进行编译的时候，会出现同样的错误：
 
-![120-tsx-jsxreact-error-result-in-cli](https://res.zhen.blog/images/post/2023-04-18/120-tsx-jsxreact-error-result-in-cli.png)
+![120-tsx-jsxreact-error-result-in-cli](https://res.zhen.wang/images/post/2023-04-18/120-tsx-jsxreact-error-result-in-cli.png)
 
 > 细心的小伙伴会看到dist目录下依然生成了index.js代码，因为类型检查结果实际上不妨碍实际js代码的生成。
 
@@ -349,7 +349,7 @@ export function App() {
 
 修改配置以后，报错如下：
 
-![130-tsx-jsxreactjsx-error-result](https://res.zhen.blog/images/post/2023-04-18/130-tsx-jsxreactjsx-error-result.png)
+![130-tsx-jsxreactjsx-error-result](https://res.zhen.wang/images/post/2023-04-18/130-tsx-jsxreactjsx-error-result.png)
 
 有两方面：
 
@@ -359,7 +359,7 @@ export function App() {
 
 当我们将`"moduleResolution": "node"`添加以后可以解决问题2，剩下的问题就是：
 
-![140-tsx-jsxreactjsx-error-result-with-moduleResolution-Node](https://res.zhen.blog/images/post/2023-04-18/140-tsx-jsxreactjsx-error-result-with-moduleResolution-Node.png)
+![140-tsx-jsxreactjsx-error-result-with-moduleResolution-Node](https://res.zhen.wang/images/post/2023-04-18/140-tsx-jsxreactjsx-error-result-with-moduleResolution-Node.png)
 
 - **Cannot find module 'react/jsx-runtime' or its corresponding type declarations.**
 
@@ -376,13 +376,13 @@ yarn add -D @types/react
 
 `@types/react`中包含了`React`和`react/jsx-runtime`类型定义。
 
-![150-tsx-jsxreactjsx-error-result-import-react](https://res.zhen.blog/images/post/2023-04-18/150-tsx-jsxreactjsx-error-result-import-react.png)
+![150-tsx-jsxreactjsx-error-result-import-react](https://res.zhen.wang/images/post/2023-04-18/150-tsx-jsxreactjsx-error-result-import-react.png)
 
 终于，我们不再有类型问题了。此时，我们看看这些h1、button标签到底是什么类型以及ts是如何对这些JSX标签进行类型定义的。
 
 在安装了`@types/react`后，IDEA里面，通过CTRL+鼠标左键点击相关的标签就能进入到对应的定义里面，比如我们查看`<a>`标签的具体定义：
 
-![160-jsx-tag-dts](https://res.zhen.blog/images/post/2023-04-18/160-jsx-tag-dts.png)
+![160-jsx-tag-dts](https://res.zhen.wang/images/post/2023-04-18/160-jsx-tag-dts.png)
 
 通过查看类型定义dts文件，可以很容易的看到该类型为：`JSX.IntrinsicElements.a`。这个`JSX.IntrinsicElements`接口是什么呢？让我们探索。
 
@@ -400,29 +400,29 @@ yarn add -D @types/react
         }
 ```
 
-![170-jsx-tag-dts-add-abc-example](https://res.zhen.blog/images/post/2023-04-18/170-jsx-tag-dts-add-abc-example.png)
+![170-jsx-tag-dts-add-abc-example](https://res.zhen.wang/images/post/2023-04-18/170-jsx-tag-dts-add-abc-example.png)
 
 于是，在代码中，我们就能使用这个`<abc>`标签，同时，如果不填写`name`字段的值，TS还会有类型检查异常，只有正确填写`name`属性才能通过类型检查：
 
-![180-jsx-use-abc-tag](https://res.zhen.blog/images/post/2023-04-18/180-jsx-use-abc-tag.png)
+![180-jsx-use-abc-tag](https://res.zhen.wang/images/post/2023-04-18/180-jsx-use-abc-tag.png)
 
 同时，当我们检查编译后的代码，会发现无论是`"jsx": "react"`还是`"jsx": "react-jsx"`，关于我们使用的`<abc>`标签的部分，都变成了字符串`"abc"`的处理（这里只用tsc编译演示，babel是同样的结果，不再赘述）：
 
-![190-jsx-use-abc-tag-compile-result](https://res.zhen.blog/images/post/2023-04-18/190-jsx-use-abc-tag-compile-result.png)
+![190-jsx-use-abc-tag-compile-result](https://res.zhen.wang/images/post/2023-04-18/190-jsx-use-abc-tag-compile-result.png)
 
 当然，我们还能编写自己的自定义组件，譬如上面示例里面的`<MyButton>`。`MyButton`是一个函数组件，满足React DTS文件里面的类型定义关于使用函数组件类型进行createElement的类型定义：
 
-![200-func-comp-dts](https://res.zhen.blog/images/post/2023-04-18/200-func-comp-dts.png)
+![200-func-comp-dts](https://res.zhen.wang/images/post/2023-04-18/200-func-comp-dts.png)
 
 总结来讲，JSX（TSX）中关于**内置标签**的类型检查流程如下：
 
-![210-intrinsic-elements-type-check-flow](https://res.zhen.blog/images/post/2023-04-18/210-intrinsic-elements-type-check-flow.png)
+![210-intrinsic-elements-type-check-flow](https://res.zhen.wang/images/post/2023-04-18/210-intrinsic-elements-type-check-flow.png)
 
 
 
 在前面，我们在react的官方dts中的`JSX.IntrinsicElements`添加了`abc`字段，所以我们才能编写`<abc>`标签并通过类型检查。但这种方式目前来讲，有个问题：非常不优雅，居然去修改react类型定义代码。那么，还有什么方式扩展JSX的内置标签元素呢？编写声明文件扩充即可：
 
-![220-extend-intrinsic-elements](https://res.zhen.blog/images/post/2023-04-18/220-extend-intrinsic-elements.png)
+![220-extend-intrinsic-elements](https://res.zhen.wang/images/post/2023-04-18/220-extend-intrinsic-elements.png)
 
 上图中，我们主动声明了`JSX.IntrinsicElements`接口，并且向里面添加了`a-custom-tag`，于是，后面的tsx代码中我们就能使用`<a-custom-tag>`这个标签了。
 

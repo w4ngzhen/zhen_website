@@ -33,7 +33,7 @@ categories:
 
 对于ts官方模式来说，ts编译器就是tsc（安装typescript就可以获得），而编译器所需的配置就是tsconfig.json配置文件形式或其他形式。ts源代码经过tsc的编译（Compile），就可以生成js代码，在tsc编译的过程中，需要**编译配置**来确定一些编译过程中要处理的内容。
 
-![010-ts-compile-flow](https://res.zhen.blog/images/post/2022-08-14/010-ts-compile-flow.png)
+![010-ts-compile-flow](https://res.zhen.wang/images/post/2022-08-14/010-ts-compile-flow.png)
 
 我们首先准备一个ts-demo，该demo中有如下的结构：
 
@@ -221,7 +221,7 @@ exports.userToString = userToString;
 2. ts的编译器（babel）
 3. 编译配置（.babelrc）
 
-![020-babel-compile-flow](https://res.zhen.blog/images/post/2022-08-14/020-babel-compile-flow.png)
+![020-babel-compile-flow](https://res.zhen.wang/images/post/2022-08-14/020-babel-compile-flow.png)
 
 **了解babel机制**
 
@@ -306,7 +306,7 @@ babel插件2处理代码：将形如() => {}的箭头函数，转换成function 
 
 >webpack 只能理解 JavaScript 和 JSON 文件，这是 webpack 开箱可用的自带能力。**loader** 让 webpack 能够去处理其他类型的文件，并将它们转换为有效 [模块](https://webpack.docschina.org/concepts/modules)，以供应用程序使用，以及被添加到依赖图中
 
-![030-webpack-base-flow](https://res.zhen.blog/images/post/2022-08-14/030-webpack-base-flow.png)
+![030-webpack-base-flow](https://res.zhen.wang/images/post/2022-08-14/030-webpack-base-flow.png)
 
 所以，当一个webpack项目是基于TS进行的时候，我们一定会有一个loader来处理ts（甚至是tsx）。当然，我们还是通过demo搭建来演示讲解。
 
@@ -478,7 +478,7 @@ module.exports = {
 
 综合来看，在基于ts-loader的webpack项目的解析流程处理如下。
 
-![040-webpack-ts-loader-flow](https://res.zhen.blog/images/post/2022-08-14/040-webpack-ts-loader-flow.png)
+![040-webpack-ts-loader-flow](https://res.zhen.wang/images/post/2022-08-14/040-webpack-ts-loader-flow.png)
 
 回顾一下webpack，它默认处理模块化js代码，比如index.js引用了utils.js（模块引用方式可以是commonjs，也可以是esModule形式），那么webpack从入口的index.js出发，来处理依赖，并打包为一个js（暂不考虑js拆分）。
 
@@ -492,7 +492,7 @@ module.exports = {
 
 只要开发过基于webpack的现代化前端项目的同学，或多或少都看到过babel-loader的身影，他是个什么东西呢？先说结论吧，babel-loader是webpack和babel（由@babel/core和一堆预置集preset、插件plugins组合）的桥梁。
 
-![050-webpack-babel-loader-flow](https://res.zhen.blog/images/post/2022-08-14/050-webpack-babel-loader-flow.png)
+![050-webpack-babel-loader-flow](https://res.zhen.wang/images/post/2022-08-14/050-webpack-babel-loader-flow.png)
 
 根据这个图，同学可能觉得这不是和ts-loader的架构很像吗？webpack启动，遇到入口ts，匹配到babel-loader，babel-loader交给babel处理，处理完毕，回到webpack打包。但是使用babel进行ts处理，比起ts-loader更加高效。而关于这块的说明，我更加推荐读者阅读这篇文章[ TypeScript 和 Babel：美丽的结合 - 知乎 (zhihu.com)](https://zhuanlan.zhihu.com/p/59614089)，简单来讲：
 
@@ -742,11 +742,11 @@ info Visit https://yarnpkg.com/en/docs/cli/run for documentation about this comm
 
 不知道有没有细心的读者在使用IDEA的时候，发现一个ts项目的IDEA右下角展示了typescript：
 
-![060-idea-ts-service](https://res.zhen.blog/images/post/2022-08-14/060-idea-ts-service.png)
+![060-idea-ts-service](https://res.zhen.wang/images/post/2022-08-14/060-idea-ts-service.png)
 
 VSCode也能看到类似：
 
-![070-vscode-ts-service](https://res.zhen.blog/images/post/2022-08-14/070-vscode-ts-service.png)
+![070-vscode-ts-service](https://res.zhen.wang/images/post/2022-08-14/070-vscode-ts-service.png)
 
 在同一台电脑上，甚至发现IDEA和VSCode的typescript版本都还不一样（4.7.4和4.7.3）。这是怎么一回事呢？实际上，IDE检测到你所在的项目是一个ts项目的时候（或包含ts文件），就会自动的启动一个ts的检测服务，专门用于所在项目的ts类型检测。这个ts类型检测服务，是通过每个IDE默认情况下自带的typescript中的tsc进行类型检测。
 
@@ -758,11 +758,11 @@ yarn add -D typescript@4.7.2
 
 在IDEA中，设置 - Languages & Frameworks - TypeScript中，就可以选择IDEA启动的4.7.2版本的TypeScript为我们项目提供类型检查（注意看选项中有一个Bundled的TS，版本是4.7.4，就是默认的）：
 
-![080-idea-select-ts](https://res.zhen.blog/images/post/2022-08-14/080-idea-select-ts.png)
+![080-idea-select-ts](https://res.zhen.wang/images/post/2022-08-14/080-idea-select-ts.png)
 
 IDE之所以能够在对应的代码位置展示代码的类型错误，流程如下：
 
-![090-ide-ts-service-flow](https://res.zhen.blog/images/post/2022-08-14/090-ide-ts-service-flow.png)
+![090-ide-ts-service-flow](https://res.zhen.wang/images/post/2022-08-14/090-ide-ts-service-flow.png)
 
 但是，ts类型检查也要有一定的依据。譬如，有些类型定义的文件从哪里查找，是否允许较新的语法等，这些配置依然是由tsconfig.json来提供的，但若未提供，则IDE会使用一份默认的配置。如果要进行类型检测的自定义配置，则需要提供tsconfig.json。
 
@@ -770,10 +770,10 @@ IDE之所以能够在对应的代码位置展示代码的类型错误，流程�
 
 对于ts-loader项目体系来说，ts代码编译和ts的类型检测如下：
 
-![100-ts-loader-and-ide](https://res.zhen.blog/images/post/2022-08-14/100-ts-loader-and-ide.png)
+![100-ts-loader-and-ide](https://res.zhen.wang/images/post/2022-08-14/100-ts-loader-and-ide.png)
 
 然而，对于babel-loader项目体系就不像ts-loader那样了：
 
-![110-babel-loader-and-ide](https://res.zhen.blog/images/post/2022-08-14/110-babel-loader-and-ide.png)
+![110-babel-loader-and-ide](https://res.zhen.wang/images/post/2022-08-14/110-babel-loader-and-ide.png)
 
 在babel-loader体系中，代码的编译只取决于babel部分的处理，根类型没有根本的关系，而类型检查使用到的tsconfig和tsc则只作用在类型检查的部分，根ts代码编译没有任何关系。
