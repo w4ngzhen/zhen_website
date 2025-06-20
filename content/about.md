@@ -27,6 +27,6 @@ hide_toc = true
 
 [《DOOM启世录》](https://book.douban.com/subject/1152971/)
 
-## 关于本博客
+## 关于本网站
 
-本博客基于[zola](https://www.getzola.org/)进行搭建，同时编写并使用自己开发的zola主题[brief](https://github.com/w4ngzhen/blog/tree/main/themes/brief)
+本网站基于[zola](https://www.getzola.org/)进行搭建，同时编写并使用自己开发的zola主题[brief](https://github.com/w4ngzhen/zola-theme-brief)（本网站有魔改）
