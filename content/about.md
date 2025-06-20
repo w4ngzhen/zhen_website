@@ -14,7 +14,7 @@ hide_toc = true
 - [w4ngzhen (Zhen WANG) (github.com)](https://github.com/w4ngzhen)
 - [w4ngzhen - 知乎 (zhihu.com)](https://www.zhihu.com/people/w4ngzhen)
 - Email: w4ngzhen`#`hotmail.com（请将`#`替换为`@`）
-- 想要留言？[来这里](https://github.com/w4ngzhen/blog/issues)创建issue吧～
+- 想要留言？[来这里](https://github.com/w4ngzhen/zhen_website/issues)创建issue吧～
 
 ## 技术栈
 
