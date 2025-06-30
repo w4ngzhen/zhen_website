@@ -7,9 +7,9 @@ hide_toc = true
 一些纯收藏的域名：
 
 - [zhen.wang](https://zhen.wang)（本人主站）
-- [zhen.blog](https://zhen.blog)（曾用的博客域名，现已重定向至zhen.wang）
-- [zhen.one](https://zhen.one)（zhen将来的AllInOne）
-- wangzhen.net（名称net域名）
+- [zhen.blog](https://zhen.blog)（曾用的博客域名，待废弃，现已重定向至zhen.wang）
+- [zhen.one](https://zhen.one)（待废弃，现保持重定向至zhen.wang）
+- wangzhen.net
 - semag.games（镜像对称域名）
 
 一些出售中的域名：
