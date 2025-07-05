@@ -4,6 +4,9 @@
     <meta charset="utf-8">
     <meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover"
           name="viewport">
+    <!-- umami web analysis -->
+    <script defer src="{{ get_url(path='libs/umami/umami.script.js') }}"
+            data-website-id="d66cfe03-f6b3-4aa0-baf8-728700db1b09"></script>
     {% set small_icon_url = config.extra.site_icon.16x16 | default(value="images/site_icon.png")%}
     {% set normal_icon_url = config.extra.site_icon.32x32 | default(value="images/site_icon.png")%}
     <link rel="icon" type="image/png" sizes="16x16" href="{{ get_url(path=small_icon_url) }}">
