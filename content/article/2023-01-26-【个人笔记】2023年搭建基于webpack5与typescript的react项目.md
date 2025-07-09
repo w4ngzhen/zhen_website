@@ -303,13 +303,13 @@ declare module '*.module.less' {
 
 效果：
 
-![020-run](https://res.zhen.wang/images/post/2023-01-26/020-run.png)
+![020-run](https://static-res.zhen.wang/images/post/2023-01-26/020-run.png)
 
 # 附录
 
 ## 图解webpack配置与NPM包关系
 
-![010-webpack-config-and-npm](https://res.zhen.wang/images/post/2023-01-26/010-webpack-config-and-npm.png)
+![010-webpack-config-and-npm](https://static-res.zhen.wang/images/post/2023-01-26/010-webpack-config-and-npm.png)
 
 ## github仓库
 

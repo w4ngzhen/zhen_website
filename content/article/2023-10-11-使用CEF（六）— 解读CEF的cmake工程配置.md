@@ -65,7 +65,7 @@ add_library(<name> [STATIC | SHARED | MODULE]
 
 # 顶层CMakeLists.txt
 
-![010-root-CMakeLists](https://res.zhen.wang/images/post/2023-10-11/010-root-CMakeLists.png)
+![010-root-CMakeLists](https://static-res.zhen.wang/images/post/2023-10-11/010-root-CMakeLists.png)
 
 ## OVERVIEW
 
@@ -101,13 +101,13 @@ overview部分简单介绍了CMake，然后介绍CEF binary distribution不同�
 
 这一部分主要介绍了如何构建`libcef_dll_wrapper`以及demo。具体的做法就是在`cef_binary_xxx目录`（后续都用该指代CEF binary distribution文件夹根目录）中创建一个名为`build`的目录，进入该目录后，针对不同的平台，使用CMake生成不同的构建系统的工程配置，并进行构建。其中，由于Ninja是一个跨平台的**构建系统**，所以你会看每个平台都有Ninja构建系统的生成指令。例如，下图展示了在macOS x86 64位架构上使用CMake生成对应的构建方案的两种方式：1、xcode构建方案（xcodebuild构建方案体系）；2、Ninja构建方案。
 
-![020-macOS-cmake-build](https://res.zhen.wang/images/post/2023-10-11/020-macOS-cmake-build.png)
+![020-macOS-cmake-build](https://static-res.zhen.wang/images/post/2023-10-11/020-macOS-cmake-build.png)
 
 > 无论是xcode还是ninja，都是构建系统，在macOS上最终调用编译工具链是底层的clang/LLVM。
 
 再比如，在Windows64位系统上也有两种方式：1、VisualStudio解决方案（MSBuild构建方案体系）；2、Ninja构建方案。
 
-![030-Windows-cmake-build](https://res.zhen.wang/images/post/2023-10-11/030-Windows-cmake-build.png)
+![030-Windows-cmake-build](https://static-res.zhen.wang/images/post/2023-10-11/030-Windows-cmake-build.png)
 
 > 同样的，无论是vs MSBuild还是ninja，都是构建系统，在Windows上最终调用的是底层的msvc编译工具链。
 
@@ -115,7 +115,7 @@ overview部分简单介绍了CMake，然后介绍CEF binary distribution不同�
 
 在看完了关于不同平台的构建方式以后，我们往下会看到关于`"Global setup."`的部分。这一部分开始，就是CMake真正有关的部分了。让我们首先删除掉所有的注释，逐步分析这个顶层CMakeLists.txt的配置：
 
-![040-root-CMakeLists](https://res.zhen.wang/images/post/2023-10-11/040-root-CMakeLists.png)
+![040-root-CMakeLists](https://static-res.zhen.wang/images/post/2023-10-11/040-root-CMakeLists.png)
 
 剔除了注释以后，会发现其实内容并不多。这里我们首先从上图第8行开始关于设置`CEF_ROOT`和`CMAKE_MODULE_PATH`的分析：配置首先定义了`CEF_ROOT`，它使用了CMake提供的变量`CMAKE_CURRENT_SOURCE_DIR`，也就是当前CMakeLists.txt所在目录：`cef_binary_xxx`目录；然后对`CMAKE_MODULE_PATH`**追加**了`${CEF_ROOT}/cmake`这个目录。
 
@@ -128,7 +128,7 @@ In this mode, CMake searches for a file called `Find<PackageName>.cmake`, lookin
 
 ### FindCEF.cmake
 
-![050-FindCEF](https://res.zhen.wang/images/post/2023-10-11/050-FindCEF.png)
+![050-FindCEF](https://static-res.zhen.wang/images/post/2023-10-11/050-FindCEF.png)
 
 `FindCEF.cmake`很好理解，大致处理过程是：
 
@@ -157,13 +157,13 @@ add_subdirectory(${CEF_LIBCEF_DLL_WRAPPER_PATH} libcef_dll_wrapper)
 
 这里出现了一个变量：`CEF_LIBCEF_DLL_WRAPPER_PATH`，它来源于`cef_variables.cmake`中定义的：
 
-![060-CEF_LIBCEF_DLL_WRAPPER_PATH](https://res.zhen.wang/images/post/2023-10-11/060-CEF_LIBCEF_DLL_WRAPPER_PATH.png)
+![060-CEF_LIBCEF_DLL_WRAPPER_PATH](https://static-res.zhen.wang/images/post/2023-10-11/060-CEF_LIBCEF_DLL_WRAPPER_PATH.png)
 
 也就是说，在本例中，`add_subdirectory(${CEF_LIBCEF_DLL_WRAPPER_PATH} libcef_dll_wrapper)`就是添加了子目录`cef_binary_xxx/libcef_dll`。一旦添加了该子模块目录，CMake就会在该目录下搜索对应的CMakeLists.txt文件并进行加载（这里就是`cef_binary_xxx/libcef_dll/CMakeLists.txt`）。
 
 这份`libcef_dll/CMakeLists.txt`主要就是将`libcef_dll_wrapper`的各种源码、以及`libcef`的头文件、各种平台特定的源代码文件放到一些CMake变量中，最后的通过`add_library`指令，定义了一个名为`libcef_dll_wrapper`的target，并将前面的源代码、头文件等添加到这个target中：
 
-![070-add-source-to-target](https://res.zhen.wang/images/post/2023-10-11/070-add-source-to-target.png)
+![070-add-source-to-target](https://static-res.zhen.wang/images/post/2023-10-11/070-add-source-to-target.png)
 
 写到这里，我们可以对`cef_binary_xxx/CMakeLists.txt`文件做一个简单的概念总结。首先，该CMakeLists.txt扮演的是项目顶层统领全局的角色，它并没有定义过任何的target，而是通过两个步骤组织了`CEF binary distribution目录中的libcef_dll_wrapper、demo等target的构建：
 
@@ -193,11 +193,11 @@ endif()
 
 该文件实际上也分为两个部分。第一部分就是通过变量来存储cefsimple的相关源码、头文件：
 
-![080-add-source-for-simple-demo](https://res.zhen.wang/images/post/2023-10-11/080-add-source-for-simple-demo.png)
+![080-add-source-for-simple-demo](https://static-res.zhen.wang/images/post/2023-10-11/080-add-source-for-simple-demo.png)
 
 这一块我们挑一个比较典型的处理：
 
-![090-handle-flow](https://res.zhen.wang/images/post/2023-10-11/090-handle-flow.png)
+![090-handle-flow](https://static-res.zhen.wang/images/post/2023-10-11/090-handle-flow.png)
 
 首先使用`CEFSIMPLE_SRCS`来存储平台无关的源代码和头文件。其次，由于不同操作系统平台下有一些平台特定的源代码，例如macOS下，设置窗体标题，我们可以使用objective-c代码（`.m`/`.mm`文件）来使用原生API操作窗体标题，所以使用`CEFSIMPLE_SRCS_平台标识`变量存储这些平台特定代码的列表；最后，使用一个名为`APPEND_PLATFORM_SOURCES`的宏来处理`CEFSIMPLE_SRCS`变量，这里有两个疑问点：1、这个宏的来源和作用；2、`CEFSIMPLE_SRCS_平台标识`变量似乎没有用到。这两个疑问点一起解释。实际上，这个宏就是来源于`cef_macros.cmake`中，找到对应宏的源码：
 
@@ -223,7 +223,7 @@ endmacro()
 
 现在，让我们回到对cefsimple/CMakeLists.txt本身的分析，接下来我们分析比较重要的第二部分：可执行程序的生成：
 
-![100-os-target](https://res.zhen.wang/images/post/2023-10-11/100-os-target.png)
+![100-os-target](https://static-res.zhen.wang/images/post/2023-10-11/100-os-target.png)
 
 这里我们对macOS平台的可执行程序生成进行讲解，因为它相对于在Windows和Linux更加复杂。首先，定义了在macOS平台下会添加一些编译指令（譬如支持objective-c语言编译）：
 
@@ -299,11 +299,11 @@ add_custom_command(
 
 接下来的foreach指令，这里定义了n个helper的AppBundle target。譬如渲染进程、GPU加速进程、工具进程等具有特定功能的进程help程序：
 
-![110-helper-target](https://res.zhen.wang/images/post/2023-10-11/110-helper-target.png)
+![110-helper-target](https://static-res.zhen.wang/images/post/2023-10-11/110-helper-target.png)
 
 值得注意的是，在macOS下，这里helper的`add_executable()`添加的是`CEFSIMPLE_HELPER_SRCS`，这个变量里面存储的是：
 
-![120-helper-source](https://res.zhen.wang/images/post/2023-10-11/120-helper-source.png)
+![120-helper-source](https://static-res.zhen.wang/images/post/2023-10-11/120-helper-source.png)
 
 翻看该`process_helper_mac.cc`源码，其实并不复杂：
 
@@ -341,6 +341,6 @@ int main(int argc, char* argv[]) {
 
 通过顶层CMakeLists.txt的说明，不难发现，cef_binary_xxx本身既是包含了了libcef_dll_wrapper源码构建的工程，同时也是一个比较标准的，想要使用libcef+libcef_dll_wrapper的CMake工程，所以，你才会在顶层CMakeLists.txt看到官方介绍了几种基于cef_binary_xxx的CMake工程结构的项目集成案例：
 
-![130-how-to-intergate](https://res.zhen.wang/images/post/2023-10-11/130-how-to-intergate.png)
+![130-how-to-intergate](https://static-res.zhen.wang/images/post/2023-10-11/130-how-to-intergate.png)
 
 我的博客即将同步至腾讯云开发者社区，邀请大家一同入驻：https://cloud.tencent.com/developer/support-plan?invite_code=3d9bi2yhvncwk

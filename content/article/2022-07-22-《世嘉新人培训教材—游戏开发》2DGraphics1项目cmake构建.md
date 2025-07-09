@@ -21,7 +21,7 @@ categories:
 
 ### GameLib（样例根目录）
 
-![010-root](https://res.zhen.wang/images/post/2022-07-22-sega-game-dev/010-root.png)
+![010-root](https://static-res.zhen.wang/images/post/2022-07-22-sega-game-dev/010-root.png)
 
 该目录下主要存放了：
 
@@ -33,7 +33,7 @@ categories:
 
 ### GameLib/src目录
 
-![020-root-src](https://res.zhen.wang/images/post/2022-07-22-sega-game-dev/020-root-src.png)
+![020-root-src](https://static-res.zhen.wang/images/post/2022-07-22-sega-game-dev/020-root-src.png)
 
 该目录下主要存放：
 
@@ -43,7 +43,7 @@ categories:
 
 ### GameLib/src/GameLibs目录
 
-![030-root-src-GameLibs](https://res.zhen.wang/images/post/2022-07-22-sega-game-dev/030-root-src-GameLibs.png)
+![030-root-src-GameLibs](https://static-res.zhen.wang/images/post/2022-07-22-sega-game-dev/030-root-src-GameLibs.png)
 
 该目录主要存放：
 
@@ -95,7 +95,7 @@ categories:
 
 在本文中，我们的目标是构建2DGrphics1-NimotsuKunBox项目，所以我们加载2DGrphics1的GameLib：`$(GAME_LIB_DIR)\src\GameLibs\2DGraphics1\GameLib.sln`进行构建，通过配置也能看到的确需要`Modules_d.lib`：
 
-![040-gamelib-use-modules](https://res.zhen.wang/images/post/2022-07-22-sega-game-dev/040-gamelib-use-modules.png)
+![040-gamelib-use-modules](https://static-res.zhen.wang/images/post/2022-07-22-sega-game-dev/040-gamelib-use-modules.png)
 
 该项目构建完成后，会生成：`$(GAME_LIB_DIR)\2DGraphics1\lib\GameLib_d.lib`，并且会将`GameLib_d.lib`静态库以及相关头文件都复制到`$(GAME_LIB_DIR)\2DGraphics1\中`，：
 
@@ -138,11 +138,11 @@ drawPixels
 
 将NimotsuKunBox项目作为启动项目，然后运行可以看到如下的界面：
 
-![050-NimotsuKunBox-show](https://res.zhen.wang/images/post/2022-07-22-sega-game-dev/050-NimotsuKunBox-show.png)
+![050-NimotsuKunBox-show](https://static-res.zhen.wang/images/post/2022-07-22-sega-game-dev/050-NimotsuKunBox-show.png)
 
 将drawPixels作为启动项，运行可看到如下效果：
 
-![060-drawPixels-show](https://res.zhen.wang/images/post/2022-07-22-sega-game-dev/060-drawPixels-show.png)
+![060-drawPixels-show](https://static-res.zhen.wang/images/post/2022-07-22-sega-game-dev/060-drawPixels-show.png)
 
 接下来，我们将使用cmake来移植这两个项目。
 
@@ -269,7 +269,7 @@ ADD_SUBDIRECTORY(drawPixels)
 
 之后，我们将在VS中能够运行的NimotsuKunBox项目代码拷贝到当前的main.cpp中，由于篇幅的关系，就不贴出代码本身了，给一个整体的修改：
 
-![070-NimotsuKunBox-modified01](https://res.zhen.wang/images/post/2022-07-22-sega-game-dev/070-NimotsuKunBox-modified01.png)
+![070-NimotsuKunBox-modified01](https://static-res.zhen.wang/images/post/2022-07-22-sega-game-dev/070-NimotsuKunBox-modified01.png)
 
 ### 编译问题
 
@@ -329,7 +329,7 @@ MESSAGE("Current CMakeLists.txt dir:\n${CMAKE_CURRENT_SOURCE_DIR}")
 
 稍有C/C++开发经验的开发者看到这个报错其实心里还是有底的，应该是没有提供main函数作为函数的入口。但是对于我们的项目，细心的读者发现似乎样例代码中确实是没有提供main入口函数的。那么，为什么vs项目能够正确运行起来呢？观察vs中的项目属性—连接器—系统，会发现子系统（SubSystem）的值是：`/SUBSYSTEM:WINDOWS`
 
-![070-subsystem-windows](https://res.zhen.wang/images/post/2022-07-22-sega-game-dev/080-subsystem-windows.png)
+![070-subsystem-windows](https://static-res.zhen.wang/images/post/2022-07-22-sega-game-dev/080-subsystem-windows.png)
 
 在cmake项目中，我们可以按照如下的方式进行配置：
 

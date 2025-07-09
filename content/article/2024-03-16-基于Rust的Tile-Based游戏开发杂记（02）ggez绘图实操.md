@@ -150,7 +150,7 @@ Ok(())
 
 下图是一个综合上述讲解后的一个图形：
 
-![010-draw-circle](https://res.zhen.wang/images/post/2024-03-16/010-draw-circle.png)
+![010-draw-circle](https://static-res.zhen.wang/images/post/2024-03-16/010-draw-circle.png)
 
 此外，`DrawParam`还有诸如`rotation（旋转）`、`offset（偏移）`等配置，但是通过阅读底层代码，我们会发现`DrawParam`关于图形位置、缩放等数据核心其实是通过`变换transform`这个字段数据存储的：
 
@@ -177,21 +177,21 @@ pub struct DrawParam {
 
 举例来说，比如我想在窗体中绘制一个圆形，随着每帧从左到右移动，并且颜色随着从左到右从黑色变成红色：
 
-![020-draw-dynamic-circle](https://res.zhen.wang/images/post/2024-03-16/020-draw-dynamic-circle.gif)
+![020-draw-dynamic-circle](https://static-res.zhen.wang/images/post/2024-03-16/020-draw-dynamic-circle.gif)
 
 为了达到这样的效果，最直观的做法是我们可以在每一次`fn draw`调用的时候，构造一份对应时刻的对应颜色的圆形的Mesh实例，并进行绘制。但是性能和资源利用更好的方式则是提前创建一份Mesh数据，并在每一次draw调用时，只改变DrawParam的参数即可：
 
-![030-draw-dynamic-circle-code](https://res.zhen.wang/images/post/2024-03-16/030-draw-dynamic-circle-code.png)
+![030-draw-dynamic-circle-code](https://static-res.zhen.wang/images/post/2024-03-16/030-draw-dynamic-circle-code.png)
 
 ## MeshBuilder与MeshData
 
 尽管比起之前的`Qaud`图形，我们现在已经能够绘制圆、三角形、多边形等更多种类的图形，但总的来说依然是一些常见的几何图形，对于实际的应用场景可能还远远不够。比如说，我们希望绘制一座房子，大概像下图这样：
 
-![040-house-draft](https://res.zhen.wang/images/post/2024-03-16/040-house-draft.png)
+![040-house-draft](https://static-res.zhen.wang/images/post/2024-03-16/040-house-draft.png)
 
 我们将这个图形分解为三个部分：顶部使用一个棕色三角形作为房顶，房顶下方使用一个黄色矩形作为房屋体，在房屋体内部使用一个棕色的矩形作为门。按照之前的方式，我们首先构造mesh：
 
-![050-multi-mesh-a-house](https://res.zhen.wang/images/post/2024-03-16/050-multi-mesh-a-house.png)
+![050-multi-mesh-a-house](https://static-res.zhen.wang/images/post/2024-03-16/050-multi-mesh-a-house.png)
 
 在这段代码中，我们首先在DrawHouseState结构体中增加了3个mesh数据字段：`roof`（屋顶）、`house_body`（房屋体）、`door`（门），在初始化阶段我们构造这三部分并存储起来。
 
@@ -218,13 +218,13 @@ pub struct DrawParam {
 
 在绘制阶段，我们定义了一份DrawParam数据，同时分别对`roof`、`house_body`以及`door`进行绘制。这段代码运行后的效果如下：
 
-![060-house-result1](https://res.zhen.wang/images/post/2024-03-16/060-house-result1.png)
+![060-house-result1](https://static-res.zhen.wang/images/post/2024-03-16/060-house-result1.png)
 
 上述代码并不复杂，相信读者能够理解。但是这样的方式并不优雅，因为随着图形结构复杂度愈来越高，我们不可能随时关注一大堆的mesh实例；此外，这样的方式还有一个问题：为了绘制一个“房子”，我们调用了3次`canvas.draw`方法，会有性能上的问题（后续会量化）。
 
 为了解决上述问题，ggez为我们提供了`MeshBuilder`。通过`MeshBuilder`，我们可以将多个mesh同时组合得到一份整体的mesh数据：
 
-![070-single-mesh-a-house](https://res.zhen.wang/images/post/2024-03-16/070-single-mesh-a-house.png)
+![070-single-mesh-a-house](https://static-res.zhen.wang/images/post/2024-03-16/070-single-mesh-a-house.png)
 
 上面的代码，就是通过`MeshBuilder`依次构造了一个三角形、两个矩形。`MeshBuilder`最后的`build`方法会返回一个`MeshData`，请注意，这的MeshData结构体并不是前面的Mesh数据，而是Mesh结构体创建的来源数据，我们可以将`MeshData`实例传递给`Mesh::from_data`方法来创建Mesh。于是，此处我们只通过一个mesh就包含了整个房屋的图形数据。
 
@@ -251,15 +251,15 @@ fn draw(&mut self, ctx: &mut Context) -> Result<(), GameError> {
 
 理论上来讲，MeshBuilder提供了将基础图形构成复杂图形以及方便对其进行整体操作的能力。但还有一个场景我们需要进一步讨论：**如何绘制大量的图形？**有的读者可能会说，那好办，在绘图的时候，一个for循环，多次调用`canvas.draw`绘制大量的图形：
 
-![080-draw-house-for400](https://res.zhen.wang/images/post/2024-03-16/080-draw-house-for400.png)
+![080-draw-house-for400](https://static-res.zhen.wang/images/post/2024-03-16/080-draw-house-for400.png)
 
 上述的代码，我们通过两个for循环共计400次，依次在`(0, 0)`、`(0, 50)`等位置绘制了50x50的正方形，将原来的房子绘制到对应区域。其中，缩放代码`let scale = [SIZE / 100., SIZE / 100.];`含义是我们的房子本身的尺寸是宽100，高100的尺寸，为了将其刚好会知道50x50的区域内，就需要按照比例缩放：
 
-![090-house-scale](https://res.zhen.wang/images/post/2024-03-16/090-house-scale.png)
+![090-house-scale](https://static-res.zhen.wang/images/post/2024-03-16/090-house-scale.png)
 
 上述的代码最终运行的效果如下：
 
-![100-draw-house-for400-result](https://res.zhen.wang/images/post/2024-03-16/100-draw-house-for400-result.png)
+![100-draw-house-for400-result](https://static-res.zhen.wang/images/post/2024-03-16/100-draw-house-for400-result.png)
 
 从代码逻辑的角度上讲使用for循环还算过得去，但是从性能层面上却有很大的问题。在这里为了可视化性能，我们使用ggez提供的API获得整个应用在运行过程中的fps均值，以此粗略地估算应用在每一次刷新时的性能情况：
 
@@ -278,17 +278,17 @@ impl EventHandler for DrawMultiHouseState {
 
 上述的代码，我们在每一次update中，向控制台打印当前应用的fps值。可以看到在笔者的机器上，未经过编译优化的代码，将这400个小房子绘制到屏幕上，平均的fps在**12**左右：
 
-![110-low-fps](https://res.zhen.wang/images/post/2024-03-16/110-low-fps.png)
+![110-low-fps](https://static-res.zhen.wang/images/post/2024-03-16/110-low-fps.png)
 
 对于游戏来说，这么简单的绘制400个图形fps就这么低显然是不应该的。那么这里的最佳实践是什么呢？答案是使用ggez提供的`InstanceArray`。该`InstanceArray`可以用来一次性存储大量的DrawParam数据。当我们要绘制400个房子的时候，实际上只需要构造400个DrawParam，将它们存放到`InstanceArray`中，这400个DrawParam，每一个的`dest`参数都不同，用来表示400个房子的不同位置。当我们需要进行绘制的时候，只需要调用一次`canvas.draw_instanced_mesh`方法，将`InstanceArray`作为第二个参数传入，即可在屏幕上呈现这400个房子，而不是循环400次，每次draw一次：
 
-![120-draw-house-by-instance-arr-code](https://res.zhen.wang/images/post/2024-03-16/120-draw-house-by-instance-arr-code.png)
+![120-draw-house-by-instance-arr-code](https://static-res.zhen.wang/images/post/2024-03-16/120-draw-house-by-instance-arr-code.png)
 
 > 核心本质是每调用一次draw，就是数据从内存到GPU的一次数据传输。
 
 通过使用`InstanceArray`，在同样的编译条件下，在本人60hz刷新率的机器上，绘制这400个图形的fps均值直接拉满60帧：
 
-![130-full-fps](https://res.zhen.wang/images/post/2024-03-16/130-full-fps.png)
+![130-full-fps](https://static-res.zhen.wang/images/post/2024-03-16/130-full-fps.png)
 
 # 图片与文本绘制
 
@@ -303,7 +303,7 @@ impl EventHandler for DrawMultiHouseState {
 
 如果是对矮人要塞或是CDDA大灾变等Tile-Based游戏深入了解过，就会发现，这些游戏的图形通常不是一张又一张的小图片存放起来，而是使用一张NxN规格的图片，把所有的图块统一铺在上面的：
 
-![140-tile-img-in-picture](https://res.zhen.wang/images/post/2024-03-16/140-tile-img-in-picture.png)
+![140-tile-img-in-picture](https://static-res.zhen.wang/images/post/2024-03-16/140-tile-img-in-picture.png)
 
 例如，上图是矮人要塞的Spacefox图块集。你会发现游戏中所有的图形元素都按照16x16的大小统一集中到了这张图片上。那么在实际运行中是如何渲染的呢？游戏只需要将这一张图片加载到内存中，当想要渲染一个“包裹”（上图的第一行倒数第五个就是“包裹”）图形的时候，只需要提供区域偏移信息即可只绘制。
 
@@ -326,7 +326,7 @@ impl DrawImageState {
 
 上述代码在State结构体中定义了一个image字段，用于存放`ggez::graphics::Image`实例；在初始化代码中，我们通过调用`graphics::Image::from_path`来读取图片`spacefox_16x16.png`。**默认情况下，**图片的搜索目录会从可执行程序所在目录下的`resources`目录中查找。所以为了后续正常运行，我们先暂时手动将图片拷贝至对应目录：
 
-![150-copy-image](https://res.zhen.wang/images/post/2024-03-16/150-copy-image.png)
+![150-copy-image](https://static-res.zhen.wang/images/post/2024-03-16/150-copy-image.png)
 
 > 关于ggez中的文件系统，后续会有文章详细讲解。
 
@@ -350,11 +350,11 @@ impl DrawImageState {
 
 在实际运行以后，我们能够看到如下效果：
 
-![160-draw-full-image](https://res.zhen.wang/images/post/2024-03-16/160-draw-full-image.png)
+![160-draw-full-image](https://static-res.zhen.wang/images/post/2024-03-16/160-draw-full-image.png)
 
 接下来，我们该如何将图片局部绘制到界面上？答案就是使用DrawParam的`src`参数来进行配置。首先，为了绘制上图第一行倒数第5个“包裹”图形，我们首先要确定它处于整张图片的哪个位置。已知图片尺寸为256x256像素，每一个图块尺寸为16x16，“包裹”图块处于水平第12个（基于0索引就是11），垂直第1个（基于0索引就是0）。所以，我们知道“包裹”所在的矩形区域为`x = 11 * 16, y = 0 * 16, w = 16, h = 16`：
 
-![170-tile-rect](https://res.zhen.wang/images/post/2024-03-16/170-tile-rect.png)
+![170-tile-rect](https://static-res.zhen.wang/images/post/2024-03-16/170-tile-rect.png)
 
 于是，我们创建对应区域数据，并作为参数传递给DrawParam：
 
@@ -385,17 +385,17 @@ pub struct DrawParam {
 
 这段注释指的是：传入的Rect矩形的x、y、w、h都是相对于整张图片的相对值，其值范围是0.0到1.0之间的。回到我们的例子，“包裹”图块的对于整张图片的实际位置和尺寸数据是：`x = 11 * 16, y = 0 * 16, w = 16, h = 16`，那么x相对于整张图片是：`(11 * 16) / 水平宽度256`，y相对于图片水平是：`(0 * 16) / 水平高度256`，宽度w相对于整张图是`16 / 256`，高度h相对于整张图是`16 / 256`。所以我们需要做如下的转换处理才能正确绘制：
 
-![180-tile-ratio-rect](https://res.zhen.wang/images/post/2024-03-16/180-tile-ratio-rect.png)
+![180-tile-ratio-rect](https://static-res.zhen.wang/images/post/2024-03-16/180-tile-ratio-rect.png)
 
 修正代码以后，我们能看到实际的运行效果：
 
-![190-draw-part-image](https://res.zhen.wang/images/post/2024-03-16/190-draw-part-image.png)
+![190-draw-part-image](https://static-res.zhen.wang/images/post/2024-03-16/190-draw-part-image.png)
 
 ## 文本绘制
 
 使用ggez绘制文本，离不开两个重要的结构体：`ggez::graphics::Text`、`ggez::graphics::TextFragment`。其中，`Text`是被绘制的数据，而`TextFragment`主要用于定义一段文本中的局部结构，可以作为`Text`的参数：
 
-![200-draw-text](https://res.zhen.wang/images/post/2024-03-16/200-draw-text.png)
+![200-draw-text](https://static-res.zhen.wang/images/post/2024-03-16/200-draw-text.png)
 
 上述的代码，我们首先使用`Text::new("hello, world.")`在画布上绘制文本：`"hello, world."`；然后，我们使用`TextFragment`构建了个两个片段：
 
@@ -406,7 +406,7 @@ pub struct DrawParam {
 
 上述代码的最终效果如下：
 
-![210-draw-text-display](https://res.zhen.wang/images/post/2024-03-16/210-draw-text-display.png)
+![210-draw-text-display](https://static-res.zhen.wang/images/post/2024-03-16/210-draw-text-display.png)
 
 # 写在最后
 
@@ -416,7 +416,7 @@ pub struct DrawParam {
 
 但由于ggez底层使用了`wgpu`，同时也通过一定方式暴露了`wgpu`的相关API，所以实际上我们依然可以进行利用`wgpu`进行3D图形绘制，不过这部分内容需要读者有相关3D图形渲染理论知识以及相关图形库API的使用经验，就不在本文中描述了，笔者可以通过官方[样例代码]([github.com/ggez/ggez/blob/master/examples/cube.rs](https://github.com/ggez/ggez/blob/master/examples/cube.rs))一探究竟：
 
-![220-3d-cube](https://res.zhen.wang/images/post/2024-03-16/220-3d-cube.gif)
+![220-3d-cube](https://static-res.zhen.wang/images/post/2024-03-16/220-3d-cube.gif)
 
 本章代码仓库地址：[w4ngzhen/rs-game-dev (github.com)](https://github.com/w4ngzhen/rs-game-dev)
 

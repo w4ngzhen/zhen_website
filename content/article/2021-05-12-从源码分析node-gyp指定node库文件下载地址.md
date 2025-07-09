@@ -67,7 +67,7 @@ console.log(binding.hello());
 
 **整体结构**
 
-![](https://res.zhen.wang/images/post/2021-05-12-node-gyp-dist-url/node-addon-simple-demo-proj-arch.jpg)
+![](https://static-res.zhen.wang/images/post/2021-05-12-node-gyp-dist-url/node-addon-simple-demo-proj-arch.jpg)
 
 按照如下命令依次运行：
 
@@ -93,7 +93,7 @@ world
 
 首先要直接给出一个结论，库文件并不是每次都要从网络上下载，库文件下载后会缓存在本地一个目录，在Windows上为`C:\Users\用户\AppData\Local\node-gyp\Cache`中，并按照nodejs的版本进行存储：
 
-![](https://res.zhen.wang/images/post/2021-05-12-node-gyp-dist-url/node-headers-cache-dir.jpg)
+![](https://static-res.zhen.wang/images/post/2021-05-12-node-gyp-dist-url/node-headers-cache-dir.jpg)
 
 *本人电脑安装的node版本为14.15.0，且曾经已经缓存了对应的库文件。*
 
@@ -105,21 +105,21 @@ $ npm run build --verbose
 
 于是，我们可以从众多的输出中，看到一个关键信息：
 
-![](https://res.zhen.wang/images/post/2021-05-12-node-gyp-dist-url/show-official-dist-url.jpg)
+![](https://static-res.zhen.wang/images/post/2021-05-12-node-gyp-dist-url/show-official-dist-url.jpg)
 
 从日志中可以看出，node-gyp在构建过程中，会创建缓存目录，然后从指定URL下载指定版本的headers文件。
 
 我们利用GrepWin（一款Windows下超好用的文本内容搜索工具，[官网](https://tools.stefankueng.com/grepWin.html)），在node-gyp目录中搜索`created nodedir`这个关键词，因为可以看到`gyp http GET`上面出现了这个关键词。那么现在有一个新的问题，node-gyp目录在哪儿？其实，从上面的日志往上查看，能够找到：
 
-![](https://res.zhen.wang/images/post/2021-05-12-node-gyp-dist-url/where-is-node-gyp.jpg)
+![](https://static-res.zhen.wang/images/post/2021-05-12-node-gyp-dist-url/where-is-node-gyp.jpg)
 
 这里是调用的我们全局安装的npm依赖的node-gyp，于是我们定位到node-gyp所在目录进行搜索：
 
-![](https://res.zhen.wang/images/post/2021-05-12-node-gyp-dist-url/search-create-nodedir.jpg)
+![](https://static-res.zhen.wang/images/post/2021-05-12-node-gyp-dist-url/search-create-nodedir.jpg)
 
 进入该文件，我们找到：
 
-![](https://res.zhen.wang/images/post/2021-05-12-node-gyp-dist-url/create-nodedir-and-download.jpg)
+![](https://static-res.zhen.wang/images/post/2021-05-12-node-gyp-dist-url/create-nodedir-and-download.jpg)
 
 找到关键词搜索后，继续往后续代码查阅，能够看到一个`download`函数的调用，入参最后一位是url，此时已经是成型的url，所以接下来我们需要确定，`release.tarballUrl`这个值，究竟是什么时候确定的。
 
@@ -127,17 +127,17 @@ $ npm run build --verbose
 
 继续向上翻阅代码，能够在入口处看到这个release是如何生成的：
 
-![](https://res.zhen.wang/images/post/2021-05-12-node-gyp-dist-url/get-the-release.jpg)
+![](https://static-res.zhen.wang/images/post/2021-05-12-node-gyp-dist-url/get-the-release.jpg)
 
 进入代码后，能够找到一段核心的构建：
 
-![](https://res.zhen.wang/images/post/2021-05-12-node-gyp-dist-url/distUrl-make-flow.jpg)
+![](https://static-res.zhen.wang/images/post/2021-05-12-node-gyp-dist-url/distUrl-make-flow.jpg)
 
 通过上述代码流程，我们总结出来，tarballUrl的baseUrl取决于是否存在overrideDistUrl，若存在，则直接使用；否则使用默认URL：`https://nodejs.org/dist`。
 
 再查看`overrideDistUrl`的传入点：
 
-![](https://res.zhen.wang/images/post/2021-05-12-node-gyp-dist-url/overrideDistUrl.jpg)
+![](https://static-res.zhen.wang/images/post/2021-05-12-node-gyp-dist-url/overrideDistUrl.jpg)
 
 也就是说，gyp对象的opts属性存在`dist-url`或`disturl`时，就会使用该值作为库文件下载的baseUrl。
 
@@ -145,7 +145,7 @@ $ npm run build --verbose
 
 首先检查该函数的调用点：
 
-![](https://res.zhen.wang/images/post/2021-05-12-node-gyp-dist-url/where-use-processRelease.jpg)
+![](https://static-res.zhen.wang/images/post/2021-05-12-node-gyp-dist-url/where-use-processRelease.jpg)
 
 发现configure和install.js都使用了该函数，且都是入口处进行的调用的：
 
@@ -190,7 +190,7 @@ gyp verb cli ]
 
 入口函数是：`node-gyp根目录/bin/node-gyp.js`。所以，我们将node-gyp以项目的形式添加到IDEA中，尝试以相同的形式调用这些命令，通过开启DEBUG模式，来一探究竟。
 
-![](https://res.zhen.wang/images/post/2021-05-12-node-gyp-dist-url/debug-node-gyp-portal.jpg)
+![](https://static-res.zhen.wang/images/post/2021-05-12-node-gyp-dist-url/debug-node-gyp-portal.jpg)
 
 在`bin/node-gyp.js`中的最下方进行了一个名为`run`的函数调用：
 
@@ -206,7 +206,7 @@ run()
 
 根据注释可以，`run()`执行所提供的命令。翻阅该函数：
 
-![](https://res.zhen.wang/images/post/2021-05-12-node-gyp-dist-url/the-run-func.jpg)
+![](https://static-res.zhen.wang/images/post/2021-05-12-node-gyp-dist-url/the-run-func.jpg)
 
 总体分为两步：
 
@@ -215,7 +215,7 @@ run()
 
 那么这个prog是什么呢？通过向上阅读代码，可以知道来自于上层目录提供的模块：
 
-![](https://res.zhen.wang/images/post/2021-05-12-node-gyp-dist-url/what-is-gyp.jpg)
+![](https://static-res.zhen.wang/images/post/2021-05-12-node-gyp-dist-url/what-is-gyp.jpg)
 
 而上层所指代的模块是通过package.json的`main`字段可知是`lib/node-gyp.js`：
 
@@ -226,7 +226,7 @@ run()
 
 进入该文件的gyp函数，返回的是类Gyp的实例，而Gyp实例的构造过程如下：
 
-![](https://res.zhen.wang/images/post/2021-05-12-node-gyp-dist-url/Gyp-constructor-and-commands.jpg)
+![](https://static-res.zhen.wang/images/post/2021-05-12-node-gyp-dist-url/Gyp-constructor-and-commands.jpg)
 
 1. 使用self变量指代Gyp实例，并创建devDir和commands字段。
 2. 遍历上方的commands字符串数组，给self（也就是Gyp实例）的commands属性中，逐步添加对应命令名称的函数，函数的实现是：require和command同名的js模块，这些模块又本身是以函数形式导出的，最终是调用对应模块函数。举例说明：当遍历到command为`configure`的时候，就是如下的形式：
@@ -269,11 +269,11 @@ module.exports = configure
 
 所以，我们终于知道`processRelease`的入参的gyp，就是上面的gyp实例。那么gyp实例中的opts属性，是哪儿来的呢？使用IDEA的Debug进行断点调式，调试`bin/node-gyp.js`：
 
-![](https://res.zhen.wang/images/post/2021-05-12-node-gyp-dist-url/before-handle-opts.jpg)
+![](https://static-res.zhen.wang/images/post/2021-05-12-node-gyp-dist-url/before-handle-opts.jpg)
 
 可以看到，在执行`parseArgv`这个函数前，gyp实例里面还不存在opts属性，而执行后，又在使用opts属性的devdir。也就是说，`parseArgv`这个函数一定构建了opts，接下来我们重点分析这个函数。
 
-![](https://res.zhen.wang/images/post/2021-05-12-node-gyp-dist-url/parseArgv-portal.jpg)
+![](https://static-res.zhen.wang/images/post/2021-05-12-node-gyp-dist-url/parseArgv-portal.jpg)
 
 入口的argv就是我们的运行时入参：
 
@@ -283,11 +283,11 @@ module.exports = configure
 
 首先会经过`nopt`函数，看样子，是对命令行参数以及短命令的处理：
 
-![](https://res.zhen.wang/images/post/2021-05-12-node-gyp-dist-url/opts-build-1.jpg)
+![](https://static-res.zhen.wang/images/post/2021-05-12-node-gyp-dist-url/opts-build-1.jpg)
 
 然后是该函数其他的部分：
 
-![](https://res.zhen.wang/images/post/2021-05-12-node-gyp-dist-url/opts-build-2-handle-argv-and-env.jpg)
+![](https://static-res.zhen.wang/images/post/2021-05-12-node-gyp-dist-url/opts-build-2-handle-argv-and-env.jpg)
 
 主要分为两个部分：
 
@@ -328,11 +328,11 @@ module.exports = configure
 
 那么，回到我们一开始的目的，我们知道了要实现从指定的地方下载node的库文件，只要opts里面存在`dist-url`或是`disturl`即可。有些读者可能会说，那这样就行了呀：
 
-![](https://res.zhen.wang/images/post/2021-05-12-node-gyp-dist-url/custom-url-by-set-dist-url.jpg)
+![](https://static-res.zhen.wang/images/post/2021-05-12-node-gyp-dist-url/custom-url-by-set-dist-url.jpg)
 
 实际上，并不行：
 
-![](https://res.zhen.wang/images/post/2021-05-12-node-gyp-dist-url/just-has-dist_url.jpg)
+![](https://static-res.zhen.wang/images/post/2021-05-12-node-gyp-dist-url/just-has-dist_url.jpg)
 
 解析结束后，会发现，gyp.opts中是不存在`dist-url`字段的，只有`dist_url`。这一切的缘由，都是因为，npm在处理环境变量的时候，会将`-`替换为下划线`_`（[config | npm Docs (npmjs.com)](https://docs.npmjs.com/cli/v7/using-npm/config#environment-variables)）。
 
@@ -363,7 +363,7 @@ gyp verb command remove [ '14.15.0' ]
 
 [nodejs/node-gyp: Node.js native addon build tool (github.com)](https://github.com/nodejs/node-gyp)
 
-![](https://res.zhen.wang/images/post/2021-05-12-node-gyp-dist-url/official-dist-url.jpg)
+![](https://static-res.zhen.wang/images/post/2021-05-12-node-gyp-dist-url/official-dist-url.jpg)
 
 实际上，官方文档给出的参数，需要你直接使用node-gyp方式进行设置，也就是说，--dist-url这个参数必须紧跟node-gyp的命令：
 

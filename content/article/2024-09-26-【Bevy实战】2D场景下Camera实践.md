@@ -45,7 +45,7 @@ fn startup(mut commands: Commands, asset_server: Res<AssetServer>) {
 
 此时我们运行项目，会发现仅有一个没有任何内容的，黑色背景的窗口：
 
-![010](https://res.zhen.wang/images/post/2024-09-26/010.png)
+![010](https://static-res.zhen.wang/images/post/2024-09-26/010.png)
 
 造成这个现象的原因是：在默认的情况下，Bevy“游戏世界“中不存在摄像机Camera实体，因此无法将可渲染的内容”拍摄“下来并投射到屏幕上。为了解决这个问题也非常简单，在世界中增加一个摄像机实体即可：
 
@@ -64,11 +64,11 @@ fn startup(mut commands: Commands, asset_server: Res<AssetServer>) {
 
 上述代码我们添加了一个2D摄像机的实体，此时再次运行程序可以看到如下的效果：
 
-![020](https://res.zhen.wang/images/post/2024-09-26/020.png)
+![020](https://static-res.zhen.wang/images/post/2024-09-26/020.png)
 
 你可以将上面的2D渲染想象成如下的样子：
 
-![030](https://res.zhen.wang/images/post/2024-09-26/030.png)
+![030](https://static-res.zhen.wang/images/post/2024-09-26/030.png)
 
 此时，让我们在项目工程中再增加一张图片，并且在之前生成实体的位置再生成一个新的Sprite：
 
@@ -93,7 +93,7 @@ fn startup(mut commands: Commands, asset_server: Res<AssetServer>) {
 
 此时当我们再次运行程序时，可以看到img2.png的内容在img1.png之上：
 
-![040](https://res.zhen.wang/images/post/2024-09-26/040.png)
+![040](https://static-res.zhen.wang/images/post/2024-09-26/040.png)
 
 不难理解，先生成的图片实体先渲染，后生成的图片实体后渲染。那么，假设我希望img1.png能够盖住img2.png呢？此时只需要将其位置组件的z轴设置为大于0即可（因为z轴默认是0）：
 
@@ -125,7 +125,7 @@ fn startup(mut commands: Commands, asset_server: Res<AssetServer>) {
 
 此时再次运行，可以看到img1已经在img2之上，盖住了img2：
 
-![050](https://res.zhen.wang/images/post/2024-09-26/050.png)
+![050](https://static-res.zhen.wang/images/post/2024-09-26/050.png)
 
 同时，通过上面x轴偏移的效果我们也不难知道，在Bevy中的2D的坐标是以**视口**（我们马上介绍什么是视口Viewport）中心为原点的，并非传统GUI的top-left为原点的坐标系统。
 
@@ -135,15 +135,15 @@ fn startup(mut commands: Commands, asset_server: Res<AssetServer>) {
 
 通过查阅Camera2dBundle中的Camera组件细节，我们会发现Camera组件存在一个名为`viewport`的字段。根据其文档我们可以知道，这个字段可以用来配置将Camera摄取到的内容渲染到指定`RenderTarget`的矩形区域：
 
-![060](https://res.zhen.wang/images/post/2024-09-26/060.png)
+![060](https://static-res.zhen.wang/images/post/2024-09-26/060.png)
 
 所以，在继续对视口相关内容进行介绍前，我们首先要知道上面提到的`RenderTarget`是个什么东西。继续翻阅Camera的代码内容，可以看到Camera还有一个字段`target`：
 
-![070](https://res.zhen.wang/images/post/2024-09-26/070.png)
+![070](https://static-res.zhen.wang/images/post/2024-09-26/070.png)
 
 查看`RenderTarget`定义如下：
 
-![080](https://res.zhen.wang/images/post/2024-09-26/080.png)
+![080](https://static-res.zhen.wang/images/post/2024-09-26/080.png)
 
 通过其文档我们得知，“target”指的是Camera摄取的内容应该渲染到哪个目标上。已知的有：
 
@@ -179,11 +179,11 @@ fn startup(mut commands: Commands, asset_server: Res<AssetServer>) {
 
 上述代码中，我们给对应的Camera配置了视口：在渲染目标（目前就是当前这个窗口）的左上角（50，50）位置开始，宽400，高200的矩形区域。在其余代码保持不变的情况下，运行该程序能够得到如下的效果：
 
-![090](https://res.zhen.wang/images/post/2024-09-26/090.png)
+![090](https://static-res.zhen.wang/images/post/2024-09-26/090.png)
 
 此时，我们可以用一张图例来更加形象的表达上述目前的情形：
 
-![100](https://res.zhen.wang/images/post/2024-09-26/100.png)
+![100](https://static-res.zhen.wang/images/post/2024-09-26/100.png)
 
 ## 关于2D实体的位置等处理
 
@@ -198,15 +198,15 @@ fn startup(mut commands: Commands, asset_server: Res<AssetServer>) {
 
 一般情况下，我们很容易的产生多个Camera：
 
-![110](https://res.zhen.wang/images/post/2024-09-26/110.png)
+![110](https://static-res.zhen.wang/images/post/2024-09-26/110.png)
 
 在前面的代码基础上，我们又Spawn了另一个Camera，这个Camera的视口我们设置到了另一个区域。此时运行程序，我们会发现效果如下：
 
-![120](https://res.zhen.wang/images/post/2024-09-26/120.png)
+![120](https://static-res.zhen.wang/images/post/2024-09-26/120.png)
 
 如果你理解了前面的视口流程图，那么这个地方也不难理解：两个摄像机都在“摄取”游戏世界中的2D内容，但由于两个摄像机有不同的视口配置，因此将摄取到的内容渲染到渲染目标上Window上的时候，会将内容渲染到不同的位置：
 
-![130](https://res.zhen.wang/images/post/2024-09-26/130.png)
+![130](https://static-res.zhen.wang/images/post/2024-09-26/130.png)
 
 当然，从上图你会发现控制台有这样一句不断打印的警告：
 
@@ -216,21 +216,21 @@ WARN bevy_render::camera::camera: Camera order ambiguities detected for active c
 
 核心意思是，如果场景中存在多个Camera且对应的渲染对象都是一个（比如本例中的同一个Window），需要每一个Camera一个特定的顺序，否则这种歧义可能会造成不可预测的渲染结果（Bevy内部的机制导致的，这里不深究）。所以，为了消除这一警告，我们只需要为不同的Camera设置不同的`order`：
 
-![140](https://res.zhen.wang/images/post/2024-09-26/140.png)
+![140](https://static-res.zhen.wang/images/post/2024-09-26/140.png)
 
 ## 不同的摄像机渲染不同的实体
 
 有的时候，我们确实需要有多个Camera，且它们各自需要“摄取”并渲染不同的实体。此时，为了实现这个效果，我们需要引入一个组件：RenderLayer。
 
-![150](https://res.zhen.wang/images/post/2024-09-26/150.png)
+![150](https://static-res.zhen.wang/images/post/2024-09-26/150.png)
 
 我们将第一个Camera对应的实体和img1对应的实体都添加了`RenderLayer::layer(1)`，标识摄像机将只会“摄取”layer为1的所有实体。同样的，我们针对第二个Camera和img2添加`RenderLayer::layer(2)`：
 
-![160](https://res.zhen.wang/images/post/2024-09-26/160.png)
+![160](https://static-res.zhen.wang/images/post/2024-09-26/160.png)
 
 就绪以后，运行程序，我们能看到如下效果：
 
-![170](https://res.zhen.wang/images/post/2024-09-26/170.png)
+![170](https://static-res.zhen.wang/images/post/2024-09-26/170.png)
 
 左上角视口的Camera#1，只摄取了img1的内容；而右边的Camera#2则只摄取了img2的内容。
 
@@ -243,13 +243,13 @@ WARN bevy_render::camera::camera: Camera order ambiguities detected for active c
 
 对于第一点来说，最直观的就是，也许我们制作的游戏类似这样的布局：
 
-![180](https://res.zhen.wang/images/post/2024-09-26/180.png)
+![180](https://static-res.zhen.wang/images/post/2024-09-26/180.png)
 
 上述是游戏《Caves of Quad》的游戏界面,整体来看，我们就完全可以使用2个以上的Camera来分别渲染左侧的游戏部分和右侧的状态部分。
 
 对于第二点来说，像CS2中的投掷物预览效果，就可以单独用一个Camera来呈现：
 
-![190](https://res.zhen.wang/images/post/2024-09-26/190.png)
+![190](https://static-res.zhen.wang/images/post/2024-09-26/190.png)
 
 # 写在最后
 

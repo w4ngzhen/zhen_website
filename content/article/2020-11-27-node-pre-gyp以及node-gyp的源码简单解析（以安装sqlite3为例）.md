@@ -283,11 +283,11 @@ function install(gyp, argv, callback) {
 
 ### 下载二进制包
 
-![](https://res.zhen.wang/images/post/2020-11-27-node-native-install/hosted_tarball_download.png)
+![](https://static-res.zhen.wang/images/post/2020-11-27-node-native-install/hosted_tarball_download.png)
 
 根据流程，接下来我们进一步检查`versioning.js`文件，找到其中的`evaluate`函数，分析最后的`hosted_tarball`路径：
 
-![](https://res.zhen.wang/images/post/2020-11-27-node-native-install/analysis_hosted_path.png)
+![](https://static-res.zhen.wang/images/post/2020-11-27-node-native-install/analysis_hosted_path.png)
 
 `hosted_tarball`路径主要分为两个部分：1、`hosted_path`；2、`package_name`。
 
@@ -295,17 +295,17 @@ function install(gyp, argv, callback) {
 
 经过源码分析来源路径为：
 
- ![](https://res.zhen.wang/images/post/2020-11-27-node-native-install/opts.hosted_path-analysis.png)
+ ![](https://static-res.zhen.wang/images/post/2020-11-27-node-native-install/opts.hosted_path-analysis.png)
 
 我们自底向上分析。
 
 `host`变量取决于从环境变量中检查名称为`'npm_config_' + opts.module_name + '_binary_host_mirror'`的环境变量。如果不存在，则使用`package_json.binary.host`。正常使用的时候，我们并不会设定环境变量，所以这里就进入`package_json.binary`进行获取。这个`package_json`是`evaluate`函数被调用时候传入的，在`node-pre-gyp/install.js`中能够看到：
 
-![](https://res.zhen.wang/images/post/2020-11-27-node-native-install/import-gyp.png)
+![](https://static-res.zhen.wang/images/post/2020-11-27-node-native-install/import-gyp.png)
 
 一开始分析的时候，看到这里，本人以为`package_json`就是`node-pre-gyp/package.json`，于是本人去检查该`json`发现很奇怪，并没有binary属性，更别提host了。一番思考才明白，`node-pre-gyp install`的运行时调用者是谁呀？不是应该是`sqlite3`吗？所以这个地方的`require('./package.json')`实际上是指代的是`sqlite3/package.json`。查看`sqlite3/package.json`，果然发现了对应的元素：
 
-![](https://res.zhen.wang/images/post/2020-11-27-node-native-install/sqlite3-binary.png)
+![](https://static-res.zhen.wang/images/post/2020-11-27-node-native-install/sqlite3-binary.png)
 
 在`binary`属性中，我们还能看到`remote_path`也在其中。
 
@@ -319,7 +319,7 @@ function install(gyp, argv, callback) {
 
 其实，对于`hosted_path`的分析，我们也容易分析`package_name`了。
 
-![](https://res.zhen.wang/images/post/2020-11-27-node-native-install/opts.package_name-analysis.png)
+![](https://static-res.zhen.wang/images/post/2020-11-27-node-native-install/opts.package_name-analysis.png)
 
 自底向上分析，来自于`sqlite3/package.json`中`binary`属性中的`package_name`，内容见上图分析`host`。
 
@@ -343,25 +343,25 @@ function do_build(gyp,argv,callback) {
 
 代码中，`gyp`由调用install的时候，传入：
 
-![](https://res.zhen.wang/images/post/2020-11-27-node-native-install/gyp-from-install.png)
+![](https://static-res.zhen.wang/images/post/2020-11-27-node-native-install/gyp-from-install.png)
 
 那么我们又将回到调用install的地方。实际上，gyp就是node-pre-gyp.js导出的模块：
 
-![](https://res.zhen.wang/images/post/2020-11-27-node-native-install/node-pre-gyp-export.png)
+![](https://static-res.zhen.wang/images/post/2020-11-27-node-native-install/node-pre-gyp-export.png)
 
 也就是说在`do_build`中进行操作就是，放置了一个`build`任务在队列中。所以我们按照先前的分析，直接去看`build.js`
 
-![](https://res.zhen.wang/images/post/2020-11-27-node-native-install/build-buildjs.png)
+![](https://static-res.zhen.wang/images/post/2020-11-27-node-native-install/build-buildjs.png)
 
 看源码调用了当前模块中的`do_build`，且其中最核心的就是`compile`模块：
 
-![](https://res.zhen.wang/images/post/2020-11-27-node-native-install/do_build-buildjs.png)
+![](https://static-res.zhen.wang/images/post/2020-11-27-node-native-install/do_build-buildjs.png)
 
 #### util/compile.js
 
 进入compile模块，直接找到对应的`run_gyp`函数，代码很短，不难看出进行构建调用了`node-gyp`
 
-![](https://res.zhen.wang/images/post/2020-11-27-node-native-install/run-gyp.png)
+![](https://static-res.zhen.wang/images/post/2020-11-27-node-native-install/run-gyp.png)
 
 上述代码，会先考略`node-webkit`构建。但是我们核心的还是使用`node-gyp`，所以else中，会进行`node-gyp`的工具的检查工作。最后调用命令行执行`node-gyp`。于是，node原生模块的安装工作，进入了新的阶段：`node-gyp`。
 
@@ -379,7 +379,7 @@ function do_build(gyp,argv,callback) {
 
 我们进入该`js`进行分析
 
-![](https://res.zhen.wang/images/post/2020-11-27-node-native-install/node-gyp-GYP.png)
+![](https://static-res.zhen.wang/images/post/2020-11-27-node-native-install/node-gyp-GYP.png)
 
 实际上，`node-gyp`这段的命令行代码，和`node-pre-gyp`非常相似！所以我们也不去深入分析调用命令行了。直接在lib文件夹下面的`build.js`。在该`js`中，核心的方法为：
 
@@ -421,6 +421,6 @@ function build (gyp, argv, callback) {
 
 不得不说，`build`写的真心不错，看起来很舒服。这里为了方便读者快速阅读，我整理这些函数的调用图：
 
-![](https://res.zhen.wang/images/post/2020-11-27-node-native-install/node-gyp-build-flow.png)
+![](https://static-res.zhen.wang/images/post/2020-11-27-node-native-install/node-gyp-build-flow.png)
 
 整个调用流程图个人认为足够进行安装的时候的一场分析了。至于每个内部函数的功能，有空继续更新本文吧。

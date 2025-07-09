@@ -14,7 +14,7 @@ categories:
 
 这个画布能够实现如下的一个简单的效果。对于所有渲染出来的元素，都会有一个灰色的边框，当我们选中某个元素的时候，就会高亮显示。
 
-![010-wrapper-show](https://res.zhen.wang/images/post/2023-02-04/010-wrapper-show.gif)
+![010-wrapper-show](https://static-res.zhen.wang/images/post/2023-02-04/010-wrapper-show.gif)
 
 # ComponentNodeDesignWrapper
 
@@ -47,17 +47,17 @@ export type ComponentNodeDesignWrapperProps = {
 
 对于这个wrapper，我们考虑使用div元素来包裹子元素，也就是说，wrapper的本质是div。这个div元素我们通过isSelected（是否选中）来控制其CSS中的`outline`样式配置。之所以选择`outline`，是因为outline在显示的时候，是不会影响元素的位置大小的，但缺点则是无论其元素是什么外形，`outline`总是矩形。
 
-![020-wrapper-detail](https://res.zhen.wang/images/post/2023-02-04/020-wrapper-detail.png)
+![020-wrapper-detail](https://static-res.zhen.wang/images/post/2023-02-04/020-wrapper-detail.png)
 
 其次，我们还需要考虑这样一种问题，如果wrapper div包裹的实际HTML是`<button>`、`<a>`、`<span>`、`<b>`以及`<i>`元素，如果我们不将这个作为wrapper div的display设置为`inline-block`，那么wrapper div则会变成宽度占据一行的元素，会变成如下效果：
 
-![030-outline-err-display](https://res.zhen.wang/images/post/2023-02-04/030-outline-err-display.png)
+![030-outline-err-display](https://static-res.zhen.wang/images/post/2023-02-04/030-outline-err-display.png)
 
 我们需要做的就是，检测wrapper div内部的元素是button、a、span、b或i元素的时候，则将wrapper div的样式中display属性置为`inline-block`，这样wrapper div就可以贴合这些元素。
 
 那么，如何检测呢？我们可以采用这样一种方式：通过useRef这个Hook来创建一个ref，交给我们的wrapper div；然后，在useEffect的回调中，拿到类型为HTMLDivElement的ref.current。这个current我们可以通过访问firstChild就是div的唯一一个子元素，也就是wrapper包裹的元素。并且，我们可以访问firstChild.nodeName就能知道wrapper的HTML元素名称。存放到一个名为`targetNodeHtmlType`的state中；最后，我们按照上面的需求，让wrapper div的样式中的display属性，根据`targetNodeHtmlType`是否属于button、a、span、b或i元素中的一种来决定是否是`inline-block`。
 
-![040-wrapper-html-ref-detail](https://res.zhen.wang/images/post/2023-02-04/040-wrapper-html-ref-detail.png)
+![040-wrapper-html-ref-detail](https://static-res.zhen.wang/images/post/2023-02-04/040-wrapper-html-ref-detail.png)
 
 最后，我们还需要对wrapper div的onClick事件进行“代理”，并阻止冒泡。
 
@@ -273,7 +273,7 @@ export function DesignCanvasExample() {
 
 效果：
 
-![050-DesignCanvasExample-effect](https://res.zhen.wang/images/post/2023-02-04/050-DesignCanvasExample-effect.gif)
+![050-DesignCanvasExample-effect](https://static-res.zhen.wang/images/post/2023-02-04/050-DesignCanvasExample-effect.gif)
 
 当然，细心的伙伴已经发现了问题了。因为在我们的框架中，文本也是一个ComponentNode，会导致这个文本组件节点也被Wrapper包裹了。这个我们后续会通过对Wrapper进行优化来完成。这里不再赘述。
 

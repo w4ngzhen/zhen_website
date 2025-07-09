@@ -18,15 +18,15 @@ categories:
 
 在对Electron进行打包的时候，需要对当前Electron项目中使用到的node原生C/C++模块进行额外的平台编译，这个过程被称为`rebuild`。有这样的一个步骤，是因为electron在运行主进程脚本的时候，是跑在了electron内部的一个nodejs环境的，electron内部的nodejs与开发机器上的nodejs并不一定是相同的。为了验证这一论点，我们进行如下的一个测试，来分别打印本地机器安装的node的版本和electon内部的node版本：
 
-![](https://res.zhen.wang/images/post/2021-04-18-electron-builder/test-show-version1.png)
+![](https://static-res.zhen.wang/images/post/2021-04-18-electron-builder/test-show-version1.png)
 
 接下来是electron主进程脚本的node版本显示（main.js）：
 
-![](https://res.zhen.wang/images/post/2021-04-18-electron-builder/test-show-version2.png)
+![](https://static-res.zhen.wang/images/post/2021-04-18-electron-builder/test-show-version2.png)
 
 接下来是分别运行`npm run show-local-node-version`和`npm run start`：
 
-![](https://res.zhen.wang/images/post/2021-04-18-electron-builder/show-local-and-inner-version.png)
+![](https://static-res.zhen.wang/images/post/2021-04-18-electron-builder/show-local-and-inner-version.png)
 
 可以看到输出确实和我们的理解是一致的，版本为11.2.0的electron内部的node版本呢是12，而我们本地机器上的node是14。这也侧面说明了为什么一般的electron应用程序会很大，因为一份electron应用程序，就有一个node的运行时。
 
@@ -38,7 +38,7 @@ electron-builder进行打包的时候，会建议你在此之前使用`electron-
 2. 然后在package.json中的scripts中添加一段脚本：`"installappdeps": "electron-builder install-app-deps"`
 3. 最后调用命令`npm rum installappdeps`执行该脚本
 
-![](https://res.zhen.wang/images/post/2021-04-18-electron-builder/images-install-and-run-install-app-deps.png)
+![](https://static-res.zhen.wang/images/post/2021-04-18-electron-builder/images-install-and-run-install-app-deps.png)
 
 ## DEBUG环境变量
 
@@ -76,7 +76,7 @@ $env:DEBUG=electron-builder
 
 在我们的机器上，我们同样设置该环境变量，然后执行：
 
-![](https://res.zhen.wang/images/post/2021-04-18-electron-builder/install-app-deps-with-DEBUG.png)
+![](https://static-res.zhen.wang/images/post/2021-04-18-electron-builder/install-app-deps-with-DEBUG.png)
 
 发现输出了大量的关于electron-builder的DEBUG打印，为我们了解`electron-builder install-app-deps`提供了更多的信息。
 
@@ -90,7 +90,7 @@ $env:DEBUG=electron-builder
 
 不幸的是，虽然`--verbose`能被node-gyp识别，无法被electron-builder识别，。当你直接这么调用的时候，会出错：
 
-![](https://res.zhen.wang/images/post/2021-04-18-electron-builder/electron-cannot-recognise-verbose.png)
+![](https://static-res.zhen.wang/images/post/2021-04-18-electron-builder/electron-cannot-recognise-verbose.png)
 
 那么要如何解决这个问题呢？正确的做法是编写两个`scripts`：
 
@@ -104,6 +104,6 @@ $env:DEBUG=electron-builder
 
 然后在想要进行verbose打印的时候，执行`npm rum installappdeps-with-verbose`：
 
-![](https://res.zhen.wang/images/post/2021-04-18-electron-builder/after-use-two-scripts-output.png)
+![](https://static-res.zhen.wang/images/post/2021-04-18-electron-builder/after-use-two-scripts-output.png)
 
 可以看到，在install-app-deps的DEBUG打印前，我们还看到node给出的一些额外信息。

@@ -17,15 +17,15 @@ categories:
 
 在开发之前，我们首先要了解下什么是JS Dialog。有过Web页面开发经历的开发者都或多或少使用过这样一个JS的API：`alert('this is a message')`，当JS页面执行这段脚本的时候，在浏览器上会有类似于如下的显示：
 
-![](https://res.zhen.wang/images/post/2021-10-06-intelliJ-plugin-dev-2/010-show-js-alert.gif)
+![](https://static-res.zhen.wang/images/post/2021-10-06-intelliJ-plugin-dev-2/010-show-js-alert.gif)
 
 同样，当我们使用`confirm('ok?')`的时候，会显示如下：
 
-![](https://res.zhen.wang/images/post/2021-10-06-intelliJ-plugin-dev-2/020-show-js-confirm.gif)
+![](https://static-res.zhen.wang/images/post/2021-10-06-intelliJ-plugin-dev-2/020-show-js-confirm.gif)
 
 以及，使用`prompt(input your name: ')`，有如下的显示：
 
-![](https://res.zhen.wang/images/post/2021-10-06-intelliJ-plugin-dev-2/030-show-js-prompt.gif)
+![](https://static-res.zhen.wang/images/post/2021-10-06-intelliJ-plugin-dev-2/030-show-js-prompt.gif)
 
 
 
@@ -33,15 +33,15 @@ categories:
 
 **alert**
 
-![](https://res.zhen.wang/images/post/2021-10-06-intelliJ-plugin-dev-2/040-show-js-alert-in-jcef.gif)
+![](https://static-res.zhen.wang/images/post/2021-10-06-intelliJ-plugin-dev-2/040-show-js-alert-in-jcef.gif)
 
 **confirm**
 
-![](https://res.zhen.wang/images/post/2021-10-06-intelliJ-plugin-dev-2/050-show-js-confirm-in-jcef.gif)
+![](https://static-res.zhen.wang/images/post/2021-10-06-intelliJ-plugin-dev-2/050-show-js-confirm-in-jcef.gif)
 
 **prompt**
 
-![](https://res.zhen.wang/images/post/2021-10-06-intelliJ-plugin-dev-2/060-show-js-prompt-in-jcef.gif)
+![](https://static-res.zhen.wang/images/post/2021-10-06-intelliJ-plugin-dev-2/060-show-js-prompt-in-jcef.gif)
 
 可以看到，原生窗体显得不是那么好看。那么，我们能不能自定义这个原生窗体呢？答案是肯定的，接下来就要用到**JCEF**里面一个Handler CefJSDialogHandler（[java-cef/CefJSDialogHandler](https://github.com/chromiumembedded/java-cef/blob/master/java/org/cef/handler/CefJSDialogHandler.java)）。
 
@@ -296,15 +296,15 @@ if (dialog_type == JSDIALOGTYPE_ALERT) {
 
 我们对代码进行断点确认线程，在onJSDialog执行的时候，所运行的线程是：`AWT-AppKit`。
 
-![](https://res.zhen.wang/images/post/2021-10-06-intelliJ-plugin-dev-2/070-onJSDialog-thread.jpg)
+![](https://static-res.zhen.wang/images/post/2021-10-06-intelliJ-plugin-dev-2/070-onJSDialog-thread.jpg)
 
 而EventQueue.invokeLater中所运行的线程是：`AWT-EventQueue-0`，这个线程就是IDEA插件中的GUI线程。
 
-![](https://res.zhen.wang/images/post/2021-10-06-intelliJ-plugin-dev-2/080-EventQueueInvokeLater-thread.jpg)
+![](https://static-res.zhen.wang/images/post/2021-10-06-intelliJ-plugin-dev-2/080-EventQueueInvokeLater-thread.jpg)
 
 修改线程处理后，让我们再次调用alert：
 
-![](https://res.zhen.wang/images/post/2021-10-06-intelliJ-plugin-dev-2/090-new-not-perfect-alert-dialog.gif)
+![](https://static-res.zhen.wang/images/post/2021-10-06-intelliJ-plugin-dev-2/090-new-not-perfect-alert-dialog.gif)
 
 可以看到对话框已经显示为了使用IDEA插件下的dialog形式，但是这个dialog还不完全正确，一般的alert对话框，只会有一个确认按钮，而IDEA下的dialog默认是Cancel+OK的按钮组合。
 
@@ -328,11 +328,11 @@ IDEA插件的DialogWrapper默认情况下是Cancel+OK的按钮组合。那么如
 
 **务必注意，DialogWrapperAction的实现子类，必须是DialogWrapper的内部类，否则无法查看。**
 
-![](https://res.zhen.wang/images/post/2021-10-06-intelliJ-plugin-dev-2/100-ok-action-in-alert.jpg)
+![](https://static-res.zhen.wang/images/post/2021-10-06-intelliJ-plugin-dev-2/100-ok-action-in-alert.jpg)
 
 重新运行，查看AlertDialog的效果：
 
-![](https://res.zhen.wang/images/post/2021-10-06-intelliJ-plugin-dev-2/110-new-perfect-alert-dialog.gif)
+![](https://static-res.zhen.wang/images/post/2021-10-06-intelliJ-plugin-dev-2/110-new-perfect-alert-dialog.gif)
 
 接下来，我们需要编写ConfirmDialog，来处理JS中的confirm。
 
@@ -381,7 +381,7 @@ if (dialog_type == JSDIALOGTYPE_CONFIRM) {
 
 这点和AlertDialog的差别在于，需要调用`showAndGet`方法获取用户的点击是cancel还是ok的结果，使用callback返回给JS，才能使得JS的confirm调用获得正确的返回。下面是效果：
 
-![](https://res.zhen.wang/images/post/2021-10-06-intelliJ-plugin-dev-2/120-new-confirm-dialog.gif)
+![](https://static-res.zhen.wang/images/post/2021-10-06-intelliJ-plugin-dev-2/120-new-confirm-dialog.gif)
 
 ## PromptDialog
 
@@ -445,7 +445,7 @@ if (dialog_type == JSDIALOGTYPE_PROMPT) {
 
 和之前不太一样的是，这里需要在showAndGet之后，调用getText来获取用户输入，并在`callback.Continue(isOk, text)方法中`传入用户的数据数据。最终效果如下：
 
-![](https://res.zhen.wang/images/post/2021-10-06-intelliJ-plugin-dev-2/130-new-prompt-dialog.gif)
+![](https://static-res.zhen.wang/images/post/2021-10-06-intelliJ-plugin-dev-2/130-new-prompt-dialog.gif)
 
 # 源码
 

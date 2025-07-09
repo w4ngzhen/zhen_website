@@ -200,11 +200,11 @@ ADD_COMPILE_OPTIONS("$<$<CXX_COMPILER_ID:MSVC>:/utf-8>")
 
 原因以及解决方案：针对该问题，首先通过网上搜寻的博文了解到是：`当前工程是Debug版本，而引用的库文件时Release版本`。排查libcef_dll_wrapper.lib，确实使用的Debug版本。从报错了解到与`mocs_compilation.cpp.obj`的`_ITERATOR_DEBUG_LEVEL`不一致。但是，这个`mocs_compilation.cpp.obj`是通过咱们项目生成的，是QT的MetaObject元对象机制下，MOC参与代码生成、编译输出的，其自动生成的代码在`cmake-build-debug`目录下的`qt-cef_autogen`中：
 
-![010-autogen-in-cmake](https://res.zhen.wang/images/post/2022-09-12/010-autogen-in-cmake.png)
+![010-autogen-in-cmake](https://static-res.zhen.wang/images/post/2022-09-12/010-autogen-in-cmake.png)
 
 该cpp编译单元编译后的产物在`项目根目录/cmake-build-debug/CMakeFiles/qt-cef.dir/qt-cef_autogen`下：
 
-![020-autogen-obj-in-cmake](https://res.zhen.wang/images/post/2022-09-12/020-autogen-obj-in-cmake.png)
+![020-autogen-obj-in-cmake](https://static-res.zhen.wang/images/post/2022-09-12/020-autogen-obj-in-cmake.png)
 
 使用VS的工具（ [适用于开发人员的命令行 shell 和提示 - Visual Studio (Windows) | Microsoft Docs](https://docs.microsoft.com/zh-cn/visualstudio/ide/reference/command-prompt-powershell?view=vs-2022)）中的**dumpbin.exe**工具（[DUMPBIN 参考 | Microsoft Docs](https://docs.microsoft.com/zh-cn/cpp/build/reference/dumpbin-reference?view=msvc-170)），可以查看库文件的`_ITERATOR_DEBUG_LEVEL`值。操作方式为：
 
@@ -217,11 +217,11 @@ dumpbin /directives "库文件路径"
 
 mocs_compilation.cpp.obj的_ITERATOR_DEBUG_LEVEL值
 
-![030-dumpbin-mocs-obj](https://res.zhen.wang/images/post/2022-09-12/030-dumpbin-mocs-obj.png)
+![030-dumpbin-mocs-obj](https://static-res.zhen.wang/images/post/2022-09-12/030-dumpbin-mocs-obj.png)
 
 libcef_dll_wrapper.lib中一些obj的_ITERATOR_DEBUG_LEVEL值：
 
-![040-dumpbin-libcef_dll_wrapper](https://res.zhen.wang/images/post/2022-09-12/040-dumpbin-libcef_dll_wrapper.png)
+![040-dumpbin-libcef_dll_wrapper](https://static-res.zhen.wang/images/post/2022-09-12/040-dumpbin-libcef_dll_wrapper.png)
 
 可以看出，两份库代码确实是不一样的。由于libcef_dll_wrapper.lib我们已经完成了编译，这里我们不考虑重新编译该lib库，而是通过配置CMake，让生成的mocs_compilation.cpp.obj等obj的_ITERATOR_DEBUG_LEVEL值为0，来匹配libcef_dll_wrapper.lib。所以，解决方案就是在CMakeLists.txt中，添加配置（[c++ - How to add _ITERATOR_DEBUG_LEVEL to CMake? - Stack Overflow](https://stackoverflow.com/questions/54246427/how-to-add-iterator-debug-level-to-cmake)）：
 
@@ -260,11 +260,11 @@ Build finished
 
 出现这个问题的时候，使用CLion的Debug模式进行，会看到错误调用栈：
 
-![050-debug-string-error](https://res.zhen.wang/images/post/2022-09-12/050-debug-string-error.png)
+![050-debug-string-error](https://static-res.zhen.wang/images/post/2022-09-12/050-debug-string-error.png)
 
 经过问题排查，主要原因点：
 
-![060-string-error-detail](https://res.zhen.wang/images/post/2022-09-12/060-string-error-detail.png)
+![060-string-error-detail](https://static-res.zhen.wang/images/post/2022-09-12/060-string-error-detail.png)
 
 在qtcefwindow构造函数中调用`CefBrowserHost::CreateBrowser`API，会传入初始要打开的页面地址，然而QString.toStdString得到string有问题（后续排查具体原因）。解决方案就是直接使用std::string变量即可：
 
@@ -324,11 +324,11 @@ Build finished
 
 # 效果演示与代码库
 
-![070-show](https://res.zhen.wang/images/post/2022-09-12/070-show.gif)
+![070-show](https://static-res.zhen.wang/images/post/2022-09-12/070-show.gif)
 
 与本文相关的代码已经提交至Github，且按照整个文章的编写流程进行提交：
 
 [w4ngzhen/QtCefCmakeDemo (github.com)](https://github.com/w4ngzhen/QtCefCmakeDemo)
 
-![080-git-commits](https://res.zhen.wang/images/post/2022-09-12/080-git-commits.png)
+![080-git-commits](https://static-res.zhen.wang/images/post/2022-09-12/080-git-commits.png)
 

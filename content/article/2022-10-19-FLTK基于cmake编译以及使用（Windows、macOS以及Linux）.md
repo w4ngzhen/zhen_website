@@ -342,7 +342,7 @@ make: *** [Makefile:91: all] Error 2
 
 下图是本人分别在Windows、macOS以及Linux环境下的运行效果：
 
-![010-fltk-demo-in-all](https://res.zhen.wang/images/post/2022-10-19/010-fltk-demo-in-all.png)
+![010-fltk-demo-in-all](https://static-res.zhen.wang/images/post/2022-10-19/010-fltk-demo-in-all.png)
 
 # 附录
 

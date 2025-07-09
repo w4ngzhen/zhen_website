@@ -22,12 +22,12 @@ categories:
 进入Linux系统，命令行下输入hostname可以看到当前的hostname，而通常默认的hostname是local.localadmin。
 
 本次试验环境在CentOS7下，所以我们编辑/etc/hostname文件，试验hostname为：hadoop.w4ng，填入其中，重启Linux，可以看到已经生效。
-![hostname.png](https://res.zhen.wang/images/post/2018-03-08-hadoop-install/hostname.png)
+![hostname.png](https://static-res.zhen.wang/images/post/2018-03-08-hadoop-install/hostname.png)
 
 **2.配置静态IP**
 
 同样，在CentOS7以后，其网卡配置已经有原先的/etc/sysconfig/network/network-scripts下面的ifcfg-eth0等改名为乐ifcfg-enpXsY（en表示ethnet，p表示pci设备，s表示soket）
-![ll-network-scripts.png](https://res.zhen.wang/images/post/2018-03-08-hadoop-install/ll-network-scripts.png)
+![ll-network-scripts.png](https://static-res.zhen.wang/images/post/2018-03-08-hadoop-install/ll-network-scripts.png)
 本人这里有两个ifcfg文件是因为配置了两块网卡[分别做NAT以及与虚拟机Host-Only两个功能，实现双网卡上网](http://blog.csdn.net/wangshfa/article/details/8813505)
 
 打开ifcfg-enp0s8，配置如下：
@@ -160,7 +160,7 @@ ${HADOOP_HOME}/bin/hdfs namenode -format
 ```
 
 根据配置中我们都是配置的root用户，显然需要我们以root身份进行，且过程中需要root密码。当然，通过ssh免密可以方便很多。启动完成以后，命令行中使用jps命令打印Java进程，会看到下图五个进程（忽略Jps进程）：
-![jps.png](https://res.zhen.wang/images/post/2018-03-08-hadoop-install/jps.png)
+![jps.png](https://static-res.zhen.wang/images/post/2018-03-08-hadoop-install/jps.png)
 当然，Hadoop在服务启动以后以提供web端：
 ```
 visit hdfs manage page

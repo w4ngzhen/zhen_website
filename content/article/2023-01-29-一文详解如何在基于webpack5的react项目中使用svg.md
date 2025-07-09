@@ -38,7 +38,7 @@ categories:
 </html>
 ```
 
-![010-html-svg-usecase](https://res.zhen.wang/images/post/2023-01-29/010-html-svg-usecase.png)
+![010-html-svg-usecase](https://static-res.zhen.wang/images/post/2023-01-29/010-html-svg-usecase.png)
 
 # React编写SVG组件
 
@@ -60,11 +60,11 @@ export const IconComment = () => {
 
 这个IconComment就是一个普通的React组件，编写完成后我们就可以在需要使用的地方引入了：
 
-![020-svg-react-component-usecase](https://res.zhen.wang/images/post/2023-01-29/020-svg-react-component-usecase.png)
+![020-svg-react-component-usecase](https://static-res.zhen.wang/images/post/2023-01-29/020-svg-react-component-usecase.png)
 
 效果如下：
 
-![030-svg-react-component-display](https://res.zhen.wang/images/post/2023-01-29/030-svg-react-component-display.png)
+![030-svg-react-component-display](https://static-res.zhen.wang/images/post/2023-01-29/030-svg-react-component-display.png)
 
 # SVG文件在React中的使用方式
 
@@ -72,17 +72,17 @@ export const IconComment = () => {
 
 上面我们讲到了如何编写一个svg组件，但一般来说，我们都会让设计出svg资源，然后存放在项目某个目录下并进行使用。我们当然可以把设计出的svg的内容复制到我们的项目中，以组件的方式来使用：
 
-![040-copy-svg-content-to-react-component](https://res.zhen.wang/images/post/2023-01-29/040-copy-svg-content-to-react-component.png)
+![040-copy-svg-content-to-react-component](https://static-res.zhen.wang/images/post/2023-01-29/040-copy-svg-content-to-react-component.png)
 
 但是每次都需要拷贝一个又一个的组件当然是一件很麻烦的事情，在webpack中我们使用svg资源的时候，其实更希望如同图片资源一样以模块的形式引入（import或者是require）并使用，就像下面一样：
 
-![050-import-svg-component-flow](https://res.zhen.wang/images/post/2023-01-29/050-import-svg-component-flow.png)
+![050-import-svg-component-flow](https://static-res.zhen.wang/images/post/2023-01-29/050-import-svg-component-flow.png)
 
 如果要达到上面的目的，我们首先需要弄清楚一件事情，那就是咱们"import"的"**IconAbc**"到底是个什么？通过上面的代码**反推**，我们很容易回答，IconAbc肯定需要是一个React组件（函数组件或类组件）。
 
 了解webpack的同学都知道，webpack可以通过loader，来处理一个资源在导入的时候会变成什么。但现在在webpack配置中，我们先不添加任何关于svg模块的处理loader，不出意外肯定会报错：
 
-![060-import-svg-without-loader](https://res.zhen.wang/images/post/2023-01-29/060-import-svg-without-loader.png)
+![060-import-svg-without-loader](https://static-res.zhen.wang/images/post/2023-01-29/060-import-svg-without-loader.png)
 
 >ERROR in ./src/icon-comment.svg 1:0
 >Module parse failed: Unexpected token (1:0)
@@ -121,7 +121,7 @@ module.exports = {
 
 完成配置以后，重新经过webpack编译打包，运行后会看到控制台的输出：
 
-![070-import-svg-by-svgr](https://res.zhen.wang/images/post/2023-01-29/070-import-svg-by-svgr.png)
+![070-import-svg-by-svgr](https://static-res.zhen.wang/images/post/2023-01-29/070-import-svg-by-svgr.png)
 
 - 效果1：我们通过console.log输出的IconComment是一个React组件纯函数。
 - 效果2：代码中我们使用`<IconComment/>`在屏幕上展示出来了。
@@ -130,23 +130,23 @@ module.exports = {
 
 回顾整个过程，我们可以用下面的图来描述这个过程：
 
-![080-svgrwebpack-handle-flow](https://res.zhen.wang/images/post/2023-01-29/080-svgrwebpack-handle-flow.png)
+![080-svgrwebpack-handle-flow](https://static-res.zhen.wang/images/post/2023-01-29/080-svgrwebpack-handle-flow.png)
 
 ## 资源模式使用
 
 当然，我们有的时候并不想按照React组件的使用。例如，svg同样可以作为一些元素的背景，这个时候我们需要把svg是为类似于图片一样的资源，就像下面的方式：
 
-![090-use-svg-by-url](https://res.zhen.wang/images/post/2023-01-29/090-use-svg-by-url.png)
+![090-use-svg-by-url](https://static-res.zhen.wang/images/post/2023-01-29/090-use-svg-by-url.png)
 
 如果svg的loader配置保持不变，还是`@svgr/webpack`，我们会看到没有起效果，并且，查看对应生成css样式文件，我们可以看到对应的`url('./icon-comment.svg')`被编译为了`url(8ed4ed501566520a5cd0.svg)`：
 
-![100-svg-url-result](https://res.zhen.wang/images/post/2023-01-29/100-svg-url-result.png)
+![100-svg-url-result](https://static-res.zhen.wang/images/post/2023-01-29/100-svg-url-result.png)
 
 
 
 这个`8ed4ed501566520a5cd0.svg`是什么呢？可能看起来还有点懵，我们尝试打包编译项目，看一下编译后的产物就知道了：
 
-![110-build-dist-svg](https://res.zhen.wang/images/post/2023-01-29/110-build-dist-svg.png)
+![110-build-dist-svg](https://static-res.zhen.wang/images/post/2023-01-29/110-build-dist-svg.png)
 
 通过上图的结果可知，很明显svg在这种场景下依然被`@svgr/webpack`这个loader处理为了React组件，又因为咱们是在less/css中引用这个svg，loader内部将这种场景回退到了文件资源存放了。
 
@@ -185,7 +185,7 @@ module.exports = {
 
 完成上述的配置以后，我们适当的修改代码，如下所示：
 
-![120-code-show-svg-usecase](https://res.zhen.wang/images/post/2023-01-29/120-code-show-svg-usecase.png)
+![120-code-show-svg-usecase](https://static-res.zhen.wang/images/post/2023-01-29/120-code-show-svg-usecase.png)
 
 关于关键代码的解释：
 
@@ -194,11 +194,11 @@ module.exports = {
 
 代码运行以后，我们首先从UI上能够看到效果：
 
-![130-svg-usecase-ui-display](https://res.zhen.wang/images/post/2023-01-29/130-svg-usecase-ui-display.png)
+![130-svg-usecase-ui-display](https://static-res.zhen.wang/images/post/2023-01-29/130-svg-usecase-ui-display.png)
 
 其次，从控制台也能看到对应的IconComment就是React函数组件；IconComment是svg资源的base64 DataUrl：
 
-![140-svg-usecase-console-output](https://res.zhen.wang/images/post/2023-01-29/140-svg-usecase-console-output.png)
+![140-svg-usecase-console-output](https://static-res.zhen.wang/images/post/2023-01-29/140-svg-usecase-console-output.png)
 
 # demo地址
 

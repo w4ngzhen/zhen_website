@@ -123,7 +123,7 @@ int CefExecuteProcess(const CefMainArgs& args,
 
 从这段话我们不难推断出，CEF在以多进程架构下启动的时候，会多次启动自身可执行程序。启动的时候，会通过命令行参数传入某些标识，由`CefExecuteProcess`内部进行判断。如果是主进程，则该函数立刻返回-1，程序会继续执行下去，那么后续继续运行的代码全部都运行在主进程中；如果是子进程（渲染进程等），那么该函数会阻塞住，直到子进程结束后，该函数会返回一个大于等于0的值，并在main函数直接返回，进而退出。
 
-![](https://res.zhen.wang/images/post/2021-03-31-use-cef-3/CefExecuteProcess-flow.jpg)
+![](https://static-res.zhen.wang/images/post/2021-03-31-use-cef-3/CefExecuteProcess-flow.jpg)
 
 对CefExecuteProcess分析就到这里，细节可以阅读[官方文档](https://bitbucket.org/chromiumembedded/cef/wiki/GeneralUsage.md#markdown-header-entry-point-function)，我们继续后续的代码分析：
 
@@ -225,21 +225,21 @@ virtual CefRefPtr<CefRenderProcessHandler> GetRenderProcessHandler()
 
 注意CefInitialize中的`app.get()`参数，就是将我们的CefApp关联到CEF的运行中的。那么，有些读者会有疑问，在示例代码中，只看到我们创建的SimpleApp类继承了CefApp，并通过`GetBrowserProcessHandler`返回自身来表明是一个浏览器进程的回调实例，并没有看到体现渲染进程的代码呢？确实，cefsimple作为helloworld级别的代码，没有体现这一点。在cefclient示例代码中（更高阶的CEF示例，也更复杂），你会看到：
 
-![](https://res.zhen.wang/images/post/2021-03-31-use-cef-3/cefclient-app-browser.jpg)
+![](https://static-res.zhen.wang/images/post/2021-03-31-use-cef-3/cefclient-app-browser.jpg)
 
 上图是浏览器进程CefApp子类ClientAppBrowser（这里的”Client“是cefclient示例代码的“client”，请勿和下文的CefClient类混淆）。
 
 同时你还能找到一个CefApp子类ClientAppRenderer：
 
-![](https://res.zhen.wang/images/post/2021-03-31-use-cef-3/cefclient-app-renderer.jpg)
+![](https://static-res.zhen.wang/images/post/2021-03-31-use-cef-3/cefclient-app-renderer.jpg)
 
 你甚至还能找到一个名为ClientAppOther的CefApp子类：
 
-![](https://res.zhen.wang/images/post/2021-03-31-use-cef-3/cefclient-app-other.jpg)
+![](https://static-res.zhen.wang/images/post/2021-03-31-use-cef-3/cefclient-app-other.jpg)
 
 那么它们在哪儿被使用到呢？
 
-![](https://res.zhen.wang/images/post/2021-03-31-use-cef-3/where-use-CefApp.jpg)
+![](https://static-res.zhen.wang/images/post/2021-03-31-use-cef-3/where-use-CefApp.jpg)
 
 看到这里，我相信绝大多数的读者应该能够理解我所说的CefApp代表的是一个进程的抽象了。这块的大体流程是，通过一个工具函数`GetProcessType`从命令行中解析`--type=xxx`（浏览器进程没有这个命令参数）来判断进程的类型，然后实例化对应的CefApp子类，最后通过`CefExecuteProcess`来运行进程。
 
@@ -342,7 +342,7 @@ void SimpleApp::OnContextInitialized() {
 
 对于这段代码，我整理了如下流程，方便读者对照阅读：
 
-![](https://res.zhen.wang/images/post/2021-03-31-use-cef-3/cef-SimpleApp-OnContextInitialized.jpg)
+![](https://static-res.zhen.wang/images/post/2021-03-31-use-cef-3/cef-SimpleApp-OnContextInitialized.jpg)
 
 在这个流程中，最关键的3个部分被我用红色标记出来：
 
@@ -357,14 +357,14 @@ void SimpleApp::OnContextInitialized() {
 1. 首先是调用CefBrowserView::CreateBrowserView得到CefBrowserView实例，这个过程会把CefClient实例和View对象通过API绑定。
 2. 调用CefWindow::CreateTopLevelWindow，传入CefBrowserView实例来创建窗体。
 
-![](https://res.zhen.wang/images/post/2021-03-31-use-cef-3/cef-use-CEF-Views.jpg)
+![](https://static-res.zhen.wang/images/post/2021-03-31-use-cef-3/cef-use-CEF-Views.jpg)
 
 **对于使用操作系统原生API创建浏览器窗体，主要是如下步骤：**
 
 1. 使用CefWindowInfo设置窗体句柄
 2. 调用CefBrowserHost::CreateBrowser将对应窗体句柄的窗体和CefClient绑定起来
 
-![](https://res.zhen.wang/images/post/2021-03-31-use-cef-3/cef-use-OS-native-Views.jpg)
+![](https://static-res.zhen.wang/images/post/2021-03-31-use-cef-3/cef-use-OS-native-Views.jpg)
 
 当然，上述两个窗体的创建过程涉及到CEF的窗体模块，我们不在这里细说，但是两个流程都离不开一个重要的类：CefClient，它具体是什么呢？接下来，我们将对CefClient进行介绍，并对SimpleHandler这个类（CefClient子类）进行一定的源码分析。
 
@@ -425,7 +425,7 @@ class CefClient : public virtual CefBaseRefCounted {
 
 也就是说，将在渲染进程发生的事件，用在浏览器进程中的CefClient一定的抽象映射，而不是直接在浏览器进程处理器中进行，因为一个浏览器进程可能会创建多个渲染进程，让CefClient作为中间层避免耦合。
 
-![](https://res.zhen.wang/images/post/2021-03-31-use-cef-3/CefClientAndRenderer.jpg)
+![](https://static-res.zhen.wang/images/post/2021-03-31-use-cef-3/CefClientAndRenderer.jpg)
 
 当然，文档也为我们指出，CefClient实例与浏览器实例可以不是一一对应的，多个浏览器实例可以共享一个CefClient，如此一来我们也可以总结关于CefClient的一点：**非必要情况，不要编写具有状态的CefClient**。
 

@@ -82,7 +82,7 @@ deb https://mirrors.tuna.tsinghua.edu.cn/debian-security bullseye-security main 
 - [contrib](http://www.debian.org/doc/debian-policy/ch-archive#s-contrib) 软件包包含 DFSG 兼容的软件，但具有不在 main 中的依赖关系（可能打包为非自由的 Debian）。
 - [非自由](http://www.debian.org/doc/debian-policy/ch-archive#s-non-free)软件包含不符合 DFSG 的软件。
 
-![010-sources-list-path](https://res.zhen.wang/images/post/2022-10-27/010-sources-list-path.png)
+![010-sources-list-path](https://static-res.zhen.wang/images/post/2022-10-27/010-sources-list-path.png)
 
 当我们通过apt/apt-get进行软件安装的时候，如果出现某些软件找不到，一方面可能软件包名称不对；另一方面，可能是在配置sources.list的时候，main、contrib或者non-free遗漏了配置，导致不会进入这些目录下进行搜索。
 
@@ -166,11 +166,11 @@ sudo apt-get install linux-headers-$(uname -r)
 
 ## 方式一：直接利用VBox的`Insert Guest Additions CD image`
 
-![020-addition-insert-iso](https://res.zhen.wang/images/post/2022-10-27/020-addition-insert-iso.png)
+![020-addition-insert-iso](https://static-res.zhen.wang/images/post/2022-10-27/020-addition-insert-iso.png)
 
 使用该方式，VBox会自动查找对应的增强工具包CD镜像，并挂在到Debian系统。稍等片刻后，我们可以从桌面上看到一个名为：`VBOX_GAs_x.x.x`的CD镜像，双击打开后可以直接看到里面的内容：
 
-![030-VBox-GAs-cd-image-content](https://res.zhen.wang/images/post/2022-10-27/030-VBox-GAs-cd-image-content.png)
+![030-VBox-GAs-cd-image-content](https://static-res.zhen.wang/images/post/2022-10-27/030-VBox-GAs-cd-image-content.png)
 
 我们首先把其中的`VBoxLinuxAdditions.sh`拷贝到桌面，或者任意路径。然后命令界面执行：
 
@@ -223,9 +223,9 @@ sudo reboot
 
 重启完成后，我们就可以配置一个共享目录来检查是否安装成功。共享目录的配置，网上有很多，这里不再赘述。
 
-![040-config-shared-dir](https://res.zhen.wang/images/post/2022-10-27/040-config-shared-dir.png)
+![040-config-shared-dir](https://static-res.zhen.wang/images/post/2022-10-27/040-config-shared-dir.png)
 
-![050-set-shared-dir](https://res.zhen.wang/images/post/2022-10-27/050-set-shared-dir.png)
+![050-set-shared-dir](https://static-res.zhen.wang/images/post/2022-10-27/050-set-shared-dir.png)
 
 这里没有选择Auto-mount自动挂载，那么需要手动挂载。这里点击OK以后，我们进入Linux，可以手动创建一个目录：`/media/shared-dir`目录，然后通过调用挂载的命令：
 
@@ -238,8 +238,8 @@ sudo mount -t vboxsf SharedDir /media/shared-dir
 
 完成挂载后，我们可以在宿主系统创建一个文件夹来验证：
 
-![060-host-os-new-file](https://res.zhen.wang/images/post/2022-10-27/060-host-os-new-file.png)
+![060-host-os-new-file](https://static-res.zhen.wang/images/post/2022-10-27/060-host-os-new-file.png)
 
-![070-shared-file-in-linux](https://res.zhen.wang/images/post/2022-10-27/070-shared-file-in-linux.png)
+![070-shared-file-in-linux](https://static-res.zhen.wang/images/post/2022-10-27/070-shared-file-in-linux.png)
 
 可以看到已经将宿主系统里面的hello.txt在Linux读取出来了。
