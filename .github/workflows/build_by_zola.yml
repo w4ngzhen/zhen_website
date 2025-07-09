@@ -1,6 +1,8 @@
+permissions:
+  contents: write  # 允许创建分支、推送代码等操作
 # On every push this script is executed
 on: push
-name: Build and deploy GH Pages
+name: build static pages to repo branch
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -9,7 +11,7 @@ jobs:
       - name: checkout
         uses: actions/checkout@v4
       - name: build_and_deploy
-        uses: shalzz/zola-deploy-action@0.20.0
+        uses: shalzz/zola-deploy-action@v0.20.0
         env:
           # Target branch
           PAGES_BRANCH: dist_pages
