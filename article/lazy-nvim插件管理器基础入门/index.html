@@ -1,0 +1,368 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="utf-8">
+    <meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover"
+          name="viewport">
+    
+    
+    <!-- umami web analysis -->
+    <script defer src="https://zhen.wang/libs/umami/umami.script.js"
+            data-website-id="d66cfe03-f6b3-4aa0-baf8-728700db1b09"></script>
+    
+    
+    
+    <link rel="icon" type="image/png" sizes="16x16" href="https://zhen.wang/images/blog-site-icon.svg">
+    <link rel="icon" type="image/png" sizes="32x32" href="https://zhen.wang/images/blog-site-icon.svg">
+    <title>zhen&#x27;s blog</title>
+    <link rel="stylesheet" href="https://zhen.wang/style.css">
+    
+<link rel="stylesheet" href="https://zhen.wang/article_content.css">
+<link rel="stylesheet" href="https://zhen.wang/article_markdown.css">
+
+</head>
+<body>
+
+<div id="article">
+    <header class="article-header">
+        
+<div class="base-title">
+    <a href="#" onclick="history.length > 1 ? history.back() : location.href = '/'; return false;">&LeftArrow; Back</a>
+    <h1>
+        lazy-nvim插件管理器基础入门
+    </h1>
+</div>
+
+    </header>
+    <p class="article-date">2023-06-19</p>
+    
+    <!-- toc -->
+    <div class="article-toc">
+        <label class="toc-title" for="toc-trigger">目录</label>
+        <input id="toc-trigger" type="checkbox" checked/>
+        <div class="toc-content">
+            <ol class="toc">
+                
+                <li class="toc-item toc-level-1">
+                    <a class="toc-link" href="https://zhen.wang/article/lazy-nvim插件管理器基础入门/#ji-chu-an-zhuang">基础安装</a>
+                    
+                    <ol class="toc-child">
+                        
+                        <li class="toc-item toc-level-2">
+                            <a href="https://zhen.wang/article/lazy-nvim插件管理器基础入门/#init-lua">init.lua</a>
+                        </li>
+                        
+                        <li class="toc-item toc-level-2">
+                            <a href="https://zhen.wang/article/lazy-nvim插件管理器基础入门/#lazynvim-init-lua">lazynvim-init.lua</a>
+                        </li>
+                        
+                        <li class="toc-item toc-level-2">
+                            <a href="https://zhen.wang/article/lazy-nvim插件管理器基础入门/#yan-zheng">验证</a>
+                        </li>
+                        
+                    </ol>
+                    
+                </li>
+                
+                <li class="toc-item toc-level-1">
+                    <a class="toc-link" href="https://zhen.wang/article/lazy-nvim插件管理器基础入门/#cha-jian-an-zhuang-pei-zhi">插件安装配置</a>
+                    
+                    <ol class="toc-child">
+                        
+                        <li class="toc-item toc-level-2">
+                            <a href="https://zhen.wang/article/lazy-nvim插件管理器基础入门/#fang-shi-1-zhi-jie-pei-zhi">方式1：直接配置</a>
+                        </li>
+                        
+                        <li class="toc-item toc-level-2">
+                            <a href="https://zhen.wang/article/lazy-nvim插件管理器基础入门/#fang-shi-2-pluginsmu-lu-tong-yi-bian-pai">方式2：plugins目录统一编排</a>
+                        </li>
+                        
+                        <li class="toc-item toc-level-2">
+                            <a href="https://zhen.wang/article/lazy-nvim插件管理器基础入门/#an-zhuang-jie-guo-yan-zheng">安装结果验证</a>
+                        </li>
+                        
+                    </ol>
+                    
+                </li>
+                
+                <li class="toc-item toc-level-1">
+                    <a class="toc-link" href="https://zhen.wang/article/lazy-nvim插件管理器基础入门/#cha-jian-ti-xi-ji-zhi">插件体系机制</a>
+                    
+                    <ol class="toc-child">
+                        
+                        <li class="toc-item toc-level-2">
+                            <a href="https://zhen.wang/article/lazy-nvim插件管理器基础入门/#cha-jian-pei-zhi-qian-xi">插件配置浅析</a>
+                        </li>
+                        
+                        <li class="toc-item toc-level-2">
+                            <a href="https://zhen.wang/article/lazy-nvim插件管理器基础入门/#guan-yu-cha-jian-de-sou-suo-lu-jing">关于插件的搜索路径</a>
+                        </li>
+                        
+                    </ol>
+                    
+                </li>
+                
+            </ol>
+        </div>
+    </div>
+    
+    <!-- real content -->
+    <div class="article-content markdown-content">
+        <p>一篇通过使用lazy.nvim进行nvim插件管理的入门笔记。</p>
+<span id="continue-reading"></span><h1 id="ji-chu-an-zhuang">基础安装</h1>
+<h2 id="init-lua">init.lua</h2>
+<p>路径：stdpath("<strong>config</strong>")/init.lua</p>
+<blockquote>
+<p>stdpath("config")</p>
+<p>macOS/Linux：~/.config/nvim</p>
+<p>Windows：~/AppData/Local/nvim</p>
+</blockquote>
+<pre data-lang="lua" style="background-color:#2b303b;color:#c0c5ce;" class="language-lua "><code class="language-lua" data-lang="lua"><span style="color:#65737e;">-- bootstrap lazy.nvim
+</span><span style="color:#65737e;">-- ./lua/lazynvim-init.lua
+</span><span style="color:#96b5b4;">require</span><span>(&quot;</span><span style="color:#a3be8c;">lazynvim-init</span><span>&quot;)
+</span></code></pre>
+<p>意义作用：</p>
+<p>nvim启动时会加载<code>init.lua</code>配置，然后通过<code>require("lazynvim-init")</code>查找当前<code>init.lua</code>所在目录下的lua目录下的<code>lazynvim-init.lua</code>文件，运行其内容。</p>
+<h2 id="lazynvim-init-lua">lazynvim-init.lua</h2>
+<p>路径：stdpath("<strong>config</strong>")/lua/lazynvim-init.lua</p>
+<p>代码内容：</p>
+<pre data-lang="lua" style="background-color:#2b303b;color:#c0c5ce;" class="language-lua "><code class="language-lua" data-lang="lua"><span style="color:#65737e;">-- 1. 准备lazy.nvim模块（存在性检测）
+</span><span style="color:#65737e;">-- stdpath(&quot;data&quot;)
+</span><span style="color:#65737e;">-- macOS/Linux: ~/.local/share/nvim
+</span><span style="color:#65737e;">-- Windows: ~/AppData/Local/nvim-data
+</span><span style="color:#b48ead;">local </span><span style="color:#bf616a;">lazypath </span><span>= </span><span style="color:#bf616a;">vim</span><span>.fn.</span><span style="color:#bf616a;">stdpath</span><span>(&quot;</span><span style="color:#a3be8c;">data</span><span>&quot;) .. &quot;</span><span style="color:#a3be8c;">/lazy/lazy.nvim</span><span>&quot;
+</span><span style="color:#b48ead;">if </span><span>not </span><span style="color:#bf616a;">vim</span><span>.loop.</span><span style="color:#bf616a;">fs_stat</span><span>(</span><span style="color:#bf616a;">lazypath</span><span>) </span><span style="color:#b48ead;">then
+</span><span>	</span><span style="color:#bf616a;">vim</span><span>.fn.</span><span style="color:#bf616a;">system</span><span>({
+</span><span>		&quot;</span><span style="color:#a3be8c;">git</span><span>&quot;,
+</span><span>		&quot;</span><span style="color:#a3be8c;">clone</span><span>&quot;,
+</span><span>		&quot;</span><span style="color:#a3be8c;">--filter=blob:none</span><span>&quot;,
+</span><span>		&quot;</span><span style="color:#a3be8c;">https://github.com/folke/lazy.nvim.git</span><span>&quot;,
+</span><span>		&quot;</span><span style="color:#a3be8c;">--branch=stable</span><span>&quot;, </span><span style="color:#65737e;">-- latest stable release
+</span><span>		</span><span style="color:#bf616a;">lazypath</span><span>,
+</span><span>	})
+</span><span style="color:#b48ead;">end
+</span><span style="color:#65737e;">-- 
+</span><span style="color:#65737e;">-- 2. 将 lazypath 设置为运行时路径
+</span><span style="color:#65737e;">-- rtp（runtime path）
+</span><span style="color:#65737e;">-- nvim进行路径搜索的时候，除已有的路径，还会从prepend的路径中查找
+</span><span style="color:#65737e;">-- 否则，下面 require(&quot;lazy&quot;) 是找不到的
+</span><span style="color:#bf616a;">vim</span><span>.opt.rtp:</span><span style="color:#bf616a;">prepend</span><span>(</span><span style="color:#bf616a;">lazypath</span><span>)
+</span><span>
+</span><span style="color:#65737e;">-- 3. 加载lazy.nvim模块
+</span><span style="color:#96b5b4;">require</span><span>(&quot;</span><span style="color:#a3be8c;">lazy</span><span>&quot;).</span><span style="color:#bf616a;">setup</span><span>({})
+</span></code></pre>
+<p>意义作用：</p>
+<p>该配置文件主要有3部分组成：</p>
+<ol>
+<li>lazy.nvim的加载与存在性验证；</li>
+<li>将lazy.nvim模块所在目录加入到lua模块搜索路径下，以便可以require到lazy.nvim模块；</li>
+<li>让lazy.nvim加载插件。</li>
+</ol>
+<p>第一步，lazy.nvim进行存在性检查。如果不存在，则通过git clone方式，下载lazy.nvim模块代码，并存放到<code>stdpath("data")/lazy/lazy.nvim</code>目录下。</p>
+<blockquote>
+<p>stdpath("data")路径为：</p>
+<p>macOS/Linux：~/.local/share/nvim</p>
+<p>Windows：~/AppData/Local/nvim-data</p>
+</blockquote>
+<p>第二步，通过<code>"vim.opt.rtp:prepend(lazypath)"</code>代码将lazy.nvim模块所在的路径（也就是上面的变量<code>lazypath</code>）加入到运行时路径（runtimepath）下，只有配置了这行代码才能让下面<code>require("lazy")</code>执行的时候，能够从<code>lazypath</code>中搜索到lazy模块并加载。</p>
+<p>在本人macOS机器上，如果第一步成功安装了lazy.nvim模块，则翻看<code>"~/.local/share/nvim/lazy/lazy.nvim"</code>目录，会看到以下内容：</p>
+<pre style="background-color:#2b303b;color:#c0c5ce;"><code><span>$ cd ~/.local/share/nvim/lazy/lazy.nvim
+</span><span>$ tree -L 2
+</span><span>.
+</span><span>├── CHANGELOG.md
+</span><span>├── LICENSE
+</span><span>├── README.md
+</span><span>├── TODO.md
+</span><span>├── doc
+</span><span>├── lua（这里面还有目录lazy/init.lua文件）
+</span><span>├── selene.toml
+</span><span>├── stylua.toml
+</span><span>├── tests
+</span><span>└── vim.toml
+</span></code></pre>
+<p>搜索<code>lazy</code>模块的时候，会从<code>～/.local/share/nvim/lazy/lazy.nvim</code>目录下找到<code>lua/lazy/init.lua</code>进行加载。</p>
+<p>如果不配置，会看到如下报错：</p>
+<pre style="background-color:#2b303b;color:#c0c5ce;"><code><span>E5113: Error while calling lua chunk: /Users/w4ngzhen/.config/nvim/lua/lazynvim-init.lua:22: module &#39;lazy&#39; not found:
+</span><span>        no field package.preload[&#39;lazy&#39;]
+</span><span>        no file &#39;./lazy.lua&#39;
+</span><span>        no file &#39;/usr/local/share/luajit-2.1.0-beta3/lazy.lua&#39;
+</span><span>        no file &#39;/usr/local/share/lua/5.1/lazy.lua&#39;
+</span><span>        no file &#39;/usr/local/share/lua/5.1/lazy/init.lua&#39;
+</span><span>        no file &#39;./lazy.so&#39;
+</span><span>        no file &#39;/usr/local/lib/lua/5.1/lazy.so&#39;
+</span><span>        no file &#39;/usr/local/lib/lua/5.1/loadall.so&#39;
+</span></code></pre>
+<p>第三步，通过<code>require("lazy").setup({})</code>代码加载下载好的lazy.nvim模块代码。当然，由于<code>setup</code>代码的参数是一个空的table，也就意味着我们还没有让lazy.nvim管理/加载任何的插件，后文将介绍插件的安装与加载、配置。</p>
+<h2 id="yan-zheng">验证</h2>
+<p>我们的配置文件结构如下：</p>
+<pre style="background-color:#2b303b;color:#c0c5ce;"><code><span>$ cd ~/.config/nvim
+</span><span>$ tree
+</span><span>.
+</span><span>├── README.md
+</span><span>├── init.lua
+</span><span>└── lua
+</span><span>    └── lazynvim-init.lua
+</span></code></pre>
+<p>上述配置完毕以后，让我们首次启动nvim，第一次启动的时候，由于会从远端下载lazy.nvim模块，所以会有一定的延迟。然后，我们就会进入正常的nvim界面。然后命令模式下输入指令<code>:Lazy</code>后，我们会看到nvim的界面弹出一个对话框，展示lazy的状态：</p>
+<p><img src="https://static-res.zhen.wang/images/post/2023-06-19/010-simple-lazynvim-config-result.png" alt="010-simple-lazynvim-config-result" /></p>
+<p>至此，我们就完成了lazy.nvim的安装与加载，下面会介绍使用lazy.nvim来安装/管理插件。</p>
+<h1 id="cha-jian-an-zhuang-pei-zhi">插件安装配置</h1>
+<p>在这一节中，我们将基于上面的成果，尝试安装几个高频的插件（关于这些插件的功能与使用方式，本文不会详细介绍）：</p>
+<ol>
+<li>文件树插件：<a rel="noopener" target="_blank" href="https://github.com/nvim-tree/nvim-tree.lua">nvim-tree.lua</a></li>
+<li>文件状态展示插件：<a rel="noopener" target="_blank" href="https://github.com/nvim-lualine/lualine.nvim">lualine.nvim</a></li>
+</ol>
+<h2 id="fang-shi-1-zhi-jie-pei-zhi">方式1：直接配置</h2>
+<p>以直接配置的方式安装插件十分简单，只需要在上面的lazynvim-init.lua的中<code>require("lazy").setup({})</code>添加插件安装代码即可：</p>
+<p><img src="https://static-res.zhen.wang/images/post/2023-06-19/020-add-plugins-by-simple-way.png" alt="020-add-plugins-by-simple-way" /></p>
+<pre data-lang="lua" style="background-color:#2b303b;color:#c0c5ce;" class="language-lua "><code class="language-lua" data-lang="lua"><span style="color:#b48ead;">local </span><span style="color:#bf616a;">nvim_tree_plugin </span><span>= {
+</span><span>    &quot;</span><span style="color:#a3be8c;">nvim-tree/nvim-tree.lua</span><span>&quot;,
+</span><span>    </span><span style="color:#a3be8c;">version </span><span>= &quot;</span><span style="color:#a3be8c;">*</span><span>&quot;,
+</span><span>    </span><span style="color:#a3be8c;">dependencies </span><span>= {&quot;</span><span style="color:#a3be8c;">nvim-tree/nvim-web-devicons</span><span>&quot;},
+</span><span>    </span><span style="color:#8fa1b3;">config </span><span>= </span><span style="color:#b48ead;">function</span><span>()
+</span><span>        </span><span style="color:#96b5b4;">require</span><span>(&quot;</span><span style="color:#a3be8c;">nvim-tree</span><span>&quot;).</span><span style="color:#bf616a;">setup </span><span>{}
+</span><span>    </span><span style="color:#b48ead;">end
+</span><span>}
+</span><span style="color:#b48ead;">local </span><span style="color:#bf616a;">lualine_plugin </span><span>= {
+</span><span>    &#39;</span><span style="color:#a3be8c;">nvim-lualine/lualine.nvim</span><span>&#39;,
+</span><span>    </span><span style="color:#8fa1b3;">config </span><span>= </span><span style="color:#b48ead;">function</span><span>()
+</span><span>        </span><span style="color:#96b5b4;">require</span><span>(&#39;</span><span style="color:#a3be8c;">lualine</span><span>&#39;).</span><span style="color:#bf616a;">setup</span><span>()
+</span><span>    </span><span style="color:#b48ead;">end
+</span><span>}
+</span><span style="color:#96b5b4;">require</span><span>(&quot;</span><span style="color:#a3be8c;">lazy</span><span>&quot;).</span><span style="color:#bf616a;">setup</span><span>({</span><span style="color:#bf616a;">nvim_tree_plugin</span><span>, </span><span style="color:#bf616a;">lualine_plugin</span><span>})
+</span></code></pre>
+<p>上述方式下，我们首先定义了两个插件配置的table；然后，在setup中第一个参数table中，逐个添加插件。这样lazy.nvim就能帮我们将插件进行下载、安装。</p>
+<blockquote>
+<p>这里不验证插件安装的结果，等到下文通过更加优雅的方式配置再看效果。</p>
+</blockquote>
+<h2 id="fang-shi-2-pluginsmu-lu-tong-yi-bian-pai">方式2：plugins目录统一编排</h2>
+<p>上述方式1固然简单，但每一次想要添加一个插件就需要在lazynvim-init.lua中添加插件代码；另外，大量的插件配置势必造成lazynvim-init.lua愈发臃肿。好在lazy.nvim还支持我们以更加优雅的方式编排插件：使用plugins目录统一编排插件。具体做法为：</p>
+<p>第一步：lazynvim-init.lua中的setup参数变为<code>setup("plugins")</code>，同时移除掉有关具体插件安装配置的代码；</p>
+<p>第二步：在lazynvim-init.lua所在目录下创建一个名为"plugins"的目录；</p>
+<p>第三步：在plugins目录中创建插件配置模块lua脚本。在这一步中，我们分别创建两个lua脚本来分别作为两个插件的配置模块：</p>
+<ol>
+<li>plugin-lualine.lua</li>
+</ol>
+<pre data-lang="lua" style="background-color:#2b303b;color:#c0c5ce;" class="language-lua "><code class="language-lua" data-lang="lua"><span style="color:#b48ead;">return </span><span>{
+</span><span>    {
+</span><span>        &#39;</span><span style="color:#a3be8c;">nvim-lualine/lualine.nvim</span><span>&#39;,
+</span><span>        </span><span style="color:#8fa1b3;">config </span><span>= </span><span style="color:#b48ead;">function</span><span>()
+</span><span>            </span><span style="color:#96b5b4;">require</span><span>(&#39;</span><span style="color:#a3be8c;">lualine</span><span>&#39;).</span><span style="color:#bf616a;">setup</span><span>()
+</span><span>        </span><span style="color:#b48ead;">end
+</span><span>    }
+</span><span>}
+</span></code></pre>
+<ol start="2">
+<li>plugin-nvim-tree.lua</li>
+</ol>
+<pre data-lang="lua" style="background-color:#2b303b;color:#c0c5ce;" class="language-lua "><code class="language-lua" data-lang="lua"><span style="color:#b48ead;">return </span><span>{
+</span><span>    {
+</span><span>        &quot;</span><span style="color:#a3be8c;">nvim-tree/nvim-tree.lua</span><span>&quot;,
+</span><span>        </span><span style="color:#a3be8c;">version </span><span>= &quot;</span><span style="color:#a3be8c;">*</span><span>&quot;,
+</span><span>        </span><span style="color:#a3be8c;">dependencies </span><span>= {&quot;</span><span style="color:#a3be8c;">nvim-tree/nvim-web-devicons</span><span>&quot;},
+</span><span>        </span><span style="color:#8fa1b3;">config </span><span>= </span><span style="color:#b48ead;">function</span><span>()
+</span><span>            </span><span style="color:#96b5b4;">require</span><span>(&quot;</span><span style="color:#a3be8c;">nvim-tree</span><span>&quot;).</span><span style="color:#bf616a;">setup </span><span>{}
+</span><span>        </span><span style="color:#b48ead;">end
+</span><span>    }
+</span><span>}
+</span></code></pre>
+<p>这里有两个注意点：1）文件名可以随意；2）每一个脚本模块都将返回一个table，且table的每一项都是一个插件配置（这里每个文件只有一项插件配置），lazy会把这些table合并为一个插件配置的table进行加载（<a rel="noopener" target="_blank" href="https://github.com/folke/lazy.nvim#-structuring-your-plugins">folke/lazy.nvim: 💤 A modern plugin manager for Neovim (github.com)</a>）。</p>
+<p>当然，你也可以只在plugins目录下创建一个lua脚本（譬如叫all-plugins.lua），然后里面return的table包含有上述两个插件的配置，就像下面这样：</p>
+<pre data-lang="lua" style="background-color:#2b303b;color:#c0c5ce;" class="language-lua "><code class="language-lua" data-lang="lua"><span style="color:#65737e;">-- all-plugins.lua
+</span><span style="color:#b48ead;">return </span><span>{
+</span><span>    {
+</span><span>        &#39;</span><span style="color:#a3be8c;">nvim-lualine/lualine.nvim</span><span>&#39;,
+</span><span>        </span><span style="color:#8fa1b3;">config </span><span>= </span><span style="color:#b48ead;">function</span><span>()
+</span><span>            </span><span style="color:#96b5b4;">require</span><span>(&#39;</span><span style="color:#a3be8c;">lualine</span><span>&#39;).</span><span style="color:#bf616a;">setup</span><span>()
+</span><span>        </span><span style="color:#b48ead;">end
+</span><span>    }
+</span><span>    {
+</span><span>        &quot;</span><span style="color:#a3be8c;">nvim-tree/nvim-tree.lua</span><span>&quot;,
+</span><span>        </span><span style="color:#a3be8c;">version </span><span>= &quot;</span><span style="color:#a3be8c;">*</span><span>&quot;,
+</span><span>        </span><span style="color:#a3be8c;">dependencies </span><span>= {&quot;</span><span style="color:#a3be8c;">nvim-tree/nvim-web-devicons</span><span>&quot;},
+</span><span>        </span><span style="color:#8fa1b3;">config </span><span>= </span><span style="color:#b48ead;">function</span><span>()
+</span><span>            </span><span style="color:#96b5b4;">require</span><span>(&quot;</span><span style="color:#a3be8c;">nvim-tree</span><span>&quot;).</span><span style="color:#bf616a;">setup </span><span>{}
+</span><span>        </span><span style="color:#b48ead;">end
+</span><span>    }
+</span><span>}
+</span></code></pre>
+<p>无论是一个插件一个lua脚本模块还是，统一一个文件都行。但是为了以后安装插件的尽可能不动脚本而是新增脚本，笔者还是建议一个插件配置一个lua文件的方式。</p>
+<p>在上述三步完成以后，目录结构如下：</p>
+<p><img src="https://static-res.zhen.wang/images/post/2023-06-19/030-setup-plugin-by-dir-arch.png" alt="030-setup-plugin-by-dir-arch" /></p>
+<p>lazynvim-init.lua、plugin-lualine.lua以及plugin-nvim-tree.lua的代码具体代码如下：</p>
+<p><img src="https://static-res.zhen.wang/images/post/2023-06-19/040-plugin-file-content.png" alt="040-plugin-file-content" /></p>
+<h2 id="an-zhuang-jie-guo-yan-zheng">安装结果验证</h2>
+<p>终于，当我们完成了插件的安装配置以后，在此启动nvim，理论上此时会看到lazy对其他插件的加载动画和加载结果：</p>
+<p><img src="https://static-res.zhen.wang/images/post/2023-06-19/050-install-plugin-by-many-lua-files.png" alt="050-install-plugin-by-many-lua-files" /></p>
+<p>同时，我们可以看到lualine加载后的效果：</p>
+<p><img src="https://static-res.zhen.wang/images/post/2023-06-19/060-lualine-install-result.png" alt="060-lualine-install-result" /></p>
+<p>命令模式下可以执行命令<code>:NvimTreeOpen</code>：</p>
+<p><img src="https://static-res.zhen.wang/images/post/2023-06-19/070-nvim-tree-install-result.gif" alt="070-nvim-tree-install-result" /></p>
+<h1 id="cha-jian-ti-xi-ji-zhi">插件体系机制</h1>
+<h2 id="cha-jian-pei-zhi-qian-xi">插件配置浅析</h2>
+<p>目前为止，我们通过上面简单的三部分文件（1、init.lua；2、lua/lazynvim-init.lua；3、plugins目录下的plugin-lualine.lua和plugin-nvim-tree.lua），就用上了lazy.nvim这个插件管理工具，以及安装了lualine和nvim-tree两个插件。</p>
+<p>接下来我们通过nvim-tree这个插件的配置，来简单分析下lazy.nvim的插件体系机制：</p>
+<pre data-lang="Lua" style="background-color:#2b303b;color:#c0c5ce;" class="language-Lua "><code class="language-Lua" data-lang="Lua"><span style="color:#b48ead;">return </span><span>{
+</span><span>    {
+</span><span>        &quot;</span><span style="color:#a3be8c;">nvim-tree/nvim-tree.lua</span><span>&quot;,
+</span><span>        </span><span style="color:#a3be8c;">version </span><span>= &quot;</span><span style="color:#a3be8c;">*</span><span>&quot;,
+</span><span>        </span><span style="color:#a3be8c;">dependencies </span><span>= {&quot;</span><span style="color:#a3be8c;">nvim-tree/nvim-web-devicons</span><span>&quot;},
+</span><span>        </span><span style="color:#8fa1b3;">config </span><span>= </span><span style="color:#b48ead;">function</span><span>()
+</span><span>            </span><span style="color:#96b5b4;">require</span><span>(&quot;</span><span style="color:#a3be8c;">nvim-tree</span><span>&quot;).</span><span style="color:#bf616a;">setup </span><span>{}
+</span><span>        </span><span style="color:#b48ead;">end
+</span><span>    }
+</span><span>}
+</span></code></pre>
+<p>按照lazy.nvim的官方总结，一个插件配置（官方叫plugin spec）的table：</p>
+<ul>
+<li>
+<p><code>"nvim-tree/nvim-tree.lua"</code>：指这个插件在github上的short url。lazy.nvim在安装插件的时候，默认就会拉取github上的仓库代码到本地进行存放。</p>
+</li>
+<li>
+<p><code>version = "*"</code>：version是版本配置，使用<code>"*"</code>则表明使用最新版本，如果以后仓库有更新，则拉去最新插件代码。</p>
+</li>
+<li>
+<p><code>dependencies = {"nvim-tree/nvim-web-devicons"}</code>：说明该插件依赖另一个插件：<code>"nvim-tree/nvim-web-devicons"</code>，同样是一个short url，会从github上拉取代码。</p>
+</li>
+<li>
+<p><code>config = ... ...</code>：当插件启动加载以后，则会执行该config的代码，在本例中，会运行脚本：<code>require("nvim-tree").setup {}</code>。</p>
+</li>
+</ul>
+<p>当然，除此之外还有很多的配置，详情可以查看：<a rel="noopener" target="_blank" href="https://github.com/folke/lazy.nvim#-plugin-spec">lazy.nvim#-plugin-spec</a></p>
+<h2 id="guan-yu-cha-jian-de-sou-suo-lu-jing">关于插件的搜索路径</h2>
+<p>vim/nvim启动时，会自动寻找<code>runtimepath</code>下的脚本进行加载。你可以在nvim中通过指令：<code>echo &amp;runtimepath</code>或者<code>set runtimepath</code>，在我的macOS的机器上结果如下：</p>
+<pre style="background-color:#2b303b;color:#c0c5ce;"><code><span>  runtimepath=~/.config/nvim,~/.local/share/nvim/lazy/lazy.nvim,~/.local/share/n
+</span><span>vim/lazy/lualine.nvim,~/.local/share/nvim/lazy/nvim-web-devicons,~/.local/share/
+</span><span>nvim/lazy/nvim-tree.lua,/usr/local/Cellar/neovim/0.9.1/share/nvim/runtime,/usr/l
+</span><span>ocal/Cellar/neovim/0.9.1/share/nvim/runtime/pack/dist/opt/matchit,/usr/local/Cel
+</span><span>lar/neovim/0.9.1/lib/nvim,~/.local/state/nvim/lazy/readme
+</span><span>Press ENTER or type command to continue
+</span></code></pre>
+<p>可以看到，我们之前安装的lazy.nvim、lualine.nvim以及nvim-tree都在路径列表中有所体现。</p>
+<p>此外，有lua开发经验的开发者应该比较了解lua中的<code>require</code>的加载机制，这里不再赘述。<strong>但需要注意的是</strong>，在nvim中的lua脚本<code>require</code>是有“魔改”的，它会从<code>runtimepath/lua/</code>下寻找 lua 脚本。想更了解的读者可以使用<code>:help lua-require</code>来查看官方文档。</p>
+
+    </div>
+</div>
+<script src="https://zhen.wang/libs/viewerjs@1.11.7/viewer.min.js"></script>
+<link rel="stylesheet" href="https://zhen.wang/libs/viewerjs@1.11.7/viewer.min.css"/>
+<script>
+  if (window.Viewer) {
+    document.querySelectorAll('img').forEach(img => {
+      new Viewer(img, {
+        inline: false,
+        navbar: false,
+        toolbar: {
+          zoomIn: 1,
+          zoomOut: 1,
+          reset: 1,
+          rotateLeft: 1,
+          rotateRight: 1,
+        },
+      });
+    });
+  }
+</script>
+
+
+</body>
+</html>
