@@ -4,9 +4,6 @@
 {% block extra_head %}
 <link rel="stylesheet" href="{{ get_url(path='article_content.css') }}">
 <link rel="stylesheet" href="{{ get_url(path='article_markdown.css') }}">
-<!-- mediumZoom image viewer -->
-<script src="{{ get_url(path='libs/medium-zoom@1.1.0/medium-zoom.min.umd.js') }}"></script>
-<link rel="stylesheet" href="{{ get_url(path='libs/medium-zoom@1.1.0/style.min.css') }}">
 {% endblock extra_head %}
 
 {% block content %}
@@ -45,17 +42,24 @@
         {{ page.content | safe }}
     </div>
 </div>
+<script src="{{ get_url(path='libs/viewerjs@1.11.7/viewer.min.js') }}"></script>
+<link rel="stylesheet" href="{{ get_url(path='libs/viewerjs@1.11.7/viewer.min.css') }}"/>
 <script>
-  // == mediumZoom ==
-  // handle all images in article.
-  // make sure that "medium-zoom" load successfully.
-  if (typeof window.mediumZoom === 'function') {
-    mediumZoom("#article img", {
-      background: "rgba(170,170,170,0.5)",
-      margin: 24
+  if (window.Viewer) {
+    document.querySelectorAll('img').forEach(img => {
+      new Viewer(img, {
+        inline: false,
+        navbar: false,
+        toolbar: {
+          zoomIn: 1,
+          zoomOut: 1,
+          reset: 1,
+          rotateLeft: 1,
+          rotateRight: 1,
+        },
+      });
     });
-  } else {
-    console.error('cannot find \'mediumZoon\' in window');
   }
 </script>
+
 {% endblock content %}
