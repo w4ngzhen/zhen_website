@@ -32,4 +32,4 @@ links = [
 
 site_icon = { 16x16 = 'images/blog-site-icon.svg', 32x32 = 'images/blog-site-icon.svg' }
 
-#umami_web_analysis = { enabled = true, data_website_id = "d66cfe03-f6b3-4aa0-baf8-728700db1b09" }
+umami_web_analysis = { enabled = true, data_website_id = "d66cfe03-f6b3-4aa0-baf8-728700db1b09" }
