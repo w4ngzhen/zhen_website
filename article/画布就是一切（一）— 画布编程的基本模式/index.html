@@ -1,0 +1,508 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="utf-8">
+    <meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover"
+          name="viewport">
+    
+    
+    <!-- umami web analysis -->
+    <script defer src="https://zhen.wang/libs/umami/umami.script.js"
+            data-website-id="d66cfe03-f6b3-4aa0-baf8-728700db1b09"></script>
+    
+    
+    
+    <link rel="icon" type="image/png" sizes="16x16" href="https://zhen.wang/images/blog-site-icon.svg">
+    <link rel="icon" type="image/png" sizes="32x32" href="https://zhen.wang/images/blog-site-icon.svg">
+    <title>zhen&#x27;s everything</title>
+    <link rel="stylesheet" href="https://zhen.wang/style.css">
+    
+<link rel="stylesheet" href="https://zhen.wang/article_content.css">
+<link rel="stylesheet" href="https://zhen.wang/article_markdown.css">
+
+</head>
+<body>
+
+<div id="article">
+    <header class="article-header">
+        
+<div class="base-title">
+    <a href="#" onclick="history.length > 1 ? history.back() : location.href = '/'; return false;">&LeftArrow; Back</a>
+    <h1>
+        画布就是一切（一）— 画布编程的基本模式
+    </h1>
+</div>
+
+    </header>
+    <p class="article-date">2021-11-11</p>
+    
+    <!-- toc -->
+    <div class="article-toc">
+        <label class="toc-title" for="toc-trigger">目录</label>
+        <input id="toc-trigger" type="checkbox" checked/>
+        <div class="toc-content">
+            <ol class="toc">
+                
+                <li class="toc-item toc-level-1">
+                    <a class="toc-link" href="https://zhen.wang/article/画布就是一切（一）— 画布编程的基本模式/#hua-bu-ji-ben-jie-shao">画布基本介绍</a>
+                    
+                </li>
+                
+                <li class="toc-item toc-level-1">
+                    <a class="toc-link" href="https://zhen.wang/article/画布就是一切（一）— 画布编程的基本模式/#jian-dan-hui-zhi">简单绘制</a>
+                    
+                </li>
+                
+                <li class="toc-item toc-level-1">
+                    <a class="toc-link" href="https://zhen.wang/article/画布就是一切（一）— 画布编程的基本模式/#hua-bu-bian-cheng-de-ji-ben-mo-shi">画布编程的基本模式</a>
+                    
+                    <ol class="toc-child">
+                        
+                        <li class="toc-item toc-level-2">
+                            <a href="https://zhen.wang/article/画布就是一切（一）— 画布编程的基本模式/#zhuang-tai-zheng-li-yu-ti-lian">状态整理与提炼</a>
+                        </li>
+                        
+                        <li class="toc-item toc-level-2">
+                            <a href="https://zhen.wang/article/画布就是一切（一）— 画布编程的基本模式/#shu-ru-yu-geng-xin">输入与更新</a>
+                        </li>
+                        
+                        <li class="toc-item toc-level-2">
+                            <a href="https://zhen.wang/article/画布就是一切（一）— 画布编程的基本模式/#xuan-ran">渲染</a>
+                        </li>
+                        
+                    </ol>
+                    
+                </li>
+                
+                <li class="toc-item toc-level-1">
+                    <a class="toc-link" href="https://zhen.wang/article/画布就是一切（一）— 画布编程的基本模式/#zong-jie">总结</a>
+                    
+                    <ol class="toc-child">
+                        
+                        <li class="toc-item toc-level-2">
+                            <a href="https://zhen.wang/article/画布就是一切（一）— 画布编程的基本模式/#xuan-fu-bian-se-dai-ma">悬浮变色代码</a>
+                        </li>
+                        
+                    </ol>
+                    
+                </li>
+                
+            </ol>
+        </div>
+    </div>
+    
+    <!-- real content -->
+    <div class="article-content markdown-content">
+        <p>画布编程的基本模式</p>
+<span id="continue-reading"></span><h1 id="hua-bu-ji-ben-jie-shao">画布基本介绍</h1>
+<p>我开发过基于QT的客户端程序、基于C# WinForm客户端，开发过Java后端服务，此外，前端VUE和React我也开发过不少。对应我所开发过的东西，比起一行一行冰冷的代码，我更加迷恋哪些能够直观的，可视化的东西。还记得以前在开发C#的时候，接触过一个的C# WinForm库<strong>NetronGraphLib</strong>，这个库能够让我们轻松的构建属于自己的流程图绘制软件，让我们能够以拖拉拽的方式来构建图（下图就是NetronGraphLib库的官方示例应用Cobalt）：</p>
+<p><img src="https://static-res.zhen.wang/images/post/2021-11-11-canvas/010-NetronGraphLibShow.gif" alt="010-NetronGraphLibShow" /></p>
+<p>当年看到这个库的时候，极大的震撼了作为开发菜鸟（现在也是= - =）的我。同时，这个库开源免费，他还有一个轻量级Light版本也是开源的。迫于对这种UI的迷恋，我从Light版入手，深入研究了它的实现原理。尽管是C#编写的一个库，但是它内在的实现原理以及思想确实很通用的，对于我来说都是有革新意义的，以至于这么多年以来，我都会时常回忆起这个库。</p>
+<p>这个库原理并不复杂，就是通过<strong>C# GDI+<strong>来进行图像的绘制。也许读者没有开发过C#，不知道所谓的GDI+是什么。简单来讲，很多开发语言都提供所谓的</strong>画布以及绘制能力</strong>（比如html5中的canvas标签，C#中的Graphics对象等）。在画布上，你能够通过相关绘图API来绘制各种各样的图形。上图的流程图中，你所看到的矩形、线段等等，都是通过画布提供的绘制功能来实现的。</p>
+<h1 id="jian-dan-hui-zhi">简单绘制</h1>
+<p>以下的代码就是C# 对一个空白的窗体绘制一个红色矩形：</p>
+<pre data-lang="C#" style="background-color:#2b303b;color:#c0c5ce;" class="language-C# "><code class="language-C#" data-lang="C#"><span style="color:#65737e;">/// &lt;</span><span style="color:#bf616a;">summary</span><span style="color:#65737e;">&gt;
+</span><span style="color:#65737e;">/// 窗体绘制事件，由WinForm窗体消息事件框架调用
+</span><span style="color:#65737e;">/// &lt;/</span><span style="color:#bf616a;">summary</span><span style="color:#65737e;">&gt;
+</span><span style="color:#b48ead;">private void </span><span style="color:#8fa1b3;">Form1_Paint</span><span>(</span><span style="color:#b48ead;">object </span><span style="color:#bf616a;">sender</span><span>, PaintEventArgs </span><span style="color:#bf616a;">e</span><span>)
+</span><span>{
+</span><span>    </span><span style="color:#65737e;">// 绘制事件中获取图形画布对象
+</span><span>    Graphics </span><span style="color:#bf616a;">g </span><span>= </span><span style="color:#bf616a;">e</span><span>.</span><span style="color:#bf616a;">Graphics</span><span>;
+</span><span>    </span><span style="color:#65737e;">// 调用API在当前窗体的 x = 10, y = 10 位置绘制一个
+</span><span>    </span><span style="color:#65737e;">// width = 200, height = 150 的矩形
+</span><span>    </span><span style="color:#bf616a;">g</span><span>.</span><span style="color:#bf616a;">DrawRectangle</span><span>(new Pen(</span><span style="color:#bf616a;">Color</span><span>.</span><span style="color:#bf616a;">Red</span><span>), </span><span style="color:#d08770;">10</span><span>, </span><span style="color:#d08770;">10</span><span>, </span><span style="color:#d08770;">200</span><span>, </span><span style="color:#d08770;">150</span><span>);
+</span><span>}
+</span></code></pre>
+<p>显示的效果如下：</p>
+<p><img src="https://static-res.zhen.wang/images/post/2021-11-11-canvas/020-winfrom-draw.jpg" alt="020-winfrom-draw" /></p>
+<p>以下的代码就是HTML5 Canvas 上获取Context对象，利用Context对象的API来绘制一个矩形：</p>
+<pre data-lang="html" style="background-color:#2b303b;color:#c0c5ce;" class="language-html "><code class="language-html" data-lang="html"><span>&lt;</span><span style="color:#bf616a;">body</span><span>&gt;
+</span><span>    &lt;</span><span style="color:#bf616a;">canvas </span><span style="color:#8fa1b3;">id</span><span>=&quot;</span><span style="color:#a3be8c;">myCanvas</span><span>&quot; 
+</span><span>            </span><span style="color:#d08770;">style</span><span>=&quot;border: </span><span style="color:#d08770;">1px </span><span>solid black;&quot;
+</span><span>            </span><span style="color:#d08770;">width</span><span>=&quot;</span><span style="color:#a3be8c;">200</span><span>&quot; 
+</span><span>            </span><span style="color:#d08770;">height</span><span>=&quot;</span><span style="color:#a3be8c;">200</span><span>&quot; /&gt;
+</span><span>    &lt;</span><span style="color:#bf616a;">script</span><span>&gt;
+</span><span>        </span><span style="color:#65737e;">// 获取画布的上下文
+</span><span>        </span><span style="color:#b48ead;">let </span><span style="color:#bf616a;">ctx </span><span>= 
+</span><span>            document.</span><span style="color:#bf616a;">getElementById</span><span>(&#39;</span><span style="color:#a3be8c;">myCanvas</span><span>&#39;).</span><span style="color:#bf616a;">getContext</span><span>(&#39;</span><span style="color:#a3be8c;">2d</span><span>&#39;);
+</span><span>        </span><span style="color:#65737e;">// 设置绘制的画笔颜色
+</span><span>        </span><span style="color:#bf616a;">ctx</span><span>.strokeStyle = &#39;</span><span style="color:#a3be8c;">#FF0000</span><span>&#39;;
+</span><span>        </span><span style="color:#65737e;">// 描边一个矩形
+</span><span>        </span><span style="color:#bf616a;">ctx</span><span>.</span><span style="color:#bf616a;">strokeRect</span><span>(</span><span style="color:#d08770;">10</span><span>, </span><span style="color:#d08770;">10</span><span>, </span><span style="color:#d08770;">100</span><span>, </span><span style="color:#d08770;">80</span><span>);
+</span><span>    &lt;/</span><span style="color:#bf616a;">script</span><span>&gt;
+</span><span>&lt;/</span><span style="color:#bf616a;">body</span><span>&gt;
+</span></code></pre>
+<p>实现的效果如下（黑色边框是为了便于看到画布的边界加上的）：</p>
+<p><img src="https://static-res.zhen.wang/images/post/2021-11-11-canvas/030-html-draw.jpg" alt="030-html-draw" /></p>
+<p>为了方便后续的实现，以及适应目前的Web前端化，我们使用html 5 的canvas来进行代码编写、演示。</p>
+<h1 id="hua-bu-bian-cheng-de-ji-ben-mo-shi">画布编程的基本模式</h1>
+<p>为了讲解画布编程的基本模式，接下来我们将以<strong>鼠标悬浮矩形，矩形边框变色场景</strong>为例来进行讲解。对于一个矩形，默认的情况下显示黑色边框，当鼠标悬浮在矩形上的时候，矩形的边框能够显示为红色，就像下图一样：</p>
+<p><img src="https://static-res.zhen.wang/images/post/2021-11-11-canvas/050-rect-hover-show.gif" alt="050-rect-hover-show" /></p>
+<p>那么如何实现这个功能呢？</p>
+<p>要回答这个问题，我们首先要明白一组基本概念：<strong>输入（input）</strong>—<strong>更新（update）</strong>—<strong>渲染（render）</strong>，而这几个操作，都会围绕**状态（status）**进行：</p>
+<ol>
+<li><strong>输入</strong>会触发<strong>更新</strong></li>
+<li><strong>更新</strong>会修改<strong>状态</strong></li>
+<li><strong>渲染</strong>读取最新的<strong>状态</strong>进行图像映射</li>
+</ol>
+<p>事实上，<strong>渲染</strong>和<strong>输入、更新</strong>是解耦的，它们之间只会通过<strong>状态</strong>来建立关联：</p>
+<p><img src="https://static-res.zhen.wang/images/post/2021-11-11-canvas/040-input-update-render.jpg" alt="040-input-update-render" /></p>
+<h2 id="zhuang-tai-zheng-li-yu-ti-lian">状态整理与提炼</h2>
+<p>将上述的概念应用到悬浮变色这个场景，我们首先需要整理并提炼有哪些状态。</p>
+<p><strong>整理状态</strong>最直接的方式，就是看所实现的效果需要哪些UI元素。悬浮变色的场景下，需要的东西很简单：</p>
+<ol>
+<li>矩形位置</li>
+<li>矩形大小</li>
+<li>矩形边框颜色</li>
+</ol>
+<p>整理完成以后，我们还需要进行<strong>提炼</strong>。有的读者可能会说，上述整理的东西已经足够了，还需要提炼什么呢？事实上<strong>提炼的过程是通用化的过程，是划清状态与渲染界限的过程</strong>。对于1、2来说，无需过多讨论，它们是核心渲染基础，再简单的图像渲染，都离不开position和size这两个核心的元素。</p>
+<p>但对于矩形边框颜色是不是状态，则需要探讨。在我看来，应该<strong>属于渲染</strong>的范畴，<strong>不属于状态</strong>的范畴。为什么这么来理解呢？因为颜色变化的根本原因是鼠标悬浮，鼠标是否悬浮在矩形上，是矩形的<strong>固有属性</strong>，在正常的情况下，鼠标和矩形发生交互，必然有是否悬浮这一情形；但是悬浮的颜色却不是固有属性，在这个场景中，指定了悬浮的颜色是红色，但是换一个场景，可能又需要蓝色。<em>“流水线的颜色，铁打悬浮”。</em></p>
+<p>经过上述的讨论，我们得到这个画布的状态：一个包含位置与大小，以及标识是否被鼠标悬浮的标志。在JS中，代码如下：</p>
+<pre data-lang="js" style="background-color:#2b303b;color:#c0c5ce;" class="language-js "><code class="language-js" data-lang="js"><span style="color:#b48ead;">let </span><span style="color:#bf616a;">rect </span><span>= {
+</span><span>    x: </span><span style="color:#d08770;">10</span><span>,
+</span><span>    y: </span><span style="color:#d08770;">10</span><span>,
+</span><span>    width: </span><span style="color:#d08770;">80</span><span>,
+</span><span>    height: </span><span style="color:#d08770;">60</span><span>,
+</span><span>    hovered: </span><span style="color:#d08770;">false
+</span><span>}
+</span></code></pre>
+<h2 id="shu-ru-yu-geng-xin">输入与更新</h2>
+<h3 id="zhao-dao-geng-xin-dian">找到更新点</h3>
+<p>完成对状态的整理提炼后，我们需要知道哪些部分是对状态的更新操作。在这个场景中，只要鼠标坐标在矩形区域内，那么我们就会修改矩形的hover为true，否则为false。用伪代码进行描述：</p>
+<pre data-lang="js" style="background-color:#2b303b;color:#c0c5ce;" class="language-js "><code class="language-js" data-lang="js"><span style="color:#b48ead;">if</span><span>(</span><span style="color:#bf616a;">鼠标在矩形区域内</span><span>) {
+</span><span>    </span><span style="color:#bf616a;">rect</span><span>.</span><span style="color:#bf616a;">hover </span><span>= </span><span style="color:#d08770;">true</span><span>; </span><span style="color:#65737e;">// 更新状态
+</span><span>} </span><span style="color:#b48ead;">else </span><span>{
+</span><span>    </span><span style="color:#bf616a;">rect</span><span>.</span><span style="color:#bf616a;">hover </span><span>= </span><span style="color:#d08770;">false</span><span>; </span><span style="color:#65737e;">// 更新状态
+</span><span>}
+</span></code></pre>
+<p>也就是说，我们接下来需要需要考虑“鼠标在矩形区域内”这个条件成立与否。在canvas中，我们需要知道如下的几个数据：矩形的位置、矩形的大小以及鼠标在canvas中的位置，如下图所示：</p>
+<p><img src="https://static-res.zhen.wang/images/post/2021-11-11-canvas/060-position-1.jpg" alt="060-position-1" /></p>
+<p>只要满足如下的条件，我们就认为鼠标在矩形内，于是就会发生状态的更新：</p>
+<pre style="background-color:#2b303b;color:#c0c5ce;"><code><span>(x &lt;= xInCanvas &amp;&amp; xInCanvas &lt;= x + width) 
+</span><span>&amp;&amp; 
+</span><span>(y &lt;= yInCanvas &amp;&amp; yInCanvas &lt;= y + height)
+</span></code></pre>
+<h3 id="zhao-dao-shu-ru-dian">找到输入点</h3>
+<p>更新是如何触发的呢？我们现在知道，矩形的位置与大小是已有的值。那么鼠标在canvas中的x、y怎么获得呢？事实上，我们可以给canvas添加<strong>鼠标移动事件（mousemove）</strong>，从移动事件中获取鼠标位置。当事件被触发时，我们可以获取鼠标相对于 viewport（<a rel="noopener" target="_blank" href="https://www.seoptimer.com/blog/viewport/">什么是viewport？</a>）的坐标（<code>event.clientX</code>和<code>event.clientY</code>，这两个值并不是直接就是鼠标在canvas中的位置）。 同时，我们可以通过 <strong>canvas.getBoundingClientRect()</strong> 来获取 canvas 相对于 viewport 的坐标（<code>top, left</code>），这样我们就可以计算出鼠标在 canvas 中的坐标。</p>
+<p><em>注意：下图的canvas.left可能产生误导，canvas没有left，是通过调用canvas的getBoundingClientRect，获取一个boundingClientRect，再获取这个rect的left。</em></p>
+<p><img src="https://static-res.zhen.wang/images/post/2021-11-11-canvas/070-position-2.jpg" alt="070-position-2" /></p>
+<p>为了后续的代码编写，我们准备一个index.html：</p>
+<pre data-lang="html" style="background-color:#2b303b;color:#c0c5ce;" class="language-html "><code class="language-html" data-lang="html"><span>&lt;!</span><span style="color:#b48ead;">DOCTYPE </span><span style="color:#d08770;">html</span><span>&gt;
+</span><span>&lt;</span><span style="color:#bf616a;">html </span><span style="color:#d08770;">lang</span><span>=&quot;</span><span style="color:#a3be8c;">en</span><span>&quot;&gt;
+</span><span>&lt;</span><span style="color:#bf616a;">head</span><span>&gt;
+</span><span>    &lt;</span><span style="color:#bf616a;">meta </span><span style="color:#d08770;">charset</span><span>=&quot;</span><span style="color:#a3be8c;">UTF-8</span><span>&quot;&gt;
+</span><span>    &lt;</span><span style="color:#bf616a;">title</span><span>&gt;Hover Example&lt;/</span><span style="color:#bf616a;">title</span><span>&gt;
+</span><span>&lt;/</span><span style="color:#bf616a;">head</span><span>&gt;
+</span><span>&lt;</span><span style="color:#bf616a;">body</span><span>&gt;
+</span><span>&lt;</span><span style="color:#bf616a;">canvas </span><span style="color:#8fa1b3;">id</span><span>=&quot;</span><span style="color:#a3be8c;">myCanvas</span><span>&quot;
+</span><span>        </span><span style="color:#d08770;">style</span><span>=&quot;border: </span><span style="color:#d08770;">1px </span><span>solid black&quot;
+</span><span>        </span><span style="color:#d08770;">width</span><span>=&quot;</span><span style="color:#a3be8c;">450</span><span>&quot;
+</span><span>        </span><span style="color:#d08770;">height</span><span>=&quot;</span><span style="color:#a3be8c;">200</span><span>&quot;&gt;&lt;/</span><span style="color:#bf616a;">canvas</span><span>&gt;
+</span><span>    </span><span style="color:#65737e;">&lt;!-- 同级目录下的index.js --&gt;
+</span><span>&lt;</span><span style="color:#bf616a;">script </span><span style="color:#d08770;">src</span><span>=&quot;</span><span style="color:#a3be8c;">index.js</span><span>&quot;&gt;&lt;/</span><span style="color:#bf616a;">script</span><span>&gt;
+</span><span>&lt;/</span><span style="color:#bf616a;">body</span><span>&gt;
+</span><span>&lt;/</span><span style="color:#bf616a;">html</span><span>&gt;
+</span></code></pre>
+<p>同级目录下的index.js：</p>
+<pre data-lang="js" style="background-color:#2b303b;color:#c0c5ce;" class="language-js "><code class="language-js" data-lang="js"><span style="color:#65737e;">// 同级目录的index.js
+</span><span style="color:#b48ead;">let </span><span style="color:#bf616a;">canvasEle </span><span>= document.</span><span style="color:#96b5b4;">querySelector</span><span>(&#39;</span><span style="color:#a3be8c;">#myCanvas</span><span>&#39;);
+</span><span>
+</span><span style="color:#bf616a;">canvasEle</span><span>.</span><span style="color:#96b5b4;">addEventListener</span><span>(&#39;</span><span style="color:#a3be8c;">mousemove</span><span>&#39;, </span><span style="color:#bf616a;">ev </span><span style="color:#b48ead;">=&gt; </span><span>{
+</span><span>  </span><span style="color:#65737e;">// 移动事件对象，从中解构clientX和clientY
+</span><span>  </span><span style="color:#b48ead;">let </span><span>{</span><span style="color:#bf616a;">clientX</span><span>, </span><span style="color:#bf616a;">clientY</span><span>} = </span><span style="color:#bf616a;">ev</span><span>;
+</span><span>  </span><span style="color:#65737e;">// 解构canvas的boundingClientRect中的left和top
+</span><span>  </span><span style="color:#b48ead;">let </span><span>{</span><span style="color:#bf616a;">left</span><span>, </span><span style="color:#bf616a;">top</span><span>} = </span><span style="color:#bf616a;">canvasEle</span><span>.</span><span style="color:#96b5b4;">getBoundingClientRect</span><span>();
+</span><span>  </span><span style="color:#65737e;">// 计算得到鼠标在canvas上的坐标
+</span><span>  </span><span style="color:#b48ead;">let </span><span style="color:#bf616a;">mousePositionInCanvas </span><span>= {
+</span><span>    x: </span><span style="color:#bf616a;">clientX </span><span>- </span><span style="color:#bf616a;">left</span><span>,
+</span><span>    y: </span><span style="color:#bf616a;">clientY </span><span>- </span><span style="color:#bf616a;">top
+</span><span>  }
+</span><span>  </span><span style="color:#ebcb8b;">console</span><span>.</span><span style="color:#96b5b4;">log</span><span>(</span><span style="color:#bf616a;">mousePositionInCanvas</span><span>);
+</span><span>})
+</span><span>
+</span></code></pre>
+<p>用浏览器打开<code>index.html</code>，在控制台就能看到坐标输出：</p>
+<p><img src="https://static-res.zhen.wang/images/post/2021-11-11-canvas/080-show-mouse-position.gif" alt="080-show-mouse-position" /></p>
+<p>PS：实际上在对canvas有不同的缩放、CSS样式的加持下，坐标的计算会更加复杂，本文只是简单的获取鼠标在canvas中的坐标，不做过多的讨论，想要深入了解可以看这篇大佬的文章：<a rel="noopener" target="_blank" href="https://www.cnblogs.com/wangqh8975/p/12706513.html">获取鼠标在 canvas 中的位置 - 一根破棍子 - 博客园 (cnblogs.com)</a>。</p>
+<h3 id="zheng-he-shu-ru-yi-ji-zhuang-tai-geng-xin">整合输入以及状态更新</h3>
+<p>综合上述的讨论，我们整合目前的信息，有如下的JS代码：</p>
+<pre data-lang="js" style="background-color:#2b303b;color:#c0c5ce;" class="language-js "><code class="language-js" data-lang="js"><span style="color:#65737e;">// 定义状态
+</span><span style="color:#b48ead;">let </span><span style="color:#bf616a;">rect </span><span>= {
+</span><span>  x: </span><span style="color:#d08770;">10</span><span>,
+</span><span>  y: </span><span style="color:#d08770;">10</span><span>,
+</span><span>  width: </span><span style="color:#d08770;">80</span><span>,
+</span><span>  height: </span><span style="color:#d08770;">60</span><span>,
+</span><span>  hover: </span><span style="color:#d08770;">false
+</span><span>}
+</span><span>
+</span><span style="color:#65737e;">// 获取canvas元素
+</span><span style="color:#b48ead;">let </span><span style="color:#bf616a;">canvasEle </span><span>= document.</span><span style="color:#96b5b4;">querySelector</span><span>(&#39;</span><span style="color:#a3be8c;">#myCanvas</span><span>&#39;);
+</span><span>
+</span><span style="color:#65737e;">// 监听鼠标移动
+</span><span style="color:#bf616a;">canvasEle</span><span>.</span><span style="color:#96b5b4;">addEventListener</span><span>(&#39;</span><span style="color:#a3be8c;">mousemove</span><span>&#39;, </span><span style="color:#bf616a;">ev </span><span style="color:#b48ead;">=&gt; </span><span>{
+</span><span>  </span><span style="color:#65737e;">// 移动事件对象，从中解构clientX和clientY
+</span><span>  </span><span style="color:#b48ead;">let </span><span>{</span><span style="color:#bf616a;">clientX</span><span>, </span><span style="color:#bf616a;">clientY</span><span>} = </span><span style="color:#bf616a;">ev</span><span>;
+</span><span>  </span><span style="color:#65737e;">// 解构canvas的boundingClientRect中的left和top
+</span><span>  </span><span style="color:#b48ead;">let </span><span>{</span><span style="color:#bf616a;">left</span><span>, </span><span style="color:#bf616a;">top</span><span>} = </span><span style="color:#bf616a;">canvasEle</span><span>.</span><span style="color:#96b5b4;">getBoundingClientRect</span><span>();
+</span><span>  </span><span style="color:#65737e;">// 计算得到鼠标在canvas上的坐标
+</span><span>  </span><span style="color:#b48ead;">let </span><span style="color:#bf616a;">mousePositionInCanvas </span><span>= {
+</span><span>    x: </span><span style="color:#bf616a;">clientX </span><span>- </span><span style="color:#bf616a;">left</span><span>,
+</span><span>    y: </span><span style="color:#bf616a;">clientY </span><span>- </span><span style="color:#bf616a;">top
+</span><span>  }
+</span><span>
+</span><span>  </span><span style="color:#65737e;">// console.log(mousePositionInCanvas);
+</span><span>  </span><span style="color:#65737e;">// 判断条件进行更新
+</span><span>  </span><span style="color:#b48ead;">let </span><span style="color:#bf616a;">inRect </span><span>= 
+</span><span>    (</span><span style="color:#bf616a;">rect</span><span>.x &lt;= </span><span style="color:#bf616a;">mousePositionInCanvas</span><span>.x &amp;&amp; </span><span style="color:#bf616a;">mousePositionInCanvas</span><span>.x &lt;= </span><span style="color:#bf616a;">rect</span><span>.x + </span><span style="color:#bf616a;">rect</span><span>.width)
+</span><span>    &amp;&amp; (</span><span style="color:#bf616a;">rect</span><span>.y &lt;= </span><span style="color:#bf616a;">mousePositionInCanvas</span><span>.y &amp;&amp; </span><span style="color:#bf616a;">mousePositionInCanvas</span><span>.y &lt;= </span><span style="color:#bf616a;">rect</span><span>.y + </span><span style="color:#bf616a;">rect</span><span>.height)
+</span><span>  </span><span style="color:#ebcb8b;">console</span><span>.</span><span style="color:#96b5b4;">log</span><span>(&#39;</span><span style="color:#a3be8c;">mouse in rect: </span><span>&#39; + </span><span style="color:#bf616a;">inRect</span><span>);
+</span><span>  </span><span style="color:#bf616a;">rect</span><span>.</span><span style="color:#bf616a;">hover </span><span>= </span><span style="color:#bf616a;">inRect</span><span>; </span><span style="color:#65737e;">// 状态修改
+</span><span>})
+</span></code></pre>
+<h2 id="xuan-ran">渲染</h2>
+<p>在上一节，我们已经实现了这样的效果：鼠标不断在canvas上进行移动，移动的过程中，鼠标在矩形外部移动的时候，控制台会不断的输出文本：<code>mouse in rect: false</code>，而当鼠标一旦进入了矩形内部，控制台则会输出：<code>mouse in rect: true</code>。那么如何将rect的布尔属性hover，转换为我们能够看到的UI图像呢？通过canvas的CanvasRenderingContext2D类实例的相关API来进行绘制即可：</p>
+<pre data-lang="js" style="background-color:#2b303b;color:#c0c5ce;" class="language-js "><code class="language-js" data-lang="js"><span style="color:#65737e;">// canvasEle来源见上面的代码
+</span><span style="color:#65737e;">// 从Canvas元素上获取CanvasRenderingContext2D类实例
+</span><span style="color:#b48ead;">let </span><span style="color:#bf616a;">ctx </span><span>= </span><span style="color:#bf616a;">canvasEle</span><span>.</span><span style="color:#96b5b4;">getContext</span><span>(&#39;</span><span style="color:#a3be8c;">2d</span><span>&#39;);
+</span><span style="color:#65737e;">// 设置画笔颜色：黑色
+</span><span style="color:#bf616a;">ctx</span><span>.</span><span style="color:#bf616a;">strokeStyle </span><span>= &#39;</span><span style="color:#a3be8c;">#000</span><span>&#39;;
+</span><span style="color:#65737e;">// 矩形所在位置画一个黑色框的矩形
+</span><span style="color:#bf616a;">ctx</span><span>.</span><span style="color:#8fa1b3;">strokeRect</span><span>(</span><span style="color:#bf616a;">rect</span><span>.x, </span><span style="color:#bf616a;">rect</span><span>.y, </span><span style="color:#bf616a;">rect</span><span>.width, </span><span style="color:#bf616a;">rect</span><span>.height);
+</span></code></pre>
+<p>对于strokeStyle，根据我们的需求，我们需要判断rect的hover属性来决定实际的颜色是红色还是黑色：</p>
+<pre data-lang="js" style="background-color:#2b303b;color:#c0c5ce;" class="language-js "><code class="language-js" data-lang="js"><span style="color:#65737e;">// ctx.strokeStyle = &#39;#000&#39;; 改写为：
+</span><span style="color:#bf616a;">ctx</span><span>.</span><span style="color:#bf616a;">strokeStyle </span><span>= </span><span style="color:#bf616a;">rect</span><span>.</span><span style="color:#bf616a;">hover </span><span>? &#39;</span><span style="color:#a3be8c;">#F00</span><span>&#39; : &#39;</span><span style="color:#a3be8c;">#000</span><span>&#39;;
+</span></code></pre>
+<p>为了后续调用的方便，我们将绘制操作封装为一个方法：</p>
+<pre data-lang="js" style="background-color:#2b303b;color:#c0c5ce;" class="language-js "><code class="language-js" data-lang="js"><span style="color:#65737e;">/**
+</span><span style="color:#65737e;"> * 画布渲染矩形的工具函数
+</span><span style="color:#65737e;"> * </span><span style="color:#b48ead;">@param </span><span style="color:#bf616a;">ctx
+</span><span style="color:#65737e;"> * </span><span style="color:#b48ead;">@param </span><span style="color:#bf616a;">rect
+</span><span style="color:#65737e;"> */
+</span><span style="color:#b48ead;">function </span><span style="color:#8fa1b3;">drawRect</span><span>(</span><span style="color:#bf616a;">ctx</span><span>, </span><span style="color:#bf616a;">rect</span><span>) {
+</span><span>  </span><span style="color:#65737e;">// 暂存当前ctx的状态
+</span><span>  </span><span style="color:#bf616a;">ctx</span><span>.</span><span style="color:#8fa1b3;">save</span><span>();
+</span><span>  </span><span style="color:#65737e;">// 设置画笔颜色：黑色
+</span><span>  </span><span style="color:#bf616a;">ctx</span><span>.</span><span style="color:#bf616a;">strokeStyle </span><span>= </span><span style="color:#bf616a;">rect</span><span>.</span><span style="color:#bf616a;">hover </span><span>? &#39;</span><span style="color:#a3be8c;">#F00</span><span>&#39; : &#39;</span><span style="color:#a3be8c;">#000</span><span>&#39;;
+</span><span>  </span><span style="color:#65737e;">// 矩形所在位置画一个黑色框的矩形
+</span><span>  </span><span style="color:#bf616a;">ctx</span><span>.</span><span style="color:#8fa1b3;">strokeRect</span><span>(</span><span style="color:#bf616a;">rect</span><span>.x, </span><span style="color:#bf616a;">rect</span><span>.y, </span><span style="color:#bf616a;">rect</span><span>.width, </span><span style="color:#bf616a;">rect</span><span>.height);
+</span><span>  </span><span style="color:#65737e;">// 恢复ctx的状态
+</span><span>  </span><span style="color:#bf616a;">ctx</span><span>.</span><span style="color:#8fa1b3;">restore</span><span>();
+</span><span>}
+</span></code></pre>
+<p>在这个方法中，ctx调用了save和restore。关于这两个方法含义以及使用方式，请参考：</p>
+<ul>
+<li><a rel="noopener" target="_blank" href="https://developer.mozilla.org/zh-CN/docs/Web/API/CanvasRenderingContext2D/save">CanvasRenderingContext2D.save() - Web API 接口参考 | MDN (mozilla.org)</a></li>
+<li><a rel="noopener" target="_blank" href="https://developer.mozilla.org/zh-CN/docs/Web/API/CanvasRenderingContext2D/restore">CanvasRenderingContext2D.restore() - Web API 接口参考 | MDN (mozilla.org)</a></li>
+</ul>
+<p>完成方法封装以后，我们需要该方法的调用点，一个最直接的方式就是在鼠标移动事件处理的内部进行：</p>
+<pre data-lang="js" style="background-color:#2b303b;color:#c0c5ce;" class="language-js "><code class="language-js" data-lang="js"><span style="color:#65737e;">// 监听鼠标移动
+</span><span style="color:#bf616a;">canvasEle</span><span>.</span><span style="color:#96b5b4;">addEventListener</span><span>(&#39;</span><span style="color:#a3be8c;">mousemove</span><span>&#39;, </span><span style="color:#bf616a;">ev </span><span style="color:#b48ead;">=&gt; </span><span>{
+</span><span>  </span><span style="color:#65737e;">// 状态更新的代码
+</span><span>  </span><span style="color:#65737e;">// ......
+</span><span>  </span><span style="color:#65737e;">// 触发移动时，就进行渲染
+</span><span>  </span><span style="color:#8fa1b3;">drawRect</span><span>(</span><span style="color:#bf616a;">ctx</span><span>, </span><span style="color:#bf616a;">rect</span><span>);
+</span><span>});
+</span></code></pre>
+<p>编写好代码以后，目前的index.js的整体内容如下：</p>
+<pre data-lang="js" style="background-color:#2b303b;color:#c0c5ce;" class="language-js "><code class="language-js" data-lang="js"><span style="color:#65737e;">// 定义状态
+</span><span style="color:#b48ead;">let </span><span style="color:#bf616a;">rect </span><span>= {
+</span><span>	</span><span style="color:#65737e;">// ...
+</span><span>};
+</span><span>
+</span><span style="color:#65737e;">// 获取canvas元素
+</span><span style="color:#b48ead;">let </span><span style="color:#bf616a;">canvasEle </span><span>= document.</span><span style="color:#96b5b4;">querySelector</span><span>(&#39;</span><span style="color:#a3be8c;">#myCanvas</span><span>&#39;);
+</span><span>
+</span><span style="color:#65737e;">// 从Canvas元素上获取context
+</span><span style="color:#b48ead;">let </span><span style="color:#bf616a;">ctx </span><span>= </span><span style="color:#bf616a;">canvasEle</span><span>.</span><span style="color:#96b5b4;">getContext</span><span>(&#39;</span><span style="color:#a3be8c;">2d</span><span>&#39;);
+</span><span>
+</span><span style="color:#65737e;">/**
+</span><span style="color:#65737e;"> * 画布渲染矩形的工具函数
+</span><span style="color:#65737e;"> */
+</span><span style="color:#b48ead;">function </span><span style="color:#8fa1b3;">drawRect</span><span>(</span><span style="color:#bf616a;">ctx</span><span>, </span><span style="color:#bf616a;">rect</span><span>) {
+</span><span>	</span><span style="color:#65737e;">// ... 
+</span><span>}
+</span><span>
+</span><span style="color:#65737e;">// 监听鼠标移动
+</span><span style="color:#bf616a;">canvasEle</span><span>.</span><span style="color:#96b5b4;">addEventListener</span><span>(&#39;</span><span style="color:#a3be8c;">mousemove</span><span>&#39;, </span><span style="color:#bf616a;">ev </span><span style="color:#b48ead;">=&gt; </span><span>{
+</span><span>	</span><span style="color:#65737e;">// ...
+</span><span>});
+</span></code></pre>
+<p>效果如下：</p>
+<p><img src="https://static-res.zhen.wang/images/post/2021-11-11-canvas/090-first-hover-show.gif" alt="090-first-hover-show" /></p>
+<h3 id="xuan-ran-de-shi-ji">渲染的时机</h3>
+<p>细心的读者发现了这个演示中的问题：将鼠标从canvas的外部移动进入，在初始的情况下，canvas中并没有矩形显示，只有在鼠标移动进入canvas以后才显示。原因也很容易解释：在触发mousemove事件后，渲染（drawRect调用）才开始。</p>
+<p>要解决上述问题，我们需要明确一点：**一般情况下，图像渲染应该和任何的输入事件独立开来，输入事件应只作用于更新。**也就是说，上面的（drawRect）调用，不应该和mousemove事件相关联，而是应该在一套独立的循环中去做：</p>
+<p><img src="https://static-res.zhen.wang/images/post/2021-11-11-canvas/100-render-cycle.jpg" alt="100-render-cycle" /></p>
+<p>那么，在JS中，我们可以有哪些循环调用方法的方式来完成我们图像的渲染呢？在我的认知中，主要有以下几种：</p>
+<p><strong>while类循环，包括for等循环控制语句类</strong></p>
+<pre data-lang="js" style="background-color:#2b303b;color:#c0c5ce;" class="language-js "><code class="language-js" data-lang="js"><span style="color:#b48ead;">while</span><span>(</span><span style="color:#d08770;">true</span><span>) {
+</span><span>	</span><span style="color:#8fa1b3;">render</span><span>();
+</span><span>}
+</span></code></pre>
+<p>弊端：极易造成CPU高占用的卡死问题</p>
+<p><strong>setInterval</strong></p>
+<pre data-lang="js" style="background-color:#2b303b;color:#c0c5ce;" class="language-js "><code class="language-js" data-lang="js"><span style="color:#b48ead;">let </span><span style="color:#bf616a;">interval </span><span>= </span><span style="color:#d08770;">1000 </span><span>/ </span><span style="color:#d08770;">60</span><span>; </span><span style="color:#65737e;">// 每1秒大约60次
+</span><span style="color:#96b5b4;">setInterval</span><span>(() </span><span style="color:#b48ead;">=&gt; </span><span>{
+</span><span>	</span><span style="color:#8fa1b3;">render</span><span>();
+</span><span>}, </span><span style="color:#bf616a;">interval</span><span>);
+</span></code></pre>
+<p>弊端：当render()的调用超过interval间隔的时候，会发生调用丢失的问题；此外，无论canvas是否需要渲染，都会进行调用渲染。</p>
+<p><strong>setTimeout</strong></p>
+<pre data-lang="js" style="background-color:#2b303b;color:#c0c5ce;" class="language-js "><code class="language-js" data-lang="js"><span style="color:#b48ead;">let </span><span style="color:#bf616a;">interval </span><span>= </span><span style="color:#d08770;">1000 </span><span>/ </span><span style="color:#d08770;">60</span><span>;
+</span><span style="color:#b48ead;">function </span><span style="color:#8fa1b3;">doRendert</span><span>() {
+</span><span>	</span><span style="color:#96b5b4;">setTimeout</span><span>(() </span><span style="color:#b48ead;">=&gt; </span><span>{
+</span><span>        </span><span style="color:#8fa1b3;">doRender</span><span>(); </span><span style="color:#65737e;">// 递归调用
+</span><span>    }, </span><span style="color:#bf616a;">interval</span><span>)
+</span><span>}
+</span></code></pre>
+<p>弊端：同上，无论canvas是否需要渲染，都会调用，造成资源浪费。</p>
+<p><strong>requestAnimationFrame</strong></p>
+<p>关于这个API的基本使用以及原理，请参考这篇大神的详解：<a rel="noopener" target="_blank" href="https://juejin.cn/post/6844903761102536718">你知道的requestAnimationFrame - 掘金 (juejin.cn)</a>。</p>
+<p>简单来讲，requestAnimationFrame(callbackFunc)，这个API调用的时候，只是告诉浏览器，我在请求一个操作，这个操作是在动画帧渲染发生的时候进行的，至于什么时候发生的动画帧渲染交由浏览器底层完成，但通常，这个值是60FPS。所以，我们的代码如下：</p>
+<pre data-lang="js" style="background-color:#2b303b;color:#c0c5ce;" class="language-js "><code class="language-js" data-lang="js"><span>(</span><span style="color:#b48ead;">function </span><span style="color:#8fa1b3;">doRender</span><span>() {
+</span><span>  </span><span style="color:#8fa1b3;">requestAnimationFrame</span><span>(() </span><span style="color:#b48ead;">=&gt; </span><span>{
+</span><span>    </span><span style="color:#8fa1b3;">drawRect</span><span>(</span><span style="color:#bf616a;">ctx</span><span>, </span><span style="color:#bf616a;">rect</span><span>);
+</span><span>    </span><span style="color:#8fa1b3;">doRender</span><span>(); </span><span style="color:#65737e;">// 递归
+</span><span>  })
+</span><span>})();
+</span></code></pre>
+<h3 id="bi-yao-de-hua-bu-qing-kong">必要的画布清空</h3>
+<p>目前为止这份代码还有一个问题：我们一直在不断循环调用drawRect方法在指定位置绘制矩形，但是我们从来没有清空过画布，也就是说我们不断在一个位置画着矩形。在本例中，这问题凸显的效果看出不出，但是试想如果我们在输入更新的时候，修改了矩形的x或y值，就会发现画布上会有多个矩形图像了（因为上一个位置的矩形已经被“画”在画布上了）。所以，我们需要在开始进行图像绘制的时候，进行清空：</p>
+<pre data-lang="js" style="background-color:#2b303b;color:#c0c5ce;" class="language-js "><code class="language-js" data-lang="js"><span>(</span><span style="color:#b48ead;">function </span><span style="color:#8fa1b3;">doRender</span><span>() {
+</span><span>  </span><span style="color:#8fa1b3;">requestAnimationFrame</span><span>(() </span><span style="color:#b48ead;">=&gt; </span><span>{
+</span><span>    </span><span style="color:#65737e;">// 先清空画布
+</span><span>    </span><span style="color:#bf616a;">ctx</span><span>.</span><span style="color:#8fa1b3;">clearRect</span><span>(</span><span style="color:#d08770;">0</span><span>, </span><span style="color:#d08770;">0</span><span>, </span><span style="color:#bf616a;">canvasEle</span><span>.width, </span><span style="color:#bf616a;">canvasEle</span><span>.height);
+</span><span>    </span><span style="color:#65737e;">// 绘制矩形
+</span><span>    </span><span style="color:#8fa1b3;">drawRect</span><span>(</span><span style="color:#bf616a;">ctx</span><span>, </span><span style="color:#bf616a;">rect</span><span>);
+</span><span>    </span><span style="color:#65737e;">// 递归调用
+</span><span>    </span><span style="color:#8fa1b3;">doRender</span><span>(); </span><span style="color:#65737e;">// 递归
+</span><span>  })
+</span><span>})();
+</span></code></pre>
+<h3 id="1pxxian-tiao-mo-hu">1px线条模糊</h3>
+<p>目前为止这份代码<strong>还还</strong>有一个问题：默认的情况下，我们的线条宽度为1px。但实际上，我们画布上的显示的确实一个<strong>模糊的</strong>看起来<strong>比1px更加宽</strong>的线条：</p>
+<p><img src="https://static-res.zhen.wang/images/post/2021-11-11-canvas/110-dim-line.jpg" alt="110-dim-line" /></p>
+<p>这个问题产生的原因读者可以自行网上搜索。这里直接给出解决方案就是，在线宽1px的情况下，线条的坐标需要向左或者向右移动0.5像素，所以对于之前的drawRect中，绘制的时候将x和y进行0.5像素移动：</p>
+<pre data-lang="js" style="background-color:#2b303b;color:#c0c5ce;" class="language-js "><code class="language-js" data-lang="js"><span style="color:#b48ead;">function </span><span style="color:#8fa1b3;">drawRect</span><span>(</span><span style="color:#bf616a;">ctx</span><span>, </span><span style="color:#bf616a;">rect</span><span>) {
+</span><span>  </span><span style="color:#65737e;">// ...
+</span><span>  </span><span style="color:#65737e;">// 矩形所在位置画一个黑色框的矩形，移位0.5像素
+</span><span>  </span><span style="color:#bf616a;">ctx</span><span>.</span><span style="color:#8fa1b3;">strokeRect</span><span>(</span><span style="color:#bf616a;">rect</span><span>.x - </span><span style="color:#d08770;">0.5</span><span>, </span><span style="color:#bf616a;">rect</span><span>.y - </span><span style="color:#d08770;">0.5</span><span>, </span><span style="color:#bf616a;">rect</span><span>.width, </span><span style="color:#bf616a;">rect</span><span>.height);
+</span><span>  </span><span style="color:#65737e;">// ...
+</span><span>}
+</span></code></pre>
+<p>修改之后，效果如下：</p>
+<p><img src="https://static-res.zhen.wang/images/post/2021-11-11-canvas/120-new-line.jpg" alt="" /></p>
+<h1 id="zong-jie">总结</h1>
+<p>画布编程的模式：</p>
+<p><img src="https://static-res.zhen.wang/images/post/2021-11-11-canvas/130-pattern-arch.jpg" alt="130-pattern-arch" /></p>
+<h2 id="xuan-fu-bian-se-dai-ma">悬浮变色代码</h2>
+<h3 id="index-html">index.html</h3>
+<pre data-lang="html" style="background-color:#2b303b;color:#c0c5ce;" class="language-html "><code class="language-html" data-lang="html"><span>&lt;!</span><span style="color:#b48ead;">DOCTYPE </span><span style="color:#d08770;">html</span><span>&gt;
+</span><span>&lt;</span><span style="color:#bf616a;">html </span><span style="color:#d08770;">lang</span><span>=&quot;</span><span style="color:#a3be8c;">en</span><span>&quot;&gt;
+</span><span>&lt;</span><span style="color:#bf616a;">head</span><span>&gt;
+</span><span>    &lt;</span><span style="color:#bf616a;">meta </span><span style="color:#d08770;">charset</span><span>=&quot;</span><span style="color:#a3be8c;">UTF-8</span><span>&quot;&gt;
+</span><span>    &lt;</span><span style="color:#bf616a;">title</span><span>&gt;Hover Example&lt;/</span><span style="color:#bf616a;">title</span><span>&gt;
+</span><span>&lt;/</span><span style="color:#bf616a;">head</span><span>&gt;
+</span><span>&lt;</span><span style="color:#bf616a;">body</span><span>&gt;
+</span><span>&lt;</span><span style="color:#bf616a;">canvas </span><span style="color:#8fa1b3;">id</span><span>=&quot;</span><span style="color:#a3be8c;">myCanvas</span><span>&quot;
+</span><span>        </span><span style="color:#d08770;">style</span><span>=&quot;border: </span><span style="color:#d08770;">1px </span><span>solid black&quot;
+</span><span>        </span><span style="color:#d08770;">width</span><span>=&quot;</span><span style="color:#a3be8c;">450</span><span>&quot;
+</span><span>        </span><span style="color:#d08770;">height</span><span>=&quot;</span><span style="color:#a3be8c;">200</span><span>&quot;&gt;&lt;/</span><span style="color:#bf616a;">canvas</span><span>&gt;
+</span><span>&lt;</span><span style="color:#bf616a;">script </span><span style="color:#d08770;">src</span><span>=&quot;</span><span style="color:#a3be8c;">index.js</span><span>&quot;&gt;&lt;/</span><span style="color:#bf616a;">script</span><span>&gt;
+</span><span>&lt;/</span><span style="color:#bf616a;">body</span><span>&gt;
+</span><span>&lt;/</span><span style="color:#bf616a;">html</span><span>&gt;
+</span></code></pre>
+<h3 id="index-js">index.js</h3>
+<pre data-lang="js" style="background-color:#2b303b;color:#c0c5ce;" class="language-js "><code class="language-js" data-lang="js"><span style="color:#65737e;">// 定义状态
+</span><span style="color:#b48ead;">let </span><span style="color:#bf616a;">rect </span><span>= {
+</span><span>  x: </span><span style="color:#d08770;">10</span><span>,
+</span><span>  y: </span><span style="color:#d08770;">10</span><span>,
+</span><span>  width: </span><span style="color:#d08770;">80</span><span>,
+</span><span>  height: </span><span style="color:#d08770;">60</span><span>,
+</span><span>  hover: </span><span style="color:#d08770;">false
+</span><span>};
+</span><span>
+</span><span style="color:#65737e;">// 获取canvas元素
+</span><span style="color:#b48ead;">let </span><span style="color:#bf616a;">canvasEle </span><span>= document.</span><span style="color:#96b5b4;">querySelector</span><span>(&#39;</span><span style="color:#a3be8c;">#myCanvas</span><span>&#39;);
+</span><span style="color:#65737e;">// 从Canvas元素上获取context
+</span><span style="color:#b48ead;">let </span><span style="color:#bf616a;">ctx </span><span>= </span><span style="color:#bf616a;">canvasEle</span><span>.</span><span style="color:#96b5b4;">getContext</span><span>(&#39;</span><span style="color:#a3be8c;">2d</span><span>&#39;);
+</span><span>
+</span><span style="color:#65737e;">/**
+</span><span style="color:#65737e;"> * 画布渲染矩形的工具函数
+</span><span style="color:#65737e;"> * </span><span style="color:#b48ead;">@param </span><span style="color:#bf616a;">ctx
+</span><span style="color:#65737e;"> * </span><span style="color:#b48ead;">@param </span><span style="color:#bf616a;">rect
+</span><span style="color:#65737e;"> */
+</span><span style="color:#b48ead;">function </span><span style="color:#8fa1b3;">drawRect</span><span>(</span><span style="color:#bf616a;">ctx</span><span>, </span><span style="color:#bf616a;">rect</span><span>) {
+</span><span>  </span><span style="color:#65737e;">// 暂存当前ctx的状态
+</span><span>  </span><span style="color:#bf616a;">ctx</span><span>.</span><span style="color:#8fa1b3;">save</span><span>();
+</span><span>  </span><span style="color:#65737e;">// 设置画笔颜色：黑色
+</span><span>  </span><span style="color:#bf616a;">ctx</span><span>.</span><span style="color:#bf616a;">strokeStyle </span><span>= </span><span style="color:#bf616a;">rect</span><span>.</span><span style="color:#bf616a;">hover </span><span>? &#39;</span><span style="color:#a3be8c;">#F00</span><span>&#39; : &#39;</span><span style="color:#a3be8c;">#000</span><span>&#39;;
+</span><span>  </span><span style="color:#65737e;">// 矩形所在位置画一个黑色框的矩形
+</span><span>  </span><span style="color:#bf616a;">ctx</span><span>.</span><span style="color:#8fa1b3;">strokeRect</span><span>(</span><span style="color:#bf616a;">rect</span><span>.x - </span><span style="color:#d08770;">0.5</span><span>, </span><span style="color:#bf616a;">rect</span><span>.y - </span><span style="color:#d08770;">0.5</span><span>, </span><span style="color:#bf616a;">rect</span><span>.width, </span><span style="color:#bf616a;">rect</span><span>.height);
+</span><span>  </span><span style="color:#65737e;">// 恢复ctx的状态
+</span><span>  </span><span style="color:#bf616a;">ctx</span><span>.</span><span style="color:#8fa1b3;">restore</span><span>();
+</span><span>}
+</span><span>
+</span><span style="color:#65737e;">// 监听鼠标移动
+</span><span style="color:#bf616a;">canvasEle</span><span>.</span><span style="color:#96b5b4;">addEventListener</span><span>(&#39;</span><span style="color:#a3be8c;">mousemove</span><span>&#39;, </span><span style="color:#bf616a;">ev </span><span style="color:#b48ead;">=&gt; </span><span>{
+</span><span>  </span><span style="color:#65737e;">// 移动事件对象，从中解构clientX和clientY
+</span><span>  </span><span style="color:#b48ead;">let </span><span>{</span><span style="color:#bf616a;">clientX</span><span>, </span><span style="color:#bf616a;">clientY</span><span>} = </span><span style="color:#bf616a;">ev</span><span>;
+</span><span>  </span><span style="color:#65737e;">// 解构canvas的boundingClientRect中的left和top
+</span><span>  </span><span style="color:#b48ead;">let </span><span>{</span><span style="color:#bf616a;">left</span><span>, </span><span style="color:#bf616a;">top</span><span>} = </span><span style="color:#bf616a;">canvasEle</span><span>.</span><span style="color:#96b5b4;">getBoundingClientRect</span><span>();
+</span><span>  </span><span style="color:#65737e;">// 计算得到鼠标在canvas上的坐标
+</span><span>  </span><span style="color:#b48ead;">let </span><span style="color:#bf616a;">mousePositionInCanvas </span><span>= {
+</span><span>    x: </span><span style="color:#bf616a;">clientX </span><span>- </span><span style="color:#bf616a;">left</span><span>,
+</span><span>    y: </span><span style="color:#bf616a;">clientY </span><span>- </span><span style="color:#bf616a;">top
+</span><span>  };
+</span><span>
+</span><span>  </span><span style="color:#65737e;">// console.log(mousePositionInCanvas);
+</span><span>  </span><span style="color:#65737e;">// 判断条件进行更新
+</span><span>  </span><span style="color:#b48ead;">let </span><span style="color:#bf616a;">inRect </span><span>=
+</span><span>    (</span><span style="color:#bf616a;">rect</span><span>.x &lt;= </span><span style="color:#bf616a;">mousePositionInCanvas</span><span>.x &amp;&amp; </span><span style="color:#bf616a;">mousePositionInCanvas</span><span>.x &lt;= </span><span style="color:#bf616a;">rect</span><span>.x + </span><span style="color:#bf616a;">rect</span><span>.width)
+</span><span>    &amp;&amp; (</span><span style="color:#bf616a;">rect</span><span>.y &lt;= </span><span style="color:#bf616a;">mousePositionInCanvas</span><span>.y &amp;&amp; </span><span style="color:#bf616a;">mousePositionInCanvas</span><span>.y &lt;= </span><span style="color:#bf616a;">rect</span><span>.y + </span><span style="color:#bf616a;">rect</span><span>.height);
+</span><span>  </span><span style="color:#ebcb8b;">console</span><span>.</span><span style="color:#96b5b4;">log</span><span>(&#39;</span><span style="color:#a3be8c;">mouse in rect: </span><span>&#39; + </span><span style="color:#bf616a;">inRect</span><span>);
+</span><span>  </span><span style="color:#bf616a;">rect</span><span>.</span><span style="color:#bf616a;">hover </span><span>= </span><span style="color:#bf616a;">inRect</span><span>;
+</span><span>});
+</span><span>
+</span><span>
+</span><span>(</span><span style="color:#b48ead;">function </span><span style="color:#8fa1b3;">doRender</span><span>() {
+</span><span>  </span><span style="color:#8fa1b3;">requestAnimationFrame</span><span>(() </span><span style="color:#b48ead;">=&gt; </span><span>{
+</span><span>    </span><span style="color:#65737e;">// 先清空画布
+</span><span>    </span><span style="color:#bf616a;">ctx</span><span>.</span><span style="color:#8fa1b3;">clearRect</span><span>(</span><span style="color:#d08770;">0</span><span>, </span><span style="color:#d08770;">0</span><span>, </span><span style="color:#bf616a;">canvasEle</span><span>.width, </span><span style="color:#bf616a;">canvasEle</span><span>.height);
+</span><span>    </span><span style="color:#65737e;">// 绘制矩形
+</span><span>    </span><span style="color:#8fa1b3;">drawRect</span><span>(</span><span style="color:#bf616a;">ctx</span><span>, </span><span style="color:#bf616a;">rect</span><span>);
+</span><span>    </span><span style="color:#65737e;">// 递归调用
+</span><span>    </span><span style="color:#8fa1b3;">doRender</span><span>(); </span><span style="color:#65737e;">// 递归
+</span><span>  })
+</span><span>})();
+</span></code></pre>
+<h3 id="github">GitHub</h3>
+<p><a rel="noopener" target="_blank" href="https://github.com/w4ngzhen/canvas-is-everything">w4ngzhen/canvas-is-everything (github.com)</a></p>
+<p><strong>01_hover</strong></p>
+
+    </div>
+</div>
+<script src="https://zhen.wang/libs/viewerjs@1.11.7/viewer.min.js"></script>
+<link rel="stylesheet" href="https://zhen.wang/libs/viewerjs@1.11.7/viewer.min.css"/>
+<script>
+  if (window.Viewer) {
+    document.querySelectorAll('img').forEach(img => {
+      new Viewer(img, {
+        inline: false,
+        navbar: false,
+        toolbar: {
+          zoomIn: 1,
+          zoomOut: 1,
+          reset: 1,
+          rotateLeft: 1,
+          rotateRight: 1,
+        },
+      });
+    });
+  }
+</script>
+
+
+</body>
+</html>
