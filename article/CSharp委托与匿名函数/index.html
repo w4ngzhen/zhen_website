@@ -1,0 +1,389 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="utf-8">
+    <meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover"
+          name="viewport">
+    
+    
+    <!-- umami web analysis -->
+    <script defer src="https://zhen.wang/libs/umami/umami.script.js"
+            data-website-id="d66cfe03-f6b3-4aa0-baf8-728700db1b09"></script>
+    
+    
+    
+    <link rel="icon" type="image/png" sizes="16x16" href="https://zhen.wang/images/blog-site-icon.svg">
+    <link rel="icon" type="image/png" sizes="32x32" href="https://zhen.wang/images/blog-site-icon.svg">
+    <title>zhen&#x27;s everything</title>
+    <link rel="stylesheet" href="https://zhen.wang/style.css">
+    
+<link rel="stylesheet" href="https://zhen.wang/article_content.css">
+<link rel="stylesheet" href="https://zhen.wang/article_markdown.css">
+
+</head>
+<body>
+
+<div id="article">
+    <header class="article-header">
+        
+<div class="base-title">
+    <a href="#" onclick="history.length > 1 ? history.back() : location.href = '/'; return false;">&LeftArrow; Back</a>
+    <h1>
+        CSharp委托与匿名函数
+    </h1>
+</div>
+
+    </header>
+    <p class="article-date">2018-08-04</p>
+    
+    <!-- toc -->
+    <div class="article-toc">
+        <label class="toc-title" for="toc-trigger">目录</label>
+        <input id="toc-trigger" type="checkbox" checked/>
+        <div class="toc-content">
+            <ol class="toc">
+                
+                <li class="toc-item toc-level-1">
+                    <a class="toc-link" href="https://zhen.wang/article/CSharp委托与匿名函数/#chang-jing">场景</a>
+                    
+                </li>
+                
+                <li class="toc-item toc-level-1">
+                    <a class="toc-link" href="https://zhen.wang/article/CSharp委托与匿名函数/#geng-hao-de-yu-fa-tang-c-wei-tuo">更好的语法糖——c#委托</a>
+                    
+                    <ol class="toc-child">
+                        
+                        <li class="toc-item toc-level-2">
+                            <a href="https://zhen.wang/article/CSharp委托与匿名函数/#shi-yong-wei-tuo-de-jiao-du">使用委托的角度</a>
+                        </li>
+                        
+                        <li class="toc-item toc-level-2">
+                            <a href="https://zhen.wang/article/CSharp委托与匿名函数/#ding-yi-wei-tuo-de-jiao-du">定义委托的角度</a>
+                        </li>
+                        
+                    </ol>
+                    
+                </li>
+                
+                <li class="toc-item toc-level-1">
+                    <a class="toc-link" href="https://zhen.wang/article/CSharp委托与匿名函数/#ni-ming-han-shu">匿名函数</a>
+                    
+                    <ol class="toc-child">
+                        
+                        <li class="toc-item toc-level-2">
+                            <a href="https://zhen.wang/article/CSharp委托与匿名函数/#lambdabiao-da-shi">Lambda表达式：</a>
+                        </li>
+                        
+                        <li class="toc-item toc-level-2">
+                            <a href="https://zhen.wang/article/CSharp委托与匿名函数/#ni-ming-fang-fa-biao-da-shi">匿名方法表达式：</a>
+                        </li>
+                        
+                    </ol>
+                    
+                </li>
+                
+            </ol>
+        </div>
+    </div>
+    
+    <!-- real content -->
+    <div class="article-content markdown-content">
+        <h4 id="chang-jing">场景</h4>
+<p>面对事件处理，我们通常会通过定义某一个通用接口，在该接口中定义方法，然后在框架代码中，调用实现该接口的类实例的方法来实现函数的回调。可能这样来说有些抽象，那我们提供一个具体的情形来实现这一情形。</p>
+<span id="continue-reading"></span>
+<p>假设目前我在编写某一个服务，这个服务通过Start启动，并在一定的时间内不停地监听某一个事件的发生：</p>
+<pre data-lang="csharp" style="background-color:#2b303b;color:#c0c5ce;" class="language-csharp "><code class="language-csharp" data-lang="csharp"><span>// 伪代码
+</span><span>public class Service
+</span><span>{
+</span><span>    public void Start()
+</span><span>    {
+</span><span>        int i = 0;
+</span><span>        Random rand = new Random();
+</span><span>        while (i &lt;= 10000)// 一段时间内
+</span><span>        {
+</span><span>            int eventInt = rand.Next(10);
+</span><span>            // 监听事件的发生，这里就是i能够被随机数整除的事件
+</span><span>            if (i % eventInt == 0)
+</span><span>            {
+</span><span>                // TODU
+</span><span>            }
+</span><span>            i++;
+</span><span>        }
+</span><span>    }
+</span><span>}
+</span></code></pre>
+<p>以上这段代码就大致描述了我的服务运行过程。往往我们都是自行的编写服务代码，在上面的TODU处编写处理函数，以应对这些事件发生的时候进行的操作。比如，现在我想要当事件发生的时候，能够打印eventInt，只需要在TODU处编写输出函数就行了。</p>
+<p>然而，我们编写这样的代码扩展性受到了严重的限制。因为假如我要修改事件处理的函数，就必须要到这个地方来修改。其次，假设我现在的想法是这段框架代码我编写好了，而你作为客户端代码使用者，想要定义其他的处理函数，当我打包编译好了这段代码，你完全没法修改它，只能够告诉我，然后将你的代码加入TODU中，这样的维护几乎不现实。</p>
+<p>但是，接口（或者是抽象类等其他同思想）可以帮助我们改变这一现状。我们使用一个通用的接口比如EventHandler，在其中定义一个名为EventHandle的方法，就像下面这样：</p>
+<pre data-lang="csharp" style="background-color:#2b303b;color:#c0c5ce;" class="language-csharp "><code class="language-csharp" data-lang="csharp"><span>public interface IEventHandler
+</span><span>{
+</span><span>    void EventHandle();
+</span><span>}
+</span></code></pre>
+<p>然后在原先的服务代码，定义一个接口对象域，通过构造函数或者是定义一个注册方法来注册这个处理类，就像下面这样：</p>
+<pre data-lang="csharp" style="background-color:#2b303b;color:#c0c5ce;" class="language-csharp "><code class="language-csharp" data-lang="csharp"><span>public class Service
+</span><span>{
+</span><span>    // 定义一个接口对象
+</span><span>    private IEventHandler _eventHandler;
+</span><span>    // 通过构造函数注册这个处理对象
+</span><span>    public Service(IEventHandler eventHandler)
+</span><span>    {
+</span><span>        this._eventHandler = eventHandler;
+</span><span>    }
+</span><span>    // 通过顶定义一个方法来注册这个对象
+</span><span>    public void RegistHandler(IEventHandler eventHandler)
+</span><span>    {
+</span><span>        this._eventHandler = eventHandler;
+</span><span>    }
+</span><span>    public void Start() 
+</span><span>    {
+</span><span>        ...// 省略部分代码
+</span><span>        if (i % eventInt == 0)
+</span><span>        {
+</span><span>            // 把操作全部交给 _eventHandler 来进行
+</span><span>            _eventHandler.EventHandle();
+</span><span>        }
+</span><span>        ...
+</span><span>    }
+</span><span>}
+</span></code></pre>
+<p>于是，在我们客户端代码，只需要实现这个接口，并定义自己的方法处理内容，然后实例化这个对象并将其注册到Service中就能够，那么当事件发生的时候，就能够通过运行时候的多态，动态根据我们new出来的不同的Handler对象进行定制的操作，并且，Service端是可以与客户端分离出来的。</p>
+<h4 id="geng-hao-de-yu-fa-tang-c-wei-tuo">更好的语法糖——c#委托</h4>
+<h5 id="shi-yong-wei-tuo-de-jiao-du">使用委托的角度</h5>
+<p>诚然，在学习的初期，我十分推荐完全利用面向对象的思想来构建和理解接口与事件处理的代码。但是我们可以发现，这样的代码还不足够的简练。还是以上面的例子来说，每次我要去定制属于自己的事件处理代码的时候，都需要我们去实现这个接口，然后实现其中的接口的方法，然后把这个实例化对象，再注册到代码中去。实际上，在c#中，我们可以利用更加舒服的语法糖来实现：委托。委托的声明类似于函数，但是不带函数体，且要用delegate关键字。大致形式如下：</p>
+<pre data-lang="csharp" style="background-color:#2b303b;color:#c0c5ce;" class="language-csharp "><code class="language-csharp" data-lang="csharp"><span>namespace XXX
+</span><span>{
+</span><span>    public delegate void EventHandle();
+</span><span>    // 不同的返回类型以及参数类型
+</span><span>    public delegate bool Check(int param);
+</span><span>}
+</span></code></pre>
+<p>实际上，委托的语法应该这样理解：第一个是我定义了一个名为EventHandle的委托，它代表了一个函数，这个函数名字我也不知道是什么，只知道他是参数为空，返回为void的函数；第二个是我定义了一个名为Check的委托，它代表了一个只有一个int类型参数的，返回值为bool的函数。</p>
+<p>定义规则如下：</p>
+<pre data-lang="csharp" style="background-color:#2b303b;color:#c0c5ce;" class="language-csharp "><code class="language-csharp" data-lang="csharp"><span>namespace XXX
+</span><span>{
+</span><span>    public delegate void EventHandle();
+</span><span>    // 不同的返回类型以及参数类型
+</span><span>    public delegate bool Check(int param);
+</span><span>}
+</span></code></pre>
+<p>使用的方式如下：</p>
+<pre data-lang="csharp" style="background-color:#2b303b;color:#c0c5ce;" class="language-csharp "><code class="language-csharp" data-lang="csharp"><span>namespace ServiceSimulate
+</span><span>{
+</span><span>    namespace XXX
+</span><span>    {
+</span><span>        public delegate void EventHandle();
+</span><span>        public delegate bool Check(int param);
+</span><span>    }
+</span><span>    class Program
+</span><span>    {
+</span><span>        public static void MyEventHandle()
+</span><span>        {
+</span><span>            Console.WriteLine(&quot;Do IT&quot;);
+</span><span>        }
+</span><span>        public static bool MyCheck(int param)
+</span><span>        {
+</span><span>            return param &gt; 0;
+</span><span>        }
+</span><span>        static void Main(string[] args)
+</span><span>        {
+</span><span>            EventHandle myEventHandle = new EventHandle(Program.MyEventHandle);
+</span><span>            myEventHandle();
+</span><span>            Check myCheck = new Check(Program.MyCheck);
+</span><span>            Console.WriteLine(myCheck(2));
+</span><span>            Console.ReadKey();
+</span><span>        }
+</span><span>    }
+</span><span>}
+</span></code></pre>
+<p>在上面的Program类中，我分别定义了两个函数MyEventHandle和MyCheck，这两个函数的签名（只考虑参数和返回类型）与定义的两个委托EventHandle和Check的语义是一样的。在这样的情况下，我在使用这两个委托的时候，可以上面Main方法中的语法一样，首先定义一个委托类型（EventHandle myEventHandle），通过new 委托的方式将方法设置到委托中（= new EventHandle(Program.MyEventHandle)）。
+于是接下来我可以直接使用委托变量来达到和使用函数一样的作用，输出见下方：</p>
+<pre data-lang="csharp" style="background-color:#2b303b;color:#c0c5ce;" class="language-csharp "><code class="language-csharp" data-lang="csharp"><span>// OUTPUT
+</span><span>DO IT
+</span><span>True
+</span></code></pre>
+<p>当然，我们还可以通过更加简洁的声明方式，不用new关键字，而是直接将函数赋予委托类型变量：</p>
+<pre data-lang="csharp" style="background-color:#2b303b;color:#c0c5ce;" class="language-csharp "><code class="language-csharp" data-lang="csharp"><span>EventHandle myEventHandle = Program.MyEventHandle;
+</span><span>Check myCheck = Program.MyCheck;
+</span></code></pre>
+<p>目前位置大致介绍了委托的语法与语义，那么回到一开始的服务代码中，我们可以看到，每次我们去实现接口，都会去实现接口中的固定的方法，然后再注册，被调用。实际上，我们完全可以使用委托的方式来来简化代码：</p>
+<p>我们现在可以不用定义统一的接口了，而是定义一个委托，然后想Service注册这个委托，就完全能够达到一开始调用实现接口的类中的方法的目的了（有点拗口）。</p>
+<pre data-lang="csharp" style="background-color:#2b303b;color:#c0c5ce;" class="language-csharp "><code class="language-csharp" data-lang="csharp"><span>namespace ServiceSimulate
+</span><span>{
+</span><span>    public delegate void EventHandle();// 定义委托类型
+</span><span>    public class Service
+</span><span>    {
+</span><span>        private EventHandle _eventHandle;
+</span><span>        // 通过构造函数注册委托对象
+</span><span>        public Service(EventHandle eventHandle)
+</span><span>        {
+</span><span>            this._eventHandle = eventHandle;
+</span><span>        }
+</span><span>        // 通过定义的方法注册委托对象
+</span><span>        public void RegistHandler(EventHandle eventHandle)
+</span><span>        {
+</span><span>            this._eventHandle = eventHandle;
+</span><span>        }
+</span><span>        public void Start()
+</span><span>        {
+</span><span>            int i = 0;
+</span><span>            Random rand = new Random();
+</span><span>            while (i &lt;= 10000)
+</span><span>            {
+</span><span>                int eventInt = rand.Next(10);
+</span><span>                if (i % eventInt == 0)
+</span><span>                {
+</span><span>                    // 注意这里直接就是委托对象语法形式来调用方法了
+</span><span>                    _eventHandle();
+</span><span>                }
+</span><span>                i++;
+</span><span>            }
+</span><span>        }
+</span><span>    }
+</span><span>}
+</span></code></pre>
+<p>在客户端代码中，我们就可以定义满足委托类型语法语义的函数，将函数注册到委托对象上：</p>
+<pre data-lang="csharp" style="background-color:#2b303b;color:#c0c5ce;" class="language-csharp "><code class="language-csharp" data-lang="csharp"><span>class Program
+</span><span>{
+</span><span>    // 定义处理方法就行了，不用再实现接口，再定义处理内容
+</span><span>    public static void MyEventHandle()
+</span><span>    {
+</span><span>        Console.WriteLine(&quot;Do IT&quot;);
+</span><span>    }
+</span><span>    static void Main(string[] args)
+</span><span>    {
+</span><span>        Service ss = new Service(MyEventHandle);// 通过构造函数注册委托对象
+</span><span>        ss.Start();
+</span><span>    }
+</span><span>}
+</span></code></pre>
+<p>如此以来，利用委托，能够更加方便的函数回调。实际上，我个人对委托的理解，再代码的底层编译器处理的过程中，应该还是将委托转化为了接口函数（个人猜测，技艺不深，无法验证）。</p>
+<h5 id="ding-yi-wei-tuo-de-jiao-du">定义委托的角度</h5>
+<p>在前面的介绍中，我谈了关于委托的使用过程及其思想，主要是从客户端的角度，谈了谈如何使用定义好的委托。在这一节中，我将从结合泛型来谈一谈在我们编写框架代码的时候，如何更为高效的定义我们的委托。</p>
+<p>回到一开始的例子，当作为服务端（此服务端是指为客户端程序员提供代码）代码编写者，在以后的开发中，我们会发现我们会定义大量的委托，并且，这些委托实际上绝大部分是具有共性的。有点抽象，具体一点讲，上面的例子中Service我们定义了一个名为EventHandle的委托，他代表了一个返回值为void，无参的函数类型。在以后的开发中，我们可能会定义更多的类似结构的委托，返回值或有不同，参数列表或有不同，就像下面这种情形：</p>
+<pre data-lang="csharp" style="background-color:#2b303b;color:#c0c5ce;" class="language-csharp "><code class="language-csharp" data-lang="csharp"><span>namespace XXX
+</span><span>{
+</span><span>    public delegate void EventHandle();
+</span><span>    public delegate void EventHandle2(int p1);
+</span><span>    public delegate bool EventHandle3(int p1);
+</span><span>    public delegate bool EventHandle4(int p1, double p2);
+</span><span>    public delegate bool EventHandle5(double p1, int p2);
+</span><span>}
+</span></code></pre>
+<p>可以看到，我们定义如此多的事件处理委托类型，他们由于返回值、参数的差异彼此不同。不难看出，不同的返回值、参数类型的搭配，可以定义成千上万个委托类型，同时他们彼此还很接近。为了解决这一定义爆炸，c#提供了三种基本的泛型委托，我们只需要改变泛型参数，就能够达到定义不同的委托：</p>
+<h6 id="predicate-t">Predicate&lt;T&gt;</h6>
+<p>该泛型委托的原型定义如下：</p>
+<pre data-lang="csharp" style="background-color:#2b303b;color:#c0c5ce;" class="language-csharp "><code class="language-csharp" data-lang="csharp"><span>public delegate bool Predicate&lt;in T&gt;(T obj);
+</span></code></pre>
+<p>该委托只需要指定一个参数类型，就能够定义一个返回值类型为bool，一个参数的函数语义委托定义。</p>
+<h6 id="action-t1-t2-t16-or-action">Action&lt;T1, T2, ......T16&gt; or Action</h6>
+<p>泛型Action&lt;T&gt;委托表示引用一个void返回类型的方法。Action&lt;T&gt;委托类存在不同的变体，可以传递至多16种不同的参数类型，没有泛型参数的Action类可以调用没有参数的方法。例如：Action&lt;in T1&gt;调用带一个参数的方法，Action&lt;in T1,in T2&gt;调用带两个参数的方法等.。其<strong>某两个</strong>原型定义如下：</p>
+<pre data-lang="csharp" style="background-color:#2b303b;color:#c0c5ce;" class="language-csharp "><code class="language-csharp" data-lang="csharp"><span>public delegate void Action();
+</span><span>public delegate void Action&lt;in T&gt;(T obj);
+</span><span>// 极限 void Action&lt;T1,..., T16&gt;(T1 arg1, ...., T16 arg16)
+</span></code></pre>
+<h6 id="func-t1-t2-t16-tresult">Func&lt;[T1, T2, ...T16,] TResult&gt;</h6>
+<p>Func&lt;T&gt;的用法和Action&lt;T&gt;用法类似，但是Func&lt;T&gt;表示引用一个带返回类型的方法，Func&lt;T&gt;也存在不同的变体，至多可以传递16个参数类型和1个返回类型，例如：Func&lt;in T1,out Resout&gt;表示带一个参数的方法，Func&lt;in T1,in T2,out Resout&gt;表示调用带两个参数的方法。其<strong>某两个</strong>原型定义如下：</p>
+<pre data-lang="csharp" style="background-color:#2b303b;color:#c0c5ce;" class="language-csharp "><code class="language-csharp" data-lang="csharp"><span>// 没有参数 + 1个返回类型
+</span><span>public delegate TResult Func&lt;out TResult&gt;();
+</span><span>// 2个参数 + 个返回类型
+</span><span>public delegate TResult Func&lt;in T1, int T2, out TResult&gt;(T1 arg1, T2 arg2);
+</span><span>// 极限 TResult Func&lt;T1,..., T16, TResult&gt;(T1 arg1, ...., T16 arg16)
+</span></code></pre>
+<h4 id="ni-ming-han-shu">匿名函数</h4>
+<p>通过前面的介绍，我们已经能够更为简洁通用的定义自己的委托类型了，比如现在我需要一个定义一个返回值为string，参一个int类型与一个double类型的参数形式的委托类型，可以按照如下定义：</p>
+<pre data-lang="csharp" style="background-color:#2b303b;color:#c0c5ce;" class="language-csharp "><code class="language-csharp" data-lang="csharp"><span>namespace Test
+</span><span>{
+</span><span>    class Program
+</span><span>    {
+</span><span>        public static void Main(string[] args)
+</span><span>        {
+</span><span>            Func&lt;int, double, string&gt; myFunc;
+</span><span>        }
+</span><span>    }
+</span><span>}
+</span></code></pre>
+<p>为了使用这个委托，我们定义一个方法并赋予这个委托myFunc：</p>
+<pre data-lang="csharp" style="background-color:#2b303b;color:#c0c5ce;" class="language-csharp "><code class="language-csharp" data-lang="csharp"><span>class Program
+</span><span>{
+</span><span>    public static string f(int p1, double p2)
+</span><span>    {
+</span><span>        return p1 + &quot;, &quot; + p2;
+</span><span>    }
+</span><span>    public static void Main(string[] args)
+</span><span>    {
+</span><span>        Func&lt;int, double, string&gt; myFunc = f;
+</span><span>        Console.WriteLine(myFunc(2, 3.33));
+</span><span>        Console.ReadKey();
+</span><span>    }
+</span><span>}
+</span></code></pre>
+<p>我们会发现，每次要“实例化”一个委托，我们都要在某个地方去编写一个函数，无论是static的还是实例的方法，都需要我们到一个地方去显式指定好方法函数名等等。而且，通常这些函数我们都是某种工具函数，只会在一些特定的地方去调用，为了这些函数，我们还需要给他们创建一个类，这往往是很多余的（尽管贯彻了OO思想，但是匿名方法往往更体现在函数式编程FP而不是面向对象编程OOP，这是一种编程哲学）。于是，为了脱离面向对象，更好的方式是采取匿名的形式，因为既然我们定义好了委托类型，他制定了返回值制定了参数类型，我们还有必要去显示制定一个函数的名称吗？正如委托语义一样，委托类型就是定义了一个返回值是XXX类型，参数列表是XX t1, xx t1...的函数，至于这个函数到底叫什么根本不用关心。而匿名函数就符合这样的要求。而匿名函数在c#中又分为两种：Lambda表达式和匿名方法表达式。在几乎所有的情况下，Lambda表达式都比匿名方法表达式更为简介具有表现力。</p>
+<h6 id="lambdabiao-da-shi">Lambda表达式：</h6>
+<p>(匿名的函数签名) =&gt; (匿名的函数体)</p>
+<p>其中匿名的函数签名可以包括两种，一种是隐式的匿名函数签名另一种是显式的匿名函数签名：</p>
+<ol>
+<li>隐式的函数签名：(p)、(p1,p1)</li>
+<li>显式的函数签名：(int p)、(int p1,int p2)、(ref int p1, out int p2)</li>
+</ol>
+<p>在显式类型化参数列表中，每个参数的类型是显式声明的，在隐式类型化参数列表中，参数的类型是从匿名函数出现的上下文中推断出来的。</p>
+<p>匿名的函数体可以是表达式或者代码块。</p>
+<p>当Lambda表达式只有<strong>一个</strong>具有隐式类型化参数的时候，参数列表可以省略圆括号，也就是说：</p>
+<p>(参数) =&gt; 表达式 可以简写为 参数 =&gt; 表达式</p>
+<h6 id="ni-ming-fang-fa-biao-da-shi">匿名方法表达式：</h6>
+<p>delegate (显式的匿名函数签名) {代码块}</p>
+<p>从表达式来看，匿名方法实际上就是单纯的将函数名省去，而其他部分都和一般定义一个方法一样。</p>
+<p>下面是是综合了上述两种表达式形式的是实例</p>
+<pre data-lang="csharp" style="background-color:#2b303b;color:#c0c5ce;" class="language-csharp "><code class="language-csharp" data-lang="csharp"><span>// Lambda表达式
+</span><span>x =&gt; x + 1 //隐式的类型化，函数体为表达式
+</span><span>x =&gt; {return x + 1;} //隐式的类型化，函数体为代码块
+</span><span>(int x) =&gt; x + 1 //显式的类型化，函数体为表达式
+</span><span>(int x) =&gt; {return x + 1;} //显式的类型化，函数体为代码块
+</span><span>(x , y) =&gt; x * y //多参数
+</span><span>() =&gt; Console.WriteLine() //无参数
+</span><span>// 匿名函数方法表达式
+</span><span>delegate (int x) {return x + 1;}
+</span><span>delegate {return 1 + 1;} //参数列表省略
+</span></code></pre>
+<p>那么，匿名方法表达式和Lambda表达式有什么区别呢？从上面的介绍看来有以下的几点：</p>
+<ol>
+<li>在参数列表上，Lambda表达式能够通过上下文推断参数的类型信息，故可以使用隐式类型化参数。而匿名方法表达式必须要显示的参数类型化。</li>
+<li>当没有参数或者是多个参数的时候，Lambda表达式是不能够省略括号的；匿名方法表达式允许完全省略参数列表。</li>
+<li>在函数体上，Lambda表达式的主题可以是表达式，也可以是代码块；而匿名方法表达式只能是代码块。</li>
+</ol>
+<p>回到上面的代码，我们利用匿名函数来实现f方法，这一次我们完全不需要在其他类中去定义这个f方法了：</p>
+<pre data-lang="csharp" style="background-color:#2b303b;color:#c0c5ce;" class="language-csharp "><code class="language-csharp" data-lang="csharp"><span>Func&lt;int, double, string&gt; myFunc = (x, y) =&gt; x + &quot;, &quot; + y;
+</span><span>Func&lt;int, double, string&gt; myFunc2 = delegate (int x, double y) { return x + &quot;, &quot; + y; };
+</span><span>Console.WriteLine(myFunc(2, 3.33));
+</span><span>Console.WriteLine(myFunc2(2, 3.33));
+</span><span>Console.ReadKey();
+</span><span>// output
+</span><span>2, 2.33
+</span><span>2, 2.33
+</span></code></pre>
+
+    </div>
+</div>
+<script src="https://zhen.wang/libs/viewerjs@1.11.7/viewer.min.js"></script>
+<link rel="stylesheet" href="https://zhen.wang/libs/viewerjs@1.11.7/viewer.min.css"/>
+<script>
+  if (window.Viewer) {
+    document.querySelectorAll('img').forEach(img => {
+      new Viewer(img, {
+        inline: false,
+        navbar: false,
+        toolbar: {
+          zoomIn: 1,
+          zoomOut: 1,
+          reset: 1,
+          rotateLeft: 1,
+          rotateRight: 1,
+        },
+      });
+    });
+  }
+</script>
+
+
+</body>
+</html>

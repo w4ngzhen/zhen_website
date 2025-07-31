@@ -1,0 +1,346 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="utf-8">
+    <meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover"
+          name="viewport">
+    
+    
+    <!-- umami web analysis -->
+    <script defer src="https://zhen.wang/libs/umami/umami.script.js"
+            data-website-id="d66cfe03-f6b3-4aa0-baf8-728700db1b09"></script>
+    
+    
+    
+    <link rel="icon" type="image/png" sizes="16x16" href="https://zhen.wang/images/blog-site-icon.svg">
+    <link rel="icon" type="image/png" sizes="32x32" href="https://zhen.wang/images/blog-site-icon.svg">
+    <title>zhen&#x27;s everything</title>
+    <link rel="stylesheet" href="https://zhen.wang/style.css">
+    
+<link rel="stylesheet" href="https://zhen.wang/article_content.css">
+<link rel="stylesheet" href="https://zhen.wang/article_markdown.css">
+
+</head>
+<body>
+
+<div id="article">
+    <header class="article-header">
+        
+<div class="base-title">
+    <a href="#" onclick="history.length > 1 ? history.back() : location.href = '/'; return false;">&LeftArrow; Back</a>
+    <h1>
+        Wgpu图文详解（05）纹理与绑定组
+    </h1>
+</div>
+
+    </header>
+    <p class="article-date">2025-01-16</p>
+    
+    <!-- toc -->
+    <div class="article-toc">
+        <label class="toc-title" for="toc-trigger">目录</label>
+        <input id="toc-trigger" type="checkbox" checked/>
+        <div class="toc-content">
+            <ol class="toc">
+                
+                <li class="toc-item toc-level-1">
+                    <a class="toc-link" href="https://zhen.wang/article/Wgpu图文详解（05）纹理与绑定组/#qian-yan">前言</a>
+                    
+                    <ol class="toc-child">
+                        
+                        <li class="toc-item toc-level-2">
+                            <a href="https://zhen.wang/article/Wgpu图文详解（05）纹理与绑定组/#shen-me-shi-wen-li">什么是纹理？</a>
+                        </li>
+                        
+                        <li class="toc-item toc-level-2">
+                            <a href="https://zhen.wang/article/Wgpu图文详解（05）纹理与绑定组/#wen-li-he-tu-pian-de-chai-yi">纹理和图片的差异</a>
+                        </li>
+                        
+                    </ol>
+                    
+                </li>
+                
+                <li class="toc-item toc-level-1">
+                    <a class="toc-link" href="https://zhen.wang/article/Wgpu图文详解（05）纹理与绑定组/#wen-li-yu-bang-ding-zu-shi-jian">纹理与绑定组实践</a>
+                    
+                    <ol class="toc-child">
+                        
+                        <li class="toc-item toc-level-2">
+                            <a href="https://zhen.wang/article/Wgpu图文详解（05）纹理与绑定组/#gou-zao-wen-li-texture">构造纹理Texture</a>
+                        </li>
+                        
+                        <li class="toc-item toc-level-2">
+                            <a href="https://zhen.wang/article/Wgpu图文详解（05）纹理与绑定组/#tian-chong-shu-ju-dao-wen-li">填充数据到纹理</a>
+                        </li>
+                        
+                        <li class="toc-item toc-level-2">
+                            <a href="https://zhen.wang/article/Wgpu图文详解（05）纹理与绑定组/#chuang-jian-cai-yang-qi">创建采样器</a>
+                        </li>
+                        
+                        <li class="toc-item toc-level-2">
+                            <a href="https://zhen.wang/article/Wgpu图文详解（05）纹理与绑定组/#chuang-jian-bang-ding-zu-yu-bang-ding-zu-bu-ju">创建绑定组与绑定组布局</a>
+                        </li>
+                        
+                        <li class="toc-item toc-level-2">
+                            <a href="https://zhen.wang/article/Wgpu图文详解（05）纹理与绑定组/#chuang-jian-guan-xian-bu-ju">创建管线布局</a>
+                        </li>
+                        
+                        <li class="toc-item toc-level-2">
+                            <a href="https://zhen.wang/article/Wgpu图文详解（05）纹理与绑定组/#xiu-gai-ding-dian-shu-ju">修改顶点数据</a>
+                        </li>
+                        
+                        <li class="toc-item toc-level-2">
+                            <a href="https://zhen.wang/article/Wgpu图文详解（05）纹理与绑定组/#xiu-gai-zhao-se-qi-dai-ma">修改着色器代码</a>
+                        </li>
+                        
+                    </ol>
+                    
+                </li>
+                
+                <li class="toc-item toc-level-1">
+                    <a class="toc-link" href="https://zhen.wang/article/Wgpu图文详解（05）纹理与绑定组/#xiao-guo-cheng-xian">效果呈现</a>
+                    
+                </li>
+                
+                <li class="toc-item toc-level-1">
+                    <a class="toc-link" href="https://zhen.wang/article/Wgpu图文详解（05）纹理与绑定组/#xie-zai-zui-hou">写在最后</a>
+                    
+                </li>
+                
+            </ol>
+        </div>
+    </div>
+    
+    <!-- real content -->
+    <div class="article-content markdown-content">
+        <blockquote>
+<p>⚠️本文编写时，wgpu最新主版本已升级至24，与先前版本存在差异，请读者自行阅读官方：<a rel="noopener" target="_blank" href="https://github.com/gfx-rs/wgpu/releases/tag/v24.0.0">change log</a>。</p>
+</blockquote>
+<h1 id="qian-yan">前言</h1>
+<h2 id="shen-me-shi-wen-li">什么是纹理？</h2>
+<p>纹理是图形渲染中用于增强几何图形视觉效果的一种资源。它是一个二维或三维的数据数组，通常包含颜色信息，但也可以包含其他类型的数据，如法线、高度、环境光遮蔽等。纹理的主要目的是为几何图形的表面提供详细的视觉效果，使其看起来更加真实和复杂。而我们常见的图片是一个二维的像素数组，每个像素包含颜色信息（通常是 RGB 或 RGBA）。图片可以是任何内容，如照片、图标、绘画等。图片的主要用途是显示和存储视觉信息，可以用于各种应用，如网页、文档、多媒体等。</p>
+<h2 id="wen-li-he-tu-pian-de-chai-yi">纹理和图片的差异</h2>
+<p><strong>用途</strong>：</p>
+<ul>
+<li><strong>纹理</strong>：主要用于图形渲染，增强几何图形的视觉效果。</li>
+<li><strong>图片</strong>：主要用于显示和存储视觉内容，应用范围更广泛。</li>
+</ul>
+<p><strong>数据结构</strong>：</p>
+<ul>
+<li><strong>纹理</strong>：可以是二维或三维的数据数组，包含多种类型的数据（如颜色、法线、高度等）。</li>
+<li><strong>图片</strong>：通常是二维的像素数组，主要包含颜色信息。</li>
+</ul>
+<p><strong>处理方式</strong>：</p>
+<ul>
+<li><strong>纹理</strong>：通过图形渲染管线进行处理，涉及纹理坐标、采样器、片段着色器等。</li>
+<li><strong>图片</strong>：通过图像处理软件或库进行处理，直接操作像素数据。</li>
+</ul>
+<p><strong>存储和传输</strong>：</p>
+<ul>
+<li><strong>纹理</strong>：通常存储在 GPU 内存中，优化为渲染操作。</li>
+<li><strong>图片</strong>：可以存储在文件系统中，格式多样（如 JPEG、PNG、BMP 等），用于各种应用。</li>
+</ul>
+<h1 id="wen-li-yu-bang-ding-zu-shi-jian">纹理与绑定组实践</h1>
+<p>在理解纹理的基本概念以后，我们基于第四章的项目内容初始化本章代码目录。要得到纹理数据，我们首先需要加载一张图片到内存中。因此，我们先放置一张样例图片到项目目录下的assets目录中（一般将资源文件放到assets目录中）；同时，引入<a rel="noopener" target="_blank" href="https://docs.rs/image">image</a> 包，该包提供了读写图片数据的能力，以方便我们后续加载图片；最后，我们增加一个<code>img_utils.rs</code>的源代码文件，该文件中封装了一个名为<code>RgbaImg</code>的结构体来抽象图片数据。初始准备完成后，现在的项目结构如下：</p>
+<p><img src="https://static-res.zhen.wang/images/post/2025-01-16/010.png" alt="010" /></p>
+<blockquote>
+<p>初始化内容可checkout该 <a rel="noopener" target="_blank" href="https://github.com/w4ngzhen/wgpu_winit_example/commit/5adbdd93adde63c9ced444be3537fcfed301f138">commit</a></p>
+</blockquote>
+<p>接下来，我们会在合适的位置通过RgbaImg实例来构造出纹理对象，并将其按照之前的思路存储到WgpuCtx实例中。</p>
+<h2 id="gou-zao-wen-li-texture">构造纹理Texture</h2>
+<p>首先，我们需要在WgpuCtx结构体中增加三个字段：</p>
+<ol>
+<li><code>texture: wgpu::Texture</code>：存储纹理Texture实例。</li>
+<li><code>texture_image: RgbaImg</code>：存储图片的原始数据（宽、高、像素二进制数据）。</li>
+<li><code>texture_size: wgpu::Extent3d</code>：纹理的尺寸定义。</li>
+</ol>
+<p><img src="https://static-res.zhen.wang/images/post/2025-01-16/020.png" alt="020" /></p>
+<p><code>texture: wgpu::Texture</code>是一个纹理实例，主要是保存了GPU在渲染纹理过程中的一些上下文信息（譬如纹理的宽高深度等）；</p>
+<p><code>texture_image: RgbaImg</code>主要是存储我们待会儿加载示例图片后，得到的图片的信息（宽高二进制数据等）；</p>
+<p><code>texture_size: wgpu::Extent3d</code>主要是存储了纹理的宽高登信息。</p>
+<p>在WgpuCtx结构体中定义好字段以后，我们需要完成纹理和图片的构造过程。这个过程其实和之前创建顶点缓冲区的思路类似，就是在<code>WgpuCtx</code>的<code>new_async</code>方法的合适位置调用相关的API进行构造：</p>
+<p><img src="https://static-res.zhen.wang/images/post/2025-01-16/030.png" alt="030" /></p>
+<p>首先，我们调用<code>Rgba</code>的<code>new</code>方法，传入项目下的示例图片路径，构造出<code>RgbaImg</code>对象，该对象存储了图片的宽高以及rgba格式的二进制数据（<strong>注意，这里的路径需要传递一个绝对路径，请读者自己将图片放置到合适位置，并在这里填写正确的绝对路径，否则运行时会找不到</strong>）。</p>
+<p>然后，我们通过图片的宽高信息来直接构造了一个<code>Extend3d</code>对象。</p>
+<p>最后，我们调用<code>wgpu::Device</code>的<code>create_texture</code>API来创建一个纹理对象，该方法参数<code>TextureDescriptor</code>的具体配置如下：</p>
+<p><img src="https://static-res.zhen.wang/images/post/2025-01-16/040.png" alt="040" /></p>
+<p>在这里，我们梳理一遍<code>create_texture</code>参数字段（label字段不在赘述）：</p>
+<ul>
+<li>
+<p><code>size: wgpu::Extend3d</code>：用于表达纹理的基本尺寸结构（宽、高以及深度）。在这里，我们将前面获取到的图片的宽高作为了Extend3d的宽高；对于Extend3d的<code>depth_or_array_layers</code>字段，理论下，纹理是以3维形式存储的，但是在本例中我们主要是为了渲染一个2D图片纹理，所以在这里我们传入<code>1</code>。</p>
+</li>
+<li>
+<p><code>mip_level_count</code>与<code>sample_count</code>我们暂时先不讲，因为涉及到的内容稍微有点复杂，不是一两句能讲清楚的，等到后面实践过程中再来回顾该字段，这里目前就设置为<code>1</code>即可。</p>
+</li>
+<li>
+<p><code>dimension: wgpu::TextureDimension</code>：表明纹理的维度，我们传入表示2D的枚举。</p>
+</li>
+<li>
+<p><code>format: wgpu::TextureFormat</code>：表明我们使用的纹理的原始数据格式。在前面我们加载图片数据后，将其转换为了u8rgba，即四个字节（u8）每个字节分别对应Red、Green、Blue、Alpha通道的数据，同时，大部分图像数据使用sRGB来存储，所以这里我们选择了对应的枚举：<code>Rgba8UnormSrgb</code>。关于图像格式的细节，不在本文讨论，感兴趣的读者自行拓展学习：<a rel="noopener" target="_blank" href="https://zh.wikipedia.org/wiki/SRGB%E8%89%B2%E5%BD%A9%E7%A9%BA%E9%97%B4">sRGB色彩空间</a>。</p>
+</li>
+<li>
+<p><code>usage: wgpu::TextureUsages</code>：该字段用来表示我们的纹理数据将会被怎样使用，在这里我们设置两个：<code>TEXTURE_BINDING</code>与<code>COPY_DST</code>。前者表示我们要在着色器中使用这个纹理，即在稍后的过程中我们会在着色器中通过一定的方式访问到这个纹理；后者表示我们能将数据复制到这个纹理上，即我们后续会有将数据写入到纹理上的操作。</p>
+</li>
+<li>
+<p><code>view_formats</code>也是一个比较复杂的字段，我们暂时先不关心它，传入<code>&amp;[]</code>即可。</p>
+</li>
+</ul>
+<blockquote>
+<p>细心的读者发现了，当我们创建<code>wgpu::Texture</code>的时候，会首先创建该<code>wgpu::Extent3d</code>实例，并通过该<code>Extent3d</code>再来创建<code>Texture</code>，那么理论上，Texture实例是包含了<code>Extend3d</code>的，那么为什么这里需要将再额外<code>Extend3d</code>保存下来呢？原因在于在接下来的流程中，我们还会消费<code>Extend3d</code>，但是Texture没有相关的API来访问内部的<code>Extend3d</code>数据。</p>
+</blockquote>
+<h2 id="tian-chong-shu-ju-dao-wen-li">填充数据到纹理</h2>
+<p>在完成对纹理实例的创建并保存到<code>WgpuCtx</code>后，我们需要调用Queue队列的<code>write_texture</code> API 来将我们的图片数据通过队列的方式写入到纹理中。具体做法则是在我们先前在<code>WgpuCtx</code>中定义的<code>draw</code>方法中，在最后调用队列的<code>submit</code>方法前调用<code>write_texture</code>API：</p>
+<blockquote>
+<p>注意，这一步我们并不是将纹理数据写入到渲染流程中，而是通过队列提供的API，将图片像素数据写入到纹理中，即完成纹理和实际二进制数据的关联。</p>
+</blockquote>
+<p><img src="https://static-res.zhen.wang/images/post/2025-01-16/050.png" alt="050" /></p>
+<p>对于<code>write_texture</code>API来说，它的参数现阶段有四个，我们依次讲解：</p>
+<p>第一个参数我们需要传递一个<code>TexelCopyTextureInfo</code>对象，该对象引用了我们刚刚创建的纹理对象（<code>self.texture</code>），<code>TexelCopyTextureInfo</code>并不是一个纹理对象，而是一个用来描述纹理操作配置信息的对象，它表达这样一个意图：期望将接下来传入的图像数据以<strong>拷贝</strong>的方式填充到纹理<code>self.texture</code>中。至于其中的<code>mip_level</code>、<code>origin</code>以及<code>aspect</code>字段这里我们先暂时不介绍，读者按照默认即可。</p>
+<p>第二个参数传递的是我们保存的图像像素数据（<code>self.texture.bytes</code>）。这里就是我们实际要填充到纹理中的图像数据。</p>
+<p>第三个参数我们需要传入一个<code>TexelCopyBufferLayout</code>对象，如果读者对先前的文章比较熟悉，那么会记得在Wgpu中，常规数据需要结合XxxLayout布局才能描述一个原始的二进制数据的形态究竟是什么（比如之前的顶点缓冲区布局）。在这里也是同样一个思路，当我们传入的图片数据在没有任何其他上下文定义的情况下，GPU内部是无法理解这个二进制数据是什么结构，因此才会有<code>TexelCopyBufferLayout</code>。回到本例的具体配置中，<code>TexelCopyBufferLayout</code>的<code>offset</code>字段为<code>0</code>，代表了我们传入的二进制数据从0开始就是图片数据；<code>bytes_per_row</code>字段表示了图片的每一行有多少个字节，由于我们的图片数据每一个像素由rgba四个属性组成，每个属性占用1个字节，即一个像素总共占用4个字节，对于一行来说，我们有 <em>图片宽度n</em> 个像素，因此这里每一行的字节数就是<code>4 x 图片宽度n</code>；至于<code>rows_per_image</code>，就不难理解了，总共有 <em>图片高度m</em> 行。</p>
+<p><img src="https://static-res.zhen.wang/images/post/2025-01-16/060.png" alt="060" /></p>
+<p>最后一个参数就是我们先前存储的<code>Extend3d</code>对象，这里就不再赘述意义了。</p>
+<p>因此，调用了该方法后，我们就将真实的图片数据填充到纹理对象中。接下来我们就可以直接使用了吗？答案是否定的，纹理在准备完成以后，我们无法很直接的使用它。接下来我会详细说明这一块的内容。</p>
+<blockquote>
+<p>注意，该处代码使用的wgpu版本已升级至24.x，其中对于TexelCopyTextureInfo和TexelCopyBufferLayout结构体，先前的版本名称是ImageCopyTexture和ImageDataLayout。</p>
+</blockquote>
+<h2 id="chuang-jian-cai-yang-qi">创建采样器</h2>
+<p>纹理采样器Sampler是一个渲染管线中的组件，它负责根据顶点坐标等信息，从纹理图像中提取出具体的像素颜色值，用于对渲染的物体表面进行纹理映射。下图是一个不太严谨但易于理解的图示来解释采样器的核心工作：</p>
+<p><img src="https://static-res.zhen.wang/images/post/2025-01-16/070.png" alt="070" /></p>
+<p>左边是一个纹理图片数据，而右边则是最终要渲染的目标平面。采样器就类似于取色器一样的东西，当右边渲染平面上某一处像素位置要渲染具体的颜色的时候，采样器会通过一定的规则去左边的纹理数据中取到对应的颜色。</p>
+<blockquote>
+<p>请务必注意，采样器基本的工作流程是依据右边的渲染目标，再从左边的纹理数据中找到对应的颜色数据，而不是从左侧的纹理数据开始，往右边渲染目标填充。这二者是有一定的区别的。</p>
+</blockquote>
+<p>理解采样器的基本工作流程后，让我们来创建一个采样器。采样器尽管听起来像是一个工具，但在Wgpu中也算做一种资源，我们保持和之前的方式一样，首先在<code>WgpuCtx</code>结构体中增加一个名为<code>sampler</code>的字段，类型为<code>wgpu::Sampler</code>，用来保存我们创建的采样器；其次，在<code>new_async</code>的方法中合适位置调用<code>device</code>的<code>create_sampler</code>API，我们就可以创建一个采样器：</p>
+<p><img src="https://static-res.zhen.wang/images/post/2025-01-16/080.png" alt="080" /></p>
+<blockquote>
+<p>我们可以看到关于<code>SamplerDescriptor</code>中的三个<code>address_mode_*</code>字段。对于UVW坐标来说：</p>
+<p>U和V：通常对应于二维纹理图像的水平和垂直方向的坐标。U坐标类似于二维图像中的X坐标，表示纹理图像的水平位置；V坐标类似于二维图像中的Y坐标，表示纹理图像的垂直位置。它们的取值范围一般在0到1之间，其中(0,0)通常表示纹理图像的左下角，(1,1)表示纹理图像的右上角。</p>
+<p>W：在一些情况下，会使用到W坐标。W坐标主要用于三维纹理映射，即纹理图像本身是三维的，或者在进行一些特殊的纹理映射操作时需要额外的一个维度来控制纹理的采样。例如，在体积渲染中，纹理图像可以是一个三维的数据体，W坐标就表示在这个三维数据体中的深度方向的位置。</p>
+</blockquote>
+<p>对于<code>address_mode_*</code>字段的枚举值，它的作用是指定了当采样器采样的坐标超出了纹理本身的边界时，应该如何处理。同样的，我们可以用下面不严谨的图示来描述具体的场景：</p>
+<p><img src="https://static-res.zhen.wang/images/post/2025-01-16/090.png" alt="090" /></p>
+<p>比如在上图中，位置1处于纹理图像本身上，我们直接使用对应位置位置的颜色数据；而对于位置2来说，它超出了纹理本身的尺寸，此时应该渲染什么颜色呢？这就涉及到了几种方式：</p>
+<ul>
+<li>
+<p>方式1：任何在纹理外的纹理坐标将返回离纹理边缘最近的像素的颜色。</p>
+</li>
+<li>
+<p>方式2：当纹理坐标超过纹理的尺寸时，纹理将重复。</p>
+</li>
+<li>
+<p>方式3：类似于方式1，但图像在越过边界时将翻转。</p>
+</li>
+</ul>
+<p>对于Wgpu中的配置枚举来说，方式1、2、3分别对应配置：<code>ClampToEdge</code>、<code>Repeat</code>、<code>MirrorRepeat</code>。</p>
+<p>上面3种方式对应的效果如下：</p>
+<p><img src="https://static-res.zhen.wang/images/post/2025-01-16/100.png" alt="100" /></p>
+<p>在我们的示例代码中，我们使用的是<code>ClampToEdge</code>。</p>
+<p>当然，<code>SamplerDescriptor</code>中不止上述的<code>address_mode_*</code>字段配置，但考虑到更多的配置涉及的知识点比较复杂，就不在本文中详细讲了。</p>
+<h2 id="chuang-jian-bang-ding-zu-yu-bang-ding-zu-bu-ju">创建绑定组与绑定组布局</h2>
+<p>本章目前为止，我们已经创建了两个资源：1）带有图像数据的纹理资源；2）采样器资源。资源创建完成以后，我们还需要通过一定的配置以便在渲染管线中访问并使用它们。具体来讲，我们需要创建一个名为绑定组（BindGroup）的对象。绑定组核心是描述了一组资源绑定关系，单个资源绑定关系其实就是代表了与某个资源的关联关系，绑定组则是这些关联关系的成组描述。让我们接下来通过实践来理解它。</p>
+<p>创建一个绑定组总共需要两步：</p>
+<ol>
+<li>创建一个绑定组布局（BindGroupLayout）对象</li>
+<li>基于绑定组布局来创建一个绑定组对象</li>
+</ol>
+<p><img src="https://static-res.zhen.wang/images/post/2025-01-16/110.png" alt="110" /></p>
+<p>接下来，让我们具体分析每一步中的配置参数。首先是创建 <strong>绑定组布局</strong>：</p>
+<p><img src="https://static-res.zhen.wang/images/post/2025-01-16/120.png" alt="120" /></p>
+<p>从图中代码我们可以看到，创建绑定组布局，核心就是设置<code>BindGroupLayoutDescriptor</code>中的<code>entries</code>字段，该字段是一个由<code>BindGroupLayoutEntry</code>对象构成的数组。对于<code>BindGroupLayoutEntry</code>来说，它包含了以下四个字段：</p>
+<ol>
+<li>binding</li>
+<li>visibility</li>
+<li>ty</li>
+<li>count</li>
+</ol>
+<p>对于<code>binding</code>字段，它代表了某个具体的<strong>绑定</strong>在整个绑定组中的位置插槽。要理解这句话，我们需要回过头来先理解什么<strong>绑定组布局</strong>，绑定组布局的本质是通过配置来描述一堆“绑定资源”的组成形态。我们可以将绑定组布局比喻成一个包含多个格子的盒子：</p>
+<p><img src="https://static-res.zhen.wang/images/post/2025-01-16/130.png" alt="130" /></p>
+<p>对于这样一个盒子，其中每一个小格子都会有一个“编号”，这个“编号”其实就是<code>binding</code>字段的形象表达。有了这一层思维以后，就不难理解关于<code>BindGroupLayoutEntry</code>其余字段的作用了，其实就是描述了对应格子中存放的绑定资源对象的属性。</p>
+<p>对于<code>visibility</code>字段，它表示了对应<code>binding</code>下的绑定资源在着色器中的哪个阶段可见。这个字段可以是<code>VERTEX</code>（即顶点着色器阶段可以见）、<code>FRAGMENT</code>（即片元着色器阶段可以见）等，此外，你也可以使用<code>VERTEX | FRAGMENT</code>来表示顶点着色器阶段和片元着色器同时可见。“可见”意味着只有在<strong>对应阶段</strong>着色器代码中运行中，我们才能够通过一定的方式来正确访问某些资源。</p>
+<p>对于<code>ty</code>字段，它代表了这个插槽位置下的资源是什么类型的。比如是一个纹理资源，或是一个采样器资源。请注意，这里依然是定义，即描述这个位置将会是个什么类型的资源，而并不是实际的资源数据，因为实际的资源要等到创建绑定组对象本身的时候才会设置。</p>
+<p>对于<code>count</code>字段，我们暂时不进行详细的描述，以后会提到。</p>
+<p>在了解了<code>BindGroupLayoutEntry</code>每一个字段意义以后，让我们回过头来看一看创建 <strong>绑定组布局</strong> 的代码，其含义就比较容易理解了。即，我们创建了一个绑定组布局，这个绑定组布局定义了接下来即将创建的绑定组的形态：</p>
+<ul>
+<li>由2个<strong>绑定资源</strong>组成，插槽位置分别是<code>0</code>和<code>1</code></li>
+<li>2个绑定资源均在片元着色器阶段可见，能被使用</li>
+<li>2个绑定资源的类型分别是纹理和采样器（具体的配置这里就不详细描述了，读者直接使用代码中的配置即可）</li>
+<li>两个绑定组元素的count均为None（读者暂时不用关心意义）</li>
+</ul>
+<p>理解了绑定组布局配置后，再让我们聚焦 <strong>绑定组</strong> 本身的创建。具体代码如下：</p>
+<p><img src="https://static-res.zhen.wang/images/post/2025-01-16/140.png" alt="140" /></p>
+<p>相信结合了前面绑定组布局的介绍，读者这里应该很容易的看出。首先，我们创建绑定组本身的时候，使用了刚刚创建的绑定组布局。其次，对于<code>entries</code>字段，<strong>我们也同样设置了2项</strong>。其中第1项的<code>binding</code>为<code>0</code>，代表了我们配置的绑定资源对应前面绑定组布局中<code>binding</code>为<code>0</code>的配置定义，<code>resource</code>字段则设置了一个由纹理对象而来的纹理视图对象，即插槽为0位置的绑定资源关联的就是我们的一个纹理视图资源，（纹理视图是对纹理数据本身访问的一层抽象）；对于第2项，其<code>binding</code>值为<code>1</code>，代表了我们配置的绑定资源对应前面绑定组布局中<code>binding</code>为<code>1</code>的配置定义，其<code>resource</code>字段引用了创建的采样器sampler，代表我们关联了一个创建好的采样器资源。当然，我们用一张图来描述可能更加直观：</p>
+<p><img src="https://static-res.zhen.wang/images/post/2025-01-16/150.png" alt="150" /></p>
+<p>Ok，至此我们完成了一个绑定组的创建工作。绑定组本身已经包含有具体的资源数据，需要在运行时使用，因此我们将其保存至<code>WgpuCtx</code>的<code>bind_group</code>字段中。并在<code>draw</code>方法中合适位置进行设置：</p>
+<p><img src="https://static-res.zhen.wang/images/post/2025-01-16/160.png" alt="160" /></p>
+<p>上述代码设置完成以后，其实还不够，为了能够使用到绑定组（及其关联的纹理、采样器资源）。我们还需要对一个比较久远的对象的创建过程进行调整。在很久之前，我们曾创建了渲染管线RenderPipeline这一对象：</p>
+<p><img src="https://static-res.zhen.wang/images/post/2025-01-16/170.png" alt="170" /></p>
+<h2 id="chuang-jian-guan-xian-bu-ju">创建管线布局</h2>
+<p>为了能够真正地使用到绑定组，我们需要创建一个名为管线布局（PipelineLayout）的对象，同时将绑定组布局设置到管线布局中，以便关联到我们创建的渲染管线中。首先，我们先通过创建好的绑定组布局对象来创建管线布局对象：</p>
+<p><img src="https://static-res.zhen.wang/images/post/2025-01-16/180.png" alt="180" /></p>
+<p>然后，我们适当的调整原来的<code>create_pipeline</code>的调用点，将其移动到PipelineLayout对象创建以后：</p>
+<p><img src="https://static-res.zhen.wang/images/post/2025-01-16/190.png" alt="190" /></p>
+<p>接着，我们修改<code>create_pipeline</code>的方法签名，让其传入一个管线布局对象，并在调用处将管线布局对象传入：</p>
+<p><img src="https://static-res.zhen.wang/images/post/2025-01-16/200.png" alt="200" /></p>
+<p>最后，我们修改<code>create_pipeline</code>的具体实现，在调用<code>create_render_pipeline</code>传递的<code>RenderPipelineDescriptor</code>的<code>layout</code>字段，设置管线布局：</p>
+<p><img src="https://static-res.zhen.wang/images/post/2025-01-16/210.png" alt="210" /></p>
+<p>这几步下来，最重要的结果是，我们将原本一个“光秃秃”的没有关联任何资源的渲染管线，修改为了关联了一个管线布局的渲染管线，而这个渲染管线关联的管线布局又包含一个绑定组布局，绑定组布局中还定义两个绑定资源：</p>
+<p><img src="https://static-res.zhen.wang/images/post/2025-01-16/220.png" alt="220" /></p>
+<p>同时，读者还需要仔细辨别和理解，在<code>draw</code>方法调用时（即运行时），里面使用到的是关联了实际资源数据的 <strong>绑定组</strong>，而不是 <strong>绑定组布局</strong>。在创建的渲染管线的时候，则都是布局（包含绑定组布局的管线布局）。</p>
+<h2 id="xiu-gai-ding-dian-shu-ju">修改顶点数据</h2>
+<p>接下来，我们还需要对原有的顶点数据的部分进行修改。首先，我们修改<code>vertex.rs</code>文件中定义的<code>Vertex</code>结构体，将原本的<code>color</code>字段改为<code>tex_uv</code>（表示UV二维坐标），类型也由原来的<code>[f32; 3]</code>改为了<code>[f32; 2]</code>（二维坐标）；与之对应的，就是下方的<code>VERTEX_LIST</code>的数据也要适当调整：</p>
+<p><img src="https://static-res.zhen.wang/images/post/2025-01-16/230.png" alt="230" /></p>
+<blockquote>
+<p>这里的tex_uv值的含义考虑到篇幅原因，就不在本文中进行介绍了。感兴趣的读者可以等笔者后续的文章，或自行学习</p>
+</blockquote>
+<p>然后，我们需要对该文件中曾编写的方法<code>create_vertex_buffer_layout</code>的具体实现进行调整。对于<code>shader_location</code>为<code>1</code>的地方，原本每一个顶点数据的该位置是一个<code>[f32; 3]</code>的数据（表示一个颜色数据），由于调整为了<code>[f32; 2]</code>（表示一个UV坐标数据），因此我们需要在做出对应的修改：</p>
+<p><img src="https://static-res.zhen.wang/images/post/2025-01-16/240.png" alt="240" /></p>
+<p>修改完成后，关于Rust中的代码我们基本上就编写完成了。接下来我们还差最后一步，修改着色器代码。</p>
+<h2 id="xiu-gai-zhao-se-qi-dai-ma">修改着色器代码</h2>
+<p>首先，对于顶点着色器的部分，由于我们传入管线的数据实际上是有调整的（Vertex结构体字段调整），因此着色器中的代码也需要完成对应调整：</p>
+<p><img src="https://static-res.zhen.wang/images/post/2025-01-16/250.png" alt="250" /></p>
+<blockquote>
+<p>关于着色器代码中的<code>VertexInput</code>、<code>VertexOutput</code>、<code>FragmentInput</code>的对应关系我就不多赘述了。</p>
+</blockquote>
+<p>接下来，重要的一步，在着色器代码中，我们需要加入有关纹理资源以及采样器资源对象的代码，并修改片元着色器的实现逻辑：</p>
+<p><img src="https://static-res.zhen.wang/images/post/2025-01-16/260.png" alt="260" /></p>
+<p>在这里有两个要点需要解释。首先我们会看到我们新加入了两个“变量”，类型分别是<code>texture_2d&lt;f32&gt;</code>和<code>sampler</code>（这两个类型是wgsl内置的），分别代表了纹理对象和采样器资源对象；其次，它们的上面都有注解，有的读者可能已经能联想到这里的<code>group(0)</code>和<code>bind(0)</code>、<code>bind(1)</code>的含义了。对于<code>group(0)</code>，其实就对应了我们刚刚创建的<strong>渲染管线布局</strong>中定义的仅有的索引为0的绑定组布局：</p>
+<p><img src="https://static-res.zhen.wang/images/post/2025-01-16/270.png" alt="270" /></p>
+<p>而<code>bind(0)</code>和<code>bind(1)</code>其实就是这个绑定组中的两个entry：</p>
+<p><img src="https://static-res.zhen.wang/images/post/2025-01-16/280.png" alt="280" /></p>
+<p>再看修改后的片元着色器实现，我们调用了wgsl语言内置的<code>textureSample</code>方法，第一个参数是纹理对象，第二个参数是采样器对象，第三个参数是对应的uv坐标。这段代码表达了这样一个意图：对于片元的某一位置的像素点的颜色值，我们使用采样器在纹理采样得到对应的颜色。</p>
+<h1 id="xiao-guo-cheng-xian">效果呈现</h1>
+<p>终于，我们经历“千辛万苦”，终于完成了为了在Wgpu中渲染一张图片的所有准备工作。此时当我们运行本章程序，会得到如下的效果：</p>
+<p><img src="https://static-res.zhen.wang/images/post/2025-01-16/290.png" alt="290" /></p>
+<p>我们将本章最开始的一张图片渲染到了一个正六边形中。当然，我们会发现图片的渲染实际上还存在一些问题，比如六边形内部的图片是颠倒的、图片存在扭曲、部分区域分割的不正常。这一块的内容，其实涉及到了顶点、UV坐标的一些关系处理，考虑到本章篇幅原因（内容实在太多了= _ =），就不再本章中进行详解了，笔者会单独写一篇文章来详细讲解这块的内容。</p>
+<h1 id="xie-zai-zui-hou">写在最后</h1>
+<p>本章内容中，我们先创建了纹理以及采样器资源，并通过<strong>绑定组</strong>来完成了对纹理资源和采样器资源的关联，同时又介绍了如何将渲染管线和绑定组进行关联逻辑流程。本章内容很多，需要读者慢慢消化，但是相信读者在阅读本文内容以后，能够对Wgpu中的常常提到的布局Layout这一概念有一个更加深入的认识。</p>
+<p>本章的代码仓库在这里：</p>
+<p><a rel="noopener" target="_blank" href="https://github.com/w4ngzhen/wgpu_winit_example/tree/main/ch05_texture_and_bind_group">ch05_texture_and_bind_group</a></p>
+<p>后续文章的相关代码也会在该仓库中添加，所以感兴趣的读者可以点个star，谢谢你们的支持！</p>
+
+    </div>
+</div>
+<script src="https://zhen.wang/libs/viewerjs@1.11.7/viewer.min.js"></script>
+<link rel="stylesheet" href="https://zhen.wang/libs/viewerjs@1.11.7/viewer.min.css"/>
+<script>
+  if (window.Viewer) {
+    document.querySelectorAll('img').forEach(img => {
+      new Viewer(img, {
+        inline: false,
+        navbar: false,
+        toolbar: {
+          zoomIn: 1,
+          zoomOut: 1,
+          reset: 1,
+          rotateLeft: 1,
+          rotateRight: 1,
+        },
+      });
+    });
+  }
+</script>
+
+
+</body>
+</html>
