@@ -1,0 +1,705 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="utf-8">
+    <meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover"
+          name="viewport">
+    
+    
+    <!-- umami web analysis -->
+    <script defer src="https://zhen.wang/libs/umami/umami.script.js"
+            data-website-id="d66cfe03-f6b3-4aa0-baf8-728700db1b09"></script>
+    
+    
+    
+    <link rel="icon" type="image/png" sizes="16x16" href="https://zhen.wang/images/blog-site-icon.svg">
+    <link rel="icon" type="image/png" sizes="32x32" href="https://zhen.wang/images/blog-site-icon.svg">
+    <title>zhen&#x27;s everything</title>
+    <link rel="stylesheet" href="https://zhen.wang/style.css">
+    
+<link rel="stylesheet" href="https://zhen.wang/article_content.css">
+<link rel="stylesheet" href="https://zhen.wang/article_markdown.css">
+
+</head>
+<body>
+
+<div id="article">
+    <header class="article-header">
+        
+<div class="base-title">
+    <a href="#" onclick="history.length > 1 ? history.back() : location.href = '/'; return false;">&LeftArrow; Back</a>
+    <h1>
+        从零搭建基于react与ts的组件库（一）项目搭建与封装antd组件
+    </h1>
+</div>
+
+    </header>
+    <p class="article-date">2022-05-27</p>
+    
+    <!-- toc -->
+    <div class="article-toc">
+        <label class="toc-title" for="toc-trigger">目录</label>
+        <input id="toc-trigger" type="checkbox" checked/>
+        <div class="toc-content">
+            <ol class="toc">
+                
+                <li class="toc-item toc-level-1">
+                    <a class="toc-link" href="https://zhen.wang/article/从零搭建基于react与ts的组件库（一）项目搭建与封装antd组件/#zheng-ti-xu-qiu">整体需求</a>
+                    
+                </li>
+                
+                <li class="toc-item toc-level-1">
+                    <a class="toc-link" href="https://zhen.wang/article/从零搭建基于react与ts的组件库（一）项目搭建与封装antd组件/#kai-fa-yu-da-bao-gong-ju-xuan-xing">开发与打包工具选型</a>
+                    
+                    <ol class="toc-child">
+                        
+                        <li class="toc-item toc-level-2">
+                            <a href="https://zhen.wang/article/从零搭建基于react与ts的组件库（一）项目搭建与封装antd组件/#shi-yong-webpackzuo-wei-da-bao-gong-ju">使用webpack作为打包工具</a>
+                        </li>
+                        
+                        <li class="toc-item toc-level-2">
+                            <a href="https://zhen.wang/article/从零搭建基于react与ts的组件库（一）项目搭建与封装antd组件/#shi-yong-babellai-chu-li-typescriptdai-ma">使用babel来处理typescript代码</a>
+                        </li>
+                        
+                        <li class="toc-item toc-level-2">
+                            <a href="https://zhen.wang/article/从零搭建基于react与ts的组件库（一）项目搭建与封装antd组件/#shi-yong-less-loader-css-loaderdeng-chu-li-yang-shi-dai-ma">使用less-loader、css-loader等处理样式代码</a>
+                        </li>
+                        
+                        <li class="toc-item toc-level-2">
+                            <a href="https://zhen.wang/article/从零搭建基于react与ts的组件库（一）项目搭建与封装antd组件/#shi-yong-minicssextractpluginfen-chi-css">使用MiniCssExtractPlugin分离CSS</a>
+                        </li>
+                        
+                    </ol>
+                    
+                </li>
+                
+                <li class="toc-item toc-level-1">
+                    <a class="toc-link" href="https://zhen.wang/article/从零搭建基于react与ts的组件库（一）项目搭建与封装antd组件/#xiang-mu-da-jian-si-lu">项目搭建思路</a>
+                    
+                    <ol class="toc-child">
+                        
+                        <li class="toc-item toc-level-2">
+                            <a href="https://zhen.wang/article/从零搭建基于react与ts的组件库（一）项目搭建与封装antd组件/#zheng-ti-jie-gou">整体结构</a>
+                        </li>
+                        
+                        <li class="toc-item toc-level-2">
+                            <a href="https://zhen.wang/article/从零搭建基于react与ts的组件库（一）项目搭建与封装antd组件/#fang-an-si-lu">方案思路</a>
+                        </li>
+                        
+                    </ol>
+                    
+                </li>
+                
+                <li class="toc-item toc-level-1">
+                    <a class="toc-link" href="https://zhen.wang/article/从零搭建基于react与ts的组件库（一）项目搭建与封装antd组件/#xiang-mu-da-jian-shi-shi">项目搭建实施</a>
+                    
+                    <ol class="toc-child">
+                        
+                        <li class="toc-item toc-level-2">
+                            <a href="https://zhen.wang/article/从零搭建基于react与ts的组件库（一）项目搭建与封装antd组件/#chu-shi-hua">初始化</a>
+                        </li>
+                        
+                        <li class="toc-item toc-level-2">
+                            <a href="https://zhen.wang/article/从零搭建基于react与ts的组件库（一）项目搭建与封装antd组件/#babelyin-ru">Babel引入</a>
+                        </li>
+                        
+                        <li class="toc-item toc-level-2">
+                            <a href="https://zhen.wang/article/从零搭建基于react与ts的组件库（一）项目搭建与封装antd组件/#yin-ru-reactxiang-guan-ku-externalsfang-shi">引入React相关库（externals方式）</a>
+                        </li>
+                        
+                        <li class="toc-item toc-level-2">
+                            <a href="https://zhen.wang/article/从零搭建基于react与ts的组件库（一）项目搭建与封装antd组件/#jie-duan-yan-shi-1-ji-yu-typescriptde-reactzu-jian-xiang-mu-de-webpackpei-zhi-ke-xing-xing">阶段演示1：基于TypeScript的React组件项目的webpack配置可行性</a>
+                        </li>
+                        
+                        <li class="toc-item toc-level-2">
+                            <a href="https://zhen.wang/article/从零搭建基于react与ts的组件库（一）项目搭建与封装antd组件/#chu-li-yang-shi-lessbian-yi-yu-cssdao-chu">处理样式（less编译与css导出）</a>
+                        </li>
+                        
+                        <li class="toc-item toc-level-2">
+                            <a href="https://zhen.wang/article/从零搭建基于react与ts的组件库（一）项目搭建与封装antd组件/#jie-duan-yan-shi-2-lessyang-shi-chu-li-pei-zhi-ke-xing-xing">阶段演示2：less样式处理配置可行性</a>
+                        </li>
+                        
+                        <li class="toc-item toc-level-2">
+                            <a href="https://zhen.wang/article/从零搭建基于react与ts的组件库（一）项目搭建与封装antd组件/#yin-ru-antdesign">引入AntDesign</a>
+                        </li>
+                        
+                        <li class="toc-item toc-level-2">
+                            <a href="https://zhen.wang/article/从零搭建基于react与ts的组件库（一）项目搭建与封装antd组件/#jie-duan-yan-shi-3-antdzu-jian-yin-ru-ke-xing-xing">阶段演示3：antd组件引入可行性</a>
+                        </li>
+                        
+                    </ol>
+                    
+                </li>
+                
+                <li class="toc-item toc-level-1">
+                    <a class="toc-link" href="https://zhen.wang/article/从零搭建基于react与ts的组件库（一）项目搭建与封装antd组件/#xie-zai-zui-hou">写在最后</a>
+                    
+                </li>
+                
+            </ol>
+        </div>
+    </div>
+    
+    <!-- real content -->
+    <div class="article-content markdown-content">
+        <p>为什么会有这样一篇文章？因为网上的教程/示例只说了怎么做，没有系统详细的介绍引入这些依赖、为什么要这样配置，甚至有些文章还是错的！迫于技术洁癖，我希望更多的开发小伙伴能够真正的理解一个项目搭建各个方面的细节，做到面对对于工程出现的错误能够做到有把握。</p>
+<span id="continue-reading"></span>
+<p>最近使用阿里低开引擎的时候，想要封装一套组件库作为物料给低开引擎引入。根据低开引擎的物料封层模式，我的诉求是做一套组件库，并且将该组件库以umd方式生成。当然，从零开始开发组件库也是一个比较耗时耗力的事情，所以我想到将antd组件封装，于是催生出了本篇文章。</p>
+<p><strong>在封装组件并生成umd代码过程中，踩了很多的坑，也更加系统的了解了babel。</strong></p>
+<h2 id="zheng-ti-xu-qiu">整体需求</h2>
+<ol>
+<li><strong>react</strong>组件库，取名r-ui，能够导出<strong>r-ui.umd.js</strong>和<strong>r-ui.umd.css</strong>。</li>
+<li>代码使用<strong>typescript</strong>进行开发。</li>
+<li>样式使用<strong>less</strong>进行开发。</li>
+<li>引入antd组件库作为底层原子组件库，并且r-ui.umd.js和r-ui.umd.css包含antd组件代码和样式代码。</li>
+<li>依赖的react、react-dom模块以<strong>外部引用方式</strong>。</li>
+</ol>
+<h2 id="kai-fa-yu-da-bao-gong-ju-xuan-xing">开发与打包工具选型</h2>
+<h3 id="shi-yong-webpackzuo-wei-da-bao-gong-ju">使用webpack作为打包工具</h3>
+<p>老牌而又经典的打包工具，广泛的使用，丰富的插件生态以及各种易得的样例。</p>
+<h3 id="shi-yong-babellai-chu-li-typescriptdai-ma">使用babel来处理typescript代码</h3>
+<blockquote>
+<p>由于 TypeScript 和 Babel 团队官方合作了一年的项目：<a rel="noopener" target="_blank" href="https://link.zhihu.com/?target=https%3A//babeljs.io/docs/en/babel-preset-typescript.html">TypeScript plugin for Babel</a>（<code>@babel/preset-typescript</code>），<a rel="noopener" target="_blank" href="https://link.zhihu.com/?target=https%3A//www.typescriptlang.org/">TypeScript</a> 的使用变得比以往任何时候都容易。 —— 摘自《<a rel="noopener" target="_blank" href="https://iamturns.com/typescript-babel/">TypeScript With Babel: A Beautiful Marriage （TypeScript 和 Babel：美丽的结合）</a>》</p>
+</blockquote>
+<p>建议各位读者可以先阅读一下上面的文章（有中文翻译文章）。</p>
+<h3 id="shi-yong-less-loader-css-loaderdeng-chu-li-yang-shi-dai-ma">使用less-loader、css-loader等处理样式代码</h3>
+<h3 id="shi-yong-minicssextractpluginfen-chi-css">使用MiniCssExtractPlugin分离CSS</h3>
+<h2 id="xiang-mu-da-jian-si-lu">项目搭建思路</h2>
+<h3 id="zheng-ti-jie-gou">整体结构</h3>
+<pre style="background-color:#2b303b;color:#c0c5ce;"><code><span>- r-ui
+</span><span>  |- src
+</span><span>     |- components
+</span><span>        |- button
+</span><span>           |- index.tsx
+</span><span>  |- index.tsx
+</span></code></pre>
+<h3 id="fang-an-si-lu">方案思路</h3>
+<p>编写webpack.config.js配置文件，添加核心loader：</p>
+<ol>
+<li>babel-loader。接收ts文件，交给babel-core以及相关babel插件进行处理，得到js代码。</li>
+<li>less-loader。接收less样式文件，处理得到css样式代码。</li>
+<li>css-loader+MiniCssExtractPlugin.loader。接收css样式代码进行处理，并分离导出组件库样式文件。</li>
+</ol>
+<h2 id="xiang-mu-da-jian-shi-shi">项目搭建实施</h2>
+<h3 id="chu-shi-hua">初始化</h3>
+<p><strong>初始化r-ui项目</strong></p>
+<pre data-lang="shell" style="background-color:#2b303b;color:#c0c5ce;" class="language-shell "><code class="language-shell" data-lang="shell"><span>mkdir r-ui &amp;&amp; cd r-ui &amp;&amp; npm init
+</span><span># 配置项目基本信息（name、version......）
+</span></code></pre>
+<p><strong>初始化git仓库，添加gitignore文件（后续所有命令非特殊情况，均相对于项目根目录）</strong></p>
+<pre data-lang="shell" style="background-color:#2b303b;color:#c0c5ce;" class="language-shell "><code class="language-shell" data-lang="shell"><span>git init
+</span><span># .gitignore文件内容请直接查看项目内文件
+</span><span># 完成后，初始提交：
+</span><span># git add . &amp;&amp; git commit -m &quot;init&quot;
+</span></code></pre>
+<p><strong>安装webpack（包管理器使用yarn）</strong></p>
+<pre data-lang="shell" style="background-color:#2b303b;color:#c0c5ce;" class="language-shell "><code class="language-shell" data-lang="shell"><span>yarn add -D webpack webpack-cli webpack-dev-server
+</span><span># 安装webpack-dev-server是为后续构建样例页面做准备，前期可以不安装。
+</span></code></pre>
+<pre data-lang="diff" style="background-color:#2b303b;color:#c0c5ce;" class="language-diff "><code class="language-diff" data-lang="diff"><span>diff --git a/package.json b/package.json
+</span><span>index e01c1b1..53dd9a3 100644
+</span><span>--- a/package.json
+</span><span>+++ b/package.json
+</span><span>@@ -8,5 +8,9 @@
+</span><span>   },
+</span><span>   &quot;author&quot;: &quot;&quot;,
+</span><span>   &quot;license&quot;: &quot;MIT&quot;,
+</span><span style="color:#bf616a;">-  &quot;devDependencies&quot;: {}
+</span><span style="color:#a3be8c;">+  &quot;devDependencies&quot;: {
+</span><span style="color:#a3be8c;">+    &quot;webpack&quot;: &quot;^5.72.1&quot;,
+</span><span style="color:#a3be8c;">+    &quot;webpack-cli&quot;: &quot;^4.9.2&quot;,
+</span><span style="color:#a3be8c;">+    &quot;webpack-dev-server&quot;: &quot;^4.9.0&quot;
+</span><span style="color:#a3be8c;">+  }
+</span><span> }
+</span></code></pre>
+<p><strong>项目根目录添加webpack.config.js并进行初始配置</strong></p>
+<pre data-lang="js" style="background-color:#2b303b;color:#c0c5ce;" class="language-js "><code class="language-js" data-lang="js"><span style="color:#65737e;">// webpack.config.js
+</span><span style="color:#b48ead;">const </span><span>{</span><span style="color:#bf616a;">resolve</span><span>} = </span><span style="color:#96b5b4;">require</span><span>(&quot;</span><span style="color:#a3be8c;">path</span><span>&quot;);
+</span><span>module.exports = {
+</span><span>  </span><span style="color:#65737e;">// 组件库的起点入口
+</span><span>  entry: &#39;</span><span style="color:#a3be8c;">./src/index.tsx</span><span>&#39;,
+</span><span>  output: {
+</span><span>    filename: &quot;</span><span style="color:#a3be8c;">r-ui.umd.js</span><span>&quot;, </span><span style="color:#65737e;">// 打包后的文件名
+</span><span>    path: </span><span style="color:#8fa1b3;">resolve</span><span>(__dirname, &#39;</span><span style="color:#a3be8c;">dist</span><span>&#39;), </span><span style="color:#65737e;">// 打包后的文件目录：根目录/dist/
+</span><span>    library: &#39;</span><span style="color:#a3be8c;">rui</span><span>&#39;, </span><span style="color:#65737e;">// 导出的UMD js会在window挂rui，即可以访问window.rui
+</span><span>    libraryTarget: &#39;</span><span style="color:#a3be8c;">umd</span><span>&#39; </span><span style="color:#65737e;">// 导出库为UMD形式
+</span><span>  },
+</span><span>  resolve: {
+</span><span>    </span><span style="color:#65737e;">// webpack 默认只处理js、jsx等js代码
+</span><span>    extensions: [&#39;</span><span style="color:#a3be8c;">.js</span><span>&#39;, &#39;</span><span style="color:#a3be8c;">.jsx</span><span>&#39;, &#39;</span><span style="color:#a3be8c;">.ts</span><span>&#39;, &#39;</span><span style="color:#a3be8c;">.tsx</span><span>&#39;]
+</span><span>  },
+</span><span>  externals: {},
+</span><span>  </span><span style="color:#65737e;">// 模块
+</span><span>  module: {
+</span><span>    </span><span style="color:#65737e;">// 规则
+</span><span>    rules: []
+</span><span>  }
+</span><span>};
+</span></code></pre>
+<h3 id="babelyin-ru">Babel引入</h3>
+<h4 id="yin-ru-babel-loaderyi-ji-xiang-guan-babelku">引入babel-loader以及相关babel库</h4>
+<pre data-lang="shell" style="background-color:#2b303b;color:#c0c5ce;" class="language-shell "><code class="language-shell" data-lang="shell"><span>yarn add -D babel-loader @babel/core @babel/preset-env @babel/preset-typescript @babel/preset-react @babel/plugin-proposal-class-properties @babel/plugin-proposal-object-rest-spread
+</span></code></pre>
+<pre data-lang="diff" style="background-color:#2b303b;color:#c0c5ce;" class="language-diff "><code class="language-diff" data-lang="diff"><span>diff --git a/package.json b/package.json
+</span><span>index 53dd9a3..33c32b6 100644
+</span><span>--- a/package.json
+</span><span>+++ b/package.json
+</span><span>@@ -9,6 +9,13 @@
+</span><span>   &quot;author&quot;: &quot;&quot;,
+</span><span>   &quot;license&quot;: &quot;MIT&quot;,
+</span><span>   &quot;devDependencies&quot;: {
+</span><span style="color:#a3be8c;">+    &quot;@babel/core&quot;: &quot;^7.18.2&quot;,
+</span><span style="color:#a3be8c;">+    &quot;@babel/plugin-proposal-class-properties&quot;: &quot;^7.17.12&quot;,
+</span><span style="color:#a3be8c;">+    &quot;@babel/plugin-proposal-object-rest-spread&quot;: &quot;^7.18.0&quot;,
+</span><span style="color:#a3be8c;">+    &quot;@babel/preset-env&quot;: &quot;^7.18.2&quot;,
+</span><span style="color:#a3be8c;">+    &quot;@babel/preset-react&quot;: &quot;^7.17.12&quot;,
+</span><span style="color:#a3be8c;">+    &quot;@babel/preset-typescript&quot;: &quot;^7.17.12&quot;,
+</span><span style="color:#a3be8c;">+    &quot;babel-loader&quot;: &quot;^8.2.5&quot;,
+</span><span>     &quot;webpack&quot;: &quot;^5.72.1&quot;,
+</span><span>     &quot;webpack-cli&quot;: &quot;^4.9.2&quot;,
+</span><span>     &quot;webpack-dev-server&quot;: &quot;^4.9.0&quot;
+</span><span>(END)
+</span></code></pre>
+<h4 id="liao-jie-babel">了解Babel</h4>
+<p>如果对于babel不太熟悉，可能对这一堆的依赖感到恐惧，这里如果读者有时间，我推荐这篇深入了解babel的文章：<a rel="noopener" target="_blank" href="https://zhuanlan.zhihu.com/p/43249121">一口（很长的）气了解 babel - 知乎 (zhihu.com)</a>。当然，如果这口气憋不住（哈哈），我做一个简单摘抄：</p>
+<blockquote>
+<p>babel 总共分为三个阶段：解析，转换，生成。</p>
+<p>babel 本身不具有任何转化功能，它把转化的功能都分解到一个个 plugin 里面。因此当我们不配置任何插件时，经过 babel 的代码和输入是相同的。</p>
+<p>插件总共分为两种：</p>
+<ul>
+<li>当我们添加 <strong>语法插件</strong> 之后，在解析这一步就使得 babel 能够解析更多的语法。(顺带一提，babel 内部使用的解析类库叫做 babylon，并非 babel 自行开发)</li>
+</ul>
+<p>举个简单的例子，当我们定义或者调用方法时，最后一个参数之后是不允许增加逗号的，如 <code>callFoo(param1, param2,)</code> 就是非法的。如果源码是这种写法，经过 babel 之后就会提示语法错误。</p>
+<p>但最近的 JS 提案中已经允许了这种新的写法(让代码 diff 更加清晰)。为了避免 babel 报错，就需要增加语法插件 <code>babel-plugin-syntax-trailing-function-commas</code></p>
+<ul>
+<li>当我们添加 <strong>转译插件</strong> 之后，在转换这一步把源码转换并输出。这也是我们使用 babel 最本质的需求。</li>
+</ul>
+<p>比起语法插件，转译插件其实更好理解，比如箭头函数 <code>(a) =&gt; a</code> 就会转化为 <code>function (a) {return a}</code>。完成这个工作的插件叫做 <code>babel-plugin-transform-es2015-arrow-functions</code>。</p>
+<p>同一类语法可能同时存在语法插件版本和转译插件版本。<strong>如果我们使用了转译插件，就不用再使用语法插件了。</strong></p>
+</blockquote>
+<p>简单来讲，使用babel就像如下流程：</p>
+<pre style="background-color:#2b303b;color:#c0c5ce;"><code><span>源代码 =babel=&gt; 目标代码
+</span></code></pre>
+<p>如果没有使用任何插件，源代码和目标代码就没有任何差异。当我们引入各种插件的时候，就像如下流程一样：</p>
+<pre style="background-color:#2b303b;color:#c0c5ce;"><code><span>源代码
+</span><span>|
+</span><span>进入babel
+</span><span>|
+</span><span>babel插件1处理代码：移除某些符号
+</span><span>|
+</span><span>babel插件2处理代码：将形如() =&gt; {}的箭头函数，转换成function xxx() {}
+</span><span>|
+</span><span>目标代码
+</span></code></pre>
+<p>因为babel的插件处理的力度很细，我们代码的语法、语义内容规范有很多，如果我们要处理这些语法，可能需要配置一大堆的插件，所以babel提出，将一堆插件组合成一个preset（预置插件包），这样，我们只需要引入一个插件组合包，就能处理代码的各种语法、语义。</p>
+<p>所以，回到我们上述的那些@babel开头的npm包，再回首可能不会那么迷茫：</p>
+<pre style="background-color:#2b303b;color:#c0c5ce;"><code><span>@babel/core
+</span><span>@babel/preset-env
+</span><span>@babel/preset-typescript
+</span><span>@babel/preset-react
+</span><span>@babel/plugin-proposal-class-properties
+</span><span>@babel/plugin-proposal-object-rest-spread
+</span></code></pre>
+<p><code>@babel/core</code>毋庸置疑，babel的核心模块，实现了上述的流程运转以及代码语法、语义分析的功能。</p>
+<p>以plugin开头的就是插件，这里我们引入了两个：<code>@babel/plugin-proposal-class-properties</code>（<a rel="noopener" target="_blank" href="https://babel.docschina.org/docs/en/babel-plugin-proposal-class-properties/">允许类具有属性</a>）和<code>@babel/plugin-proposal-object-rest-spread</code>（<a rel="noopener" target="_blank" href="https://babel.docschina.org/docs/en/7.0.0/babel-plugin-proposal-object-rest-spread/">对象展开</a>）。</p>
+<p>以preset开头的就是预置组件包合集，其中<code>@babel/preset-env</code>表示使用了可以根据实际的浏览器运行环境，会选择相关的转义插件包：</p>
+<blockquote>
+<p>env 的核心目的是通过配置得知目标环境的特点，然后只做必要的转换。</p>
+<p>如果不写任何配置项，env 等价于 latest，也等价于 es2015 + es2016 + es2017 三个相加(不包含 stage-x 中的插件)。</p>
+<pre style="background-color:#2b303b;color:#c0c5ce;"><code><span>{
+</span><span> &quot;presets&quot;: [
+</span><span>   [&quot;env&quot;, {
+</span><span>     &quot;targets&quot;: {
+</span><span>       &quot;browsers&quot;: [&quot;last 2 versions&quot;, &quot;safari &gt;= 7&quot;]
+</span><span>     }
+</span><span>   }]
+</span><span> ]
+</span><span>}
+</span></code></pre>
+<p>如上配置将考虑所有浏览器的最新2个版本(safari大于等于7.0的版本)的特性，将必要的代码进行转换。而这些版本已有的功能就不进行转化了。</p>
+<p>—— 摘自《<a rel="noopener" target="_blank" href="https://zhuanlan.zhihu.com/p/43249121">一口（很长的）气了解 babel - 知乎 (zhihu.com)</a>》</p>
+</blockquote>
+<p><code>@babel/preset-typescript</code>会处理所有ts的代码的语法和语义规则，并转换为js代码；<code>@babel/preset-react</code></p>
+<p>故名思义，<strong>可以帮助处理使用React相关特性</strong>，例如JSX标签语法等。</p>
+<h4 id="webpackde-ji-yu-babel-loaderde-chu-li-liu-cheng">webpack的基于babel-loader的处理流程</h4>
+<p>讲了这么多，我们的打包工具webpack如何使用babel相关组件处理代码的呢？还记得我们安装过<strong>babel-loader</strong>吗？</p>
+<p>实际上，我们通过配置webpack.config.js，使用<strong>babel-loader</strong>建立起webpack处理代码与babel处理代码的连接：</p>
+<pre data-lang="diff" style="background-color:#2b303b;color:#c0c5ce;" class="language-diff "><code class="language-diff" data-lang="diff"><span>diff --git a/webpack.config.js b/webpack.config.js
+</span><span>index 8bfbb63..6767fd8 100644
+</span><span>--- a/webpack.config.js
+</span><span>+++ b/webpack.config.js
+</span><span>@@ -17,6 +17,11 @@ </span><span style="color:#8fa1b3;">module.exports = {
+</span><span>   // 模块
+</span><span>   module: {
+</span><span>     // 规则
+</span><span style="color:#bf616a;">-    rules: []
+</span><span style="color:#a3be8c;">+    rules: [
+</span><span style="color:#a3be8c;">+      {
+</span><span style="color:#a3be8c;">+        test: /\.tsx?$/,
+</span><span style="color:#a3be8c;">+        use: &#39;babel-loader&#39;,
+</span><span style="color:#a3be8c;">+        exclude: /node_modules/
+</span><span style="color:#a3be8c;">+      }
+</span><span style="color:#a3be8c;">+    ]
+</span><span>   }
+</span><span> };
+</span><span>(END)
+</span></code></pre>
+<p>这一步的配置，就是让webpack遇到ts或tsx的时候，将这些代码交给babel-loader，babel-loader作为桥接把代码交给内部引用的@babel/core相关API进行处理，当然为了防止babel-loader去解析依赖库node_modules的内容，需要配置exclude。</p>
+<p>那么，@babel/core如何知道要使用我们安装的各种plugin插件和preset预置插件包的呢？通过<code>.babelrc文件</code>（注：实际上还有其他配置方式，但个人倾向于.babelrc）。这里，我们在项目根目录创建.babelrc文件，并添加一下内容：</p>
+<pre data-lang="json" style="background-color:#2b303b;color:#c0c5ce;" class="language-json "><code class="language-json" data-lang="json"><span>{
+</span><span>  &quot;</span><span style="color:#a3be8c;">presets</span><span>&quot;: [
+</span><span>    &quot;</span><span style="color:#a3be8c;">@babel/preset-env</span><span>&quot;,
+</span><span>    &quot;</span><span style="color:#a3be8c;">@babel/preset-typescript</span><span>&quot;,
+</span><span>    &quot;</span><span style="color:#a3be8c;">@babel/preset-react</span><span>&quot;
+</span><span>  ],
+</span><span>  &quot;</span><span style="color:#a3be8c;">plugins</span><span>&quot;: [
+</span><span>    &quot;</span><span style="color:#a3be8c;">@babel/plugin-proposal-class-properties</span><span>&quot;,
+</span><span>    &quot;</span><span style="color:#a3be8c;">@babel/plugin-proposal-object-rest-spread</span><span>&quot;
+</span><span>  ]
+</span><span>}
+</span></code></pre>
+<p>这里的配置不难理解，plugins字段存放要使用的插件，presets字段存放预置插件包名称，具体的配置可以查阅官方文档。</p>
+<p><strong>总结一下，配置babel可以按照如下思路进行：</strong></p>
+<ol>
+<li>xxx.ts(x)代码交给webpack打包；</li>
+<li>webpack遇到ts(x)结尾的代码文件，根据webpack.config.js配置，交给babel-loader；</li>
+<li>babel-loader交给@babel/core；</li>
+<li>@babel/core根据.babelrc配置交给相关的插件处理代码，转为js代码；</li>
+<li>webpack进行后续的打包操作。</li>
+</ol>
+<h3 id="yin-ru-reactxiang-guan-ku-externalsfang-shi">引入React相关库（externals方式）</h3>
+<p>还记得我们的需求吗？</p>
+<blockquote>
+<p>依赖的react、react-dom模块以<strong>外部引用方式</strong>。</p>
+</blockquote>
+<p>什么是外部引用方式？简单来讲，我希望react、react-dom等组件库的包，不会被打入到组件库中，而是在html中引入（<a rel="noopener" target="_blank" href="https://17.reactjs.org/docs/add-react-to-a-website.html#step-2-add-the-script-tags">Add React to a Website – React (reactjs.org)</a>）：</p>
+<pre data-lang="html" style="background-color:#2b303b;color:#c0c5ce;" class="language-html "><code class="language-html" data-lang="html"><span>  </span><span style="color:#65737e;">&lt;!-- ... other HTML ... --&gt;
+</span><span>  </span><span style="color:#65737e;">&lt;!-- Load React. --&gt;
+</span><span>  </span><span style="color:#65737e;">&lt;!-- Note: when deploying, replace &quot;development.js&quot; with &quot;production.min.js&quot;. --&gt;
+</span><span>  &lt;</span><span style="color:#bf616a;">script </span><span style="color:#d08770;">src</span><span>=&quot;</span><span style="color:#a3be8c;">https://unpkg.com/react@17/umd/react.development.js</span><span>&quot; </span><span style="color:#d08770;">crossorigin</span><span>&gt;&lt;/</span><span style="color:#bf616a;">script</span><span>&gt;
+</span><span>  &lt;</span><span style="color:#bf616a;">script </span><span style="color:#d08770;">src</span><span>=&quot;</span><span style="color:#a3be8c;">https://unpkg.com/react-dom@17/umd/react-dom.development.js</span><span>&quot; </span><span style="color:#d08770;">crossorigin</span><span>&gt;&lt;/</span><span style="color:#bf616a;">script</span><span>&gt;
+</span><span>  </span><span style="color:#65737e;">&lt;!-- 组件库JS --&gt;
+</span><span>  &lt;</span><span style="color:#bf616a;">script </span><span style="color:#d08770;">src</span><span>=&quot;</span><span style="color:#a3be8c;">r-ui.js</span><span>&quot;&gt;&lt;/</span><span style="color:#bf616a;">script</span><span>&gt;
+</span><span>&lt;/</span><span style="color:#bf616a;">body</span><span>&gt;
+</span></code></pre>
+<p>要实现这样的效果，第一步是配置webapck.config.js：</p>
+<pre data-lang="diff" style="background-color:#2b303b;color:#c0c5ce;" class="language-diff "><code class="language-diff" data-lang="diff"><span>diff --git a/webpack.config.js b/webpack.config.js
+</span><span>index 6767fd8..54fc0e5 100644
+</span><span>--- a/webpack.config.js
+</span><span>+++ b/webpack.config.js
+</span><span>@@ -13,7 +13,13 @@ </span><span style="color:#8fa1b3;">module.exports = {
+</span><span>     // webpack 默认只处理js、jsx等js代码
+</span><span>     extensions: [&#39;.js&#39;, &#39;.jsx&#39;, &#39;.ts&#39;, &#39;.tsx&#39;]
+</span><span>   },
+</span><span style="color:#bf616a;">-  externals: {},
+</span><span style="color:#a3be8c;">+  externals: {
+</span><span style="color:#a3be8c;">+    // 打包过程遇到以下依赖导入，不会打包对应库代码，而是调用window上的React和ReactDOM
+</span><span style="color:#a3be8c;">+    // import React from &#39;react&#39;
+</span><span style="color:#a3be8c;">+    // import ReactDOM from &#39;react-dom&#39;
+</span><span style="color:#a3be8c;">+    &#39;react&#39;: &#39;React&#39;,
+</span><span style="color:#a3be8c;">+    &#39;react-dom&#39;: &#39;ReactDOM&#39;
+</span><span style="color:#a3be8c;">+  },
+</span><span>   // 模块
+</span><span>   module: {
+</span><span>     // 规则
+</span><span>(END)
+</span></code></pre>
+<p>第二部，在引入react相关库的时候，可以不用引入到dependencies运行时依赖，而只需要引入对应的类型定义到devDependencies开发依赖中：</p>
+<pre data-lang="shell" style="background-color:#2b303b;color:#c0c5ce;" class="language-shell "><code class="language-shell" data-lang="shell"><span>yarn add -D @types/react@17.0.39 @types/react-dom@17.0.17
+</span></code></pre>
+<pre data-lang="diff" style="background-color:#2b303b;color:#c0c5ce;" class="language-diff "><code class="language-diff" data-lang="diff"><span>diff --git a/package.json b/package.json
+</span><span>index 33c32b6..bd17763 100644
+</span><span>--- a/package.json
+</span><span>+++ b/package.json
+</span><span>@@ -15,6 +15,8 @@
+</span><span>     &quot;@babel/preset-env&quot;: &quot;^7.18.2&quot;,
+</span><span>     &quot;@babel/preset-react&quot;: &quot;^7.17.12&quot;,
+</span><span>     &quot;@babel/preset-typescript&quot;: &quot;^7.17.12&quot;,
+</span><span style="color:#a3be8c;">+    &quot;@types/react&quot;: &quot;17.0.39&quot;,
+</span><span style="color:#a3be8c;">+    &quot;@types/react-dom&quot;: &quot;17.0.17&quot;,
+</span><span>     &quot;babel-loader&quot;: &quot;^8.2.5&quot;,
+</span><span>     &quot;webpack&quot;: &quot;^5.72.1&quot;,
+</span><span>     &quot;webpack-cli&quot;: &quot;^4.9.2&quot;,
+</span></code></pre>
+<p>至此，我们已经完成了处理<strong>基于TypeScript</strong>的<strong>React项目</strong>的webpack配置，此时我们的项目结构如下：</p>
+<pre style="background-color:#2b303b;color:#c0c5ce;"><code><span>- r-ui
+</span><span>  |- .babelrc
+</span><span>  |- package.json
+</span><span>  |- webpack.config.js
+</span></code></pre>
+<h3 id="jie-duan-yan-shi-1-ji-yu-typescriptde-reactzu-jian-xiang-mu-de-webpackpei-zhi-ke-xing-xing">阶段演示1：基于TypeScript的React组件项目的webpack配置可行性</h3>
+<h4 id="bian-xie-zu-jian-dai-ma">编写组件代码</h4>
+<p>新增src目录，在src目录下添加index.tsx（用于将所有的组件导出）</p>
+<p>src目录下添加components/button目录，并创建index.tsx文件。具体结构与目录如下：</p>
+<pre style="background-color:#2b303b;color:#c0c5ce;"><code><span>- r-ui
+</span><span>  |- src/components/button/index.tsx
+</span><span>  |- src/index.tsx
+</span><span>  |- ... ...
+</span></code></pre>
+<p><strong>src/components/button/index.tsx</strong></p>
+<pre data-lang="tsx" style="background-color:#2b303b;color:#c0c5ce;" class="language-tsx "><code class="language-tsx" data-lang="tsx"><span style="color:#b48ead;">import </span><span style="color:#d08770;">* </span><span style="color:#b48ead;">as </span><span style="color:#bf616a;">React </span><span style="color:#b48ead;">from </span><span>&#39;</span><span style="color:#a3be8c;">react</span><span>&#39;;
+</span><span>
+</span><span style="color:#b48ead;">interface </span><span>ButtonProps {
+</span><span>}
+</span><span>
+</span><span style="color:#b48ead;">const </span><span style="color:#8fa1b3;">Button</span><span>: React.FC&lt;ButtonProps&gt; = (</span><span style="color:#bf616a;">props</span><span>) </span><span style="color:#b48ead;">=&gt; </span><span>{
+</span><span>    </span><span style="color:#b48ead;">const </span><span>{</span><span style="color:#bf616a;">children</span><span>, ...</span><span style="color:#bf616a;">rest</span><span>} = </span><span style="color:#bf616a;">props</span><span>;
+</span><span>    </span><span style="color:#b48ead;">return </span><span>&lt;</span><span style="color:#bf616a;">button </span><span style="color:#ab7967;">{</span><span>...</span><span style="color:#bf616a;">rest</span><span style="color:#ab7967;">} </span><span>&gt;</span><span style="color:#ab7967;">{</span><span style="color:#bf616a;">children</span><span style="color:#ab7967;">}</span><span>&lt;/</span><span style="color:#bf616a;">button</span><span>&gt;
+</span><span>}
+</span><span>
+</span><span style="color:#b48ead;">export default </span><span style="color:#bf616a;">Button</span><span>;
+</span></code></pre>
+<p><strong>src/index.tsx</strong></p>
+<pre data-lang="tsx" style="background-color:#2b303b;color:#c0c5ce;" class="language-tsx "><code class="language-tsx" data-lang="tsx"><span style="color:#b48ead;">export </span><span>{</span><span style="color:#b48ead;">default as </span><span style="color:#bf616a;">Button</span><span>} </span><span style="color:#b48ead;">from </span><span>&#39;</span><span style="color:#a3be8c;">./components/button</span><span>&#39;;
+</span></code></pre>
+<h4 id="xiu-gai-package-json">修改package.json</h4>
+<p>添加webpack处理脚本</p>
+<pre data-lang="diff" style="background-color:#2b303b;color:#c0c5ce;" class="language-diff "><code class="language-diff" data-lang="diff"><span>diff --git a/package.json b/package.json
+</span><span>index bd17763..01565ad 100644
+</span><span>--- a/package.json
+</span><span>+++ b/package.json
+</span><span>@@ -4,6 +4,7 @@
+</span><span>   &quot;description&quot;: &quot;&quot;,
+</span><span>   &quot;main&quot;: &quot;index.js&quot;,
+</span><span>   &quot;scripts&quot;: {
+</span><span style="color:#a3be8c;">+    &quot;build&quot;: &quot;webpack --config webpack.config.js&quot;,
+</span><span>     &quot;test&quot;: &quot;echo \&quot;Error: no test specified\&quot; &amp;&amp; exit 1&quot;
+</span><span>   },
+</span><span>   &quot;author&quot;: &quot;&quot;,
+</span><span>(END)
+</span></code></pre>
+<h4 id="bian-yi-da-bao-zu-jian-ku">编译打包组件库</h4>
+<pre data-lang="shell" style="background-color:#2b303b;color:#c0c5ce;" class="language-shell "><code class="language-shell" data-lang="shell"><span>yarn run build
+</span></code></pre>
+<p>打包完成后，在<strong>项目根目录/dist目录</strong>下，会生成一个r-ui.umd.js文件。</p>
+<h4 id="xiao-guo-yan-shi">效果演示</h4>
+<p>想要查看效果，可以在dist目录下添加如下的html：</p>
+<pre data-lang="html" style="background-color:#2b303b;color:#c0c5ce;" class="language-html "><code class="language-html" data-lang="html"><span>&lt;!</span><span style="color:#b48ead;">DOCTYPE </span><span style="color:#d08770;">html</span><span>&gt;
+</span><span>&lt;</span><span style="color:#bf616a;">html </span><span style="color:#d08770;">lang</span><span>=&quot;</span><span style="color:#a3be8c;">en</span><span>&quot;&gt;
+</span><span>&lt;</span><span style="color:#bf616a;">head</span><span>&gt;
+</span><span>    &lt;</span><span style="color:#bf616a;">meta </span><span style="color:#d08770;">charset</span><span>=&quot;</span><span style="color:#a3be8c;">UTF-8</span><span>&quot;&gt;
+</span><span>    &lt;</span><span style="color:#bf616a;">title</span><span>&gt;r-ui example&lt;/</span><span style="color:#bf616a;">title</span><span>&gt;
+</span><span>    &lt;</span><span style="color:#bf616a;">script </span><span style="color:#d08770;">src</span><span>=&quot;</span><span style="color:#a3be8c;">https://unpkg.com/react@17/umd/react.development.js</span><span>&quot;&gt;&lt;/</span><span style="color:#bf616a;">script</span><span>&gt;
+</span><span>    &lt;</span><span style="color:#bf616a;">script </span><span style="color:#d08770;">src</span><span>=&quot;</span><span style="color:#a3be8c;">https://unpkg.com/react-dom@17/umd/react-dom.development.js</span><span>&quot;&gt;&lt;/</span><span style="color:#bf616a;">script</span><span>&gt;
+</span><span>  	</span><span style="color:#65737e;">&lt;!-- 注意r-ui.umd.js的路径 --&gt;
+</span><span>    &lt;</span><span style="color:#bf616a;">script </span><span style="color:#d08770;">src</span><span>=&quot;</span><span style="color:#a3be8c;">r-ui.umd.js</span><span>&quot;&gt;&lt;/</span><span style="color:#bf616a;">script</span><span>&gt;
+</span><span>&lt;/</span><span style="color:#bf616a;">head</span><span>&gt;
+</span><span>&lt;</span><span style="color:#bf616a;">body</span><span>&gt;
+</span><span>&lt;</span><span style="color:#bf616a;">div </span><span style="color:#8fa1b3;">id</span><span>=&quot;</span><span style="color:#a3be8c;">example</span><span>&quot;&gt;&lt;/</span><span style="color:#bf616a;">div</span><span>&gt;
+</span><span>&lt;</span><span style="color:#bf616a;">script</span><span>&gt;
+</span><span>  </span><span style="color:#b48ead;">const </span><span style="color:#bf616a;">onClick </span><span>= () </span><span style="color:#b48ead;">=&gt; </span><span>{
+</span><span>    </span><span style="color:#bf616a;">alert</span><span>(&#39;</span><span style="color:#a3be8c;">hello</span><span>&#39;);
+</span><span>  };
+</span><span>  </span><span style="color:#65737e;">// window上存在rui，是因为我们将组件包导出为了umd包，取名为rui
+</span><span>  </span><span style="color:#65737e;">// 使用React原生方法创建Button的react组件实例
+</span><span>  </span><span style="color:#65737e;">// 等价于：
+</span><span>  </span><span style="color:#65737e;">// &lt;Button onClick={onClick}&gt;hello, world&lt;/Button&gt;
+</span><span>  </span><span style="color:#b48ead;">const </span><span style="color:#bf616a;">button </span><span>= </span><span style="color:#ebcb8b;">React</span><span>.</span><span style="color:#bf616a;">createElement</span><span>(</span><span style="color:#bf616a;">rui</span><span>.Button, {</span><span style="color:#bf616a;">onClick</span><span>}, &#39;</span><span style="color:#a3be8c;">hello, world</span><span>&#39;);
+</span><span>  </span><span style="color:#65737e;">// 调用ReactDOM方法，将button组件实例挂载到example DOM节点上
+</span><span>  </span><span style="color:#ebcb8b;">ReactDOM</span><span>.</span><span style="color:#bf616a;">render</span><span>(</span><span style="color:#bf616a;">button</span><span>, document.</span><span style="color:#bf616a;">getElementById</span><span>(&#39;</span><span style="color:#a3be8c;">example</span><span>&#39;));
+</span><span>&lt;/</span><span style="color:#bf616a;">script</span><span>&gt;
+</span><span>&lt;/</span><span style="color:#bf616a;">body</span><span>&gt;
+</span><span>&lt;/</span><span style="color:#bf616a;">html</span><span>&gt;
+</span></code></pre>
+<pre style="background-color:#2b303b;color:#c0c5ce;"><code><span>- r-ui
+</span><span>  |- dist
+</span><span>     |- index.html
+</span><span>     |- r-ui.umd.js
+</span><span>  |- ... ...
+</span></code></pre>
+<p>此时，可以直接使用浏览器打开index.html查看效果：</p>
+<p><img src="https://static-res.zhen.wang/images/post/2022-05-27-webpack-ts-react/010.gif" alt="010" /></p>
+<h3 id="chu-li-yang-shi-lessbian-yi-yu-cssdao-chu">处理样式（less编译与css导出）</h3>
+<h4 id="yi-lai-yin-ru">依赖引入</h4>
+<p>根据上述内容，我们已经搭建了基础的项目结构，但是目前来说我们还需要处理我们的less样式，并且能够支持导出r-ui.umd.css样式文件。基于此考虑，我们需要引入：</p>
+<ol>
+<li>less-loader。处理less样式代码，转为css；</li>
+<li>less。由于less-loader内部是调用了less模块进行less代码编译，故还需要引入less（模式和babel-loader内部使用@babel/core一样）；</li>
+<li>css-loader。处理css样式代码，进行适当加工；</li>
+<li>mini-css-extract-plugin。MiniCssExtractPlugin的loader用于进一步处理css，并且该插件用于导出独立样式文件。</li>
+</ol>
+<pre data-lang="shell" style="background-color:#2b303b;color:#c0c5ce;" class="language-shell "><code class="language-shell" data-lang="shell"><span>yarn add -D less-loader less css-loader mini-css-extract-plugin
+</span></code></pre>
+<pre data-lang="diff" style="background-color:#2b303b;color:#c0c5ce;" class="language-diff "><code class="language-diff" data-lang="diff"><span>diff --git a/package.json b/package.json
+</span><span>index 01565ad..3070d07 100644
+</span><span>--- a/package.json
+</span><span>+++ b/package.json
+</span><span>@@ -19,6 +19,10 @@
+</span><span>     &quot;@types/react&quot;: &quot;17.0.39&quot;,
+</span><span>     &quot;@types/react-dom&quot;: &quot;17.0.17&quot;,
+</span><span>     &quot;babel-loader&quot;: &quot;^8.2.5&quot;,
+</span><span style="color:#a3be8c;">+    &quot;css-loader&quot;: &quot;^6.7.1&quot;,
+</span><span style="color:#a3be8c;">+    &quot;less&quot;: &quot;^4.1.2&quot;,
+</span><span style="color:#a3be8c;">+    &quot;less-loader&quot;: &quot;^11.0.0&quot;,
+</span><span style="color:#a3be8c;">+    &quot;mini-css-extract-plugin&quot;: &quot;^2.6.0&quot;,
+</span><span>     &quot;webpack&quot;: &quot;^5.72.1&quot;,
+</span><span>     &quot;webpack-cli&quot;: &quot;^4.9.2&quot;,
+</span><span>     &quot;webpack-dev-server&quot;: &quot;^4.9.0&quot;
+</span></code></pre>
+<h4 id="pei-zhi-webpack">配置webpack</h4>
+<p>根据上述依赖，我们可以知道需要less-loader、css-loader以及MiniCssExtractPlugin的内置loader来处理我们的样式代码。但是配置到webpack需要注意： webpack中的顺序是**【从后向前】**链式调用的，所以注意下面配置的代码中use数组的顺序：</p>
+<pre data-lang="diff" style="background-color:#2b303b;color:#c0c5ce;" class="language-diff "><code class="language-diff" data-lang="diff"><span>diff --git a/webpack.config.js b/webpack.config.js
+</span><span>index 54fc0e5..9db43b8 100644
+</span><span>--- a/webpack.config.js
+</span><span>+++ b/webpack.config.js
+</span><span>@@ -1,5 +1,6 @@
+</span><span> // webpack.config.js
+</span><span> const {resolve} = require(&quot;path&quot;);
+</span><span style="color:#a3be8c;">+const MiniCssExtractPlugin = require(&#39;mini-css-extract-plugin&#39;);
+</span><span> module.exports = {
+</span><span>   // 组件库的起点入口
+</span><span>   entry: &#39;./src/index.tsx&#39;,
+</span><span>@@ -27,7 +28,28 @@ </span><span style="color:#8fa1b3;">module.exports = {
+</span><span>       {
+</span><span>         test: /\.tsx?$/,
+</span><span>         use: &#39;babel-loader&#39;,
+</span><span>         exclude: /node_modules/
+</span><span style="color:#a3be8c;">+      },
+</span><span style="color:#a3be8c;">+      {
+</span><span style="color:#a3be8c;">+        test: /\.less$/,
+</span><span style="color:#a3be8c;">+        use: [
+</span><span style="color:#a3be8c;">+          // webpack中的顺序是【从后向前】链式调用的
+</span><span style="color:#a3be8c;">+          // 所以对于less先交给less-loader处理，转为css
+</span><span style="color:#a3be8c;">+          // 再交给css-loader
+</span><span style="color:#a3be8c;">+          // 最后导出css（MiniCssExtractPlugin.loader）
+</span><span style="color:#a3be8c;">+          // 所以注意loader的配置顺序
+</span><span style="color:#a3be8c;">+          {
+</span><span style="color:#a3be8c;">+            loader: MiniCssExtractPlugin.loader,
+</span><span style="color:#a3be8c;">+          },
+</span><span style="color:#a3be8c;">+          &#39;css-loader&#39;,
+</span><span style="color:#a3be8c;">+          &#39;less-loader&#39;
+</span><span style="color:#a3be8c;">+        ]
+</span><span>       }
+</span><span>     ]
+</span><span style="color:#bf616a;">-  }
+</span><span style="color:#a3be8c;">+  },
+</span><span style="color:#a3be8c;">+  plugins: [
+</span><span style="color:#a3be8c;">+    // 插件用于最终的导出独立的css的工作
+</span><span style="color:#a3be8c;">+    new MiniCssExtractPlugin({
+</span><span style="color:#a3be8c;">+      filename: &#39;r-ui.umd.css&#39;
+</span><span style="color:#a3be8c;">+    }),
+</span><span style="color:#a3be8c;">+  ]
+</span><span> };
+</span></code></pre>
+<h3 id="jie-duan-yan-shi-2-lessyang-shi-chu-li-pei-zhi-ke-xing-xing">阶段演示2：less样式处理配置可行性</h3>
+<h4 id="bian-xie-yang-shi-dai-ma">编写样式代码</h4>
+<p>新增<strong>src/components/button/index.less</strong></p>
+<pre data-lang="less" style="background-color:#2b303b;color:#c0c5ce;" class="language-less "><code class="language-less" data-lang="less"><span>@</span><span style="color:#bf616a;">color</span><span>: </span><span style="color:#96b5b4;">#006fde</span><span>;
+</span><span>
+</span><span style="color:#8fa1b3;">.</span><span style="color:#d08770;">my-button </span><span>{
+</span><span>  color: @</span><span style="color:#bf616a;">color</span><span>;
+</span><span>}
+</span></code></pre>
+<p>修改<strong>src/components/button/index.tsx</strong></p>
+<pre data-lang="diff" style="background-color:#2b303b;color:#c0c5ce;" class="language-diff "><code class="language-diff" data-lang="diff"><span> import * as React from &#39;react&#39;;
+</span><span style="color:#a3be8c;">+// 引入less样式
+</span><span style="color:#a3be8c;">+import &#39;./index.less&#39;;
+</span><span> 
+</span><span> interface ButtonProps {
+</span><span> }
+</span><span> 
+</span><span> const Button: React.FC&lt;ButtonProps&gt; = (props) =&gt; {
+</span><span>     const {children, ...rest} = props;
+</span><span style="color:#bf616a;">-    return &lt;button {...rest} &gt;{children}&lt;/button&gt;
+</span><span style="color:#a3be8c;">+    // 使用my-button样式
+</span><span style="color:#a3be8c;">+    return &lt;button {...rest} className=&#39;my-button&#39;&gt;{children}&lt;/button&gt;
+</span><span> }
+</span><span> 
+</span><span> export default Button;
+</span></code></pre>
+<h4 id="bian-yi-zu-jian-ku">编译组件库</h4>
+<p>再次打包组件库以后，dist目录下会额外生成文件：r-ui.umd.css。所以，我们需要在index.html中添加样式文件的引入：</p>
+<pre data-lang="diff" style="background-color:#2b303b;color:#c0c5ce;" class="language-diff "><code class="language-diff" data-lang="diff"><span> &lt;head&gt;
+</span><span>     &lt;meta charset=&quot;UTF-8&quot;&gt;
+</span><span>     &lt;title&gt;r-ui example&lt;/title&gt;
+</span><span>     &lt;script src=&quot;https://unpkg.com/react@17/umd/react.development.js&quot;&gt;&lt;/script&gt;
+</span><span>     &lt;script src=&quot;https://unpkg.com/react-dom@17/umd/react-dom.development.js&quot;&gt;&lt;/script&gt;
+</span><span>     &lt;script src=&quot;r-ui.umd.js&quot;&gt;&lt;/script&gt;
+</span><span style="color:#a3be8c;">+    &lt;link href=&quot;r-ui.umd.css&quot; rel=&quot;stylesheet&quot;/&gt;
+</span><span> &lt;/head&gt;
+</span></code></pre>
+<h4 id="xiao-guo-yan-shi-1">效果演示</h4>
+<p>刷新页面后，可以看到按钮的文字颜色已经生效</p>
+<p><img src="https://static-res.zhen.wang/images/post/2022-05-27-webpack-ts-react/020.jpg" alt="020" /></p>
+<h3 id="yin-ru-antdesign">引入AntDesign</h3>
+<p>根据我们的需求，我们希望将antd组件代码引用到我们组件内部进行封装，所以需要以dependencies方式引入：</p>
+<pre data-lang="shell" style="background-color:#2b303b;color:#c0c5ce;" class="language-shell "><code class="language-shell" data-lang="shell"><span>yarn add antd
+</span></code></pre>
+<pre data-lang="diff" style="background-color:#2b303b;color:#c0c5ce;" class="language-diff "><code class="language-diff" data-lang="diff"><span>diff --git a/package.json b/package.json
+</span><span>index 3070d07..09ca792 100644
+</span><span>--- a/package.json
+</span><span>+++ b/package.json
+</span><span>@@ -26,5 +26,8 @@
+</span><span>     &quot;webpack&quot;: &quot;^5.72.1&quot;,
+</span><span>     &quot;webpack-cli&quot;: &quot;^4.9.2&quot;,
+</span><span>     &quot;webpack-dev-server&quot;: &quot;^4.9.0&quot;
+</span><span style="color:#a3be8c;">+  },
+</span><span style="color:#a3be8c;">+  &quot;dependencies&quot;: {
+</span><span style="color:#a3be8c;">+    &quot;antd&quot;: &quot;^4.20.6&quot;
+</span><span>   }
+</span><span> }
+</span></code></pre>
+<h4 id="yin-yong-antdde-buttonyang-shi">引用antd的button样式</h4>
+<p><strong>src/components/button/index.less</strong></p>
+<pre data-lang="diff" style="background-color:#2b303b;color:#c0c5ce;" class="language-diff "><code class="language-diff" data-lang="diff"><span style="color:#bf616a;">-@color: #006fde;
+</span><span style="color:#bf616a;">-
+</span><span style="color:#bf616a;">-.my-button {
+</span><span style="color:#bf616a;">-  color: @color;
+</span><span style="color:#bf616a;">-}
+</span><span style="color:#a3be8c;">+@import &quot;~antd/lib/button/style/index.css&quot;;
+</span></code></pre>
+<h4 id="yin-yong-antdde-buttonzu-jian">引用antd的button组件</h4>
+<pre data-lang="diff" style="background-color:#2b303b;color:#c0c5ce;" class="language-diff "><code class="language-diff" data-lang="diff"><span> import * as React from &#39;react&#39;;
+</span><span style="color:#a3be8c;">+// 使用antd的Button和ButtonProps
+</span><span style="color:#a3be8c;">+// 为了不和我们的Button冲突，需要改导出名
+</span><span style="color:#a3be8c;">+import {Button as AntdButton, ButtonProps as AntdButtonProps} from &#39;antd&#39;;
+</span><span> // 引入less样式
+</span><span> import &#39;./index.less&#39;;
+</span><span> 
+</span><span style="color:#bf616a;">-interface ButtonProps {
+</span><span style="color:#a3be8c;">+interface ButtonProps extends AntdButtonProps {
+</span><span> }
+</span><span> 
+</span><span> const Button: React.FC&lt;ButtonProps&gt; = (props) =&gt; {
+</span><span>     const {children, ...rest} = props;
+</span><span style="color:#bf616a;">-    // 使用my-button样式
+</span><span style="color:#bf616a;">-    return &lt;button {...rest} className=&#39;my-button&#39;&gt;{children}&lt;/button&gt;
+</span><span style="color:#a3be8c;">+    // 使用AntdButton
+</span><span style="color:#a3be8c;">+    return &lt;AntdButton {...rest}&gt;{children}&lt;/AntdButton&gt;
+</span><span> }
+</span><span> 
+</span><span> export default Button;
+</span></code></pre>
+<h3 id="jie-duan-yan-shi-3-antdzu-jian-yin-ru-ke-xing-xing">阶段演示3：antd组件引入可行性</h3>
+<p>通过上述的代码修改以后，我们直接进行编译，然后检查效果即可：</p>
+<p><img src="https://static-res.zhen.wang/images/post/2022-05-27-webpack-ts-react/030.gif" alt="030" /></p>
+<h2 id="xie-zai-zui-hou">写在最后</h2>
+<p>实际上，代码开发过程中，还有很多可以辅助开发的模块、流程，例如eslint检查，热更新等。但是那些内容不在本文的讨论范围。后续会出相关的文章再进一步进行介绍。</p>
+<p>本文所搭建的整个项目，我都按照文章一步一步进行了git提交，开发小伙伴可以边阅读文章边对照git提交一步一步来看。</p>
+<p>github地址：<a rel="noopener" target="_blank" href="https://github.com/w4ngzhen/r-ui">w4ngzhen/r-ui (github.com)</a></p>
+
+    </div>
+</div>
+<script src="https://zhen.wang/libs/viewerjs@1.11.7/viewer.min.js"></script>
+<link rel="stylesheet" href="https://zhen.wang/libs/viewerjs@1.11.7/viewer.min.css"/>
+<script>
+  if (window.Viewer) {
+    document.querySelectorAll('img').forEach(img => {
+      new Viewer(img, {
+        inline: false,
+        navbar: false,
+        toolbar: {
+          zoomIn: 1,
+          zoomOut: 1,
+          reset: 1,
+          rotateLeft: 1,
+          rotateRight: 1,
+        },
+      });
+    });
+  }
+</script>
+
+
+</body>
+</html>
