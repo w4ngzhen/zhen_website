@@ -1,6 +1,6 @@
 +++
 title = "关于"
-template = "article_content.html"
+template = "about.html"
 [extra]
 hide_toc = true
 +++
@@ -29,4 +29,4 @@ hide_toc = true
 
 ## 关于本网站
 
-本网站基于[zola](https://www.getzola.org/)进行搭建，同时编写并使用自己开发的zola主题[brief](https://github.com/w4ngzhen/zola-theme-brief)（本网站有魔改）
+本网站基于[zola](https://www.getzola.org/)进行搭建，同时编写并使用自己开发的zola主题[brief](https://github.com/w4ngzhen/zola-theme-brief)（本网站有魔改），使用[come-comment-box](https://github.com/w4ngzhen/come)（轻量级自部署评论系统）实现版本模块评论留言能力。
