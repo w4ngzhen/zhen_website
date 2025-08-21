@@ -1,0 +1,360 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="utf-8">
+    <meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover"
+          name="viewport">
+    
+    
+    <!-- umami web analysis -->
+    <script defer src="https://zhen.wang/libs/umami/umami.script.js"
+            data-website-id="d66cfe03-f6b3-4aa0-baf8-728700db1b09"></script>
+    
+    
+    
+    <link rel="icon" type="image/png" sizes="16x16" href="https://zhen.wang/images/blog-site-icon.svg">
+    <link rel="icon" type="image/png" sizes="32x32" href="https://zhen.wang/images/blog-site-icon.svg">
+    <title>zhen&#x27;s everything</title>
+    <link rel="stylesheet" href="https://zhen.wang/style.css">
+    
+<link rel="stylesheet" href="https://zhen.wang/article_content.css">
+<link rel="stylesheet" href="https://zhen.wang/article_markdown.css">
+
+</head>
+<body>
+
+<div id="article">
+    <header class="article-header">
+        
+<div class="base-title">
+    <a href="#" onclick="history.length > 1 ? history.back() : location.href = '/'; return false;">&LeftArrow; Back</a>
+    <h1>
+        极简SpringBoot指南-Chapter02-Spring依赖注入的方式
+    </h1>
+</div>
+
+    </header>
+    <p class="article-date">2021-08-10</p>
+    
+    <!-- toc -->
+    <div class="article-toc">
+        <label class="toc-title" for="toc-trigger">目录</label>
+        <input id="toc-trigger" type="checkbox" checked/>
+        <div class="toc-content">
+            <ol class="toc">
+                
+                <li class="toc-item toc-level-1">
+                    <a class="toc-link" href="https://zhen.wang/article/极简SpringBoot指南-chapter02-Spring依赖注入的方式/#cang-ku-di-zhi">仓库地址</a>
+                    
+                </li>
+                
+                <li class="toc-item toc-level-1">
+                    <a class="toc-link" href="https://zhen.wang/article/极简SpringBoot指南-chapter02-Spring依赖注入的方式/#chapter02-springyi-lai-zhu-ru-de-fang-shi">Chapter02-Spring依赖注入的方式</a>
+                    
+                    <ol class="toc-child">
+                        
+                        <li class="toc-item toc-level-2">
+                            <a href="https://zhen.wang/article/极简SpringBoot指南-chapter02-Spring依赖注入的方式/#yi-shu-xing-setterfang-fa-zhu-ru">一 属性setter方法注入</a>
+                        </li>
+                        
+                        <li class="toc-item toc-level-2">
+                            <a href="https://zhen.wang/article/极简SpringBoot指南-chapter02-Spring依赖注入的方式/#er-gou-zao-han-shu-zhu-ru">二 构造函数注入</a>
+                        </li>
+                        
+                        <li class="toc-item toc-level-2">
+                            <a href="https://zhen.wang/article/极简SpringBoot指南-chapter02-Spring依赖注入的方式/#san-zi-duan-zhu-ru">三 字段注入</a>
+                        </li>
+                        
+                        <li class="toc-item toc-level-2">
+                            <a href="https://zhen.wang/article/极简SpringBoot指南-chapter02-Spring依赖注入的方式/#kuo-zhan-yue-du-yi-lai-zhu-ru-de-zhu-yi-dian">扩展阅读：依赖注入的注意点</a>
+                        </li>
+                        
+                        <li class="toc-item toc-level-2">
+                            <a href="https://zhen.wang/article/极简SpringBoot指南-chapter02-Spring依赖注入的方式/#ben-zhang-xiao-jie">本章小结</a>
+                        </li>
+                        
+                        <li class="toc-item toc-level-2">
+                            <a href="https://zhen.wang/article/极简SpringBoot指南-chapter02-Spring依赖注入的方式/#cang-ku-di-zhi-1">仓库地址</a>
+                        </li>
+                        
+                    </ol>
+                    
+                </li>
+                
+            </ol>
+        </div>
+    </div>
+    
+    <!-- real content -->
+    <div class="article-content markdown-content">
+        <h2 id="cang-ku-di-zhi">仓库地址</h2>
+<p><a rel="noopener" target="_blank" href="https://github.com/w4ngzhen/springboot-simple-guide">w4ngzhen/springboot-simple-guide: This is a project that guides SpringBoot users to get started quickly through a series of examples (github.com)</a></p>
+<h1 id="chapter02-springyi-lai-zhu-ru-de-fang-shi">Chapter02-Spring依赖注入的方式</h1>
+<span id="continue-reading"></span>
+<p>我们在<strong>Chapter00—2.2节依赖注入</strong>已经介绍了Spring的对象依赖注入的方式，在那个例子中，我们使用了字段的setter方法对字段进行了注入。在本章中，我们将介绍对象依赖注入的另外的方式，并提到一些关于依赖注入的注意点。</p>
+<p>大致来说，依赖注入分为三种：</p>
+<ol>
+<li>属性setter方法注入</li>
+<li>字段注入</li>
+<li>构造函数注入</li>
+</ol>
+<p>为了 接下来的示例做准备，我们按照如下的代码结构顺序编写：</p>
+<ol>
+<li>编写类Pen，表示一个笔类Pen</li>
+<li>编写类Box，表示一个用于装Pen的盒子类Box</li>
+<li>编写相关配置注入的代码</li>
+<li>使用Spring验证代码注入</li>
+</ol>
+<p>OK，首先编写类Pen做准备：</p>
+<pre data-lang="java" style="background-color:#2b303b;color:#c0c5ce;" class="language-java "><code class="language-java" data-lang="java"><span>@</span><span style="color:#bf616a;">Component
+</span><span style="color:#b48ead;">public class </span><span style="color:#ebcb8b;">Pen </span><span style="color:#eff1f5;">{
+</span><span style="color:#eff1f5;">    </span><span style="color:#b48ead;">public </span><span style="color:#8fa1b3;">Pen</span><span style="color:#eff1f5;">() {
+</span><span style="color:#eff1f5;">        </span><span style="color:#ebcb8b;">System</span><span style="color:#eff1f5;">.out.</span><span style="color:#bf616a;">println</span><span style="color:#eff1f5;">(</span><span>&quot;</span><span style="color:#a3be8c;">Pen 无参构造函数</span><span>&quot;</span><span style="color:#eff1f5;">);
+</span><span style="color:#eff1f5;">    }
+</span><span style="color:#eff1f5;">}
+</span></code></pre>
+<p>对于该类，我们使用<code>@Component</code>将其标记为Bean（PS：这里为了本章的主题，我们就不使用上一章的配置类和XML来声明了）。</p>
+<h2 id="yi-shu-xing-setterfang-fa-zhu-ru">一 属性setter方法注入</h2>
+<p>编写类BoxA类：</p>
+<pre data-lang="java" style="background-color:#2b303b;color:#c0c5ce;" class="language-java "><code class="language-java" data-lang="java"><span>@</span><span style="color:#bf616a;">Component
+</span><span style="color:#b48ead;">public class </span><span style="color:#ebcb8b;">BoxA </span><span style="color:#eff1f5;">{
+</span><span style="color:#eff1f5;">
+</span><span style="color:#eff1f5;">    </span><span style="color:#b48ead;">private </span><span style="color:#ebcb8b;">Pen </span><span style="color:#eff1f5;">pen;
+</span><span style="color:#eff1f5;">
+</span><span style="color:#eff1f5;">    </span><span style="color:#65737e;">// 我们在属性setter方法上，使用@Autowire注解
+</span><span style="color:#eff1f5;">    </span><span style="color:#65737e;">// 目的是希望Spring容器框架能够让帮助我们注入该属性
+</span><span style="color:#eff1f5;">    @</span><span style="color:#bf616a;">Autowired
+</span><span style="color:#eff1f5;">    </span><span style="color:#b48ead;">public void </span><span style="color:#8fa1b3;">setPen</span><span style="color:#eff1f5;">(</span><span style="color:#ebcb8b;">Pen </span><span style="color:#bf616a;">pen</span><span style="color:#eff1f5;">) {
+</span><span style="color:#eff1f5;">        </span><span style="color:#bf616a;">this</span><span style="color:#eff1f5;">.pen </span><span>=</span><span style="color:#eff1f5;"> pen;
+</span><span style="color:#eff1f5;">        </span><span style="color:#ebcb8b;">System</span><span style="color:#eff1f5;">.out.</span><span style="color:#bf616a;">println</span><span style="color:#eff1f5;">(</span><span>&quot;</span><span style="color:#a3be8c;">setter函数注入：</span><span>&quot; +</span><span style="color:#eff1f5;"> pen);
+</span><span style="color:#eff1f5;">    }
+</span><span style="color:#eff1f5;">
+</span><span style="color:#eff1f5;">    </span><span style="color:#b48ead;">public void </span><span style="color:#8fa1b3;">printPen</span><span style="color:#eff1f5;">() {
+</span><span style="color:#eff1f5;">        </span><span style="color:#ebcb8b;">System</span><span style="color:#eff1f5;">.out.</span><span style="color:#bf616a;">println</span><span style="color:#eff1f5;">(pen </span><span>== </span><span style="color:#d08770;">null </span><span>? &quot;</span><span style="color:#a3be8c;">BoxA没有Pen</span><span>&quot; : &quot;</span><span style="color:#a3be8c;">BoxA有Pen：</span><span>&quot; +</span><span style="color:#eff1f5;"> pen);
+</span><span style="color:#eff1f5;">    }
+</span><span style="color:#eff1f5;">
+</span><span style="color:#eff1f5;">}
+</span></code></pre>
+<p>对于该BoxA类，我们同样使用<code>@Component</code>标记为了Bean。此外，我们为其添加了Pen类型的字段pen，并编写了setter方法。在该方法上，我们添加了<code>@Autowired</code>注解，表明我们希望类型为Pen的属性pen能够由Spring为我们注入进来。</p>
+<p>那么现在有一个问题，这个Pen的实例，是怎么来的呢？不难思考出来，就是我们一开头准备的<code>@Component Pen</code>。</p>
+<p>接下来编写验证代码：</p>
+<pre data-lang="java" style="background-color:#2b303b;color:#c0c5ce;" class="language-java "><code class="language-java" data-lang="java"><span>@</span><span style="color:#bf616a;">SpringBootApplication
+</span><span style="color:#b48ead;">public class </span><span style="color:#ebcb8b;">Chapter02App </span><span style="color:#eff1f5;">{
+</span><span style="color:#eff1f5;">    </span><span style="color:#b48ead;">public static void </span><span style="color:#8fa1b3;">main</span><span style="color:#eff1f5;">(</span><span style="color:#ebcb8b;">String</span><span style="color:#b48ead;">[] </span><span style="color:#bf616a;">args</span><span style="color:#eff1f5;">) {
+</span><span style="color:#eff1f5;">        </span><span style="color:#ebcb8b;">ConfigurableApplicationContext</span><span style="color:#eff1f5;"> context </span><span>=
+</span><span style="color:#eff1f5;">                </span><span style="color:#ebcb8b;">SpringApplication</span><span style="color:#eff1f5;">.</span><span style="color:#bf616a;">run</span><span style="color:#eff1f5;">(</span><span style="color:#ebcb8b;">Chapter02App</span><span style="color:#eff1f5;">.</span><span style="color:#bf616a;">class</span><span style="color:#eff1f5;">, args);
+</span><span style="color:#eff1f5;">        </span><span style="color:#65737e;">// 我们只获取了BoxA的实例
+</span><span style="color:#eff1f5;">        </span><span style="color:#ebcb8b;">Object</span><span style="color:#eff1f5;"> boxA </span><span>=</span><span style="color:#eff1f5;"> context.</span><span style="color:#bf616a;">getBean</span><span style="color:#eff1f5;">(</span><span>&quot;</span><span style="color:#a3be8c;">boxA</span><span>&quot;</span><span style="color:#eff1f5;">);
+</span><span style="color:#eff1f5;">        </span><span style="color:#b48ead;">if </span><span style="color:#eff1f5;">(boxA </span><span>instanceof </span><span style="color:#ebcb8b;">BoxA</span><span style="color:#eff1f5;">) {
+</span><span style="color:#eff1f5;">            </span><span style="color:#ebcb8b;">System</span><span style="color:#eff1f5;">.out.</span><span style="color:#bf616a;">println</span><span style="color:#eff1f5;">(</span><span>&quot;</span><span style="color:#a3be8c;">BoxA实例：</span><span>&quot; +</span><span style="color:#eff1f5;"> box);
+</span><span style="color:#eff1f5;">            ((</span><span style="color:#ebcb8b;">BoxA</span><span style="color:#eff1f5;">) boxA).</span><span style="color:#bf616a;">printPen</span><span style="color:#eff1f5;">(); </span><span style="color:#65737e;">// 却能够正确打印Pen实例
+</span><span style="color:#eff1f5;">        }
+</span><span style="color:#eff1f5;">    }
+</span><span style="color:#eff1f5;">}
+</span></code></pre>
+<h2 id="er-gou-zao-han-shu-zhu-ru">二 构造函数注入</h2>
+<p>编写BoxB类：</p>
+<pre data-lang="java" style="background-color:#2b303b;color:#c0c5ce;" class="language-java "><code class="language-java" data-lang="java"><span>@</span><span style="color:#bf616a;">Component
+</span><span style="color:#b48ead;">public class </span><span style="color:#ebcb8b;">BoxB </span><span style="color:#eff1f5;">{
+</span><span style="color:#eff1f5;">
+</span><span style="color:#eff1f5;">    </span><span style="color:#b48ead;">private </span><span style="color:#ebcb8b;">Pen </span><span style="color:#eff1f5;">pen;
+</span><span style="color:#eff1f5;">
+</span><span style="color:#eff1f5;">    </span><span style="color:#65737e;">// 在构造函数上添加@Autowired注解，并且构造函数入参有Pen
+</span><span style="color:#eff1f5;">    @</span><span style="color:#bf616a;">Autowired
+</span><span style="color:#eff1f5;">    </span><span style="color:#b48ead;">public </span><span style="color:#8fa1b3;">BoxB</span><span style="color:#eff1f5;">(</span><span style="color:#ebcb8b;">Pen </span><span style="color:#bf616a;">pen</span><span style="color:#eff1f5;">) {
+</span><span style="color:#eff1f5;">        </span><span style="color:#bf616a;">this</span><span style="color:#eff1f5;">.pen </span><span>=</span><span style="color:#eff1f5;"> pen;
+</span><span style="color:#eff1f5;">        </span><span style="color:#ebcb8b;">System</span><span style="color:#eff1f5;">.out.</span><span style="color:#bf616a;">println</span><span style="color:#eff1f5;">(</span><span>&quot;</span><span style="color:#a3be8c;">BoxB 有参构造函数，注入Pen实例：</span><span>&quot; +</span><span style="color:#eff1f5;"> pen);
+</span><span style="color:#eff1f5;">    }
+</span><span style="color:#eff1f5;">
+</span><span style="color:#eff1f5;">    </span><span style="color:#b48ead;">public void </span><span style="color:#8fa1b3;">printPen</span><span style="color:#eff1f5;">() {
+</span><span style="color:#eff1f5;">        </span><span style="color:#ebcb8b;">System</span><span style="color:#eff1f5;">.out.</span><span style="color:#bf616a;">println</span><span style="color:#eff1f5;">(pen </span><span>== </span><span style="color:#d08770;">null </span><span>? &quot;</span><span style="color:#a3be8c;">BoxB没有Pen</span><span>&quot; : &quot;</span><span style="color:#a3be8c;">BoxB有Pen：</span><span>&quot; +</span><span style="color:#eff1f5;"> pen);
+</span><span style="color:#eff1f5;">    }
+</span><span style="color:#eff1f5;">}
+</span></code></pre>
+<p>对于该类，我们同样拥有Pen类型字段pen，但和setter方法注入不同的是，我们没有编写setter方法，而是显式编写了BoxB的构造函数，并且构造函数的入参就是Pen类的实例，然后在该构造函数上也同样添加了注解<code>@Autowired</code>。其意图其实和setter方法注入相同，都是希望Spring框架能够帮我们进行依赖注入。</p>
+<p>对于验证的代码，我们只需要稍微修改以下：</p>
+<pre data-lang="java" style="background-color:#2b303b;color:#c0c5ce;" class="language-java "><code class="language-java" data-lang="java"><span>@</span><span style="color:#bf616a;">SpringBootApplication
+</span><span style="color:#b48ead;">public class </span><span style="color:#ebcb8b;">Chapter02App </span><span style="color:#eff1f5;">{
+</span><span style="color:#eff1f5;">    </span><span style="color:#b48ead;">public static void </span><span style="color:#8fa1b3;">main</span><span style="color:#eff1f5;">(</span><span style="color:#ebcb8b;">String</span><span style="color:#b48ead;">[] </span><span style="color:#bf616a;">args</span><span style="color:#eff1f5;">) {
+</span><span style="color:#eff1f5;">        </span><span style="color:#ebcb8b;">ConfigurableApplicationContext</span><span style="color:#eff1f5;"> context </span><span>=
+</span><span style="color:#eff1f5;">                </span><span style="color:#ebcb8b;">SpringApplication</span><span style="color:#eff1f5;">.</span><span style="color:#bf616a;">run</span><span style="color:#eff1f5;">(</span><span style="color:#ebcb8b;">Chapter02App</span><span style="color:#eff1f5;">.</span><span style="color:#bf616a;">class</span><span style="color:#eff1f5;">, args);
+</span><span style="color:#eff1f5;">        </span><span style="color:#65737e;">// 我们只获取了BoxB的实例
+</span><span style="color:#eff1f5;">        </span><span style="color:#ebcb8b;">Object</span><span style="color:#eff1f5;"> boxB </span><span>=</span><span style="color:#eff1f5;"> context.</span><span style="color:#bf616a;">getBean</span><span style="color:#eff1f5;">(</span><span>&quot;</span><span style="color:#a3be8c;">boxB</span><span>&quot;</span><span style="color:#eff1f5;">);
+</span><span style="color:#eff1f5;">        </span><span style="color:#b48ead;">if </span><span style="color:#eff1f5;">(boxB </span><span>instanceof </span><span style="color:#ebcb8b;">BoxB</span><span style="color:#eff1f5;">) {
+</span><span style="color:#eff1f5;">            </span><span style="color:#ebcb8b;">System</span><span style="color:#eff1f5;">.out.</span><span style="color:#bf616a;">println</span><span style="color:#eff1f5;">(</span><span>&quot;</span><span style="color:#a3be8c;">BoxB实例：</span><span>&quot; +</span><span style="color:#eff1f5;"> boxB);
+</span><span style="color:#eff1f5;">            ((</span><span style="color:#ebcb8b;">BoxB</span><span style="color:#eff1f5;">) boxB).</span><span style="color:#bf616a;">printPen</span><span style="color:#eff1f5;">(); </span><span style="color:#65737e;">// BoxB 能够正确打印Pen实例
+</span><span style="color:#eff1f5;">        }
+</span><span style="color:#eff1f5;">    }
+</span><span style="color:#eff1f5;">}
+</span></code></pre>
+<h2 id="san-zi-duan-zhu-ru">三 字段注入</h2>
+<p>对于字段注入来说，就更简单了，BoxC：</p>
+<pre data-lang="java" style="background-color:#2b303b;color:#c0c5ce;" class="language-java "><code class="language-java" data-lang="java"><span>@</span><span style="color:#bf616a;">Component
+</span><span style="color:#b48ead;">public class </span><span style="color:#ebcb8b;">BoxC </span><span style="color:#eff1f5;">{
+</span><span style="color:#eff1f5;">
+</span><span style="color:#eff1f5;">    @</span><span style="color:#bf616a;">Autowired
+</span><span style="color:#eff1f5;">    </span><span style="color:#b48ead;">private </span><span style="color:#ebcb8b;">Pen </span><span style="color:#eff1f5;">pen;
+</span><span style="color:#eff1f5;">
+</span><span style="color:#eff1f5;">    </span><span style="color:#b48ead;">public void </span><span style="color:#8fa1b3;">printPen</span><span style="color:#eff1f5;">() {
+</span><span style="color:#eff1f5;">        </span><span style="color:#ebcb8b;">System</span><span style="color:#eff1f5;">.out.</span><span style="color:#bf616a;">println</span><span style="color:#eff1f5;">(pen </span><span>== </span><span style="color:#d08770;">null </span><span>? &quot;</span><span style="color:#a3be8c;">BoxC没有Pen</span><span>&quot; : &quot;</span><span style="color:#a3be8c;">BoxC有Pen：</span><span>&quot; +</span><span style="color:#eff1f5;"> pen);
+</span><span style="color:#eff1f5;">    }
+</span><span style="color:#eff1f5;">}
+</span></code></pre>
+<p>没有构造函数，没有setter方法，只有<del>无尽的怒火</del>字段，然后字段上添加<code>@Autowired</code>注解。验证代码同上，不再赘述。</p>
+<p>字段注入比起另外的两种两种方式简单的多，可能绝大多数的项目都会用这个字段，但本人将<strong>字段注入</strong>放在了第三个来讲，还是希望说一下字段注入的问题点。使用IDEA同学可能已经看到了，IDEA会提示：</p>
+<pre style="background-color:#2b303b;color:#c0c5ce;"><code><span>Field injection is not recommended 
+</span><span>不推荐使用字段注入
+</span></code></pre>
+<p>字段注入这么方便，为什么说不推荐呢？主要有以下几点：</p>
+<ol>
+<li>基于字段的依赖注入在声明为final的字段上不起作用。</li>
+<li>会与SpringIOC容器框架紧密耦合。因为private字段的原因，想要编写单元测试，就必须依赖Spring测试框架，否则你无法手动注入（除了使用反射，但是那样不久太麻烦了吗？）。</li>
+</ol>
+<p>字段注入的问题还有其他的问题，可以自行搜索：Spring不推荐字段注入。</p>
+<p>当然，如果一个项目自始自终都是在Spring框架中运行，也没有所谓的需要脱离Spring框架的地方，字段注入也并非不可。</p>
+<h2 id="kuo-zhan-yue-du-yi-lai-zhu-ru-de-zhu-yi-dian">扩展阅读：依赖注入的注意点</h2>
+<p>我们在上文已经提到了三种依赖注入的方式。那么读者有没有想过依赖注入需要注意什么呢？</p>
+<p>编写类TestA、TestB：</p>
+<pre data-lang="java" style="background-color:#2b303b;color:#c0c5ce;" class="language-java "><code class="language-java" data-lang="java"><span style="color:#65737e;">// TestA类
+</span><span>@</span><span style="color:#bf616a;">Component
+</span><span style="color:#b48ead;">public class </span><span style="color:#ebcb8b;">TestA </span><span style="color:#eff1f5;">{
+</span><span style="color:#eff1f5;">
+</span><span style="color:#eff1f5;">    </span><span style="color:#65737e;">// 字段注入
+</span><span style="color:#eff1f5;">    @</span><span style="color:#bf616a;">Autowired
+</span><span style="color:#eff1f5;">    </span><span style="color:#b48ead;">private </span><span style="color:#ebcb8b;">TestB </span><span style="color:#eff1f5;">testB;
+</span><span style="color:#eff1f5;">
+</span><span style="color:#eff1f5;">    </span><span style="color:#b48ead;">public void </span><span style="color:#8fa1b3;">printTestB</span><span style="color:#eff1f5;">() {
+</span><span style="color:#eff1f5;">        </span><span style="color:#ebcb8b;">System</span><span style="color:#eff1f5;">.out.</span><span style="color:#bf616a;">println</span><span style="color:#eff1f5;">(</span><span>&quot;</span><span style="color:#a3be8c;">printTestB: </span><span>&quot; + </span><span style="color:#bf616a;">this</span><span style="color:#eff1f5;">.testB);
+</span><span style="color:#eff1f5;">    }
+</span><span style="color:#eff1f5;">}
+</span><span style="color:#65737e;">// TestB类
+</span><span>@</span><span style="color:#bf616a;">Component
+</span><span style="color:#b48ead;">public class </span><span style="color:#ebcb8b;">TestB </span><span style="color:#eff1f5;">{
+</span><span style="color:#eff1f5;">
+</span><span style="color:#eff1f5;">    @</span><span style="color:#bf616a;">Autowired
+</span><span style="color:#eff1f5;">    </span><span style="color:#b48ead;">private </span><span style="color:#ebcb8b;">TestA </span><span style="color:#eff1f5;">testA;
+</span><span style="color:#eff1f5;">
+</span><span style="color:#eff1f5;">    </span><span style="color:#b48ead;">public void </span><span style="color:#8fa1b3;">printTestA</span><span style="color:#eff1f5;">() {
+</span><span style="color:#eff1f5;">        </span><span style="color:#ebcb8b;">System</span><span style="color:#eff1f5;">.out.</span><span style="color:#bf616a;">println</span><span style="color:#eff1f5;">(</span><span>&quot;</span><span style="color:#a3be8c;">printTestA: </span><span>&quot; + </span><span style="color:#bf616a;">this</span><span style="color:#eff1f5;">.testA);
+</span><span style="color:#eff1f5;">    }
+</span><span style="color:#eff1f5;">}
+</span></code></pre>
+<p>注意TestA类与TestB类相互以字段注入的方式注入到了另一个类中。接着我们编写测试代码：</p>
+<pre data-lang="java" style="background-color:#2b303b;color:#c0c5ce;" class="language-java "><code class="language-java" data-lang="java"><span>@</span><span style="color:#bf616a;">SpringBootApplication
+</span><span style="color:#b48ead;">public class </span><span style="color:#ebcb8b;">Chapter01CycleTestApp </span><span style="color:#eff1f5;">{
+</span><span style="color:#eff1f5;">    </span><span style="color:#b48ead;">public static void </span><span style="color:#8fa1b3;">main</span><span style="color:#eff1f5;">(</span><span style="color:#ebcb8b;">String</span><span style="color:#b48ead;">[] </span><span style="color:#bf616a;">args</span><span style="color:#eff1f5;">) {
+</span><span style="color:#eff1f5;">        </span><span style="color:#ebcb8b;">ConfigurableApplicationContext</span><span style="color:#eff1f5;"> context </span><span>=
+</span><span style="color:#eff1f5;">                </span><span style="color:#ebcb8b;">SpringApplication</span><span style="color:#eff1f5;">.</span><span style="color:#bf616a;">run</span><span style="color:#eff1f5;">(</span><span style="color:#ebcb8b;">Chapter01CycleTestApp</span><span style="color:#eff1f5;">.</span><span style="color:#bf616a;">class</span><span style="color:#eff1f5;">, args);
+</span><span style="color:#eff1f5;">        </span><span style="color:#ebcb8b;">TestA</span><span style="color:#eff1f5;"> testA </span><span>=</span><span style="color:#eff1f5;"> context.</span><span style="color:#bf616a;">getBean</span><span style="color:#eff1f5;">(</span><span style="color:#ebcb8b;">TestA</span><span style="color:#eff1f5;">.</span><span style="color:#bf616a;">class</span><span style="color:#eff1f5;">);
+</span><span style="color:#eff1f5;">        </span><span style="color:#ebcb8b;">TestB</span><span style="color:#eff1f5;"> testB </span><span>=</span><span style="color:#eff1f5;"> context.</span><span style="color:#bf616a;">getBean</span><span style="color:#eff1f5;">(</span><span style="color:#ebcb8b;">TestB</span><span style="color:#eff1f5;">.</span><span style="color:#bf616a;">class</span><span style="color:#eff1f5;">);
+</span><span style="color:#eff1f5;">        </span><span style="color:#ebcb8b;">System</span><span style="color:#eff1f5;">.out.</span><span style="color:#bf616a;">println</span><span style="color:#eff1f5;">(</span><span>&quot;</span><span style="color:#a3be8c;">从容器中获取的TestA实例：</span><span>&quot; +</span><span style="color:#eff1f5;"> testA);
+</span><span style="color:#eff1f5;">        testA.</span><span style="color:#bf616a;">printTestB</span><span style="color:#eff1f5;">();
+</span><span style="color:#eff1f5;">
+</span><span style="color:#eff1f5;">        </span><span style="color:#ebcb8b;">System</span><span style="color:#eff1f5;">.out.</span><span style="color:#bf616a;">println</span><span style="color:#eff1f5;">(</span><span>&quot;</span><span style="color:#a3be8c;">从容器中获取的TestB实例：</span><span>&quot; +</span><span style="color:#eff1f5;"> testB);
+</span><span style="color:#eff1f5;">        testB.</span><span style="color:#bf616a;">printTestA</span><span style="color:#eff1f5;">();
+</span><span style="color:#eff1f5;">    }
+</span><span style="color:#eff1f5;">}
+</span></code></pre>
+<p>那么，测试代码能够正常运行呢？思考一下，我们似乎陷入了循环依赖的场景了：</p>
+<pre style="background-color:#2b303b;color:#c0c5ce;"><code><span>Spring容器创建TestA实例 -&gt; 发现需要注入TestB实例 -&gt; 创建TestB实例 -&gt; 发现需要注入实例TestA -&gt; 创建TestA实例 -&gt; ... 
+</span></code></pre>
+<p>似乎陷入了一直循环的情景。可是实际运行的时候，却正确输出了：</p>
+<pre style="background-color:#2b303b;color:#c0c5ce;"><code><span>...
+</span><span>从容器中获取的TestA实例：TestA@4248ed58
+</span><span>printTestB: TestB@712ca57b
+</span><span>从容器中获取的TestB实例：TestB@712ca57b
+</span><span>printTestA: TestA@4248ed58
+</span><span>
+</span><span>PS: 为了简洁的显示，我删去了包名
+</span></code></pre>
+<p>为什么会这样呢？实际上，Spring在初始化Bean的时候，并不是傻乎乎的按照上述的逻辑进行的，而是按照如下的大致流程：</p>
+<ol>
+<li>准备创建TestA实例</li>
+<li>发现TestA依赖TestB</li>
+<li>查找TestB实例未果</li>
+<li>先继续创建TestA实例，但是<strong>内部会标记该类实际还未注入依赖</strong></li>
+<li>准备创建TestB实例</li>
+<li>发现TestB实例依赖TestA实例</li>
+<li>查找TestA实例成功（只不过目前还没注入依赖而已），注入</li>
+<li>扫描所有还未完全完成初始化的Bean，发现TestA还未注入依赖TestB</li>
+<li>再次检查发现TestB已经有了，将其注入到TestA中</li>
+</ol>
+<p>当然，这里只是简单的梳理一个流程，在Spring内部是很复杂的。</p>
+<p>那么现在再来思考另外一个相互依赖注入的情况：构造函数注入。</p>
+<pre data-lang="java" style="background-color:#2b303b;color:#c0c5ce;" class="language-java "><code class="language-java" data-lang="java"><span style="color:#65737e;">// TestA 构造函数注入
+</span><span>@</span><span style="color:#bf616a;">Component
+</span><span style="color:#b48ead;">public class </span><span style="color:#ebcb8b;">TestA </span><span style="color:#eff1f5;">{
+</span><span style="color:#eff1f5;">
+</span><span style="color:#eff1f5;">    </span><span style="color:#65737e;">// 字段注入
+</span><span style="color:#65737e;">//    @Autowired
+</span><span style="color:#eff1f5;">    </span><span style="color:#b48ead;">private </span><span style="color:#ebcb8b;">TestB </span><span style="color:#eff1f5;">testB;
+</span><span style="color:#eff1f5;">
+</span><span style="color:#eff1f5;">    @</span><span style="color:#bf616a;">Autowired
+</span><span style="color:#eff1f5;">    </span><span style="color:#b48ead;">public </span><span style="color:#8fa1b3;">TestA</span><span style="color:#eff1f5;">(</span><span style="color:#ebcb8b;">TestB </span><span style="color:#bf616a;">testB</span><span style="color:#eff1f5;">) {
+</span><span style="color:#eff1f5;">        </span><span style="color:#bf616a;">this</span><span style="color:#eff1f5;">.testB </span><span>=</span><span style="color:#eff1f5;"> testB;
+</span><span style="color:#eff1f5;">    }
+</span><span style="color:#eff1f5;">
+</span><span style="color:#eff1f5;">    </span><span style="color:#b48ead;">public void </span><span style="color:#8fa1b3;">printTestB</span><span style="color:#eff1f5;">() {
+</span><span style="color:#eff1f5;">        </span><span style="color:#ebcb8b;">System</span><span style="color:#eff1f5;">.out.</span><span style="color:#bf616a;">println</span><span style="color:#eff1f5;">(</span><span>&quot;</span><span style="color:#a3be8c;">printTestB: </span><span>&quot; + </span><span style="color:#bf616a;">this</span><span style="color:#eff1f5;">.testB);
+</span><span style="color:#eff1f5;">    }
+</span><span style="color:#eff1f5;">}
+</span><span style="color:#65737e;">// TestB构造函数注入
+</span><span>@</span><span style="color:#bf616a;">Component
+</span><span style="color:#b48ead;">public class </span><span style="color:#ebcb8b;">TestB </span><span style="color:#eff1f5;">{
+</span><span style="color:#eff1f5;">
+</span><span style="color:#65737e;">//    @Autowired
+</span><span style="color:#eff1f5;">    </span><span style="color:#b48ead;">private </span><span style="color:#ebcb8b;">TestA </span><span style="color:#eff1f5;">testA;
+</span><span style="color:#eff1f5;">
+</span><span style="color:#eff1f5;">    </span><span style="color:#65737e;">// 构造函数注入
+</span><span style="color:#eff1f5;">    @</span><span style="color:#bf616a;">Autowired
+</span><span style="color:#eff1f5;">    </span><span style="color:#b48ead;">public </span><span style="color:#8fa1b3;">TestB</span><span style="color:#eff1f5;">(</span><span style="color:#ebcb8b;">TestA </span><span style="color:#bf616a;">testA</span><span style="color:#eff1f5;">) {
+</span><span style="color:#eff1f5;">        </span><span style="color:#bf616a;">this</span><span style="color:#eff1f5;">.testA </span><span>=</span><span style="color:#eff1f5;"> testA;
+</span><span style="color:#eff1f5;">    }
+</span><span style="color:#eff1f5;">
+</span><span style="color:#eff1f5;">    </span><span style="color:#b48ead;">public void </span><span style="color:#8fa1b3;">printTestA</span><span style="color:#eff1f5;">() {
+</span><span style="color:#eff1f5;">        </span><span style="color:#ebcb8b;">System</span><span style="color:#eff1f5;">.out.</span><span style="color:#bf616a;">println</span><span style="color:#eff1f5;">(</span><span>&quot;</span><span style="color:#a3be8c;">printTestA: </span><span>&quot; + </span><span style="color:#bf616a;">this</span><span style="color:#eff1f5;">.testA);
+</span><span style="color:#eff1f5;">    }
+</span><span style="color:#eff1f5;">}
+</span><span>
+</span></code></pre>
+<p>现在我们通过构造函数注入，执行测试代码看看会发生什么：</p>
+<pre style="background-color:#2b303b;color:#c0c5ce;"><code><span>The dependencies of some of the beans in the application context form a cycle:
+</span><span>
+</span><span>┌─────┐
+</span><span>|  testA defined in file [xxx\chapter02\cycle\TestA.class]
+</span><span>↑     ↓
+</span><span>|  testB defined in file [xxx\chapter02\cycle\TestB.class]
+</span><span>└─────┘
+</span></code></pre>
+<p>”当前应用程序中某些beans出现了循环依赖“。至于原因，请搜索关键词：<code>Spring构造函数注入与setter注入</code></p>
+<h2 id="ben-zhang-xiao-jie">本章小结</h2>
+<p>在本章中，我们了解了Spring依赖注入的三种方式，并提到了循环依赖在不同注入方式下的区别。</p>
+<p>至此，关于学习SpringBoot前的需要有的知识我们算是完成了一个简单的介绍的，接下来的文章将会基于SpringBoot框架，构建我们的Web服务。</p>
+<h2 id="cang-ku-di-zhi-1">仓库地址</h2>
+<p><a rel="noopener" target="_blank" href="https://github.com/w4ngzhen/springboot-simple-guide">w4ngzhen/springboot-simple-guide: This is a project that guides SpringBoot users to get started quickly through a series of examples (github.com)</a></p>
+
+    </div>
+</div>
+<script src="https://zhen.wang/libs/viewerjs@1.11.7/viewer.min.js"></script>
+<link rel="stylesheet" href="https://zhen.wang/libs/viewerjs@1.11.7/viewer.min.css"/>
+<script>
+  if (window.Viewer) {
+    document.querySelectorAll('img').forEach(img => {
+      new Viewer(img, {
+        inline: false,
+        navbar: false,
+        toolbar: {
+          zoomIn: 1,
+          zoomOut: 1,
+          reset: 1,
+          rotateLeft: 1,
+          rotateRight: 1,
+        },
+      });
+    });
+  }
+</script>
+
+
+</body>
+</html>

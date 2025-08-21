@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="utf-8">
+    <meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover"
+          name="viewport">
+    
+    
+    <!-- umami web analysis -->
+    <script defer src="https://zhen.wang/libs/umami/umami.script.js"
+            data-website-id="d66cfe03-f6b3-4aa0-baf8-728700db1b09"></script>
+    
+    
+    
+    <link rel="icon" type="image/png" sizes="16x16" href="https://zhen.wang/images/blog-site-icon.svg">
+    <link rel="icon" type="image/png" sizes="32x32" href="https://zhen.wang/images/blog-site-icon.svg">
+    <title>zhen&#x27;s everything</title>
+    <link rel="stylesheet" href="https://zhen.wang/style.css">
+    
+<link rel="stylesheet" href="https://zhen.wang/article_content.css">
+<link rel="stylesheet" href="https://zhen.wang/article_markdown.css">
+
+</head>
+<body>
+
+<div id="article">
+    <header class="article-header">
+        
+<div class="base-title">
+    <a href="#" onclick="history.length > 1 ? history.back() : location.href = '/'; return false;">&LeftArrow; Back</a>
+    <h1>
+        关于
+    </h1>
+</div>
+
+    </header>
+    <p class="article-date"></p>
+    
+    <!-- real content -->
+    <div class="article-content markdown-content">
+        <h1 id="zhen-wang">Zhen WANG</h1>
+<p>生日：1996年春</p>
+<h2 id="she-jiao">社交</h2>
+<ul>
+<li><a rel="noopener" target="_blank" href="https://github.com/w4ngzhen">w4ngzhen (Zhen WANG) (github.com)</a></li>
+<li><a rel="noopener" target="_blank" href="https://www.zhihu.com/people/w4ngzhen">w4ngzhen - 知乎 (zhihu.com)</a></li>
+<li>Email: i#zhen.wang（请将<code>#</code>替换为<code>@</code>）</li>
+<li>想要留言？本页面现已支持！<del><a rel="noopener" target="_blank" href="https://github.com/w4ngzhen/zhen_website/issues">来这里</a>创建issue吧～</del></li>
+</ul>
+<h2 id="ji-shu-zhan">技术栈</h2>
+<ul>
+<li>前端应用开发：React（TypeScript、JavaScript）</li>
+<li>游戏开发：Bevy Engine（Rust）、Godot（GDScript）</li>
+<li>桌面应用开发：SDL3（C）、Electron（TS、JS）、<del>Qt（C++）</del></li>
+<li>后端应用开发：NestJS（nodejs TS、JS）、<del>SpringBoot（Java）</del></li>
+</ul>
+<h2 id="zui-ai-de-yi-ben-shu">最爱的一本书</h2>
+<p><a rel="noopener" target="_blank" href="https://book.douban.com/subject/1152971/">《DOOM启世录》</a></p>
+<h2 id="guan-yu-ben-wang-zhan">关于本网站</h2>
+<p>本网站基于<a rel="noopener" target="_blank" href="https://www.getzola.org/">zola</a>进行搭建，同时编写并使用自己开发的zola主题<a rel="noopener" target="_blank" href="https://github.com/w4ngzhen/zola-theme-brief">brief</a>（本网站有魔改），使用<a rel="noopener" target="_blank" href="https://github.com/w4ngzhen/come">come-comment-box</a>（轻量级自部署评论系统）实现版本模块评论留言能力。</p>
+
+    </div>
+</div>
+<div>
+    <h3>留言区</h3>
+    <div id="come_comment_box" style="border-top: 1px solid #e5e5e5;padding: 16px;"></div>
+</div>
+<script src="https://zhen.wang/libs/viewerjs@1.11.7/viewer.min.js"></script>
+<link rel="stylesheet" href="https://zhen.wang/libs/viewerjs@1.11.7/viewer.min.css"/>
+<script>
+  if (window.Viewer) {
+    document.querySelectorAll('img').forEach(img => {
+      new Viewer(img, {
+        inline: false,
+        navbar: false,
+        toolbar: {
+          zoomIn: 1,
+          zoomOut: 1,
+          reset: 1,
+          rotateLeft: 1,
+          rotateRight: 1,
+        },
+      });
+    });
+  }
+</script>
+<script src="https://zhen.wang/libs/come_comment_box/come_comment_box.js"></script>
+<link rel="stylesheet" href="https://zhen.wang/libs/come_comment_box/come_comment_box.css"/>
+<script>
+  (function run() {
+    if (!window.ComeCommentBox) {
+      console.error('cannot find ComeCommentBox in window');
+      return;
+    }
+    ComeCommentBox.init('#come_comment_box', {
+      siteKey: "zhen_website",
+      pageKey: "zhen_website@about",
+      serviceBaseUrl: "https://come-server.zhen.pro/client-api",
+    });
+  })();
+</script>
+
+</body>
+</html>

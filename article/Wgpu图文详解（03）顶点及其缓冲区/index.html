@@ -1,0 +1,319 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="utf-8">
+    <meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover"
+          name="viewport">
+    
+    
+    <!-- umami web analysis -->
+    <script defer src="https://zhen.wang/libs/umami/umami.script.js"
+            data-website-id="d66cfe03-f6b3-4aa0-baf8-728700db1b09"></script>
+    
+    
+    
+    <link rel="icon" type="image/png" sizes="16x16" href="https://zhen.wang/images/blog-site-icon.svg">
+    <link rel="icon" type="image/png" sizes="32x32" href="https://zhen.wang/images/blog-site-icon.svg">
+    <title>zhen&#x27;s everything</title>
+    <link rel="stylesheet" href="https://zhen.wang/style.css">
+    
+<link rel="stylesheet" href="https://zhen.wang/article_content.css">
+<link rel="stylesheet" href="https://zhen.wang/article_markdown.css">
+
+</head>
+<body>
+
+<div id="article">
+    <header class="article-header">
+        
+<div class="base-title">
+    <a href="#" onclick="history.length > 1 ? history.back() : location.href = '/'; return false;">&LeftArrow; Back</a>
+    <h1>
+        Wgpu图文详解（03）顶点及其缓冲区
+    </h1>
+</div>
+
+    </header>
+    <p class="article-date">2024-11-18</p>
+    
+    <!-- toc -->
+    <div class="article-toc">
+        <label class="toc-title" for="toc-trigger">目录</label>
+        <input id="toc-trigger" type="checkbox" checked/>
+        <div class="toc-content">
+            <ol class="toc">
+                
+                <li class="toc-item toc-level-1">
+                    <a class="toc-link" href="https://zhen.wang/article/Wgpu图文详解（03）顶点及其缓冲区/#ren-shi-huan-chong-qu">认识缓冲区</a>
+                    
+                </li>
+                
+                <li class="toc-item toc-level-1">
+                    <a class="toc-link" href="https://zhen.wang/article/Wgpu图文详解（03）顶点及其缓冲区/#chuang-jian-ding-dian-huan-chong-qu">创建顶点缓冲区</a>
+                    
+                    <ol class="toc-child">
+                        
+                        <li class="toc-item toc-level-2">
+                            <a href="https://zhen.wang/article/Wgpu图文详解（03）顶点及其缓冲区/#yin-shen-guan-yu-nei-cun-bu-ju">引申：关于内存布局</a>
+                        </li>
+                        
+                    </ol>
+                    
+                </li>
+                
+                <li class="toc-item toc-level-1">
+                    <a class="toc-link" href="https://zhen.wang/article/Wgpu图文详解（03）顶点及其缓冲区/#chuang-jian-ding-dian-huan-chong-qu-bu-ju">创建顶点缓冲区布局</a>
+                    
+                </li>
+                
+                <li class="toc-item toc-level-1">
+                    <a class="toc-link" href="https://zhen.wang/article/Wgpu图文详解（03）顶点及其缓冲区/#xiao-fei-huan-chong-qu-ji-bu-ju">消费缓冲区及布局</a>
+                    
+                </li>
+                
+                <li class="toc-item toc-level-1">
+                    <a class="toc-link" href="https://zhen.wang/article/Wgpu图文详解（03）顶点及其缓冲区/#xiu-gai-ding-dian-zhao-se-qi-cheng-xu">修改顶点着色器程序</a>
+                    
+                </li>
+                
+                <li class="toc-item toc-level-1">
+                    <a class="toc-link" href="https://zhen.wang/article/Wgpu图文详解（03）顶点及其缓冲区/#gei-ding-dian-shu-ju-jia-ru-geng-duo-de-xin-xi">给顶点数据加入更多的信息</a>
+                    
+                    <ol class="toc-child">
+                        
+                        <li class="toc-item toc-level-2">
+                            <a href="https://zhen.wang/article/Wgpu图文详解（03）顶点及其缓冲区/#ru-he-de-dao-yan-se">如何得到颜色</a>
+                        </li>
+                        
+                        <li class="toc-item toc-level-2">
+                            <a href="https://zhen.wang/article/Wgpu图文详解（03）顶点及其缓冲区/#guan-yu-location">关于@location</a>
+                        </li>
+                        
+                    </ol>
+                    
+                </li>
+                
+                <li class="toc-item toc-level-1">
+                    <a class="toc-link" href="https://zhen.wang/article/Wgpu图文详解（03）顶点及其缓冲区/#xie-zai-zui-hou">写在最后</a>
+                    
+                </li>
+                
+            </ol>
+        </div>
+    </div>
+    
+    <!-- real content -->
+    <div class="article-content markdown-content">
+        <p>在上一篇文章中，我们介绍了Wgpu中的渲染管线与着色器的概念以及基本用法。相信读者还记得，我们在渲染一个三角形的时候，使用了三角形的三个<strong>顶点的索引</strong>作为了顶点着色器的输入，并根据索引值计算了三个几何顶点在视口中的位置，并通过片元着色器的代码逻辑，控制了每一个像素都用红色色值，最终渲染了一个红色三角形：</p>
+<p><img src="https://static-res.zhen.wang/images/post/2024-11-18/010.png" alt="010" /></p>
+<p>当然，我们不可能一直使用wgpu来渲染这样的简单固定的图形。面对实际的场景，我们有时候需要根据一些上下文来动态的修改渲染图形的大小形状。在本文中，我们将开始介绍顶点缓冲区的概念，来为后续实际的场景做一些铺垫。</p>
+<h1 id="ren-shi-huan-chong-qu">认识缓冲区</h1>
+<p><strong>缓冲区</strong>（Buffer）一个可用于 GPU 操作的内存块（又叫“显存”）。在wgpu（或其他例如OpenGL等库）中的缓冲区概念通常指的是 GPU 能读写的内存区域，与之对应的就是我们常见的CPU内存。回想一下常规的软件运行的过程：程序在启动后，会在“内存”中申请一块能够存放数据的区域。在运行的过程中，我们的代码指令按照既定的逻辑做着计算，并不断的读、写内存区域里面的数据，以达到期望的程序运行的结果。<strong>不严谨地讲</strong>，GPU 与 CPU 是一样的，它同样能够执行计算逻辑，同样会有数据存储的区域，这个区域就是 GPU 的缓冲区。</p>
+<p>一般来说，我们都在 CPU 直接阶段，在内存中将一些初始的数据准备好，通过一定的方式发送给 GPU，并存储在GPU上的缓冲区中。在执行的过程中，我们可以通过着色器代码来读取缓冲区中的数据：</p>
+<p><img src="https://static-res.zhen.wang/images/post/2024-11-18/020.png" alt="020" /></p>
+<h1 id="chuang-jian-ding-dian-huan-chong-qu">创建顶点缓冲区</h1>
+<p>为了更好的管理不同类型的数据（比如常见的有顶点数据、顶点索引数据），我们会按照其不同类型来设定不同的缓冲区。在本文中，我们先介绍如何创建并使用顶点缓冲区，对于其他缓冲区我们会在后续的文章中说明。</p>
+<p>顶点缓冲区，顾名思义，就是包含了在渲染过程中会使用到的<strong>顶点数据</strong>的 GPU 显存区域。需要注意的是，图形学中的顶点并不是我们常规意义上的几何顶点，而是包含了位置坐标、颜色信息、纹理坐标以及法线向量等的顶点数据，常规意义上的几何顶点<strong>仅仅</strong>是顶点数据中的一部分。</p>
+<p>在上一篇文章中，尽管在最后我们成功终绘制了一个三角形，但实际上它的三个顶点位置是通过三个顶点索引（0、1、2）计算而来的。假设我期望绘制一个比较另类的三角形或其他图形，纯粹靠顶点索引是不够的。这种场景我们一般会按照如下的方式进行：</p>
+<ol>
+<li>准备一些包含自定义位置信息的顶点数据；</li>
+<li>将顶点数据放置到顶点缓冲区中，并进行一定的配置；</li>
+<li>最后，在着色器代码中通过一定的方式读取这些顶点数据，并交给顶点着色器来使用。</li>
+</ol>
+<p>接下来让我们开始实践如何通过编程方式创建顶点缓冲区。</p>
+<p>假设最终我们期望渲染一个由<code>(0, 1)</code>、<code>(-0.5, -0.5)</code>、<code>(0.5, 0)</code>三个2维顶点构成的三角形：</p>
+<p><img src="https://static-res.zhen.wang/images/post/2024-11-18/030.png" alt="030" /></p>
+<p>首先，让我们在基础项目中增加一个结构体Vertex，用来表达我们的顶点：</p>
+<p><img src="https://static-res.zhen.wang/images/post/2024-11-18/040.png" alt="040" /></p>
+<p>这个结构体我们现在仅有一个类型为<code>[f32; 3]</code>类型的字段<code>position</code>，用来表示一个位置坐标。</p>
+<blockquote>
+<p>⚠️这里务必添加Copy派生</p>
+</blockquote>
+<h2 id="yin-shen-guan-yu-nei-cun-bu-ju">引申：关于内存布局</h2>
+<p>该结构体上的属性，除了我们常见用来派生<code>Copy</code>、<code>Clone</code>等trait的<code>derive</code>属性外，还有一个特殊的属性：<code>#[repr(C)]</code>，在配置该属性后，Rust 编译器会强制<strong>按照 C 编译器</strong>的编译方式来安排结构体字段的顺序和<strong>对齐方式</strong>。假设有如下结构体，在<code>#[repr(C)]</code>的加持下，其内存布局会保持4字节对齐：</p>
+<p><img src="https://static-res.zhen.wang/images/post/2024-11-18/050.png" alt="050" /></p>
+<p>上面的结构体中，age字段的类型是u8，但因为强制使用了<code>#[repr(C)]</code>，让其保持了4字节的内存布局。我们可以用如下的代码来验证：</p>
+<p><img src="https://static-res.zhen.wang/images/post/2024-11-18/060.png" alt="060" /></p>
+<p>当然，有的小伙伴会发现即使不添加<code>#[repr(C)]</code>，结果也是24bytes，是因为Rust编译器在某些场景下会进行对齐，<strong>不过这样无法保证是按照和C编译器一样的4字节对齐</strong>；此外，Rust编译器在有时为了内存的高效利用，可能会进行布局压缩。当然，你还可以使用<code>#[repr(packed)]</code>来禁用内存对齐填充：</p>
+<p><img src="https://static-res.zhen.wang/images/post/2024-11-18/070.png" alt="070" /></p>
+<p>好了，让我们回归正文。此时我们已经编写了一个<code>Vertex</code>结构体，也理解了<code>#[repr(C)]</code>的意义。接下来，我们创建一个数组切片来存放三个顶点的数据：</p>
+<pre data-lang="rust" style="background-color:#2b303b;color:#c0c5ce;" class="language-rust "><code class="language-rust" data-lang="rust"><span style="color:#65737e;">// 表示三角形三个顶点的顶点列表
+</span><span style="color:#b48ead;">pub const </span><span style="color:#d08770;">VERTEX_LIST</span><span>: &amp;[Vertex] = &amp;[
+</span><span>    Vertex { position: [</span><span style="color:#d08770;">0.0</span><span>, </span><span style="color:#d08770;">1.0</span><span>, </span><span style="color:#d08770;">0.0</span><span>] },
+</span><span>    Vertex { position: [-</span><span style="color:#d08770;">0.5</span><span>, -</span><span style="color:#d08770;">0.5</span><span>, </span><span style="color:#d08770;">0.0</span><span>] },
+</span><span>    Vertex { position: [</span><span style="color:#d08770;">0.5</span><span>, </span><span style="color:#d08770;">0.0</span><span>, </span><span style="color:#d08770;">0.0</span><span>] },
+</span><span>];
+</span></code></pre>
+<p>在编写了三个顶点的数据后，我们更进一步，将顶点缓冲区创建出来消费顶点数据。</p>
+<p>首先，让我们在<code>async_new</code>方法中的合适位置通过调用Device实例的<code>create_buffer_init</code>方法创建一个顶点缓冲区对象：</p>
+<p><img src="https://static-res.zhen.wang/images/post/2024-11-18/080.png" alt="080" /></p>
+<p><code>contents</code>字段需要我们提供<code>&amp;[u8]</code>类型的数据，即字节数组的切片引用，这里我们先传空，待会儿会讲到如何将我们的<code>VERTEX_LIST</code>数据转为<code>&amp;[u8]</code>类型的数据；<code>usage</code>字段我们现在传入<code> wgpu::BufferUsages::VERTEX</code>这个枚举，表明我们要创建的是一个顶点缓冲区，而不是其他的缓冲区。</p>
+<p>接下来，我们尝试将前面创建的<code>VERTEX_LIST</code>数据转换为<code>&amp;[u8]</code>字节数据。这里我们使用一个工具库<code>bytemuck</code>，该库可以方便的将我们的一些数据结构转为内存中的字节数据。其具体方式如下：</p>
+<ol>
+<li>在依赖中添加<code>bytemuck</code></li>
+<li>修改<code>Vertex</code>结构体的内容：</li>
+</ol>
+<p><img src="https://static-res.zhen.wang/images/post/2024-11-18/090.png" alt="090" /></p>
+<ol start="3">
+<li>在创建缓冲区的地方添加如下的转换代码：</li>
+</ol>
+<p><img src="https://static-res.zhen.wang/images/post/2024-11-18/100.png" alt="100" /></p>
+<blockquote>
+<p>调用bytemuck的cast_slice方法，将原始数据转为u8的切片，并作为contents字段的值传入</p>
+</blockquote>
+<ol start="4">
+<li>修改<code>WgpuCtx</code>结构体，保存我们本次创建的顶点缓冲区实例：</li>
+</ol>
+<p><img src="https://static-res.zhen.wang/images/post/2024-11-18/110.png" alt="110" /></p>
+<p>总结一下，为了创建一个顶点缓冲区，我们经历如下几步：</p>
+<ol>
+<li>定义一个结构体（<code>Vertex</code>）来表示一个顶点数据，该结构体除开配置<code>#[derive(Copy, Clone)]</code>属性外，还需要使用<code>#[repr(C)]</code>来保证该结构体在编译后的内存布局及对齐字节数据保持和C编译器一样；以及，让结构体实现来自<code>bytemuck</code>库提供的<code>Pod</code>和<code>Zeroable</code>两个trait，以供后续通过<code>bytemuck</code>的提供的API来将数据转为<code>&amp;[u8]</code>。</li>
+<li>完成<code>Vertex</code>结构体的定义后，我们又根据最终想要渲染的三角形的几何结构，使用<code>VERTEX_LIST</code>来存储了三个顶点数据。</li>
+<li>使用<code>bytemuck</code>提供的API将<code>VERTEX_LIST</code>通过将其转为了u8字节数组切片字节数据。</li>
+<li>调用Device提供的API<code>create_buffer_init</code>，传入顶点数组字节数据，以创建一个顶点缓冲区实例。</li>
+<li>将顶点缓冲区实例存储到WgpuCtx实例，以供后续消费使用。</li>
+</ol>
+<p>至此，对于创建顶点缓冲区部分的介绍就到此为止。接下来我们需要介绍另一个同样重要的内容：<strong>顶点缓冲区布局（VertexBufferLayout）</strong>。</p>
+<h1 id="chuang-jian-ding-dian-huan-chong-qu-bu-ju">创建顶点缓冲区布局</h1>
+<p>首先，我们需要明白为什么会有<strong>缓冲区布局</strong>这一东西。假设现在在 GPU 显存中有如下的一段数据：</p>
+<p><img src="https://static-res.zhen.wang/images/post/2024-11-18/120.png" alt="120" /></p>
+<p>在没有其他上下文的情况下，我们无法理解这段内存中的数据有何意义。同样的，如果我们单是把先前创建的顶点数据放入顶点缓冲区中，在实际渲染的过程中，GPU 也无法理解这一堆的二进制数据应该如何使用。此时，我们就需要用一些配置上下文来解释顶点缓冲区中的数据的具体意义。</p>
+<p>还是以上图数据为例，如果现在告诉你这是一段包含了<strong>3</strong>个顶点数据的内存布局，其步进（stride）是3字节（即每三个字节就算做一个顶点数据）；同时，单看每一份顶点数据，按照从其<strong>偏移字节为0</strong>的地方开始是一份位置数据，其类型为3个float32（32bits，即4bytes）数据，现在对于这段内存中的数据的布局结构是不是变的比较清晰了呢：</p>
+<p><img src="https://static-res.zhen.wang/images/post/2024-11-18/130.png" alt="130" /></p>
+<p>有了上述的说明，再回过头来就不难理解缓冲区布局的意义了。接下来就让我们通过代码实践来定义一个顶点缓冲区布局实例。</p>
+<p>首先，我们依然在<code>vertex.rs</code>文件中增加一个方法，用来返回一个顶点缓冲区布局实例：</p>
+<p><img src="https://static-res.zhen.wang/images/post/2024-11-18/140.png" alt="140" /></p>
+<p>对于该方法的实现，我们就是返回了如下的一个结构体：</p>
+<pre data-lang="rust" style="background-color:#2b303b;color:#c0c5ce;" class="language-rust "><code class="language-rust" data-lang="rust"><span>wgpu::VertexBufferLayout {
+</span><span>    array_stride: size_of::&lt;Vertex&gt;() as wgpu::BufferAddress,
+</span><span>    step_mode: wgpu::VertexStepMode::Vertex,
+</span><span>    attributes: &amp;[
+</span><span>        wgpu::VertexAttribute {
+</span><span>            offset: </span><span style="color:#d08770;">0</span><span>,
+</span><span>            shader_location: </span><span style="color:#d08770;">0</span><span>,
+</span><span>            format: wgpu::VertexFormat::Float32x3,
+</span><span>        },
+</span><span>    ],
+</span><span>}
+</span></code></pre>
+<ul>
+<li>
+<p>字段<code>array_stride</code>表示的就是每一份顶点数据在内存中的<strong>步进</strong>长度，在本例中，一个<code>Vertex</code>结构体在<code>#[repr(C)]</code>的属性配置下能够确保是12bytes。</p>
+</li>
+<li>
+<p>字段<code>step_mode</code>我们暂时不详细介绍，读者可以简单理解为告诉渲染管线每一份数据代表的是一个顶点数据（），这里默认使用该枚举值<code>VertexStepMode::Vertex</code>即可。</p>
+</li>
+<li>
+<p>字段<code>attributes</code>是一个数组切片引用，在这里我们只传递了一个<code>VertexAttribute</code>数据，表示就目前而言，我们一份顶点数据中，只有一份有意义的“子数据”。对于这份“子数据”，我们配置了<code>offset</code>、<code>shader_location</code>以及<code>format</code>字段。这三个字段整体表达了这样一个事实：在一份顶点数据中，从<code>offset = 0</code>开始有一段格式为<code>Float32x3</code>（float32 = 32bits  = 4bytes， 乘以3就等于12bytes）的数据，这段数据在shader着色器上的location为0的位置。相信读者对offset和format应该能够理解，但是对于“这段数据在shader着色器上的location为0的位置”这句话还有些难以理解，别着急，我们后面会讲到的。</p>
+</li>
+</ul>
+<h1 id="xiao-fei-huan-chong-qu-ji-bu-ju">消费缓冲区及布局</h1>
+<p>总结下现状，我们首先创建了顶点缓冲区并将其作为<code>vertex_buffer</code>存放到了<code>WgpuCtx</code>实例中；同时，我们还编写一个名为<code>create_vertex_buffer_layout</code>的方法用来构造一个顶点缓冲区布局实例，接下来我们会使用到上面准备工作的成果了。</p>
+<p>首先，让我们在<code>WgpuCtx</code>的<code>draw</code>方法中适当修改代码来消费顶点缓冲区：</p>
+<p><img src="https://static-res.zhen.wang/images/post/2024-11-18/150.png" alt="150" /></p>
+<p>在调用渲染通道（RenderPass）实例的<code>draw</code>方法前，我们先调用<code>set_vertex_buffer</code>方法。该方法接受两个参数，第一个参数slot指的是我们要把顶点缓冲区中的数据放置到显存内部的顶点缓冲区域的哪个索引位置，这里我们设置为0，表示我们会设置到默认0的位置；第二个参数使用的缓冲区的数据片段，这里我们直接消费整个顶点数据，因此代码编写为<code>slice(..)</code>。</p>
+<p>然后，修改<code>draw</code>的参数传递。将原来固定的<code>0..3</code>（即3个顶点）修改为动态的，根据我们创建的<code>VERTEX_LIST</code>的实际长度，这样在将来我们会创建更多的顶点的时候，就能够正确对应顶点数量。</p>
+<p>完成消费顶点缓冲区的代码编写以后，接下来我们就需要再适当的位置创建缓冲区布局实例并消费它，其具体做法是：</p>
+<p>调用<code>create_vertex_buffer_layout</code>方法得到缓冲区布局实例对象；把该实例对象传递给如下<code>VertexState</code>的<code>buffers</code>字段：</p>
+<p><img src="https://static-res.zhen.wang/images/post/2024-11-18/160.png" alt="160" /></p>
+<blockquote>
+<p>这个地方叫做buffers，但是实际上是要传buffer布局，maybe命名有点让人误导。</p>
+</blockquote>
+<p>到目前为止内容偏多，让我们通过下图做一个简单的总结：</p>
+<p><img src="https://static-res.zhen.wang/images/post/2024-11-18/170.png" alt="170" /></p>
+<h1 id="xiu-gai-ding-dian-zhao-se-qi-cheng-xu">修改顶点着色器程序</h1>
+<p>上面的实践过程，我们仅仅是创建并消费了顶点缓冲区以及顶点缓冲区布局实例。然而，如果在此时运行程序代码，读者会发现窗口中依然是先前的一个撑满窗口的红色三角形。很显然，我们需要适当的修改着色器程序的代码，才能真正消费到我们在上面产生的有关顶点数据。让我们对<code>shader.wgsl</code>做出如下的修改：</p>
+<p><img src="https://static-res.zhen.wang/images/post/2024-11-18/180.png" alt="180" /></p>
+<p>首先，我们在着色器代码中定义了一个结构体<code>VertexInput</code>，这个结构体包含有一个<code>position</code>字段，其类型为<code>vec3f</code>。</p>
+<p>值得注意的是，这个字段有一个前置的注解<code>@location(0)</code>。还记得前面我们说过：“这段数据在shader着色器上的location为0的位置”这句话吗？其实这里的<code>location(0)</code>对应匹配的就是前面在定义顶点缓冲区布局的<code>shader_location</code>配置：</p>
+<p><img src="https://static-res.zhen.wang/images/post/2024-11-18/190.png" alt="190" /></p>
+<p>对于顶点数据、顶点缓冲区布局配置以及着色器中<code>VertexInput</code>的结构定义，我们就可以用下图来解释它们的关系了：</p>
+<p><img src="https://static-res.zhen.wang/images/post/2024-11-18/200.png" alt="200" /></p>
+<p>再看顶点着色器<code>vs_main</code>的部分，其入参由原来的<code>@builtin(vertex_index) in_vertex_index: u32</code>修改为了<code>vertex_in: VertexInput</code>。在每次顶点着色器运行的时候，渲染管线会结合顶点缓冲区布局配置以及每一份内存中的顶点数据，为我们构建一个<code>VertexInput</code>结构体实例，并传入该顶点着色器方法中。在这里我们就可以直接读取到对应的position位置字段数据并直接返回了。</p>
+<p>而对于片元着色器，我们暂时没有任何改动。因此，在一切准备工作结束以后，让我们运行程序，会发现最终渲染的三角形确实如我们所期望的结构那样展示了：</p>
+<p><img src="https://static-res.zhen.wang/images/post/2024-11-18/210.png" alt="210" /></p>
+<h1 id="gei-ding-dian-shu-ju-jia-ru-geng-duo-de-xin-xi">给顶点数据加入更多的信息</h1>
+<p>在本文中，由于我们的顶点数据结构体<code>Vertex</code>中只包含了一个类型为<code>[f32; 3]</code>的位置数据字段，因此在设置<code>VertexBufferLayout</code>的<code>attributes</code>字段的时候，我们只传入了一个<code>VertexAttribute</code>配置，并且其offset为0，代表了我们的一份在内存中的顶点数据，只包含一份属性数据，且是从偏移字节为0开始的。当然，正如前面提到的，顶点数据并非只会有位置数据，通常伴随着的还会有颜色信息、法线信息等。在这里，我们尝试给顶点加入颜色数据，好在着色器处理阶段能够定制三角形的颜色。</p>
+<p>首先，让我们尝试修改<code>Vertex</code>结构体，加入一个颜色字段：</p>
+<p><img src="https://static-res.zhen.wang/images/post/2024-11-18/220.png" alt="220" /></p>
+<p>完成以后，可以想象到，把<code>VERTEX_LIST</code>数据转为字节数据放到顶点缓冲区以后，其内存布局会是如下形式：</p>
+<p><img src="https://static-res.zhen.wang/images/post/2024-11-18/230.png" alt="230" /></p>
+<p>如果读者理解了前面提到的offset的含义，那么就不难想到，为了让顶点着色器能够访问到颜色信息。我们需要将顶点缓冲区布局中关于attributes字段增加一条配置：</p>
+<p><img src="https://static-res.zhen.wang/images/post/2024-11-18/240.png" alt="240" /></p>
+<ol>
+<li>在顶点缓冲区布局对象的<code>attributes</code>字段，在原有基础上，再插入一份<code>VertexAttribute</code>配置，代表了要配置颜色信息；</li>
+<li>对于新加的<code>VertexAttribute</code>，其<code>offset</code>字段填入的值是偏移过position字节数据长度；</li>
+<li>将颜色信息数据指定为着色器中的location为1的地方。</li>
+</ol>
+<p>接下来，我们只需要修改着色器代码<code>VertexInput</code>结构体，增加一个color字段，</p>
+<p><img src="https://static-res.zhen.wang/images/post/2024-11-18/250.png" alt="250" /></p>
+<p>此时，渲染管线在构造这个<code>VertexInput</code>实例的时候，就能知道除了原有position字段数据外，还会把显存中的一份顶点数据的后面float32x3的大小数据映射到<code>@location(1) color: vec3f</code>上了。</p>
+<p>当然，仅仅给<code>VertexInput</code>增加color字段，对于我们最终的渲染效果目前来说是没有任何影响的，因为我们压根儿没有消费这个color字段。为了消费这个字段，并让最终渲染的三角形的颜色产生变化，接下来就让我们关注一下着色器代码，看看还需要做什么。</p>
+<p>首先，我们之前讲到过，对于顶点着色器的方法，我们返回的是<code>@builtin(position) vec4&lt;f32&gt;</code>，这意味着每次顶点着色器运行以后，会得到一个顶点的位置数据。在本例中，在所有顶点都执行以后，我们会得到3个顶点位置，渲染管线会拿着这3个位置构建一个三角形，并进行栅格化，再调用片元着色器，然后我们会再片元着色器中为每一个像素指定颜色。那么这里有一个问题：我们只能够在<strong>顶点</strong>着色器中返回每个顶点的位置吗？答案当然是否定的。除了直接返回一个<code>@builtin(position)</code>修饰的数据类型，我们还可以返回一个结构体，只要这个结构体中有一个字段用<code>@bultiin(position)</code>修饰即可：</p>
+<p><img src="https://static-res.zhen.wang/images/post/2024-11-18/260.png" alt="260" /></p>
+<p>这段修改后的代码的效果其实和之前是一样的，只不过我们用过了结构体来包裹。在返回结构体的形式下，我们可以在结构体中加入一些其他的字段，并且，在片元着色器节点还可以访问到顶点着色器输入结构体数据：</p>
+<p><img src="https://static-res.zhen.wang/images/post/2024-11-18/270.png" alt="270" /></p>
+<p>上述的着色器代码编写完成以后，理论上运行程序，你会发现如下的效果：</p>
+<p><img src="https://static-res.zhen.wang/images/post/2024-11-18/280.png" alt="280" /></p>
+<p>wow，一个<strong>渐变</strong>的三角形！然而，这就结束了吗？非也！</p>
+<h2 id="ru-he-de-dao-yan-se">如何得到颜色</h2>
+<blockquote>
+<p>⚠️笔者水平有限，因此后面的内容笔者仅能靠自己目前浅显的理解进行总结，其中可能会存在一些不到位或不正确的理解，这里恳请相关专业人士对错误的内容批评指出。</p>
+</blockquote>
+<p>如果读者认真看到现在，并且仔细思考了以后，我相信你会有一些疑问。首先，目前我们只有3个顶点，那么顶点着色器理论上来讲只会被调用3次，也就是说，我们总共只会得到3个<code>VertexOutput</code>数据并返回给渲染管线，且这3个<code>VertexOutput</code>实例的color字段分别只会是<code>(1.0, 0.0, 0.0)</code>（红色）、<code>(0.0, 1.0, 0.0)</code>（绿色）以及 <code>(0.0, 0.0, 1.0)</code>（蓝色）。然而，我们最终渲染的三角形是一个<strong>渐变</strong>三角形。根据片元着色器的作用，它会在每一个像素处理阶段被调用，这是否能够表明一件事：片元着色器代码中的消费的<code>color</code>字段，和前面的<code>VertexOutput</code>的<code>color</code>其实不是一个东西？答案确实如此。</p>
+<p><img src="https://static-res.zhen.wang/images/post/2024-11-18/290.png" alt="290" /></p>
+<p>细心的读者会发现，在<code>fs_main</code>入参，尽管类型是<code>VertexOutput</code>，但我刻意的避免了使用<code>vertex_output</code>作为名称，而是使用了<code>data</code>，其实就在暗示从顶点着色器<code>vs_main</code>返回的<code>VertexOutput</code>跟这里片元着色器<code>fs_main</code>得到的输入<code>VertexOutput</code>实例并不是一个东西。让我们开拓下思维，结构体的本质是什么？<strong>实际上，结构体只是一种对内存数据的具名表达而已</strong>，在这里我们仅仅通过了<code>VertexOutput</code>这个具名的描述内存数据形态的标识作为了顶点着色器和片元着色器的桥梁而已。</p>
+<p><img src="https://static-res.zhen.wang/images/post/2024-11-18/300.png" alt="300" /></p>
+<p>换句话说，如果我们改成下面的代码，我们的程序同样能够正确的运行：</p>
+<p><img src="https://static-res.zhen.wang/images/post/2024-11-18/310.png" alt="310" /></p>
+<p>那顶点着色器输出的位置和颜色信息，最终是如何影响到片元着色器的输入的呢？对于渲染管线来说，在顶点着色器执行以后，它会得到三个顶点数据，而其中就有通过<code>@builtin(position)</code>标识的，能够表达位置信息的数据。很显然，有了三个点的位置信息，在图元装配结合光栅化以后，我们能够得到一个最终图形的上的任意一个像素点位置信息：</p>
+<p><img src="https://static-res.zhen.wang/images/post/2024-11-18/320.png" alt="320" /></p>
+<p>每一个顶点中我们都增加了一份数据用来表示颜色（color字段）。那么，对于三角面中任意一个像素的点位置的color字段数据，实际上是三个顶点颜色数据在<strong>此位置</strong>上的算法叠加：</p>
+<p><img src="https://static-res.zhen.wang/images/post/2024-11-18/330.png" alt="330" /></p>
+<p>即，我们可以用一个方法来表达三角面上任意一个点的颜色：</p>
+<pre data-lang="rust" style="background-color:#2b303b;color:#c0c5ce;" class="language-rust "><code class="language-rust" data-lang="rust"><span style="color:#b48ead;">fn </span><span style="color:#8fa1b3;">color</span><span>((</span><span style="color:#bf616a;">v1_pos</span><span>, </span><span style="color:#bf616a;">v1_color</span><span>), (</span><span style="color:#bf616a;">v2_pos</span><span>, </span><span style="color:#bf616a;">v2_color</span><span>), (</span><span style="color:#bf616a;">v3_pos</span><span>, </span><span style="color:#bf616a;">v3_color</span><span>), any_pos) -&gt; color
+</span></code></pre>
+<p>通过输入三个顶点的位置和颜色，以及任何一个三角面上的点位置，就能算出该点的颜色数据。但值得注意的是，在我们的场景中，我们对<code>@location(0)</code>位置的数据取名为了color，表明用该字段作为颜色字段，但是在内存中，管线只知道这里有一份类型为<code>vec3f</code>的数据罢了。所以，对应的更加通用的公式应该是：</p>
+<pre data-lang="rust" style="background-color:#2b303b;color:#c0c5ce;" class="language-rust "><code class="language-rust" data-lang="rust"><span style="color:#b48ead;">fn </span><span style="color:#8fa1b3;">get_data</span><span>((</span><span style="color:#bf616a;">v1_pos</span><span>, </span><span style="color:#bf616a;">v1_data</span><span>), (</span><span style="color:#bf616a;">v2_pos</span><span>, </span><span style="color:#bf616a;">v2_data</span><span>), (</span><span style="color:#bf616a;">v3_pos</span><span>, </span><span style="color:#bf616a;">v3_data</span><span>), any_input_pos) -&gt; data_in_pos
+</span></code></pre>
+<p>那么关于这个的具体实现在本文中不再细讲，但最简单的方式应该就是线性叠加，读者可以自行深入这块的内容。</p>
+<h2 id="guan-yu-location">关于@location</h2>
+<p>另外我们还需要着色器代码解释另一个东西。仔细观察代码，无论是<code>VertexOutput</code>还是<code>FragmentInput</code>结构体，我们都在<code>color</code>这个字段使用了注解<code>@location(0)</code>。在前面的<code>VertexInput</code>结构体的中的<code>color</code>字段我们使用了同样的注解，其含义是我们把一份内存中对应位置的数据设置为了着色器中一个结构体中<code>location = 0</code>的位置的字段。那么这里是不是也是同样的意义呢？答案确实是如此的。</p>
+<p>读者可以这样理解，在光栅化后，每一次片元着色器的输入也是一份内存数据，这份内存数据我们同样可以使用一个结构体来访问（因为结构体是内存中的数据的可读性表达），但是结构体中的字段可以有很多个，每个字段究竟是内存中哪一块的数据，需要有一个明确的指明：</p>
+<p><img src="https://static-res.zhen.wang/images/post/2024-11-18/340.png" alt="340" /></p>
+<p>在上图中，无论是<code>VertexOutput</code>结构体还是<code>FragmentInput</code>结构体，其内存的布局是一致的，因此在片元着色器执行的时候，渲染管线提供的数据我们用上述两种结构体够可以表达对应的内存数据。再想的远一点，这个<code>location</code>只能是0吗？其实也不是，因为本质上讲，它是一段数据的标识，只是本例中，我们使用了0这个位置标识而已，如果你乐意，你还可以编写如下标识：</p>
+<p><img src="https://static-res.zhen.wang/images/post/2024-11-18/350.png" alt="350" /></p>
+<p>甚至，你还可以不编写任何的结构体作为输入，而是直接使用<code>@location</code>来定位：</p>
+<p><img src="https://static-res.zhen.wang/images/post/2024-11-18/360.png" alt="360" /></p>
+<p>对于最后的一种使用方式，请读者自己揣摩一下～</p>
+<h1 id="xie-zai-zui-hou">写在最后</h1>
+<p>本文的内容较多引申了不少额外的内容，读者可以慢慢阅读消化，希望能够对认识wgpu以及图形学工程有更进一步的理解和认识。在接下来的内容，我们将会认识wgpu中有关于以及图形学工程相关的更多的内容，敬请期待！</p>
+<p>本章的代码仓库在这里：</p>
+<p><a rel="noopener" target="_blank" href="https://github.com/w4ngzhen/wgpu_winit_example/tree/main/ch03_vertex_buffer">ch03_vertex_buffer</a></p>
+<p>后续文章的相关代码也会在该仓库中添加，所以感兴趣的读者可以点个star，谢谢你们的支持！</p>
+
+    </div>
+</div>
+<script src="https://zhen.wang/libs/viewerjs@1.11.7/viewer.min.js"></script>
+<link rel="stylesheet" href="https://zhen.wang/libs/viewerjs@1.11.7/viewer.min.css"/>
+<script>
+  if (window.Viewer) {
+    document.querySelectorAll('img').forEach(img => {
+      new Viewer(img, {
+        inline: false,
+        navbar: false,
+        toolbar: {
+          zoomIn: 1,
+          zoomOut: 1,
+          reset: 1,
+          rotateLeft: 1,
+          rotateRight: 1,
+        },
+      });
+    });
+  }
+</script>
+
+
+</body>
+</html>

@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="utf-8">
+    <meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover"
+          name="viewport">
+    
+    
+    <!-- umami web analysis -->
+    <script defer src="https://zhen.wang/libs/umami/umami.script.js"
+            data-website-id="d66cfe03-f6b3-4aa0-baf8-728700db1b09"></script>
+    
+    
+    
+    <link rel="icon" type="image/png" sizes="16x16" href="https://zhen.wang/images/blog-site-icon.svg">
+    <link rel="icon" type="image/png" sizes="32x32" href="https://zhen.wang/images/blog-site-icon.svg">
+    <title>zhen&#x27;s everything</title>
+    <link rel="stylesheet" href="https://zhen.wang/style.css">
+    
+<link rel="stylesheet" href="https://zhen.wang/article_content.css">
+<link rel="stylesheet" href="https://zhen.wang/article_markdown.css">
+
+</head>
+<body>
+
+<div id="article">
+    <header class="article-header">
+        
+<div class="base-title">
+    <a href="#" onclick="history.length > 1 ? history.back() : location.href = '/'; return false;">&LeftArrow; Back</a>
+    <h1>
+        WebXml文件与SpringMVC的联系
+    </h1>
+</div>
+
+    </header>
+    <p class="article-date">2018-08-26</p>
+    
+    <!-- toc -->
+    <div class="article-toc">
+        <label class="toc-title" for="toc-trigger">目录</label>
+        <input id="toc-trigger" type="checkbox" checked/>
+        <div class="toc-content">
+            <ol class="toc">
+                
+                <li class="toc-item toc-level-1">
+                    <a class="toc-link" href="https://zhen.wang/article/WebXml文件与SpringMVC的联系/#hui-dao-yi-ge-pu-tong-de-java-webxiang-mu">回到一个普通的Java Web项目</a>
+                    
+                    <ol class="toc-child">
+                        
+                        <li class="toc-item toc-level-2">
+                            <a href="https://zhen.wang/article/WebXml文件与SpringMVC的联系/#context-paramjie-dian">context-param节点</a>
+                        </li>
+                        
+                        <li class="toc-item toc-level-2">
+                            <a href="https://zhen.wang/article/WebXml文件与SpringMVC的联系/#listenerjie-dian">listener节点</a>
+                        </li>
+                        
+                    </ol>
+                    
+                </li>
+                
+                <li class="toc-item toc-level-1">
+                    <a class="toc-link" href="https://zhen.wang/article/WebXml文件与SpringMVC的联系/#hui-dao-spring-mvcpei-zhi">回到Spring MVC配置</a>
+                    
+                </li>
+                
+            </ol>
+        </div>
+    </div>
+    
+    <!-- real content -->
+    <div class="article-content markdown-content">
+        <p>无论采用何种框架来进行Java Web的开发，只要是Web项目必须在WEB-INF下有web.xml，这是java规范。 当然，我们最早接触到Java Web容器通常是tomcat，但这并不意味着web.xml是属于Tomcat的，同样，Servlet本身也不属于Tomcat，它与JSP等是Java Web的基础规范。而Servlet的运行需要有Servlet容器的支持，常见的容器有Tomcat、Jetty、JBoss等。</p>
+<span id="continue-reading"></span>
+<p>对于一个web.xml文件，比较重要的节点有context-param、listener、filter以及servlet：</p>
+<pre data-lang="xml" style="background-color:#2b303b;color:#c0c5ce;" class="language-xml "><code class="language-xml" data-lang="xml"><span style="color:#65737e;">&lt;!-- context-param元素声明应用范围内的初始化参数 --&gt;
+</span><span>&lt;</span><span style="color:#bf616a;">context-param</span><span>&gt;&lt;/</span><span style="color:#bf616a;">context-param</span><span>&gt;
+</span><span style="color:#65737e;">&lt;!-- filter 过滤器元素将一个名字与一个实现javax.servlet.Filter接口的类相关联。 --&gt;
+</span><span>&lt;</span><span style="color:#bf616a;">filter</span><span>&gt;&lt;/</span><span style="color:#bf616a;">filter</span><span>&gt;
+</span><span style="color:#65737e;">&lt;!-- filter-mapping 一旦命名了一个过滤器，就要利用filter-mapping元素把它与一个或多个servlet或JSP页面相关联。 --&gt;
+</span><span>&lt;</span><span style="color:#bf616a;">filter-mapping</span><span>&gt;&lt;/</span><span style="color:#bf616a;">filter-mapping</span><span>&gt;
+</span><span style="color:#65737e;">&lt;!-- listener 对事件监听程序的支持，事件监听程序在建立、修改和删除会话或servlet环境时得到通知。Listener元素指出事件监听程序类。 --&gt;
+</span><span>&lt;</span><span style="color:#bf616a;">listener</span><span>&gt;&lt;/</span><span style="color:#bf616a;">listener</span><span>&gt;
+</span><span style="color:#65737e;">&lt;!-- servlet 在向servlet或JSP页面制定初始化参数或定制URL时，必须首先命名servlet或JSP页面。Servlet元素就是用来完成此项任务的。 --&gt;
+</span><span>&lt;</span><span style="color:#bf616a;">servlet</span><span>&gt;&lt;/</span><span style="color:#bf616a;">servlet</span><span>&gt;
+</span></code></pre>
+<p>其他关于web.xml解释可以参考这里，本文不再详细介绍。本文主要是在整理关于Java Web使用SpringMVC过程的心得。</p>
+<p>我们知道一个最基本的Spring MVC项目需要在web.xml中区配置如下信息：</p>
+<pre data-lang="xml" style="background-color:#2b303b;color:#c0c5ce;" class="language-xml "><code class="language-xml" data-lang="xml"><span>&lt;?</span><span style="color:#bf616a;">xml </span><span style="color:#d08770;">version</span><span>=&quot;</span><span style="color:#a3be8c;">1.0</span><span>&quot; </span><span style="color:#d08770;">encoding</span><span>=&quot;</span><span style="color:#a3be8c;">UTF-8</span><span>&quot;?&gt;
+</span><span>&lt;</span><span style="color:#bf616a;">web-app </span><span style="color:#d08770;">xmlns:xsi</span><span>=&quot;</span><span style="color:#a3be8c;">http://www.w3.org/2001/XMLSchema-instance</span><span>&quot; </span><span style="color:#d08770;">xmlns</span><span>=&quot;</span><span style="color:#a3be8c;">http://java.sun.com/xml/ns/javaee</span><span>&quot; </span><span style="color:#d08770;">xsi:schemaLocation</span><span>=&quot;</span><span style="color:#a3be8c;">http://java.sun.com/xml/ns/javaee http://java.sun.com/xml/ns/javaee/web-app_2_5.xsd</span><span>&quot; </span><span style="color:#d08770;">id</span><span>=&quot;</span><span style="color:#a3be8c;">WebApp_ID</span><span>&quot; </span><span style="color:#d08770;">version</span><span>=&quot;</span><span style="color:#a3be8c;">2.5</span><span>&quot;&gt;
+</span><span>    &lt;</span><span style="color:#bf616a;">context-param</span><span>&gt;
+</span><span>        &lt;</span><span style="color:#bf616a;">param-name</span><span>&gt;contextConfigLocation&lt;/</span><span style="color:#bf616a;">param-name</span><span>&gt;
+</span><span>        &lt;</span><span style="color:#bf616a;">param-value</span><span>&gt;classpath:application-context.xml&lt;/</span><span style="color:#bf616a;">param-value</span><span>&gt;
+</span><span>    &lt;/</span><span style="color:#bf616a;">context-param</span><span>&gt;
+</span><span>    
+</span><span>    &lt;</span><span style="color:#bf616a;">listener</span><span>&gt;
+</span><span>        &lt;</span><span style="color:#bf616a;">listener-class</span><span>&gt;
+</span><span>            org.springframework.web.context.ContextLoaderListener
+</span><span>        &lt;/</span><span style="color:#bf616a;">listener-class</span><span>&gt;
+</span><span>    &lt;/</span><span style="color:#bf616a;">listener</span><span>&gt;
+</span><span>
+</span><span>    &lt;</span><span style="color:#bf616a;">servlet</span><span>&gt;
+</span><span>        &lt;</span><span style="color:#bf616a;">servlet-name</span><span>&gt;web-app&lt;/</span><span style="color:#bf616a;">servlet-name</span><span>&gt;
+</span><span>        &lt;</span><span style="color:#bf616a;">servlet-class</span><span>&gt;
+</span><span>            org.springframework.web.servlet.DispatcherServlet
+</span><span>        &lt;/</span><span style="color:#bf616a;">servlet-class</span><span>&gt;
+</span><span>        &lt;</span><span style="color:#bf616a;">init-param</span><span>&gt;
+</span><span>            &lt;</span><span style="color:#bf616a;">param-name</span><span>&gt;contextConfigLocation&lt;/</span><span style="color:#bf616a;">param-name</span><span>&gt;
+</span><span>            &lt;</span><span style="color:#bf616a;">param-value</span><span>&gt;classpath:context-mvc.xml&lt;/</span><span style="color:#bf616a;">param-value</span><span>&gt;
+</span><span>        &lt;/</span><span style="color:#bf616a;">init-param</span><span>&gt;
+</span><span>        &lt;</span><span style="color:#bf616a;">load-on-startup</span><span>&gt;1&lt;/</span><span style="color:#bf616a;">load-on-startup</span><span>&gt;
+</span><span>    &lt;/</span><span style="color:#bf616a;">servlet</span><span>&gt;
+</span><span>    &lt;</span><span style="color:#bf616a;">servlet-mapping</span><span>&gt;
+</span><span>        &lt;</span><span style="color:#bf616a;">servlet-name</span><span>&gt;web-app&lt;/</span><span style="color:#bf616a;">servlet-name</span><span>&gt;
+</span><span>        &lt;</span><span style="color:#bf616a;">url-pattern</span><span>&gt;/&lt;/</span><span style="color:#bf616a;">url-pattern</span><span>&gt;
+</span><span>    &lt;/</span><span style="color:#bf616a;">servlet-mapping</span><span>&gt;
+</span><span>&lt;/</span><span style="color:#bf616a;">web-app</span><span>&gt;
+</span></code></pre>
+<p>对于这样一份配置，我们不仅要知其然还要知其所以然。这样不仅能够加深对Java web以及web.xml的理解，对于以后排错也会有很大的帮助。</p>
+<h4 id="hui-dao-yi-ge-pu-tong-de-java-webxiang-mu">回到一个普通的Java Web项目</h4>
+<p>为什么要这么配置，首先我们要<strong>回到</strong>web.xml加载顺序介绍。web.xml基础节点的加载顺序是context-param &gt; listener &gt; filter &gt; serlvet。</p>
+<h5 id="context-paramjie-dian">context-param节点</h5>
+<p>context-param节点中的键值对首先会被容器读取并存放到ServletContext对象中，这里面的键值对信息被整个web项目共享。</p>
+<p>如何读取context-param中的值呢？我们只要获得ServletContext对象，然后再调用它的getInitParameter提供键名来获得方法就可以获得。在哪些地方能获得SerlvetContext对象呢？我们继承HttpServlet的Serlvet中去调用getServletContext就能获取ServletContext对象；这里我首先来编写一个简单Java web项目来读取相关的参数，首先是配置文件：</p>
+<pre data-lang="XML" style="background-color:#2b303b;color:#c0c5ce;" class="language-XML "><code class="language-XML" data-lang="XML"><span>&lt;?</span><span style="color:#bf616a;">xml </span><span style="color:#d08770;">version</span><span>=&quot;</span><span style="color:#a3be8c;">1.0</span><span>&quot; </span><span style="color:#d08770;">encoding</span><span>=&quot;</span><span style="color:#a3be8c;">UTF-8</span><span>&quot;?&gt;
+</span><span>&lt;</span><span style="color:#bf616a;">web-app </span><span style="color:#d08770;">xmlns</span><span>=&quot;</span><span style="color:#a3be8c;">http://xmlns.jcp.org/xml/ns/javaee</span><span>&quot;
+</span><span>         </span><span style="color:#d08770;">xmlns:xsi</span><span>=&quot;</span><span style="color:#a3be8c;">http://www.w3.org/2001/XMLSchema-instance</span><span>&quot;
+</span><span>         </span><span style="color:#d08770;">xsi:schemaLocation</span><span>=&quot;</span><span style="color:#a3be8c;">http://xmlns.jcp.org/xml/ns/javaee http://xmlns.jcp.org/xml/ns/javaee/web-app_4_0.xsd</span><span>&quot;
+</span><span>         </span><span style="color:#d08770;">version</span><span>=&quot;</span><span style="color:#a3be8c;">4.0</span><span>&quot;&gt;
+</span><span>    &lt;</span><span style="color:#bf616a;">context-param</span><span>&gt;
+</span><span>        &lt;</span><span style="color:#bf616a;">param-name</span><span>&gt;test-param&lt;/</span><span style="color:#bf616a;">param-name</span><span>&gt;
+</span><span>        &lt;</span><span style="color:#bf616a;">param-value</span><span>&gt;this is a test-param string&lt;/</span><span style="color:#bf616a;">param-value</span><span>&gt;
+</span><span>    &lt;/</span><span style="color:#bf616a;">context-param</span><span>&gt;
+</span><span>
+</span><span>   &lt;</span><span style="color:#bf616a;">servlet</span><span>&gt;
+</span><span>        &lt;</span><span style="color:#bf616a;">servlet-name</span><span>&gt;simple-web-app&lt;/</span><span style="color:#bf616a;">servlet-name</span><span>&gt;
+</span><span>        &lt;</span><span style="color:#bf616a;">servlet-class</span><span>&gt;
+</span><span>            servlet.SimpleServlet
+</span><span>        &lt;/</span><span style="color:#bf616a;">servlet-class</span><span>&gt;
+</span><span>        &lt;/</span><span style="color:#bf616a;">servlet</span><span>&gt;
+</span><span>    &lt;</span><span style="color:#bf616a;">servlet-mapping</span><span>&gt;
+</span><span>        &lt;</span><span style="color:#bf616a;">servlet-name</span><span>&gt;simple-web-app&lt;/</span><span style="color:#bf616a;">servlet-name</span><span>&gt;
+</span><span>        &lt;</span><span style="color:#bf616a;">url-pattern</span><span>&gt;/&lt;/</span><span style="color:#bf616a;">url-pattern</span><span>&gt;
+</span><span>    &lt;/</span><span style="color:#bf616a;">servlet-mapping</span><span>&gt;
+</span><span>&lt;/</span><span style="color:#bf616a;">web-app</span><span>&gt;
+</span></code></pre>
+<p>在这个配置文件中，我只定义了最简单的两个节点context-param与servlet，对于context-param节点，我定义了"test-param" : "this is a test-param string"键值对，然后定义了servlet相关配置（这一部分我认为你已经明白了）。最后，SimpleServlet中的代码如下：</p>
+<pre data-lang="JAVA" style="background-color:#2b303b;color:#c0c5ce;" class="language-JAVA "><code class="language-JAVA" data-lang="JAVA"><span style="color:#b48ead;">public class </span><span style="color:#ebcb8b;">SimpleServlet </span><span style="color:#b48ead;">extends </span><span style="color:#a3be8c;">HttpServlet </span><span style="color:#eff1f5;">{
+</span><span style="color:#eff1f5;">    @</span><span style="color:#bf616a;">Override
+</span><span style="color:#eff1f5;">    </span><span style="color:#b48ead;">protected void </span><span style="color:#8fa1b3;">doGet</span><span style="color:#eff1f5;">(</span><span style="color:#ebcb8b;">HttpServletRequest </span><span style="color:#bf616a;">req</span><span style="color:#eff1f5;">, </span><span style="color:#ebcb8b;">HttpServletResponse </span><span style="color:#bf616a;">resp</span><span style="color:#eff1f5;">) 
+</span><span style="color:#eff1f5;">        </span><span style="color:#b48ead;">throws </span><span style="color:#ebcb8b;">ServletException</span><span style="color:#eff1f5;">, </span><span style="color:#ebcb8b;">IOException </span><span style="color:#eff1f5;">{
+</span><span style="color:#eff1f5;">        </span><span style="color:#bf616a;">doPost</span><span style="color:#eff1f5;">(req, resp); </span><span style="color:#65737e;">// 将所有的Get请求转移到Post请求方法
+</span><span style="color:#eff1f5;">    }
+</span><span style="color:#eff1f5;">
+</span><span style="color:#eff1f5;">    @</span><span style="color:#bf616a;">Override
+</span><span style="color:#eff1f5;">    </span><span style="color:#b48ead;">protected void </span><span style="color:#8fa1b3;">doPost</span><span style="color:#eff1f5;">(</span><span style="color:#ebcb8b;">HttpServletRequest </span><span style="color:#bf616a;">req</span><span style="color:#eff1f5;">, </span><span style="color:#ebcb8b;">HttpServletResponse </span><span style="color:#bf616a;">resp</span><span style="color:#eff1f5;">) 
+</span><span style="color:#eff1f5;">        </span><span style="color:#b48ead;">throws </span><span style="color:#ebcb8b;">ServletException</span><span style="color:#eff1f5;">, </span><span style="color:#ebcb8b;">IOException </span><span style="color:#eff1f5;">{
+</span><span style="color:#eff1f5;">        </span><span style="color:#ebcb8b;">ServletContext</span><span style="color:#eff1f5;"> context </span><span>= </span><span style="color:#bf616a;">this</span><span style="color:#eff1f5;">.</span><span style="color:#bf616a;">getServletContext</span><span style="color:#eff1f5;">();
+</span><span style="color:#eff1f5;">        </span><span style="color:#ebcb8b;">String</span><span style="color:#eff1f5;"> param </span><span>=</span><span style="color:#eff1f5;"> context.</span><span style="color:#bf616a;">getInitParameter</span><span style="color:#eff1f5;">(</span><span>&quot;</span><span style="color:#a3be8c;">test-param</span><span>&quot;</span><span style="color:#eff1f5;">);
+</span><span style="color:#eff1f5;">        resp.</span><span style="color:#bf616a;">getWriter</span><span style="color:#eff1f5;">().</span><span style="color:#bf616a;">print</span><span style="color:#eff1f5;">(param);
+</span><span style="color:#eff1f5;">    }
+</span><span style="color:#eff1f5;">}
+</span></code></pre>
+<p>在doPost方法中，我们按照前面说的方式获取ServletContext对象，然后再通过getInitParameter方法获取"test-param"键对应的字符串，然后输出到网页上：
+<img src="https://static-res.zhen.wang/images/post/2018-08-26-JavaWeb/print.png" alt="print.png" /></p>
+<h5 id="listenerjie-dian">listener节点</h5>
+<p>web.xml第二步加载就是listener节点，该节点的形式如下：</p>
+<pre data-lang="XML" style="background-color:#2b303b;color:#c0c5ce;" class="language-XML "><code class="language-XML" data-lang="XML"><span>&lt;</span><span style="color:#bf616a;">listener</span><span>&gt;
+</span><span>    &lt;</span><span style="color:#bf616a;">listener-class</span><span>&gt;
+</span><span>        listener.MyInitListener
+</span><span>    &lt;/</span><span style="color:#bf616a;">listener-class</span><span>&gt;
+</span><span>&lt;/</span><span style="color:#bf616a;">listener</span><span>&gt;
+</span></code></pre>
+<p>而MyInitListener类需要实现ServletContextListener接口，并重写其中的方法：</p>
+<pre data-lang="JAVA" style="background-color:#2b303b;color:#c0c5ce;" class="language-JAVA "><code class="language-JAVA" data-lang="JAVA"><span style="color:#b48ead;">public class </span><span style="color:#ebcb8b;">MyInitListener </span><span style="color:#b48ead;">implements </span><span style="color:#a3be8c;">ServletContextListener </span><span style="color:#eff1f5;">{
+</span><span style="color:#eff1f5;">    @</span><span style="color:#bf616a;">Override
+</span><span style="color:#eff1f5;">    </span><span style="color:#b48ead;">public void </span><span style="color:#8fa1b3;">contextInitialized</span><span style="color:#eff1f5;">(</span><span style="color:#ebcb8b;">ServletContextEvent </span><span style="color:#bf616a;">sce</span><span style="color:#eff1f5;">) {
+</span><span style="color:#eff1f5;">        </span><span style="color:#ebcb8b;">System</span><span style="color:#eff1f5;">.out.</span><span style="color:#bf616a;">println</span><span style="color:#eff1f5;">(</span><span style="color:#b48ead;">new </span><span style="color:#ebcb8b;">Date</span><span style="color:#eff1f5;">() </span><span>+ &quot;</span><span style="color:#a3be8c;"> contextInitialized....</span><span>&quot;</span><span style="color:#eff1f5;">);
+</span><span style="color:#eff1f5;">    }
+</span><span style="color:#eff1f5;">
+</span><span style="color:#eff1f5;">    @</span><span style="color:#bf616a;">Override
+</span><span style="color:#eff1f5;">    </span><span style="color:#b48ead;">public void </span><span style="color:#8fa1b3;">contextDestroyed</span><span style="color:#eff1f5;">(</span><span style="color:#ebcb8b;">ServletContextEvent </span><span style="color:#bf616a;">sce</span><span style="color:#eff1f5;">) {
+</span><span style="color:#eff1f5;">
+</span><span style="color:#eff1f5;">    }
+</span><span style="color:#eff1f5;">}
+</span></code></pre>
+<p>当web.xml在加载监听器节点之后，会创建我们定义的对应的MyInitListener对象，并且会执行其中的contextInitialized方法，在整个项目关闭的时候会执行contextDestroyed方法。上面我们编写了contextInitialized方法中的内容，然后启动项目，会在控制台看到输出：</p>
+<pre style="background-color:#2b303b;color:#c0c5ce;"><code><span>Sun Aug 26 13:02:19 CST 2018 contextInitialized....
+</span></code></pre>
+<p>当然，我们也可以ServletContextEvent.getServletContext().getInitParam("xxx")来获取context-param了：</p>
+<pre data-lang="JAVA" style="background-color:#2b303b;color:#c0c5ce;" class="language-JAVA "><code class="language-JAVA" data-lang="JAVA"><span>@</span><span style="color:#bf616a;">Override
+</span><span style="color:#b48ead;">public</span><span> void </span><span style="color:#bf616a;">contextInitialized</span><span>(</span><span style="color:#ebcb8b;">ServletContextEvent</span><span> sce) {
+</span><span>    </span><span style="color:#ebcb8b;">System</span><span>.out.</span><span style="color:#bf616a;">println</span><span>(</span><span style="color:#b48ead;">new </span><span style="color:#ebcb8b;">Date</span><span>() + &quot;</span><span style="color:#a3be8c;">contextInitialized....</span><span>&quot;);
+</span><span>    </span><span style="color:#ebcb8b;">System</span><span>.out.</span><span style="color:#bf616a;">println</span><span>(sce.</span><span style="color:#bf616a;">getServletContext</span><span>().</span><span style="color:#bf616a;">getInitParameter</span><span>(&quot;</span><span style="color:#a3be8c;">test-param</span><span>&quot;) + &quot;</span><span style="color:#a3be8c;"> in contextInitialized()</span><span>&quot;);
+</span><span>    </span><span style="color:#65737e;">// OUTPUT
+</span><span>    </span><span style="color:#65737e;">// Sun Aug 26 13:19:16 CST 2018 contextInitialized....
+</span><span>    </span><span style="color:#65737e;">// this is a test-param string in contextInitialized()
+</span><span>}
+</span></code></pre>
+<h4 id="hui-dao-spring-mvcpei-zhi">回到Spring MVC配置</h4>
+<p>回到Spring。为什么想要使用spring mvc，需要设置param-name=contextConfigurationLocation，param-value=xxxx-spring（非mvc部分配置）.xml；然后设置listener节点中监听器类是org.springframework.web.context.ContextLoaderListener。其实就比较好理解了，因为在这一步通过首先将spring基础上下文的配置文件通过ContextLoaderListener监听器去加载，然后读取出基础spring IOC以及AOP部分配置，将一些基础组件加载到spring的bean容器中，在接下来的无论是filter节点中的对象还是serlvet节点中的对象需要依赖注入的部分，都已经通过加载context-param中对于spring基础配置文件定位加载好了，后续spring相关的bean的创建以及注入等都交给了spring来进行管理。</p>
+<p>同时在加载serlvet时候，因为所有的请求都交给了DispatcherSevlet，且指定了mvc.xml配置文件的路径参数，所以，我们在这个mvc.xml中去设置静态资源的处理规则以及试图和控制器等处理规则。</p>
+
+    </div>
+</div>
+<script src="https://zhen.wang/libs/viewerjs@1.11.7/viewer.min.js"></script>
+<link rel="stylesheet" href="https://zhen.wang/libs/viewerjs@1.11.7/viewer.min.css"/>
+<script>
+  if (window.Viewer) {
+    document.querySelectorAll('img').forEach(img => {
+      new Viewer(img, {
+        inline: false,
+        navbar: false,
+        toolbar: {
+          zoomIn: 1,
+          zoomOut: 1,
+          reset: 1,
+          rotateLeft: 1,
+          rotateRight: 1,
+        },
+      });
+    });
+  }
+</script>
+
+
+</body>
+</html>
