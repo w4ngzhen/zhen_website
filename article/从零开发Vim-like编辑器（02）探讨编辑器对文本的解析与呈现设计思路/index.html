@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="utf-8">
+    <meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover"
+          name="viewport">
+    
+    
+    <!-- umami web analysis -->
+    <script defer src="https://zhen.wang/libs/umami/umami.script.js"
+            data-website-id="d66cfe03-f6b3-4aa0-baf8-728700db1b09"></script>
+    
+    
+    
+    <link rel="icon" type="image/png" sizes="16x16" href="https://zhen.wang/images/blog-site-icon.svg">
+    <link rel="icon" type="image/png" sizes="32x32" href="https://zhen.wang/images/blog-site-icon.svg">
+    <title>zhen&#x27;s everything</title>
+    <link rel="stylesheet" href="https://zhen.wang/style.css">
+    
+<link rel="stylesheet" href="https://zhen.wang/article_content.css">
+<link rel="stylesheet" href="https://zhen.wang/article_markdown.css">
+
+</head>
+<body>
+
+<div id="article">
+    <header class="article-header">
+        
+<div class="base-title">
+    <a href="#" onclick="history.length > 1 ? history.back() : location.href = '/'; return false;">&LeftArrow; Back</a>
+    <h1>
+        从零开发Vim-like编辑器（02）探讨编辑器对文本的解析与呈现设计思路
+    </h1>
+</div>
+
+    </header>
+    <p class="article-date">2025-06-30</p>
+    
+    <!-- toc -->
+    <div class="article-toc">
+        <label class="toc-title" for="toc-trigger">目录</label>
+        <input id="toc-trigger" type="checkbox" checked/>
+        <div class="toc-content">
+            <ol class="toc">
+                
+                <li class="toc-item toc-level-1">
+                    <a class="toc-link" href="https://zhen.wang/article/从零开发Vim-like编辑器（02）探讨编辑器对文本的解析与呈现设计思路/#qian-yan">前言</a>
+                    
+                </li>
+                
+                <li class="toc-item toc-level-1">
+                    <a class="toc-link" href="https://zhen.wang/article/从零开发Vim-like编辑器（02）探讨编辑器对文本的解析与呈现设计思路/#wen-ben-jie-xi-yu-cun-chu">文本解析与存储</a>
+                    
+                    <ol class="toc-child">
+                        
+                        <li class="toc-item toc-level-2">
+                            <a href="https://zhen.wang/article/从零开发Vim-like编辑器（02）探讨编辑器对文本的解析与呈现设计思路/#guan-yu-huan-xing-fu-de-li-jie">关于换行符的理解</a>
+                        </li>
+                        
+                        <li class="toc-item toc-level-2">
+                            <a href="https://zhen.wang/article/从零开发Vim-like编辑器（02）探讨编辑器对文本的解析与呈现设计思路/#huan-xing-chu-li-luo-ji-she-ji">换行处理逻辑设计</a>
+                        </li>
+                        
+                    </ol>
+                    
+                </li>
+                
+                <li class="toc-item toc-level-1">
+                    <a class="toc-link" href="https://zhen.wang/article/从零开发Vim-like编辑器（02）探讨编辑器对文本的解析与呈现设计思路/#wen-ben-de-cheng-xian">文本的呈现</a>
+                    
+                    <ol class="toc-child">
+                        
+                        <li class="toc-item toc-level-2">
+                            <a href="https://zhen.wang/article/从零开发Vim-like编辑器（02）探讨编辑器对文本的解析与呈现设计思路/#ratatuide-wen-ben-xuan-ran">Ratatui的文本渲染</a>
+                        </li>
+                        
+                        <li class="toc-item toc-level-2">
+                            <a href="https://zhen.wang/article/从零开发Vim-like编辑器（02）探讨编辑器对文本的解析与呈现设计思路/#bian-ji-qi-de-wen-ben-xuan-ran-she-ji">编辑器的文本渲染设计</a>
+                        </li>
+                        
+                    </ol>
+                    
+                </li>
+                
+                <li class="toc-item toc-level-1">
+                    <a class="toc-link" href="https://zhen.wang/article/从零开发Vim-like编辑器（02）探讨编辑器对文本的解析与呈现设计思路/#xie-zai-zui-hou">写在最后</a>
+                    
+                </li>
+                
+            </ol>
+        </div>
+    </div>
+    
+    <!-- real content -->
+    <div class="article-content markdown-content">
+        <blockquote>
+<p>本文同步发布在我的个人博客：<a rel="noopener" target="_blank" href="https://zhen.wang">https://zhen.wang</a></p>
+</blockquote>
+<h1 id="qian-yan">前言</h1>
+<p>前一篇文章作为开篇，只是介绍了Ratatui的相关使用，引出了一些概念。从本文开始，我们正式进入咱们的Vim-like编辑器的开发设计。</p>
+<p>Vim-like编辑器，或者说任意类型的文本编辑器，其核心功能无外乎两个：</p>
+<ol>
+<li>呈现当前文本内容。</li>
+<li>响应用户输入，修改呈现的文本内容。</li>
+</ol>
+<p>我们本章首先来探讨关于文本解析与呈现。能够呈现一段文本内容的前提是我们得<strong>持有</strong>一段文本，而这这块就涉及到在程序运行中我们应该如何存储文本数据。假设现在存在如下2行的文本内容：</p>
+<pre style="background-color:#2b303b;color:#c0c5ce;"><code><span>hello.
+</span><span>你好。
+</span></code></pre>
+<p>在Rust中，我们可以使用如下的几种方式来表达这段文本：</p>
+<pre data-lang="rust" style="background-color:#2b303b;color:#c0c5ce;" class="language-rust "><code class="language-rust" data-lang="rust"><span style="color:#65737e;">// 1. 保留换行符的字符串
+</span><span style="color:#b48ead;">let</span><span> text1: &amp;</span><span style="color:#b48ead;">str </span><span>= &quot;</span><span style="color:#a3be8c;">hello.</span><span style="color:#96b5b4;">\n</span><span style="color:#a3be8c;">你好。</span><span>&quot;;
+</span><span>
+</span><span style="color:#65737e;">// 2. 每一行一项组成的动态数组，共2行
+</span><span style="color:#b48ead;">let</span><span> text2: Vec&lt;&amp;</span><span style="color:#b48ead;">str</span><span>&gt; = vec![&quot;</span><span style="color:#a3be8c;">hello.</span><span>&quot;, &quot;</span><span style="color:#a3be8c;">世界。</span><span>&quot;];
+</span><span>
+</span><span style="color:#65737e;">// 3. 每一行由n个字符构成的动态数组，共2行
+</span><span style="color:#b48ead;">let mut</span><span> text3: Vec&lt;Vec&lt;</span><span style="color:#b48ead;">char</span><span>&gt;&gt; = vec![];
+</span><span>text3.</span><span style="color:#96b5b4;">push</span><span>(vec![&#39;</span><span style="color:#a3be8c;">h</span><span>&#39;, &#39;</span><span style="color:#a3be8c;">e</span><span>&#39;, &#39;</span><span style="color:#a3be8c;">l</span><span>&#39;, &#39;</span><span style="color:#a3be8c;">l</span><span>&#39;, &#39;</span><span style="color:#a3be8c;">o</span><span>&#39;, &#39;</span><span style="color:#a3be8c;">.</span><span>&#39;]);
+</span><span>text3.</span><span style="color:#96b5b4;">push</span><span>(vec![&#39;</span><span style="color:#a3be8c;">你</span><span>&#39;, &#39;</span><span style="color:#a3be8c;">好</span><span>&#39;, &#39;</span><span style="color:#a3be8c;">。</span><span>&#39;]);
+</span></code></pre>
+<p>可以看到的是，同一段文本可以有多种数据表达的方式。那我们在实际应用中，应该选择哪种存储方式呢？考虑到在本Vim-like编辑器的设计与开发过程中，我们希望能够精确的控制每一个字符的渲染，目前来看<strong>最简单粗暴的</strong>，就是以方式3来存储原始内容。</p>
+<blockquote>
+<p>本人没有深入学习过关于文本编辑器的设计模式，从理论上来讲应该还有其他更加优雅且高效的内容存储数据结构，但是考虑到本系列文章的入门性，我们不过多讨论更加高深的内容。</p>
+</blockquote>
+<p>基于此，我们暂时将存储文本数据的数据结构定义如下：</p>
+<pre data-lang="rust" style="background-color:#2b303b;color:#c0c5ce;" class="language-rust "><code class="language-rust" data-lang="rust"><span style="color:#b48ead;">pub struct </span><span>Content {
+</span><span>    </span><span style="color:#bf616a;">lines</span><span>: Vec&lt;Vec&lt;</span><span style="color:#b48ead;">char</span><span>&gt;&gt;,
+</span><span>    </span><span style="color:#bf616a;">line_feed</span><span>: Option&lt;String&gt;,
+</span><span>}
+</span></code></pre>
+<p>注意到，除了存储每一行每一个字符的<code>Vec&lt;Vec&lt;char&gt;&gt;</code>字段<code>lines</code>以外，我们还定了一个名为<code>line_feed</code>的字段，这个字段主要是为了存储换行符。定义这个字段，是因为我们在后续将输入的包含多行文本内容的数据处理后，多行文本已经被分解为了<code>Vec&lt;Vec&lt;char&gt;&gt;</code>，不再有换行符的存在，因此我们需要将识别到的换行符存储下来，在某些场景需要用到换行符时使用（比如写入到文件时）。</p>
+<p>接下来，让我们讨论一下关于使用<code>Vec&lt;Vec&lt;char&gt;&gt;</code>存储文本数据的一些细节。</p>
+<h1 id="wen-ben-jie-xi-yu-cun-chu">文本解析与存储</h1>
+<h2 id="guan-yu-huan-xing-fu-de-li-jie">关于换行符的理解</h2>
+<p>当我们读取已存在的文本文件时，面临的第一个问题是如何理解“换行”，因为文本内容最终加载到程序内存中后，并没有所谓的视觉表现上的换行，在内存中它是一段连续一维的字符序列，只不过在某些位置存在“换行标记”：</p>
+<pre style="background-color:#2b303b;color:#c0c5ce;"><code><span>// 文本内容
+</span><span>hi!
+</span><span>世界。
+</span><span>// 读取到内存中实际上是一维字符序列
+</span><span>[&#39;h&#39;, &#39;i&#39;, &#39;!&#39;, &#39;换行标记&#39;, &#39;世&#39;, &#39;界&#39;, &#39;。&#39;]
+</span></code></pre>
+<p>当然提起换行符，在网上我们经常会看到 这样一句话：“Windows使用CRLF（<code>\r\n</code>）双字符组合作为换行符，而macOS从OS X开始已经与Linux统一采用LF（<code>\n</code>）单字符。”，在笔者看来这句话非常有误导性，给人的感觉是Windows上的文本数据似乎<strong>都是</strong><code>\r\n</code>作为换行符，而对于macOS/Linux/Unix上，则似乎<strong>都是</strong>使用<code>\n</code>作为换行符。但实际上，这块应该取决于在操作系统之上的上层应用如何定义“换行”，有的软件会识别<code>\r\n</code>双字符组合作为换行符，而有的软件会识别<code>\n</code>单字符作为换行符。比如存在如下两个文本序列：</p>
+<pre style="background-color:#2b303b;color:#c0c5ce;"><code><span>// text1
+</span><span>&#39;h&#39;, &#39;i&#39;, &#39;!&#39;, &#39;\r&#39;, &#39;\n&#39;, &#39;世&#39;, &#39;界&#39;, &#39;。&#39;
+</span><span>// text2
+</span><span>&#39;h&#39;, &#39;i&#39;, &#39;!&#39;, &#39;\n&#39;, &#39;世&#39;, &#39;界&#39;, &#39;。&#39;
+</span></code></pre>
+<p>如果某个文本编辑器<strong>只能</strong>识别<code>\r\n</code>换行符，<strong>无论这个编辑器是否运行在哪个操作系统上，对于text1它总是能够正确识别到换行</strong>，而对于text2它就无法识别换行，因此最终渲染出来可能就是一行文本（<code>\n</code>可能根据不同的实现不显示或显示为乱码）。因此，“Windows使用CRLF（<code>\r\n</code>）双字符组合作为换行符，而macOS从OS X开始已经与Linux统一采用LF（<code>\n</code>）单字符。”这句话在笔者看来，更为准确的表达应该是：</p>
+<ul>
+<li>
+<p>Windows 系统内核和原生工具（如记事本）<strong>默认</strong>生产和消费 <code>\r\n</code> 换行符。</p>
+</li>
+<li>
+<p>macOS/Linux/Unix 系统内核及工具（如 cat、vi）<strong>默认</strong>生产和消费 <code>\n</code> 换行符。</p>
+</li>
+</ul>
+<p>从本质上讲，这是操作系统和配套工具链的<strong>默认约定</strong>。当然，如今很多主流编辑器（VS Code、Sublime Text等）都支持对这两种换行符的智能识别和切换。</p>
+<h2 id="huan-xing-chu-li-luo-ji-she-ji">换行处理逻辑设计</h2>
+<p>回到我们自己Vim-like编辑器设计部分，要实现识别给定的文本内容（的换行符）以及转化为前面我们定义的字符动态数组结构（<code>Vec&lt;Vec&lt;char&gt;&gt;</code>），在这里我们可以采用如下逻辑：</p>
+<ol>
+<li>检测一段文本内容的换行符并设置为默认换行符。</li>
+<li>解析文本内容，转化char动态数组。</li>
+</ol>
+<p><strong>对于步骤1：检测默认换行符。<strong>我们可以从左到右逐步读入单个字符，检测</strong>首次出现</strong>的换行符（<code>\r\n</code>或<code>\n</code>，或没有换行符），如果存在换行符，则将该换行符作为该段文本内容的默认换行符；如果不存在换行符，则使用系统默认换行符作为该文件的默认换行符（Windows是<code>\r\n</code>，macOS/Linux/Unix等是<code>\n</code>）。</p>
+<p><img src="https://static-res.zhen.wang/images/post/2025-06-30/010.png" alt="010" /></p>
+<blockquote>
+<p>识别首次出现换行符的较坏的情况是所识别的文本不包含任意的换行符，程序会遍历这“一行”文本的每一个字符直到最后一个字符，更坏的情况是这“一行”文本还特别长。不过我们暂时不考虑这种超长单行文本的换行效率问题。</p>
+</blockquote>
+<p>注意，笔者强调这里的逻辑只看<strong>首次出现</strong>的换行符是什么，比如下面的文本，即使后续还有2个<code>\r\n</code>换行符，但我们依然使用首次出现的<code>\n</code>作为该文本内容的默认换行符：</p>
+<p><img src="https://static-res.zhen.wang/images/post/2025-06-30/020.png" alt="020" /></p>
+<p>识别到的默认换行符我们可以存储起来（例如前面的<code>Content</code>的<code>line_feed</code>字段），在编辑器后续使用过程中，在保存多行文本数据写入到文件时，作为插入的换行符号来使用：</p>
+<p><img src="https://static-res.zhen.wang/images/post/2025-06-30/030.png" alt="030" /></p>
+<p><strong>对于步骤2：解析文本内容，转化char动态数组。<strong>我们可以先准备一个<code>Vec&lt;char&gt;</code>临时容器temp_line来准备存放一行的每一个字符；然后从左到右每读取一个char，每次读取到的char只要</strong>不是</strong><code>\n</code>字符，就将该char放入temp_line中。当<code>\n</code>出现时（这个<code>\n</code>我们不会放入<code>Vec&lt;char&gt;</code>），我们再检查当前temp_line容器里最后一个元素是否是<code>\r</code>，如果是<code>\r</code>，也把它移除（这一步是为处理某一行的换行符是<code>\r\n</code>这种情况），此时剩下的就是目前识别到的该行文本。当然，在最后将所有字符遍历结束后，temp_line还存在一些字符，则说明此时temp_line就是最后一行数据：</p>
+<p><img src="https://static-res.zhen.wang/images/post/2025-06-30/040.png" alt="040" /></p>
+<p>这个处理逻辑可以同时将<code>\n</code>和<code>\r\n</code>的场景都考虑并处理掉，且复杂度是<code>O(n)</code>；同时，我们还可以在该处理逻辑中将上面第一步文本默认换行符识别的逻辑兼容到，只需要通过一个标志变量来确定是否是第一次出现换行符即可。最后，对于这块的代码处理代码如下：</p>
+<p><img src="https://static-res.zhen.wang/images/post/2025-06-30/050.png" alt="050" /></p>
+<p>其中，对于<code>for ch in value.chars()</code>遍历字符的过程如下：</p>
+<p><img src="https://static-res.zhen.wang/images/post/2025-06-30/060.png" alt="060" /></p>
+<blockquote>
+<p>注意，这段代码还有一个小小的 <del>BUG</del> 特性，如果该文本的最后一个字符是<code>\n</code>，则等价于没有该换行符，比如："Hello<code>\n</code>"的处理结果会和"Hello"一行，都会被处理为1行，而不是2行。</p>
+</blockquote>
+<p>对于上述代码，我们最终可以通过单元测试来验证：</p>
+<p><img src="https://static-res.zhen.wang/images/post/2025-06-30/070.png" alt="070" /></p>
+<h1 id="wen-ben-de-cheng-xian">文本的呈现</h1>
+<h2 id="ratatuide-wen-ben-xuan-ran">Ratatui的文本渲染</h2>
+<p>⽬前为⽌，我们完成了一个基础的存储文本数据的模型设计。当然，光是存储文本还远远不够，我们最终要完成的是一款Vim-like的文本编辑器，我们需要将文本内容呈现在一个文本编辑器区域。既然是要呈现内容，我们就需要设计一下文本呈现的逻辑。首先，让我们先了解一下Rataui官方的文本渲染。就目前而言，Ratatui官方支持如下的几种文本渲染方式：</p>
+<p><strong>Span</strong></p>
+<p>对于 <code>Span</code> ，你可以认为它是可以<strong>最小粒度可定制样式</strong>的单元，比如，如下的示例代码中表示了三种形式的 <code>Span</code> 构造以及效果：</p>
+<p><img src="https://static-res.zhen.wang/images/post/2025-06-30/080.png" alt="080" /></p>
+<p><strong>Line</strong></p>
+<p>其次是 <code>Line</code> 。<code>Line</code> 可以认为是一组 <code>Span</code> 实例的合集，当我们需要将一行文本多个部分各自呈现不同的样式时，就需要将多个部分拆分为不同的 <code>Span</code> ，然后构造 <code>Line</code> 来持有它们：</p>
+<p><img src="https://static-res.zhen.wang/images/post/2025-06-30/090.png" alt="090" /></p>
+<p><strong>Text</strong></p>
+<p><code>Text</code> 是输出文本的最终构建区块。<code>Text</code> 对象表示 <code>Line</code> 对象实例的一组集合，并且n个 <code>Line</code> 会在UI渲染上呈现n行：</p>
+<p><img src="https://static-res.zhen.wang/images/post/2025-06-30/100.png" alt="100" /></p>
+<p><strong>Buffer Cell（底层）</strong></p>
+<p>除上述几种之外，Ratatui还有一种更加底层的字符渲染。通过获取对应的命令行buffer，在指定位置设置字符：</p>
+<p><img src="https://static-res.zhen.wang/images/post/2025-06-30/110.png" alt="110" /></p>
+<blockquote>
+<p>官方文档：https://ratatui.rs/recipes/render/display-text/</p>
+</blockquote>
+<h2 id="bian-ji-qi-de-wen-ben-xuan-ran-she-ji">编辑器的文本渲染设计</h2>
+<p>在了解了Ratatui的文本渲染API以后，接下来让我们回到编辑器的文本渲染。简单来看，我们也许可以将一行文本（<code>Vec&lt;char&gt;</code>）直接转换为 <code>Line</code> 实例交给Ratatui进行渲染，但这样的做法会丧失了⼀定的灵活性，原因在于我们的Vim-like编辑器呈现⽂本的能力，在后续的迭代过程中⼤概率需要支持不同⽂字⽚段的能够完成不同颜⾊渲染：：</p>
+<p><img src="https://static-res.zhen.wang/images/post/2025-06-30/120.png" alt="120" /></p>
+<p>像类似上图这样的效果，我们肯定需要将一行文本拆分为多个 <code>Span</code> 实例来控制局部自定义文本其片段样式（比如颜色、下划线等）。因此，我们需要将文本原始数据的存储和渲染进行解耦：</p>
+<p><img src="https://static-res.zhen.wang/images/post/2025-06-30/130.png" alt="130" /></p>
+<p>因此，我们需要⼀个逻辑流程来完成从原始文本到Ratatui中 <code>Span</code> 实例的映射逻辑（例如上图的6个char会映射为4个 <code>Span</code> 实例）。这个映射逻辑的具体细节我们先不着急在这里讲解，读者先有一个思路印象即可。因为在接下来笔者还会补充⼀些额外的细节点，才能让整个映射逻辑的流程更加清晰。</p>
+<h3 id="yuan-shi-zi-fu-yu-renderterm">原始字符与RenderTerm</h3>
+<p>在编辑器中我们能够展示输入的各种文本字符，但有一类字符比较特殊，例如制表符 <code>'\t'</code> 。相信有的读者在一些主流编辑器中都见过关于制表符的设置：一个水平tab渲染为2个或4个空格宽度。如果按照字符直接渲染到编辑器上，我们会发现像是制表符这种字符，应该渲染为2个空格宽度的“空白区域”还是4个呢？答案是无法确定，我们应该允许用户进行配置。此外，对于一段来自外部输入的文本内容，我们无法保证里面的任何一个char字符都是可见的。比如，在下面的ascii表中：</p>
+<p><img src="https://static-res.zhen.wang/images/post/2025-06-30/140.png" alt="140" /></p>
+<p><code>0x00</code> 到 <code>0x1f</code>（上部分红框）的字符以及最后一个 <code>0x7f</code>（<code>DEL</code>删除字符）这类的“控制字符”都有其编码，可以存储在 char 中：</p>
+<pre data-lang="rust" style="background-color:#2b303b;color:#c0c5ce;" class="language-rust "><code class="language-rust" data-lang="rust"><span style="color:#b48ead;">let</span><span> ch = &#39;</span><span style="color:#96b5b4;">\u{00}</span><span>&#39;; </span><span style="color:#65737e;">// NUL
+</span><span style="color:#b48ead;">let</span><span> ch2 = &#39;</span><span style="color:#96b5b4;">\u{07}</span><span>&#39;; </span><span style="color:#65737e;">// BEL
+</span><span style="color:#b48ead;">let</span><span> ch3 = &#39;</span><span style="color:#96b5b4;">\u{0a}</span><span>&#39;; </span><span style="color:#65737e;">// LF
+</span></code></pre>
+<p>在笔者的机器上，尝试在控制台输出这些字符的时候，呈现如下效果：</p>
+<pre data-lang="rust" style="background-color:#2b303b;color:#c0c5ce;" class="language-rust "><code class="language-rust" data-lang="rust"><span>println!(&quot;</span><span style="color:#a3be8c;">123</span><span style="color:#d08770;">{}</span><span style="color:#a3be8c;">456</span><span style="color:#d08770;">{}</span><span style="color:#a3be8c;">789</span><span style="color:#d08770;">{}</span><span style="color:#a3be8c;">0</span><span>&quot;, ch, ch2, ch3);
+</span><span style="color:#65737e;">// 下面是在控制台的实际输出效果:
+</span><span style="color:#d08770;">123456789
+</span><span style="color:#d08770;">0
+</span></code></pre>
+<blockquote>
+<p>实际输出根据不同的命令行终端会有不同的效果</p>
+</blockquote>
+<p>在笔者使用的WezTerm终端软件上，可以看到 "123" 与 "456" 之间的 <code>\u{00}</code>（NUL）以及 "456" 与 "789" 之间的 <code>\u{07}</code>（BEL）都没有打印到控制台，但 "789" 与 "0" 之间的 <code>\u{0a}</code>（LF换行符）控制了最后的控制台输出效果，将 "789" 与 "0" 分割为了两行。也就是说，笔者机器上的命令行终端在输出一些不可见字符的时候，没有打印到控制台。</p>
+<p>回到咱们的Vim-like编辑器。在继续讨论前，我们先确定一个原则：“<strong>以数据驱动为基本模式，数据与视图始终分离</strong>”。在这个原则的基础上，我们再确定这样一个事实： <code>Vec&lt;Vec&lt;char&gt;&gt; </code> 会存储我们文本中除开换行符以外的所有文本字符（Rust中char是unicode），无论其是否可见，并且，我们不会<strong>擅自</strong>更改这里面的任何一个char数据。</p>
+<p>假设存在如下的文本内容：</p>
+<pre data-lang="rust" style="background-color:#2b303b;color:#c0c5ce;" class="language-rust "><code class="language-rust" data-lang="rust"><span>[&#39;</span><span style="color:#a3be8c;">h</span><span>&#39;, &#39;</span><span style="color:#a3be8c;">i</span><span>&#39;, &#39;</span><span style="color:#96b5b4;">\u{b}</span><span>&#39;(ascii </span><span style="color:#d08770;">0xb</span><span>), &#39;</span><span style="color:#a3be8c;">,</span><span>&#39;, &#39;</span><span style="color:#96b5b4;">\u{0}</span><span>&#39;(ascii </span><span style="color:#d08770;">0x0</span><span>)]
+</span></code></pre>
+<p>对于这一行内容，<code>'h'</code> 、<code>'i'</code>  、<code>','</code> 当然可以渲染展示到界面上，但是对于 <code>'\u{b}'</code> 以及 <code>'\u{0}'</code> 我们应当如何渲染呢？很显然，在原始的文本数据字符到最终渲染到屏幕上的字符无法完全的一一对应，<strong>假设对于本Vim-like编辑器，笔者从主观上考虑设计为如下形式</strong>：</p>
+<p><img src="https://static-res.zhen.wang/images/post/2025-06-30/150.png" alt="150" /></p>
+<p>即，我们在渲染某些特殊字符时，会设计成将其渲染为 <code>\u{该字符unicode}</code>。对这种场景更进一步抽象，<strong>我们本质上是希望编辑器支持在准备渲染某个字符时，将其映射为另外形式的文本的能力。</strong></p>
+<p>为了承载这个映射逻辑，笔者引入 <strong>渲染Term（RenderTerm）</strong> 的概念，渲染Term来源于我们文本数据中的某单个字符char，并保存了关于这个字符的一些有用上下文（比如，type表明是否为可见字符，render_text指实际渲染的文本等）。同时，渲染Term在其保存的上下文的基础上，内部经过某些配置、逻辑，能够转化为得最终渲染终端屏幕上的单个 <code>Span</code>：</p>
+<p><img src="https://static-res.zhen.wang/images/post/2025-06-30/160.png" alt="160" /></p>
+<p>在有了上述渲染Term，我们今后就可以很容易的来将某些字符进行任意效果的映射，比如我们在面对一个 char <code>'a'</code> ，将其渲染为 <code>作者厉害</code> ：</p>
+<p><img src="https://static-res.zhen.wang/images/post/2025-06-30/170.png" alt="170" /></p>
+<h3 id="shi-kou-viewport">视口Viewport</h3>
+<p>⽂本数据是来自外部不确定的内容，但是编辑器本身的⼤⼩是可描述的。命令行终端编辑器本质上是一个矩形区域，我们在实现编辑器时，就需要考虑如何将⽂本正确的渲染到这个区域内。</p>
+<p>在此，笔者再引入一个概念：编辑器文本<strong>视口Viewport</strong>，它包含两个核心部分：</p>
+<ol>
+<li>视口尺寸，通常指一个row行col列的矩形区域。</li>
+<li>视口锚点，指这个视口的左上角应该位于当前文本的哪个字符位置（通常用<code>(x行, y列)</code>坐标来表示）。</li>
+</ol>
+<p>视口主要有两个作用，一是描述实际终端界面上的某个区域；二是“框住”一部分文本，将“框住”部分的文本呈现渲染到这个可视区域内。例如，如下的4行10列的文本（我们先关注所有字符都等宽的情况），在一个视口尺寸为3行3列，视口锚点分别为<code>(0, 0)</code>和<code>(2, 1)</code>的视口区域下，编辑器理论上所呈现的内容如下所示：</p>
+<p><img src="https://static-res.zhen.wang/images/post/2025-06-30/180.png" alt="180" /></p>
+<p>当然，光是纯粹粗暴的“框住”某个区域的文本还不够，因为还涉及到一些细节我们没有考虑到。首先，我们在前面引入了渲染Term，假设有如下原始文本数据：</p>
+<pre data-lang="rust" style="background-color:#2b303b;color:#c0c5ce;" class="language-rust "><code class="language-rust" data-lang="rust"><span>[&#39;</span><span style="color:#a3be8c;">h</span><span>&#39;, &#39;</span><span style="color:#a3be8c;">e</span><span>&#39;, &#39;</span><span style="color:#96b5b4;">\u{b}</span><span>&#39;, &#39;</span><span style="color:#a3be8c;">l</span><span>&#39;, &#39;</span><span style="color:#a3be8c;">l</span><span>&#39;, &#39;</span><span style="color:#a3be8c;">o</span><span>&#39;]
+</span></code></pre>
+<p>此时我们加载的文本有6个字符，其中包含了5个可视的字符<code>hello</code>以及1个不可见的字符<code>\u{b}</code>，我们在前面已经设计了这里的渲染方式，构造渲染Term，并且对于 <code>\u{b}</code> 的渲染Term，渲染文本使用一个字符串 <code>"\u{b}"</code> 来替代这里的不可见字符。因此，假设命令行的视口宽度远远超过这行文本，那么我们应该会看到如下的效果：</p>
+<p><img src="https://static-res.zhen.wang/images/post/2025-06-30/190.png" alt="190" /></p>
+<p>但是当命令行的视口宽度只有<strong>3</strong>列时，如果我们暴力的按照最终渲染的文本来截取，就会发生如下的效果：</p>
+<p><img src="https://static-res.zhen.wang/images/post/2025-06-30/200.png" alt="200" /></p>
+<p>可以看到，由于我们的视口尺寸的UI宽度只有3个单位，原本渲染到界面上的渲染文本 <code>"he\u{b}llo"</code> 一共会占据10个宽度单位，于是最终被渲染的第三个渲染Term（render_text = <code>"\u{b}"</code>）被截取了。为了避免这样的问题，我们需要这样的逻辑：判断每个字符的渲染Term的渲染文本，所对应的渲染文本只有能被完整的渲染视口中，这个渲染Term才能最终转换为 <code>Span</code> 交给 Ratatui 渲染。</p>
+<h3 id="cjkzi-fu-xuan-ran-zhu-yi-dian">CJK字符渲染注意点</h3>
+<p>在Ratatui中，渲染CJK字符（例如中文字符）比起渲染一个常规的ascii字符（'a', 'b', 'c', ..., '1', '2', ...'）有更多的细节需要考虑知晓。假设有如下的一段4个中文字符的文本：</p>
+<pre data-lang="rust" style="background-color:#2b303b;color:#c0c5ce;" class="language-rust "><code class="language-rust" data-lang="rust"><span>[&#39;</span><span style="color:#a3be8c;">你</span><span>&#39;, &#39;</span><span style="color:#a3be8c;">好</span><span>&#39;, &#39;</span><span style="color:#a3be8c;">中</span><span>&#39;, &#39;</span><span style="color:#a3be8c;">文</span><span>&#39;]
+</span></code></pre>
+<p>这些中文字符在终端中占据的UI宽度单位与我们常规的ascii字符的宽度不一样。先给出一个结论，普通的ascii字符在命令行终端只占据1个单位宽度，而中文字符则会占用2个单位宽度。当然，这并不是Ratatui随意制定的规则，而是依照一套Unicode字符在命令行终端渲染的规范。首先，Ratatui内部使用<a rel="noopener" target="_blank" href="https://docs.rs/unicode-width/latest/unicode_width/">unicode-width</a>这个库来确定一个字符的宽度，而该库的核心作用是根据<a rel="noopener" target="_blank" href="https://www.unicode.org/reports/tr11/">《Unicode标准规范附录11》</a>的要求来返回一个字符在命令行中应该占据的宽度。</p>
+<blockquote>
+<p>Unicode® Standard Annex #11（UAX #11）是Unicode技术标准中的一个重要附件，全称为**《East Asian Width》**（东亚宽度）。它定义了东亚文字（如中文、日文、韩文）在终端显示时的宽度属性规范，主要解决字符在等宽字体环境下的对齐和布局问题。</p>
+</blockquote>
+<p>因此，当我们使用Ratatui来打印上述的中文字符，并和⼀些常规字符进⾏对⽐，就会发现中文字符确实占据是常规ascii字符的两倍宽度：</p>
+<p><img src="https://static-res.zhen.wang/images/post/2025-06-30/210.png" alt="210" /></p>
+<p>那么，在命令行渲染下，中文等东亚文字所占据的宽度与常规ascii字符存在差异会造成什么影响呢？相信读者已经想到了，这种情况和前面提到的渲染Term的实际渲染文本无法在指定宽度内完整显示本质上是一样的。假设我们使用一个3x3的视口，去渲染如下文本，理论上第2个中文字符 "好" 从UI效果上就会出现截断：</p>
+<p><img src="https://static-res.zhen.wang/images/post/2025-06-30/220.png" alt="220" /></p>
+<p>不过，由于Ratatui内部已经对这块的细节考虑了，因此，实际在如下的3x3矩形区域去渲染文本时，Ratatui会帮我们把无法完整渲染的文本给剔除掉：</p>
+<p><img src="https://static-res.zhen.wang/images/post/2025-06-30/230.png" alt="230" /></p>
+<p>然而，**在实现我们自己的编辑器的时候，我们还是得需要自己去做这块的检测机制。**因为我们先前设计了渲染Term这一数据模型来实现将某个char映射另外的文本，对于这些映射后的文本，它们本身对于Ratatui来说是就是正常的文本（例如映射后的 "\u{0}" ，会占据5个单位 ，如果不加检测，就会被错误的截断。为了统一处理逻辑，我们也将中文字符的渲染收口到渲染Term：</p>
+<p><img src="https://static-res.zhen.wang/images/post/2025-06-30/240.png" alt="240" /></p>
+<p>也就是说，对于任意一个字符，我们都将起包装为渲染Term，该渲染Term能够返回最终渲染的文本的Unicode命令行宽度，以便于我们后续根据视口来合理的进行水平裁剪。</p>
+<h1 id="xie-zai-zui-hou">写在最后</h1>
+<p>讲到这里，本章内容就差不多了。细心的读者可能发现，相较与之前的文章，本文并没有平铺太多纯代码，因为笔者现在写作时考虑更多的是将一些设计思路表达出来，而不是使用太多的代码来水文章内容。这样做一方面可以让文章的内容更加饱满，另一方面读者也可根据本文的思路自己去代码实践。</p>
+<p>当然，本章暂时还没有提到如何设计一个几乎所有编辑器都有的功能：<strong>视觉换行</strong>。这个功能主要用于当一行文本超过视口宽度时，超过的部分换行展示到下一行。值得注意的是，这个处理只是UI视觉上的换行，而不是对文本内容插入了真实的换行符进行换行。由于这块内容较为复杂，且本章内容已经比较多了，因此笔者将这块放到下一章进行讲解。读者可以根据本章内容先消化消化，以便在后续的章节中更好的理解设计思路。</p>
+
+    </div>
+</div>
+<script src="https://zhen.wang/libs/viewerjs@1.11.7/viewer.min.js"></script>
+<link rel="stylesheet" href="https://zhen.wang/libs/viewerjs@1.11.7/viewer.min.css"/>
+<script>
+  if (window.Viewer) {
+    document.querySelectorAll('img').forEach(img => {
+      new Viewer(img, {
+        inline: false,
+        navbar: false,
+        toolbar: {
+          zoomIn: 1,
+          zoomOut: 1,
+          reset: 1,
+          rotateLeft: 1,
+          rotateRight: 1,
+        },
+      });
+    });
+  }
+</script>
+
+
+</body>
+</html>

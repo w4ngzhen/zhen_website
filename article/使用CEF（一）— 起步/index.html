@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="utf-8">
+    <meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover"
+          name="viewport">
+    
+    
+    <!-- umami web analysis -->
+    <script defer src="https://zhen.wang/libs/umami/umami.script.js"
+            data-website-id="d66cfe03-f6b3-4aa0-baf8-728700db1b09"></script>
+    
+    
+    
+    <link rel="icon" type="image/png" sizes="16x16" href="https://zhen.wang/images/blog-site-icon.svg">
+    <link rel="icon" type="image/png" sizes="32x32" href="https://zhen.wang/images/blog-site-icon.svg">
+    <title>zhen&#x27;s everything</title>
+    <link rel="stylesheet" href="https://zhen.wang/style.css">
+    
+<link rel="stylesheet" href="https://zhen.wang/article_content.css">
+<link rel="stylesheet" href="https://zhen.wang/article_markdown.css">
+
+</head>
+<body>
+
+<div id="article">
+    <header class="article-header">
+        
+<div class="base-title">
+    <a href="#" onclick="history.length > 1 ? history.back() : location.href = '/'; return false;">&LeftArrow; Back</a>
+    <h1>
+        使用CEF（一）— 起步
+    </h1>
+</div>
+
+    </header>
+    <p class="article-date">2021-01-12</p>
+    
+    <!-- toc -->
+    <div class="article-toc">
+        <label class="toc-title" for="toc-trigger">目录</label>
+        <input id="toc-trigger" type="checkbox" checked/>
+        <div class="toc-content">
+            <ol class="toc">
+                
+                <li class="toc-item toc-level-1">
+                    <a class="toc-link" href="https://zhen.wang/article/使用CEF（一）— 起步/#shi-yong-cef-yi-qi-bu">使用CEF（一）— 起步</a>
+                    
+                    <ol class="toc-child">
+                        
+                        <li class="toc-item toc-level-2">
+                            <a href="https://zhen.wang/article/使用CEF（一）— 起步/#jie-shao">介绍</a>
+                        </li>
+                        
+                        <li class="toc-item toc-level-2">
+                            <a href="https://zhen.wang/article/使用CEF（一）— 起步/#cefjia-gou">CEF架构</a>
+                        </li>
+                        
+                        <li class="toc-item toc-level-2">
+                            <a href="https://zhen.wang/article/使用CEF（一）— 起步/#libcef-dll-wrapper">libcef_dll_wrapper</a>
+                        </li>
+                        
+                    </ol>
+                    
+                </li>
+                
+            </ol>
+        </div>
+    </div>
+    
+    <!-- real content -->
+    <div class="article-content markdown-content">
+        <h1 id="shi-yong-cef-yi-qi-bu">使用CEF（一）— 起步</h1>
+<h2 id="jie-shao">介绍</h2>
+<p>Chromium Embedded Framework (CEF)是个基于Google Chromium项目的开源Web browser控件，支持Windows, Linux, Mac平台。除了提供C/C++接口外，也有其他语言的移植版。</p>
+<p>因为基于Chromium，所以CEF支持<a rel="noopener" target="_blank" href="https://baike.baidu.com/item/Webkit">Webkit</a> &amp; Chrome中实现的<a rel="noopener" target="_blank" href="https://baike.baidu.com/item/HTML5">HTML5</a>的特性，并且在性能上面，也比较接近Chrome。</p>
+<span id="continue-reading"></span><h2 id="cefjia-gou">CEF架构</h2>
+<p><a rel="noopener" target="_blank" href="http://dev.chromium.org/developers/design-documents/multi-process-architecture">Chromium架构文档</a></p>
+<h2 id="libcef-dll-wrapper">libcef_dll_wrapper</h2>
+<p>在网上，大多数所谓编译CEF的教程，实际上只是编译针对CEF源码的C++包装库：<strong>libcef_dll_wrapper</strong>，并不是真正的编译CEF。libcef动态链接库导出 C API 使得使用者不用关心CEF运行库和基础代码。libcef_dll_wrapper 工程把 C API 封装成 C++ API同时包含在客户端应用程序工程中。C/C++ API的转换层代码是由转换工具自动生成。实际上，想要编译CEF源码是一件非常麻烦的事情，你需要梯子、良好的网速以及不错的电脑。回归正题，我们开始编译libcef_dll_wrapper。</p>
+<h3 id="bian-yi-qian-zhun-bei">编译前准备</h3>
+<p>cmake：https://cmake.org/download/</p>
+<p>vs2019：https://visualstudio.microsoft.com/zh-hans/vs/</p>
+<p>CEF以及Wrapper源码：https://cef-builds.spotifycdn.com/index.html</p>
+<h3 id="xia-zai-libcefyi-ji-wrapper">下载libcef以及wrapper</h3>
+<p>我们首先从CDN上下载ceflib静态库以及wrapper源码：Windows64bit，标准分发（Standard Distribution）。</p>
+<p><img src="https://static-res.zhen.wang/images/post/2021-01-12-start-cef/download-cef.jpg" alt="" /></p>
+<p>下载完成后，我们解压到工作目录下：</p>
+<p><img src="https://static-res.zhen.wang/images/post/2021-01-12-start-cef/cef-decompression-dir.jpg" alt="" /></p>
+<p>在这个目录下，会看到很多的文件夹和目录。其中主要的几个文件夹：</p>
+<ul>
+<li>
+<p><strong>cmake</strong>：该目录下存放了配置和构建以Windows作为编译环境的cmake配置文件，具体内容可以自行查看。</p>
+</li>
+<li>
+<p><strong>Debug和Release</strong>：这两个文件夹中，打开会看到已经编译好的CEF核心库文件：</p>
+</li>
+</ul>
+<p><img src="https://static-res.zhen.wang/images/post/2021-01-12-start-cef/libcef-files.jpg" alt="" /></p>
+<ul>
+<li>
+<p><strong>include</strong>：libcef本身提供的头文件以及wrapper会使用到的头文件。</p>
+</li>
+<li>
+<p><strong>libcef_dll</strong>：存放了<strong>libcef_dll_wrapper</strong>源码。</p>
+</li>
+<li>
+<p><strong>Resources</strong>：CEF作为内核的浏览器运行时需要用到的资源文件。</p>
+</li>
+<li>
+<p><strong>tests</strong>：存放了利用libcef、以及wrapper作为库来编写的浏览器Demo。其中，cefsimple编译出来的是一个简单的浏览器，而cefclient编译出来的是一个展示了cef许多API功能的exe。</p>
+</li>
+</ul>
+<h3 id="shi-yong-cmakejin-xing-pei-zhi-gou-jian">使用cmake进行配置构建</h3>
+<p>打开cmake-gui.exe程序，在<code>Where is the source code</code>栏中选择源码所在目录，在下方的<code>Where to build the binaries</code>栏目中我们可以自定义任意位置，但是为了方便管理，我们选择在源码所在目录下增加一个build文件夹，所以综合来看，当前cmake-gui的配置为：</p>
+<p><img src="https://static-res.zhen.wang/images/post/2021-01-12-start-cef/cmakegui-config.jpg" alt="" /></p>
+<p>接下来我们直接点击下方的<code>Configure</code>按钮，cmake-gui会弹框提示没有build文件夹，会帮助你ui创建一个build文件夹，以及让你选择构建工具：</p>
+<p><img src="https://static-res.zhen.wang/images/post/2021-01-12-start-cef/create-build-dir.jpg" alt="" /></p>
+<p><img src="https://static-res.zhen.wang/images/post/2021-01-12-start-cef/select-vs.jpg" alt="" /></p>
+<p>完成配置后，我们进行cmake的生成操作（Generate），并打开该解决方案：</p>
+<p><img src="https://static-res.zhen.wang/images/post/2021-01-12-start-cef/generate-and-open.jpg" alt="" /></p>
+<h3 id="bian-yi-libcef-dll-wrapper">编译libcef_dll_wrapper</h3>
+<p>上述使用cmake配置构建后，在Windows下，我们得到了一个解决方案：cef.sln。使用vs2019打开后，我们会看到解决方案中已经存在了几个工程：</p>
+<p><img src="https://static-res.zhen.wang/images/post/2021-01-12-start-cef/projects-in-sln.jpg" alt="" /></p>
+<ul>
+<li><strong>ALL_BUILD与ZERO_CHECK</strong>：是cmake自动生成的辅助工程。</li>
+<li><strong>cef_gtest与ceftests</strong>：都是测试模块,这里不关心。</li>
+<li><strong>cefclient</strong>：一个包含CEF各种API演示的浏览器程序Demo。</li>
+<li><strong>cefsimple</strong>：一个简单的CEF浏览器程序Demo。</li>
+<li><strong>libcef_dll_wrapper</strong>：对libcef库的C++代码封装。上述cefclient与cefsimple都会用它。</li>
+</ul>
+<p>我们首先完成libcef_dll_wrapper的编译，然后对cefclient以及cefsimple完成编译。</p>
+<pre style="background-color:#2b303b;color:#c0c5ce;"><code><span>2&gt;libcef_dll_wrapper.vcxproj -&gt; D:\Projects\cef\cef_binary_87.1.13+g481a82a+chromium-87.0.4280.141_windows64\build\libcef_dll_wrapper\Debug\libcef_dll_wrapper.lib
+</span><span>========== Build: 2 succeeded, 0 failed, 0 up-to-date, 0 skipped ==========
+</span></code></pre>
+<pre style="background-color:#2b303b;color:#c0c5ce;"><code><span>1&gt;   Creating library D:/Projects/cef/cef_binary_87.1.13+g481a82a+chromium-87.0.4280.141_windows64/build/tests/cefsimple/Debug/cefsimple.lib and object D:/Projects/cef/cef_binary_87.1.13+g481a82a+chromium-87.0.4280.141_windows64/build/tests/cefsimple/Debug/cefsimple.exp
+</span><span>1&gt;cefsimple.vcxproj -&gt; D:\Projects\cef\cef_binary_87.1.13+g481a82a+chromium-87.0.4280.141_windows64\build\tests\cefsimple\Debug\cefsimple.exe
+</span><span>1&gt;Adding manifest...
+</span><span>========== Build: 1 succeeded, 0 failed, 2 up-to-date, 0 skipped ==========
+</span></code></pre>
+<pre style="background-color:#2b303b;color:#c0c5ce;"><code><span>1&gt;   Creating library D:/Projects/cef/cef_binary_87.1.13+g481a82a+chromium-87.0.4280.141_windows64/build/tests/cefclient/Debug/cefclient.lib and object D:/Projects/cef/cef_binary_87.1.13+g481a82a+chromium-87.0.4280.141_windows64/build/tests/cefclient/Debug/cefclient.exp
+</span><span>1&gt;cefclient.vcxproj -&gt; D:\Projects\cef\cef_binary_87.1.13+g481a82a+chromium-87.0.4280.141_windows64\build\tests\cefclient\Debug\cefclient.exe
+</span><span>1&gt;Adding manifest...
+</span><span>========== Build: 1 succeeded, 0 failed, 2 up-to-date, 0 skipped ==========
+</span></code></pre>
+<p>完成了编译以后，我们可以直接进入cefclient或者是cefsimple里面的输出中运行对应的浏览器程序：</p>
+<p><img src="https://static-res.zhen.wang/images/post/2021-01-12-start-cef/demo-show.jpg" alt="" /></p>
+<p>注意，cefsimple.exe打开白屏是因为demo代码中默认访问的Google，cefclient.exe其实默认也访问的Google，但是因为可以输入任意的地址，所以这里不太容易发现。</p>
+<p>cefsimple中的默认访问地址修改为国内即可（cefclient中的自行搜索）：</p>
+<p><img src="https://static-res.zhen.wang/images/post/2021-01-12-start-cef/change-init-url.jpg" alt="" /></p>
+<p>下一节，将从零开始，使用cef来编写一个简单Demo。</p>
+
+    </div>
+</div>
+<script src="https://zhen.wang/libs/viewerjs@1.11.7/viewer.min.js"></script>
+<link rel="stylesheet" href="https://zhen.wang/libs/viewerjs@1.11.7/viewer.min.css"/>
+<script>
+  if (window.Viewer) {
+    document.querySelectorAll('img').forEach(img => {
+      new Viewer(img, {
+        inline: false,
+        navbar: false,
+        toolbar: {
+          zoomIn: 1,
+          zoomOut: 1,
+          reset: 1,
+          rotateLeft: 1,
+          rotateRight: 1,
+        },
+      });
+    });
+  }
+</script>
+
+
+</body>
+</html>
