@@ -1,16 +1,8 @@
 {% extends "base_layout.html" %}
+{% import "macros/gen_header.html" as gen_header %}
 
 {% block content %}
-<header>
-    <h1>{{ config.title }}</h1>
-    {% if config.extra.links %}
-    <nav class="header-links">
-        {% for link in config.extra.links %}
-        <a href="{{ link.href }}" target="{{ link.target | default(value='_blank')}}">{{ link.title }}</a>
-        {% endfor %}
-    </nav>
-    {% endif %}
-</header>
+{{ gen_header::gen_header()}}
 {% set article_section = get_section(path="article/_index.md") %}
 <main>
     {% if article_section.pages %}

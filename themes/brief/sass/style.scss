@@ -10,6 +10,8 @@ body {
 }
 
 .header-links {
+  word-wrap: break-word;
+
   a {
     color: var(--accent);
     margin-right: 0.5em;

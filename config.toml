@@ -25,6 +25,7 @@ external_links_target_blank = true
 [extra]
 links = [
     { title = "关于", href = "/about", target = '_self' },
+    { title = "留言板", href = "/message_board", target = '_self' },
     { title = "思绪", href = "/thinking", target = '_self' },
     { title = "收藏", href = "/collection", target = '_self' },
     { title = "Feed", href = "/atom.xml", target = '_blank' },
