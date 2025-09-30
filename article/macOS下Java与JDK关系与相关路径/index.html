@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="utf-8">
+    <meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover"
+          name="viewport">
+    
+    
+    <!-- umami web analysis -->
+    <script defer src="https://zhen.wang/libs/umami/umami.script.js"
+            data-website-id="d66cfe03-f6b3-4aa0-baf8-728700db1b09"></script>
+    
+    
+    
+    <link rel="icon" type="image/png" sizes="16x16" href="https://zhen.wang/images/blog-site-icon.svg">
+    <link rel="icon" type="image/png" sizes="32x32" href="https://zhen.wang/images/blog-site-icon.svg">
+    <title>zhen&#x27;s everything</title>
+    <link rel="stylesheet" href="https://zhen.wang/style.css">
+    
+<link rel="stylesheet" href="https://zhen.wang/article_content.css">
+<link rel="stylesheet" href="https://zhen.wang/article_markdown.css">
+
+</head>
+<body>
+
+<div id="article">
+    <header class="article-header">
+        
+<div class="base-title">
+    <a href="#" onclick="history.length > 1 ? history.back() : location.href = '/'; return false;">&LeftArrow; Back</a>
+    <h1>
+        macOS下Java与JDK关系与相关路径
+    </h1>
+</div>
+
+    </header>
+    <p class="article-date">2018-03-15</p>
+    
+    <!-- real content -->
+    <div class="article-content markdown-content">
+        <p>macOS下的Java与JDK的路径曾经困扰过我一段时间，今天稍有些忘记，故记下笔记，整理一下。Java与JDK的关系不在本文笔记之内，Javaer常识。</p>
+<span id="continue-reading"></span>
+<p><strong>偏好设置中的Java</strong></p>
+<p>在偏好设置中的Java是浏览器的插件，仅提供Java运行环境，其目录我们通过点击该Java图标，进入Java控制面板 —— Java —— 查看，可以显示对应的目录，本人的Java已经升级到了1.8_161，目录如下：</p>
+<pre style="background-color:#2b303b;color:#c0c5ce;"><code><span>/Library/Internet Plug-Ins/JavaAppletPlugin.plugin/Contents/Home/bin/java
+</span></code></pre>
+<p>通过/Library/Internet\ Plug-Ins目录名称我们也可以知道这个Java是作为网络相关（如浏览器）的Applet插件的。再次强调，这个目录下的Java<strong>仅仅</strong>提供Java基础运行环境，进入bin中我们可以看到<strong>并没有</strong>javac，也可以说明这一点。</p>
+<p>所以，我们完全可以删除Internet  Plug-Ins文件夹下的JavaAppletPlugin.plugin这个文件夹，并且同时为了删除偏好设置中的图标，需要删除/Library/PreferencesPanes/JavaControlPanel.prefPane这个文件夹，看文件夹名不难理解。（理论上是这样的，但是没有必要删除）</p>
+<p><strong>通过oracle安装的jdk</strong></p>
+<p>当我们安装了oracle的jdk之后，我们在命令行中输入which java，通常会显示：</p>
+<pre style="background-color:#2b303b;color:#c0c5ce;"><code><span>/usr/bin/java
+</span></code></pre>
+<p>进入/usr/bin中，查看该目录下java的详细信息，可以看到如下的信息：</p>
+<pre data-lang="shell" style="background-color:#2b303b;color:#c0c5ce;" class="language-shell "><code class="language-shell" data-lang="shell"><span>$ ls -l java
+</span><span>lrwxr-xr-x  1 root  wheel  74 11 11 15:08 java -&gt; /System/Library/Frameworks/JavaVM.framework/Versions/Current/Commands/java
+</span></code></pre>
+<p>可以看到这里的java是一个软链接，链接到上述输出目录中。我们进入到<strong>Versions</strong>目录中，这里我们只安装了一个版本的jdk，所以只会有如下的显示信息：</p>
+<pre data-lang="shell" style="background-color:#2b303b;color:#c0c5ce;" class="language-shell "><code class="language-shell" data-lang="shell"><span>drwxr-xr-x  8 root  wheel  256  1 24 22:01 A
+</span><span>lrwxr-xr-x  1 root  wheel    1 11 11 15:05 Current -&gt; A
+</span></code></pre>
+<p>可以看到，Current也只是一个软链接，链接到该目录下的A文件夹（这样的好处是装了多个版本java后，可以方便地调整Current指向，使得不同版本java变成系统默认的）</p>
+<p>我们可以看到，实际上这里面也还不是真正的jdk目录，A文件夹是安装java后系统生成的。它里面的Commands文件夹下有个java可执行文件，然而，我们可以看到这个目录下结构明显不是正常的jdk的目录结构，我们会发下这个目录下有一个java_home，使用如下命令：</p>
+<pre data-lang="shell" style="background-color:#2b303b;color:#c0c5ce;" class="language-shell "><code class="language-shell" data-lang="shell"><span>./java_home -V
+</span><span># output
+</span><span>Matching Java Virtual Machines (1):
+</span><span>    1.8.0_121, x86_64:	&quot;Java SE 8&quot;	/Library/Java/JavaVirtualMachines/jdk1.8.0_121.jdk/Contents/Home
+</span></code></pre>
+<p>上面是我机器上的输出，这个输出才是真正的jdk目录。所以在我看来，oracle安装过程应该是如下流程的：</p>
+<pre data-lang="shell" style="background-color:#2b303b;color:#c0c5ce;" class="language-shell "><code class="language-shell" data-lang="shell"><span>1.首先解压完整的JDK到
+</span><span>/Library/Java/JavaVirtualMachines/jdk{version}.jdk/Content/Home
+</span><span>
+</span><span>2.在/System/Library/Frameworks/JavaVM.framework/Versions/目录中
+</span><span>
+</span><span>  1)创建对应的A或者其他版本的文件夹（猜测是不同的JDK版本依次B、C、D之类的）
+</span><span>
+</span><span>  2)创建Current文件夹（已存在就忽略）并软链接到A或其他版本的文件夹上
+</span><span># 从A中的Commands文件夹内容本人认为，这个文件夹就是用来协调jdk相关的资源的，比如java与javac，而这里面的java、javac一类的命令会去调用第一步中对应版本的jdk目录中的java、javac
+</span><span>3.将/usr/bin下的java、javac、javadoc等软链接到第二步中对应的bin上
+</span><span>ls -l /usr/bin/java*
+</span><span>lrwxr-xr-x  1 root  wheel  74 11 11 15:08 /usr/bin/java -&gt; /System/Library/Frameworks/JavaVM.framework/Versions/Current/Commands/java
+</span><span>lrwxr-xr-x  1 root  wheel  75 11 11 15:08 /usr/bin/javac -&gt; /System/Library/Frameworks/JavaVM.framework/Versions/Current/Commands/javac
+</span><span>lrwxr-xr-x  1 root  wheel  77 11 11 15:08 /usr/bin/javadoc -&gt; /System/Library/Frameworks/JavaVM.framework/Versions/Current/Commands/javadoc
+</span><span>lrwxr-xr-x  1 root  wheel  75 11 11 15:08 /usr/bin/javah -&gt; /System/Library/Frameworks/JavaVM.framework/Versions/Current/Commands/javah
+</span><span>lrwxr-xr-x  1 root  wheel  75 11 11 15:08 /usr/bin/javap -&gt; /System/Library/Frameworks/JavaVM.framework/Versions/Current/Commands/javap
+</span><span>lrwxr-xr-x  1 root  wheel  82 11 11 15:08 /usr/bin/javapackager -&gt; /System/Library/Frameworks/JavaVM.framework/Versions/Current/Commands/javapackager
+</span><span>lrwxr-xr-x  1 root  wheel  76 11 11 15:08 /usr/bin/javaws -&gt; /System/Library/Frameworks/JavaVM.framework/Versions/Current/Commands/javaws
+</span></code></pre>
+<p>根据上面的常识，我们也完全可以卸载oracle安装的Java，同时，我们可以将真正的Java目录提取出来，放置到我们需要的地方，通过设置环境变量的方式来设置JAVA_HOME。</p>
+
+    </div>
+</div>
+<script src="https://zhen.wang/libs/viewerjs@1.11.7/viewer.min.js"></script>
+<link rel="stylesheet" href="https://zhen.wang/libs/viewerjs@1.11.7/viewer.min.css"/>
+<script>
+  if (window.Viewer) {
+    document.querySelectorAll('img').forEach(img => {
+      new Viewer(img, {
+        inline: false,
+        navbar: false,
+        toolbar: {
+          zoomIn: 1,
+          zoomOut: 1,
+          reset: 1,
+          rotateLeft: 1,
+          rotateRight: 1,
+        },
+      });
+    });
+  }
+</script>
+
+
+</body>
+</html>

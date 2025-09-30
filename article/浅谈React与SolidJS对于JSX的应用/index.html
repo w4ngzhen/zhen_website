@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="utf-8">
+    <meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover"
+          name="viewport">
+    
+    
+    <!-- umami web analysis -->
+    <script defer src="https://zhen.wang/libs/umami/umami.script.js"
+            data-website-id="d66cfe03-f6b3-4aa0-baf8-728700db1b09"></script>
+    
+    
+    
+    <link rel="icon" type="image/png" sizes="16x16" href="https://zhen.wang/images/blog-site-icon.svg">
+    <link rel="icon" type="image/png" sizes="32x32" href="https://zhen.wang/images/blog-site-icon.svg">
+    <title>zhen&#x27;s everything</title>
+    <link rel="stylesheet" href="https://zhen.wang/style.css">
+    
+<link rel="stylesheet" href="https://zhen.wang/article_content.css">
+<link rel="stylesheet" href="https://zhen.wang/article_markdown.css">
+
+</head>
+<body>
+
+<div id="article">
+    <header class="article-header">
+        
+<div class="base-title">
+    <a href="#" onclick="history.length > 1 ? history.back() : location.href = '/'; return false;">&LeftArrow; Back</a>
+    <h1>
+        浅谈React与SolidJS对于JSX的应用
+    </h1>
+</div>
+
+    </header>
+    <p class="article-date">2023-04-05</p>
+    
+    <!-- toc -->
+    <div class="article-toc">
+        <label class="toc-title" for="toc-trigger">目录</label>
+        <input id="toc-trigger" type="checkbox" checked/>
+        <div class="toc-content">
+            <ol class="toc">
+                
+                <li class="toc-item toc-level-1">
+                    <a class="toc-link" href="https://zhen.wang/article/浅谈React与SolidJS对于JSX的应用/#qian-yan">前言</a>
+                    
+                </li>
+                
+                <li class="toc-item toc-level-1">
+                    <a class="toc-link" href="https://zhen.wang/article/浅谈React与SolidJS对于JSX的应用/#reactzhong-de-jsx">React中的JSX</a>
+                    
+                    <ol class="toc-child">
+                        
+                        <li class="toc-item toc-level-2">
+                            <a href="https://zhen.wang/article/浅谈React与SolidJS对于JSX的应用/#gong-cheng-yu-bian-yi-jsx">工程预编译JSX</a>
+                        </li>
+                        
+                        <li class="toc-item toc-level-2">
+                            <a href="https://zhen.wang/article/浅谈React与SolidJS对于JSX的应用/#liu-lan-qi-shi-yong-jsx">浏览器使用JSX</a>
+                        </li>
+                        
+                    </ol>
+                    
+                </li>
+                
+                <li class="toc-item toc-level-1">
+                    <a class="toc-link" href="https://zhen.wang/article/浅谈React与SolidJS对于JSX的应用/#solidjszhong-de-jsx">SolidJS中的JSX</a>
+                    
+                    <ol class="toc-child">
+                        
+                        <li class="toc-item toc-level-2">
+                            <a href="https://zhen.wang/article/浅谈React与SolidJS对于JSX的应用/#gong-cheng-yu-bian-yi-jsx-1">工程于编译JSX</a>
+                        </li>
+                        
+                        <li class="toc-item toc-level-2">
+                            <a href="https://zhen.wang/article/浅谈React与SolidJS对于JSX的应用/#liu-lan-qi-shi-yong-jsx-1">浏览器使用JSX</a>
+                        </li>
+                        
+                    </ol>
+                    
+                </li>
+                
+            </ol>
+        </div>
+    </div>
+    
+    <!-- real content -->
+    <div class="article-content markdown-content">
+        <p>React将JSX这一概念深入人心。但，并非只有React利用了JSX，VUE、SolidJS等JS库或者框架都使用了JSX这一概念。网上已经有大量关于JSX的概念与形式的讲述文章，不在本文的讨论范围。</p>
+<span id="continue-reading"></span><h1 id="qian-yan">前言</h1>
+<p>实际上，JSX并不是合法有效的JS代码或HTML代码。目前为止也没有任何一家浏览器的引擎实现了对JSX的读取和解析。此外，JSX本身没有完全统一的规范，除了一些基本的规则以外，各种<strong>利用</strong>了JSX的JS库可以根据自身需求来设计JSX额外的特性。譬如，React中的元素会有className属性，而SolidJS中的元素会有classList属性。</p>
+<blockquote>
+<p>在FaceBook官方博文中也明确提到了：</p>
+<p>JSX是一种类似XML的语法扩展。它不打算由引擎或浏览器实现。它也不会作为某种提案被合并到ECMAScript规范中。它旨在被各种预处理器（转译器）用于将这些标记转换为标准的ECMAScript。</p>
+<p><a rel="noopener" target="_blank" href="https://facebook.github.io/jsx/#sec-intro">JSX (facebook.github.io)</a></p>
+</blockquote>
+<p>JSX的标签一定只有类似于HTML元素的标签吗？并不是这样的。比如，SolidJS中除了包含形如HTML的全部基础标签以外，还有一些控制标签，例如：<code>&lt;For&gt;</code>、<code>&lt;Show&gt;</code>等，它们是完全根据自身库的需要设计处理的标签。</p>
+<p>回到更加现实的部分，浏览器总是基于HTML+JavaScript+CSS来完成前端的渲染的。前端领域中日新月异的库、框架绝大部分都逃离不了这三要素，JSX也包括在内。无论我们设计出来的JSX语法糖多么的“甜”，就现状来看，最终都或多或少的成为了HTML、JS或CSS中的某部分。</p>
+<p>接下来，我们将进一步讨论各种前端框架是如何使用JSX的。</p>
+<h1 id="reactzhong-de-jsx">React中的JSX</h1>
+<h2 id="gong-cheng-yu-bian-yi-jsx">工程预编译JSX</h2>
+<p>React中使用JSX已经老生常谈了。简单来讲，通过编译器（一般都是babel）可以将结构化的JSX组件，转换为同样结构化的JS代码调用形式。在React中，转换JSX为原生JS代码分为两种形式：</p>
+<ol>
+<li>React17<strong>以前</strong>的<code>React.createElment</code>形式；</li>
+<li>React17<strong>以后</strong>的<code>'react/jsx-runtime'</code>形式。</li>
+</ol>
+<p>先讲第一种：直接转换为<code>React.createElement</code>。假设源代码如下：</p>
+<pre data-lang="jsx" style="background-color:#2b303b;color:#c0c5ce;" class="language-jsx "><code class="language-jsx" data-lang="jsx"><span>import React from &#39;react&#39;;
+</span><span>
+</span><span>function App() {
+</span><span>  return &lt;h1&gt;Hello World&lt;/h1&gt;;
+</span><span>}
+</span></code></pre>
+<p>转换过程，会将上述JSX转换为如下的createElement代码：</p>
+<pre data-lang="js" style="background-color:#2b303b;color:#c0c5ce;" class="language-js "><code class="language-js" data-lang="js"><span style="color:#b48ead;">import </span><span style="color:#bf616a;">React </span><span style="color:#b48ead;">from </span><span>&#39;</span><span style="color:#a3be8c;">react</span><span>&#39;;
+</span><span>
+</span><span style="color:#b48ead;">function </span><span style="color:#8fa1b3;">App</span><span>() {
+</span><span>  </span><span style="color:#b48ead;">return </span><span style="color:#bf616a;">React</span><span>.</span><span style="color:#96b5b4;">createElement</span><span>(&#39;</span><span style="color:#a3be8c;">h1</span><span>&#39;, </span><span style="color:#d08770;">null</span><span>, &#39;</span><span style="color:#a3be8c;">Hello world</span><span>&#39;);
+</span><span>}
+</span></code></pre>
+<p>但官方提到了关于这种转换方式的两个问题：</p>
+<ul>
+<li>如果使用 JSX，则需在 <code>React</code> 的环境下，因为 JSX 将被编译成 <code>React.createElement</code>。</li>
+<li>有一些 <code>React.createElement</code> 无法做到的<a rel="noopener" target="_blank" href="https://github.com/reactjs/rfcs/blob/createlement-rfc/text/0000-create-element-changes.md#motivation">性能优化和简化</a>。</li>
+</ul>
+<p>基于上述的问题，在React17以后，提供了另一种转换方式：引入jsx-runtime层。假设源码如下：</p>
+<pre data-lang="jsx" style="background-color:#2b303b;color:#c0c5ce;" class="language-jsx "><code class="language-jsx" data-lang="jsx"><span>function App() {
+</span><span>  return &lt;h1&gt;Hello World&lt;/h1&gt;;
+</span><span>}
+</span></code></pre>
+<p>下方是新 JSX 被转换编译后的结果：</p>
+<pre data-lang="js" style="background-color:#2b303b;color:#c0c5ce;" class="language-js "><code class="language-js" data-lang="js"><span style="color:#65737e;">// 由编译器引入（禁止自己引入！）
+</span><span style="color:#b48ead;">import </span><span>{</span><span style="color:#bf616a;">jsx </span><span style="color:#b48ead;">as </span><span style="color:#bf616a;">_jsx</span><span>} </span><span style="color:#b48ead;">from </span><span>&#39;</span><span style="color:#a3be8c;">react/jsx-runtime</span><span>&#39;;
+</span><span>
+</span><span style="color:#b48ead;">function </span><span style="color:#8fa1b3;">App</span><span>() {
+</span><span>  </span><span style="color:#b48ead;">return </span><span style="color:#8fa1b3;">_jsx</span><span>(&#39;</span><span style="color:#a3be8c;">h1</span><span>&#39;, { children: &#39;</span><span style="color:#a3be8c;">Hello world</span><span>&#39; });
+</span><span>}
+</span></code></pre>
+<p>第二种模式的核心在于，编译出来的代码与React库本身进行了解耦，只将JSX转换为了与React无关的JS形式的调用描述，没有直接使用<code>React.createElement</code>。</p>
+<p><img src="https://static-res.zhen.wang/images/post/2023-04-05/010-react-jsx-runtime.png" alt="010-react-jsx-runtime" /></p>
+<p>上图描述了一个前端React工程里JSX代码转换为浏览器能够运行的JS代码的基本过程。当然，Babel在这个转换过程中承担了重要角色。</p>
+<p>在Babel中，与上述两种转换相关的是部分是：<code>@babel/preset-react</code>（核心其实是该preset预置集内部的插件<code>@babel/plugin-transform-react-jsx</code>）。无论是<code>@babel/preset-react</code>还是<code>@babel/plugin-transform-react-jsx</code>，都允许我们配置上述的转换行为。</p>
+<p>Babel的v7.9.0版本之前，只能转换为<code>React.createElement</code>形式。在v7.9.0版本以后，支持我们配置转换行为。默认选项为 <code>{"runtime": "classic"}</code>，也就是说默认还是<code>React.createElement</code>。</p>
+<p>如需启用新的转换，你可以使用 <code>{"runtime": "automatic"}</code> 作为 <code>@babel/plugin-transform-react-jsx</code> 或 <code>@babel/preset-react</code> 的选项：</p>
+<pre data-lang="json" style="background-color:#2b303b;color:#c0c5ce;" class="language-json "><code class="language-json" data-lang="json"><span style="color:#65737e;">// 如果你使用的是 @babel/preset-react
+</span><span>{
+</span><span>  &quot;</span><span style="color:#a3be8c;">presets</span><span>&quot;: [
+</span><span>    [&quot;</span><span style="color:#a3be8c;">@babel/preset-react</span><span>&quot;, {
+</span><span>      &quot;</span><span style="color:#a3be8c;">runtime</span><span>&quot;: &quot;</span><span style="color:#a3be8c;">automatic</span><span>&quot;
+</span><span>    }]
+</span><span>  ]
+</span><span>}
+</span></code></pre>
+<pre data-lang="json" style="background-color:#2b303b;color:#c0c5ce;" class="language-json "><code class="language-json" data-lang="json"><span style="color:#65737e;">// 如果你使用的是 @babel/plugin-transform-react-jsx
+</span><span>{
+</span><span>  &quot;</span><span style="color:#a3be8c;">plugins</span><span>&quot;: [
+</span><span>    [&quot;</span><span style="color:#a3be8c;">@babel/plugin-transform-react-jsx</span><span>&quot;, {
+</span><span>      &quot;</span><span style="color:#a3be8c;">runtime</span><span>&quot;: &quot;</span><span style="color:#a3be8c;">automatic</span><span>&quot;
+</span><span>    }]
+</span><span>  ]
+</span><span>}
+</span></code></pre>
+<h2 id="liu-lan-qi-shi-yong-jsx">浏览器使用JSX</h2>
+<p>首先，我们可以按照如下的方式，直接基于CDN模式的React进行开发：</p>
+<pre data-lang="html" style="background-color:#2b303b;color:#c0c5ce;" class="language-html "><code class="language-html" data-lang="html"><span>&lt;!</span><span style="color:#b48ead;">DOCTYPE </span><span style="color:#d08770;">html</span><span>&gt;
+</span><span>&lt;</span><span style="color:#bf616a;">html </span><span style="color:#d08770;">lang</span><span>=&quot;</span><span style="color:#a3be8c;">en</span><span>&quot;&gt;
+</span><span>&lt;</span><span style="color:#bf616a;">head</span><span>&gt;
+</span><span>    &lt;</span><span style="color:#bf616a;">meta </span><span style="color:#d08770;">charset</span><span>=&quot;</span><span style="color:#a3be8c;">UTF-8</span><span>&quot;&gt;
+</span><span>    &lt;</span><span style="color:#bf616a;">title</span><span>&gt;Title&lt;/</span><span style="color:#bf616a;">title</span><span>&gt;
+</span><span>&lt;/</span><span style="color:#bf616a;">head</span><span>&gt;
+</span><span>&lt;</span><span style="color:#bf616a;">body</span><span>&gt;
+</span><span>&lt;</span><span style="color:#bf616a;">div </span><span style="color:#8fa1b3;">id</span><span>=&quot;</span><span style="color:#a3be8c;">app</span><span>&quot;&gt;&lt;/</span><span style="color:#bf616a;">div</span><span>&gt;
+</span><span>&lt;</span><span style="color:#bf616a;">script </span><span style="color:#d08770;">src</span><span>=&quot;</span><span style="color:#a3be8c;">https://unpkg.com/react@18.2.0/umd/react.production.min.js</span><span>&quot;&gt;&lt;/</span><span style="color:#bf616a;">script</span><span>&gt;
+</span><span>&lt;</span><span style="color:#bf616a;">script </span><span style="color:#d08770;">src</span><span>=&quot;</span><span style="color:#a3be8c;">https://unpkg.com/react-dom@18.2.0/umd/react-dom.production.min.js</span><span>&quot;&gt;&lt;/</span><span style="color:#bf616a;">script</span><span>&gt;
+</span><span>&lt;</span><span style="color:#bf616a;">script</span><span>&gt;
+</span><span>    </span><span style="color:#b48ead;">const </span><span style="color:#bf616a;">appComp </span><span>= </span><span style="color:#ebcb8b;">React</span><span>.</span><span style="color:#bf616a;">createElement</span><span>(&#39;</span><span style="color:#a3be8c;">div</span><span>&#39;, {style: {color: &#39;</span><span style="color:#a3be8c;">blue</span><span>&#39;}}, &#39;</span><span style="color:#a3be8c;">hello, world</span><span>&#39;);
+</span><span>    </span><span style="color:#ebcb8b;">ReactDOM</span><span>.</span><span style="color:#bf616a;">createRoot</span><span>(document.</span><span style="color:#bf616a;">querySelector</span><span>(&#39;</span><span style="color:#a3be8c;">#app</span><span>&#39;)).</span><span style="color:#bf616a;">render</span><span>(</span><span style="color:#bf616a;">appComp</span><span>)
+</span><span>&lt;/</span><span style="color:#bf616a;">script</span><span>&gt;
+</span><span>&lt;/</span><span style="color:#bf616a;">body</span><span>&gt;
+</span><span>&lt;/</span><span style="color:#bf616a;">html</span><span>&gt;
+</span></code></pre>
+<ol>
+<li>调用<code>React.createElement</code>创建React节点实例；</li>
+<li>调用ReactDOM的API完成某个节点的渲染。</li>
+</ol>
+<p>可以直接从页面上看到渲染效果：</p>
+<p><img src="https://static-res.zhen.wang/images/post/2023-04-05/020-react-cdn-createElement.png" alt="020-react-cdn-createElement" /></p>
+<p>这种方式则是最直接的，使用了最原生的写法。具备JS基础的同学应该都能理解。如果我们在script中编写了jsx代码：</p>
+<pre data-lang="diff" style="background-color:#2b303b;color:#c0c5ce;" class="language-diff "><code class="language-diff" data-lang="diff"><span style="color:#bf616a;">-   const appComp = React.createElement(&#39;div&#39;, {style: {color: &#39;blue&#39;}}, &#39;hello, world&#39;);
+</span><span style="color:#a3be8c;">+   const appComp = (
+</span><span style="color:#a3be8c;">+       &lt;div style={{color: &#39;blue&#39;}}&gt;
+</span><span style="color:#a3be8c;">+           hello, world
+</span><span style="color:#a3be8c;">+       &lt;/div&gt;
+</span><span style="color:#a3be8c;">+   );
+</span><span>	  ReactDOM.createRoot(document.querySelector(&#39;#app&#39;)).render(appComp)
+</span></code></pre>
+<p>毫无疑问会报错：</p>
+<p><img src="https://static-res.zhen.wang/images/post/2023-04-05/030-react-cdn-jsx-without-babel.png" alt="030-react-cdn-jsx-without-babel" /></p>
+<p>严格意义上讲，浏览器没法解析JSX代码（前面已经提到了），但是我们可以通过Babel提供的<code>standalone</code>模块库（<a rel="noopener" target="_blank" href="https://babeljs.io/docs/babel-standalone.html">@babel/standalone · Babel (babeljs.io)</a>）来完成这一任务。该库不仅仅支持JSX，同时还支持ES6语法直接在浏览器上运行，而无需对代码进行预编译，其初衷是支持一些浏览器（说的就是你IE）能够编写ES6的代码。</p>
+<p>关于@babel/standalone的具体使用方式为：</p>
+<ol>
+<li>引入<code>@babel/standalone</code>的CDN；</li>
+<li>将原有的含有JSX脚本的<code>&lt;script&gt;</code>标签添加属性<code>type="text/babel"</code>：<code>&lt;script type="text/babel"&gt;</code>。</li>
+</ol>
+<pre data-lang="diff" style="background-color:#2b303b;color:#c0c5ce;" class="language-diff "><code class="language-diff" data-lang="diff"><span>  &lt;script src=&quot;https://unpkg.com/react@18.2.0/umd/react.production.min.js&quot;&gt;&lt;/script&gt;
+</span><span>  &lt;script src=&quot;https://unpkg.com/react-dom@18.2.0/umd/react-dom.production.min.js&quot;&gt;&lt;/script&gt;
+</span><span style="color:#a3be8c;">+ &lt;script src=&quot;https://unpkg.com/@babel/standalone/babel.min.js&quot;&gt;&lt;/script&gt;
+</span><span>
+</span><span style="color:#bf616a;">- &lt;script&gt;
+</span><span style="color:#a3be8c;">+ &lt;script type=&quot;text/babel&quot;&gt;
+</span><span>    // const appComp = React.createElement(&#39;div&#39;, {style: {color: &#39;blue&#39;}}, &#39;hello, world&#39;);
+</span><span>    const appComp = (
+</span><span>        &lt;div style={{color: &#39;blue&#39;}}&gt;
+</span><span>            hello, world
+</span><span>        &lt;/div&gt;
+</span><span>    );
+</span><span>    ReactDOM.createRoot(document.querySelector(&#39;#app&#39;)).render(appComp)
+</span><span>&lt;/script&gt;
+</span></code></pre>
+<p>完成上述的配置以后，我们就能在浏览器中看到源自JSX渲染而来的React组件了：</p>
+<p><img src="https://static-res.zhen.wang/images/post/2023-04-05/040-react-cdn-jsx-with-babelstandalone.png" alt="040-react-cdn-jsx-with-babelstandalone" /></p>
+<p>这个过程主要为<code>@babel/standalone</code>的js在加载的过程中，会读取HTML上的<code>type="text/babel"</code>的节点，然后对其内容进行编译转换。不难想到， 这个过程会十分消耗性能。所以Babel官方也强调了，<a rel="noopener" target="_blank" href="https://babeljs.io/docs/babel-standalone#when-not-to-use-babelstandalone">只能在某些场景下使用</a>。</p>
+<h1 id="solidjszhong-de-jsx">SolidJS中的JSX</h1>
+<p>SolidJS是新发展起来的又一响应式框架，同样的，SolidJS也使用JSX来完成视图层的编写。</p>
+<blockquote>
+<p>不同于React的是，Solid 模型更简单，没有 Hook 规则。每个组件执行一次，随着依赖项的更新，钩子和绑定会多次执行。Solid 遵循与 React 相同的理念，具有单向数据流、读/写隔离和不可变接口。<strong>但是放弃了使用虚拟 DOM</strong>，使用了完全不同的实现。</p>
+</blockquote>
+<h2 id="gong-cheng-yu-bian-yi-jsx-1">工程于编译JSX</h2>
+<p>同样的，基于浏览器无法直接解析JSX事实，所以我们会比较好奇SolidJS编译出的内容，是什么样的。在SolidJS提供的Playground中（<a rel="noopener" target="_blank" href="https://playground.solidjs.com/">Solid Playground (solidjs.com)</a>），我们可以更加直观的看到SolidJS将JSX编译为了什么结果：</p>
+<pre data-lang="jsx" style="background-color:#2b303b;color:#c0c5ce;" class="language-jsx "><code class="language-jsx" data-lang="jsx"><span>import { createSignal } from &quot;solid-js&quot;;
+</span><span>
+</span><span>function Counter() {
+</span><span>  const [count, setCount] = createSignal(1);
+</span><span>  return (
+</span><span>    &lt;button 
+</span><span>      type=&quot;button&quot; 
+</span><span>      onClick={() =&gt; setCount(count() + 1)}
+</span><span>      &gt;
+</span><span>        {count()}
+</span><span>    &lt;/button&gt;
+</span><span>  );
+</span><span>}
+</span></code></pre>
+<p><img src="https://static-res.zhen.wang/images/post/2023-04-05/050-solidjs-jsx-compile-result.png" alt="050-solidjs-jsx-compile-result" /></p>
+<p>在本文中，我们主要分析JSX的处理过程，暂不涉及响应式的实现方式。</p>
+<p>首先可以看到我们编写的JSX，被<strong>解析</strong>为了一段非常纯粹的HTML代码字符串片段：</p>
+<pre data-lang="html" style="background-color:#2b303b;color:#c0c5ce;" class="language-html "><code class="language-html" data-lang="html"><span>`&lt;</span><span style="color:#bf616a;">button </span><span style="color:#d08770;">type</span><span>=&quot;</span><span style="color:#a3be8c;">button</span><span>&quot;&gt;&lt;/</span><span style="color:#bf616a;">button</span><span>&gt;`
+</span></code></pre>
+<p>然后，该字符串交给了来自<code>"solid-js/web"</code>中的<code>template</code>这个方法进行解析处理。</p>
+<p>那么这个<code>template</code>方法是什么呢？通过查找类型定义，可以找到其来源于<code>solid-js/web</code>包中，<code>client.ts</code>导出的<code>template</code>的定义：</p>
+<p><img src="https://static-res.zhen.wang/images/post/2023-04-05/060-where-is-template-func.png" alt="060-where-is-template-func" /></p>
+<p>通过查看<code>client.ts</code>的源码，会发现<code>solid-js/web</code>关于<code>client.ts</code>的整个部分都来自<code>dom-expression/src/client</code>导出的内容：</p>
+<p><a rel="noopener" target="_blank" href="https://github.com/solidjs/solid/blob/main/packages/solid/web/src/client.ts">solid/client.ts at main · solidjs/solid (github.com)</a></p>
+<pre data-lang="tsx" style="background-color:#2b303b;color:#c0c5ce;" class="language-tsx "><code class="language-tsx" data-lang="tsx"><span style="color:#65737e;">// &quot;solid-js/web&quot;的client部分
+</span><span style="color:#b48ead;">export </span><span style="color:#d08770;">* </span><span style="color:#b48ead;">from </span><span>&quot;</span><span style="color:#a3be8c;">dom-expressions/src/client</span><span>&quot;;
+</span></code></pre>
+<p>所以，进一步翻阅dom-expression这个库，会找到client.js代码的实现，并且能够定位到template这个方法的实现（<a rel="noopener" target="_blank" href="https://github.com/ryansolid/dom-expressions/blob/main/packages/dom-expressions/src/client.js">dom-expressions/client.js at main · ryansolid/dom-expressions (github.com)</a>）：</p>
+<pre data-lang="js" style="background-color:#2b303b;color:#c0c5ce;" class="language-js "><code class="language-js" data-lang="js"><span style="color:#b48ead;">export function </span><span style="color:#8fa1b3;">template</span><span>(</span><span style="color:#bf616a;">html</span><span>, </span><span style="color:#bf616a;">check</span><span>, </span><span style="color:#bf616a;">isSVG</span><span>) {
+</span><span>  </span><span style="color:#b48ead;">const </span><span style="color:#bf616a;">t </span><span>= document.</span><span style="color:#96b5b4;">createElement</span><span>(&quot;</span><span style="color:#a3be8c;">template</span><span>&quot;);
+</span><span>  </span><span style="color:#bf616a;">t</span><span>.</span><span style="color:#bf616a;">innerHTML </span><span>= </span><span style="color:#bf616a;">html</span><span>;
+</span><span>  </span><span style="color:#b48ead;">if </span><span>(&quot;</span><span style="color:#a3be8c;">_DX_DEV_</span><span>&quot; &amp;&amp; </span><span style="color:#bf616a;">check </span><span>&amp;&amp; </span><span style="color:#bf616a;">t</span><span>.</span><span style="color:#bf616a;">innerHTML</span><span>.</span><span style="color:#96b5b4;">split</span><span>(&quot;</span><span style="color:#a3be8c;">&lt;</span><span>&quot;).length - </span><span style="color:#d08770;">1 </span><span>!== </span><span style="color:#bf616a;">check</span><span>)
+</span><span>    </span><span style="color:#b48ead;">throw </span><span>`</span><span style="color:#a3be8c;">The browser resolved template HTML does not match JSX input:</span><span style="color:#96b5b4;">\n</span><span style="color:#a3be8c;">${</span><span style="color:#bf616a;">t</span><span style="color:#a3be8c;">.</span><span style="color:#bf616a;">innerHTML</span><span style="color:#a3be8c;">}</span><span style="color:#96b5b4;">\n\n</span><span style="color:#a3be8c;">${</span><span style="color:#bf616a;">html</span><span style="color:#a3be8c;">}. Is your HTML properly formed?</span><span>`;
+</span><span>  </span><span style="color:#b48ead;">let </span><span style="color:#bf616a;">node </span><span>= </span><span style="color:#bf616a;">t</span><span>.content.firstChild;
+</span><span>  </span><span style="color:#b48ead;">if </span><span>(</span><span style="color:#bf616a;">isSVG</span><span>) </span><span style="color:#bf616a;">node </span><span>= </span><span style="color:#bf616a;">node</span><span>.firstChild;
+</span><span>  </span><span style="color:#b48ead;">return </span><span style="color:#bf616a;">node</span><span>;
+</span><span>}
+</span></code></pre>
+<p>实际上，在不同的版本下，这些工具方法的实现有所不同，但是核心不变：</p>
+<ol>
+<li>创建template元素</li>
+<li>将html字符串插入到该元素</li>
+<li>进行一定的处理</li>
+<li>返回html对应的元素</li>
+</ol>
+<p>比如我们编写一个demo：</p>
+<p><img src="https://static-res.zhen.wang/images/post/2023-04-05/070-simple-demo-solidjs.png" alt="070-simple-demo-solidjs" /></p>
+<p>经过编译后，查看编译代码，能够看到相关的实现：</p>
+<p><img src="https://static-res.zhen.wang/images/post/2023-04-05/080-simple-demo-dist.png" alt="080-simple-demo-dist" /></p>
+<p>与React一样，SolidJS同样用到了Babel对SolidJS的代码进行编译。核心的则是<code>babel-preset-solid</code>，与之前一些标准的preset（比如<code>@babel/preset-typescript</code>或是<code>@babel/preset-react</code>）命名不同，因为SolidJS还没有成为Babel官方预置集（还是比较小众的）。</p>
+<p>关于SolidJS的代码处理过程，在Babel中，先经过<code>babel-preset-solid</code>进行编译，将JSX编译为模板字符串以及处理各种调用；然后，如果是TypeScript代码，则需要<code>@babel/preset-typescript</code>来进行TS代码处理。</p>
+<h2 id="liu-lan-qi-shi-yong-jsx-1">浏览器使用JSX</h2>
+<p>遗憾的是，目前SolidJS还没有提供关于如何以UMD CDN方式直接在HTML中使用，就更不用说在浏览器中使用JSX进行代码编写了。不过，SolidJS还有一个名为<code>solid-element</code>的库，该库底层基于WebComponents，可以让我们预定义HTML元素，然后直接在HTML中使用这些元素。</p>
+
+    </div>
+</div>
+<script src="https://zhen.wang/libs/viewerjs@1.11.7/viewer.min.js"></script>
+<link rel="stylesheet" href="https://zhen.wang/libs/viewerjs@1.11.7/viewer.min.css"/>
+<script>
+  if (window.Viewer) {
+    document.querySelectorAll('img').forEach(img => {
+      new Viewer(img, {
+        inline: false,
+        navbar: false,
+        toolbar: {
+          zoomIn: 1,
+          zoomOut: 1,
+          reset: 1,
+          rotateLeft: 1,
+          rotateRight: 1,
+        },
+      });
+    });
+  }
+</script>
+
+
+</body>
+</html>

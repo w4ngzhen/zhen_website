@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="utf-8">
+    <meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover"
+          name="viewport">
+    
+    
+    <!-- umami web analysis -->
+    <script defer src="https://zhen.wang/libs/umami/umami.script.js"
+            data-website-id="d66cfe03-f6b3-4aa0-baf8-728700db1b09"></script>
+    
+    
+    
+    <link rel="icon" type="image/png" sizes="16x16" href="https://zhen.wang/images/blog-site-icon.svg">
+    <link rel="icon" type="image/png" sizes="32x32" href="https://zhen.wang/images/blog-site-icon.svg">
+    <title>zhen&#x27;s everything</title>
+    <link rel="stylesheet" href="https://zhen.wang/style.css">
+    
+<link rel="stylesheet" href="https://zhen.wang/article_content.css">
+<link rel="stylesheet" href="https://zhen.wang/article_markdown.css">
+
+</head>
+<body>
+
+<div id="article">
+    <header class="article-header">
+        
+<div class="base-title">
+    <a href="#" onclick="history.length > 1 ? history.back() : location.href = '/'; return false;">&LeftArrow; Back</a>
+    <h1>
+        Linux下Electron loadURL报错 ERR_FAILED Not allowed to load local resource
+    </h1>
+</div>
+
+    </header>
+    <p class="article-date">2021-02-24</p>
+    
+    <!-- toc -->
+    <div class="article-toc">
+        <label class="toc-title" for="toc-trigger">目录</label>
+        <input id="toc-trigger" type="checkbox" checked/>
+        <div class="toc-content">
+            <ol class="toc">
+                
+                <li class="toc-item toc-level-1">
+                    <a class="toc-link" href="https://zhen.wang/article/Linux下Electron loadURL报错 ERR_FAILED Not allowed to load local resource/#linuxxia-electron-loadurlbao-cuo-err-failed-2-not-allowed-to-load-local-resource">Linux下Electron loadURL报错 ERR_FAILED(-2) Not allowed to load local resource</a>
+                    
+                    <ol class="toc-child">
+                        
+                        <li class="toc-item toc-level-2">
+                            <a href="https://zhen.wang/article/Linux下Electron loadURL报错 ERR_FAILED Not allowed to load local resource/#bei-jing">背景</a>
+                        </li>
+                        
+                        <li class="toc-item toc-level-2">
+                            <a href="https://zhen.wang/article/Linux下Electron loadURL报错 ERR_FAILED Not allowed to load local resource/#yuan-yin-ji-fang-an">原因及方案</a>
+                        </li>
+                        
+                    </ol>
+                    
+                </li>
+                
+            </ol>
+        </div>
+    </div>
+    
+    <!-- real content -->
+    <div class="article-content markdown-content">
+        <h1 id="linuxxia-electron-loadurlbao-cuo-err-failed-2-not-allowed-to-load-local-resource">Linux下Electron loadURL报错 ERR_FAILED(-2) Not allowed to load local resource</h1>
+<p>Linux Electron打包后页面无法加载，报错：Not allowed to load local resource</p>
+<span id="continue-reading"></span><h2 id="bei-jing">背景</h2>
+<p>使用electron-vue的时候，窗体创建后加载页面使用的是<code>loadURL</code>函数，并且传入的参数形如：</p>
+<pre data-lang="js" style="background-color:#2b303b;color:#c0c5ce;" class="language-js "><code class="language-js" data-lang="js"><span>`</span><span style="color:#a3be8c;">file://${__dirname}/index.html</span><span>`
+</span></code></pre>
+<p>PS：在<strong>electron-vue</strong>中，编译打包后的<code>__dirname</code>是<code>asar所在绝对地址/dist/electron/</code>。</p>
+<p>编译打包后的Electron程序启动时候，发现在调用loadURL的时候会出现：ERR_FAILED(-2) 。</p>
+<p>遂临时启动DevTool窗口查看控制台输出，发现类似如下错误：</p>
+<pre style="background-color:#2b303b;color:#c0c5ce;"><code><span>Not allowed to load local resource: file://XXXXXX/app.asar/dir1/dir2/index.html
+</span></code></pre>
+<h2 id="yuan-yin-ji-fang-an">原因及方案</h2>
+<h3 id="1-wen-jian-bing-bu-cun-zai-yu-ni-de-asarbao-zhong">1、文件并不存在于你的asar包中</h3>
+<p>处理方式：</p>
+<ol>
+<li>全局安装<code>npm install -g asar</code></li>
+<li>通过asar解压app.asar包，检查上述提到的file路径中是否存在你的index.html。</li>
+</ol>
+<h3 id="2-chang-shi-jin-yong-chuang-ti-can-shu-zhong-de-websercurity">2、尝试禁用窗体参数中的<code>webSercurity</code></h3>
+<p>处理方式：</p>
+<pre data-lang="js" style="background-color:#2b303b;color:#c0c5ce;" class="language-js "><code class="language-js" data-lang="js"><span>{
+</span><span>  webPreferences: {
+</span><span>    webSecurity: </span><span style="color:#d08770;">false
+</span><span>  }
+</span><span>}
+</span></code></pre>
+<h3 id="3-jian-cha-webpackpei-zhi-zhong-de-dirname-fang-zhi-webpackchu-li-mock">3、检查webpack配置中的__dirname，防止webpack处理'mock'</h3>
+<p>这一点主要是当上述<code>Not alloed to load local resource</code>提到的路径明显不正确时候，可以检查。</p>
+<pre style="background-color:#2b303b;color:#c0c5ce;"><code><span>  // webpack配置文件中的node节点，当打包的时候需要防止webpack处理
+</span><span>  node: {
+</span><span>    __dirname: false
+</span><span>  }
+</span></code></pre>
+<p>webpack配置文件中的node节点，当打包的时候需要防止webpack处理<code>__dirname</code>，如果你使用了electron-vue脚手架应该不需要关心，因为你会看到如下的内容，已经帮你处理了：</p>
+<pre style="background-color:#2b303b;color:#c0c5ce;"><code><span>  node: {
+</span><span>    __dirname: process.env.NODE_ENV !== &#39;production&#39;,
+</span><span>    __filename: process.env.NODE_ENV !== &#39;production&#39;
+</span><span>  },
+</span></code></pre>
+<h3 id="4-shi-yong-loadfileer-bu-shi-loadurl">4、使用loadFile而不是loadURL</h3>
+<p>使用loadFile接口来加载本地的路径，loadFile('path/to/index.html')，这个路径是以app.asar根路径为base的。例如，loadFile('dir_path1/dir_path2/index.html')，那么你的index.html在app.asar是如下的结构：</p>
+<pre style="background-color:#2b303b;color:#c0c5ce;"><code><span>app.asar
+</span><span>|-dir_path1
+</span><span>  |-dir_path2
+</span><span>    |-index.html
+</span></code></pre>
+
+    </div>
+</div>
+<script src="https://zhen.wang/libs/viewerjs@1.11.7/viewer.min.js"></script>
+<link rel="stylesheet" href="https://zhen.wang/libs/viewerjs@1.11.7/viewer.min.css"/>
+<script>
+  if (window.Viewer) {
+    document.querySelectorAll('img').forEach(img => {
+      new Viewer(img, {
+        inline: false,
+        navbar: false,
+        toolbar: {
+          zoomIn: 1,
+          zoomOut: 1,
+          reset: 1,
+          rotateLeft: 1,
+          rotateRight: 1,
+        },
+      });
+    });
+  }
+</script>
+
+
+</body>
+</html>

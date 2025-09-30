@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="utf-8">
+    <meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover"
+          name="viewport">
+    
+    
+    <!-- umami web analysis -->
+    <script defer src="https://zhen.wang/libs/umami/umami.script.js"
+            data-website-id="d66cfe03-f6b3-4aa0-baf8-728700db1b09"></script>
+    
+    
+    
+    <link rel="icon" type="image/png" sizes="16x16" href="https://zhen.wang/images/blog-site-icon.svg">
+    <link rel="icon" type="image/png" sizes="32x32" href="https://zhen.wang/images/blog-site-icon.svg">
+    <title>zhen&#x27;s everything</title>
+    <link rel="stylesheet" href="https://zhen.wang/style.css">
+    
+<link rel="stylesheet" href="https://zhen.wang/article_content.css">
+<link rel="stylesheet" href="https://zhen.wang/article_markdown.css">
+
+</head>
+<body>
+
+<div id="article">
+    <header class="article-header">
+        
+<div class="base-title">
+    <a href="#" onclick="history.length > 1 ? history.back() : location.href = '/'; return false;">&LeftArrow; Back</a>
+    <h1>
+        Wgpu图文详解（04）顶点索引及其缓冲区
+    </h1>
+</div>
+
+    </header>
+    <p class="article-date">2024-12-11</p>
+    
+    <!-- toc -->
+    <div class="article-toc">
+        <label class="toc-title" for="toc-trigger">目录</label>
+        <input id="toc-trigger" type="checkbox" checked/>
+        <div class="toc-content">
+            <ol class="toc">
+                
+                <li class="toc-item toc-level-1">
+                    <a class="toc-link" href="https://zhen.wang/article/Wgpu图文详解（04）顶点索引及其缓冲区/#qian-yan">前言</a>
+                    
+                </li>
+                
+                <li class="toc-item toc-level-1">
+                    <a class="toc-link" href="https://zhen.wang/article/Wgpu图文详解（04）顶点索引及其缓冲区/#ding-dian-suo-yin-ji-qi-huan-chong-qu">顶点索引及其缓冲区</a>
+                    
+                </li>
+                
+                <li class="toc-item toc-level-1">
+                    <a class="toc-link" href="https://zhen.wang/article/Wgpu图文详解（04）顶点索引及其缓冲区/#xie-zai-zui-hou">写在最后</a>
+                    
+                </li>
+                
+            </ol>
+        </div>
+    </div>
+    
+    <!-- real content -->
+    <div class="article-content markdown-content">
+        <h1 id="qian-yan">前言</h1>
+<p>在上一节中我们重点介绍了图形学工程中的缓冲区Buffer的概念，同时通过大量的图解和代码实例来讲解如何构建一个顶点缓冲区，通过与着色器代码的配合，最终实现了一个渐变效果三角形渲染。相信读者还记得我们曾经编写过这样的代码：</p>
+<p><img src="https://static-res.zhen.wang/images/post/2024-12-11/010.png" alt="010" /></p>
+<p>在上述代码中，我们用了三个Vertex结构体数据分别描述三个顶点在几何空间中的位置以及颜色。当然，在实际应用场景中，我们几乎不可能只是渲染一个三角形，我们不可避免的会渲染一些复杂的图形。值得提到的是，无论是2D图形还是3D图形，在图形学中通常都会通过一定的算法将其拆解为n个独立的三角面：</p>
+<p><img src="https://static-res.zhen.wang/images/post/2024-12-11/020.png" alt="020" /></p>
+<p>因此，为了能够表达更加复杂的图形，我们会增加三角形的数量。例如，在本文中，我们尝试渲染如下一个六边形：</p>
+<p><img src="https://static-res.zhen.wang/images/post/2024-12-11/030.png" alt="030" /></p>
+<p>为了实现上述的效果，我们可以将这个六边形分解为如下的4个三角面：</p>
+<p><img src="https://static-res.zhen.wang/images/post/2024-12-11/040.png" alt="040" /></p>
+<p>其中，由a、b、c、d、e、f六个点构成一个六边形；abc构成三角面A，acd构成三角面B，ade构成三角面C，aef构成三角面D。</p>
+<p>按照之前的思路，我们可以在顶点数据列表中，增加顶点：</p>
+<p><img src="https://static-res.zhen.wang/images/post/2024-12-11/050.png" alt="050" /></p>
+<p>只是修改VRETEXT_LIST的内容，在前一篇文章的基础上，我们就可以渲染一个期望的六边形：</p>
+<p><img src="https://static-res.zhen.wang/images/post/2024-12-11/060.png" alt="060" /></p>
+<blockquote>
+<p>上述内容代码已经作为一次提交推送到<code>wgpu_winit_example</code>仓库中，对应提交记录：<a rel="noopener" target="_blank" href="https://github.com/w4ngzhen/wgpu_winit_example/commit/4e60c76151b331397c1e1b66ad70f4405747b5f9">Commit 4e60c76</a>。</p>
+</blockquote>
+<h1 id="ding-dian-suo-yin-ji-qi-huan-chong-qu">顶点索引及其缓冲区</h1>
+<p>尽管此时我们已经完成了一个六边形的渲染，但同时我们会发现，对于相邻的三角面会共享一些顶点，例如三角面A和B都共享了顶点a、c：</p>
+<p><img src="https://static-res.zhen.wang/images/post/2024-12-11/070.png" alt="070" /></p>
+<p>通过梳理不难发现，除了顶点b、f外，另外的4个顶点：a、c、d、e，都不止一次被共享使用。假设存在一个场景会有成千上万个三角面，试想一下，如果能够复用顶点数据，那将会节省大量的内存空间。因此，有没有一种方式能够高效的复用顶点呢？答案是肯定的——使用<strong>顶点索引</strong>来表达三角面。</p>
+<p>对于上面的六边形，首先，我们只需要将每一个顶点定义出来：</p>
+<pre data-lang="rust" style="background-color:#2b303b;color:#c0c5ce;" class="language-rust "><code class="language-rust" data-lang="rust"><span style="color:#65737e;">// a, b, c, d, e, f
+</span><span style="color:#b48ead;">pub const </span><span style="color:#d08770;">VERTEX_LIST</span><span>: &amp;[Vertex] = &amp;[
+</span><span>    </span><span style="color:#65737e;">// a
+</span><span>    Vertex { position: [</span><span style="color:#d08770;">0.0</span><span>, </span><span style="color:#d08770;">0.5</span><span>, </span><span style="color:#d08770;">0.0</span><span>], color: [</span><span style="color:#d08770;">0.0</span><span>, </span><span style="color:#d08770;">0.2</span><span>, </span><span style="color:#d08770;">1.0</span><span>] },
+</span><span>    </span><span style="color:#65737e;">// b
+</span><span>    Vertex { position: [-</span><span style="color:#d08770;">0.5</span><span>, </span><span style="color:#d08770;">0.3</span><span>, </span><span style="color:#d08770;">0.0</span><span>], color: [</span><span style="color:#d08770;">0.0</span><span>, </span><span style="color:#d08770;">0.2</span><span>, </span><span style="color:#d08770;">1.0</span><span>] },
+</span><span>    </span><span style="color:#65737e;">// c
+</span><span>    Vertex { position: [-</span><span style="color:#d08770;">0.5</span><span>, -</span><span style="color:#d08770;">0.3</span><span>, </span><span style="color:#d08770;">0.0</span><span>], color: [</span><span style="color:#d08770;">0.0</span><span>, </span><span style="color:#d08770;">0.2</span><span>, </span><span style="color:#d08770;">1.0</span><span>] },
+</span><span>    </span><span style="color:#65737e;">// d
+</span><span>    Vertex { position: [</span><span style="color:#d08770;">0.0</span><span>, -</span><span style="color:#d08770;">0.5</span><span>, </span><span style="color:#d08770;">0.0</span><span>], color: [</span><span style="color:#d08770;">0.0</span><span>, </span><span style="color:#d08770;">0.2</span><span>, </span><span style="color:#d08770;">1.0</span><span>] },
+</span><span>    </span><span style="color:#65737e;">// e
+</span><span>    Vertex { position: [</span><span style="color:#d08770;">0.5</span><span>, -</span><span style="color:#d08770;">0.3</span><span>, </span><span style="color:#d08770;">0.0</span><span>], color: [</span><span style="color:#d08770;">0.0</span><span>, </span><span style="color:#d08770;">0.2</span><span>, </span><span style="color:#d08770;">1.0</span><span>] },
+</span><span>    </span><span style="color:#65737e;">// f
+</span><span>    Vertex { position: [</span><span style="color:#d08770;">0.5</span><span>, </span><span style="color:#d08770;">0.3</span><span>, </span><span style="color:#d08770;">0.0</span><span>], color: [</span><span style="color:#d08770;">0.0</span><span>, </span><span style="color:#d08770;">0.2</span><span>, </span><span style="color:#d08770;">1.0</span><span>] },
+</span><span>];
+</span></code></pre>
+<p>然后，在通过<strong>顶点索引</strong>表达：</p>
+<pre data-lang="rust" style="background-color:#2b303b;color:#c0c5ce;" class="language-rust "><code class="language-rust" data-lang="rust"><span style="color:#b48ead;">const </span><span style="color:#d08770;">INDEX_LIST</span><span>: &amp;[</span><span style="color:#b48ead;">u16</span><span>] = &amp;[
+</span><span>    </span><span style="color:#d08770;">0</span><span>, </span><span style="color:#d08770;">1</span><span>, </span><span style="color:#d08770;">2</span><span>, </span><span style="color:#65737e;">// abc
+</span><span>    </span><span style="color:#d08770;">0</span><span>, </span><span style="color:#d08770;">2</span><span>, </span><span style="color:#d08770;">3</span><span>, </span><span style="color:#65737e;">// acd
+</span><span>    </span><span style="color:#d08770;">0</span><span>, </span><span style="color:#d08770;">3</span><span>, </span><span style="color:#d08770;">4</span><span>, </span><span style="color:#65737e;">// ade
+</span><span>    </span><span style="color:#d08770;">0</span><span>, </span><span style="color:#d08770;">4</span><span>, </span><span style="color:#d08770;">5</span><span>, </span><span style="color:#65737e;">// aef
+</span><span>];
+</span></code></pre>
+<blockquote>
+<p>INDEX_LIST中每一个整数就对应VERTEX_LIST数组中对应的索引位置</p>
+</blockquote>
+<p>此时，我们的项目代码中的改动就只有vertex.rs文件中的改动：</p>
+<p><img src="https://static-res.zhen.wang/images/post/2024-12-11/080.png" alt="080" /></p>
+<p>讲一个题外话，此时你可以尝试运行基于上述改动的代码，会发现得到如下的一个效果：</p>
+<p><img src="https://static-res.zhen.wang/images/post/2024-12-11/090.png" alt="090" /></p>
+<p>如果读者对之前的内容掌握了，其实也不难理解呈现这个效果的原因。按照之前对于wgpu的图元配置（<code> wgpu::PrimitiveTopology::TriangleList</code>，请读者自行复习相关概念、代码），会让wgpu按照每三个顶点作为一个三角面来渲染，同时我们将顶点改为了6个，正好构成两个三角面（abc、def）。</p>
+<p>回到正题，我们创建了一个顶点索引数据，其目的就是告诉gpu：“在接下来请将传入的6个顶点数据，依次按照顶点索引数组的配置，渲染4个三角形“。那么我们应该如何把顶点索引数据传递给gpu（渲染管线），并让gpu能够理解并消费顶点索引数据呢？其实过程和前面我们将顶点数据创建、消费是很类似的。</p>
+<p>首先，顶点索引数据既然是要交给gpu，那么依然离不开<strong>缓冲区</strong>这一重要概念，不过与顶点缓冲区的区别在于我们要为缓冲区指明其类型为顶点索引缓冲区：</p>
+<p><img src="https://static-res.zhen.wang/images/post/2024-12-11/100.png" alt="100" /></p>
+<p>对于上述代码。首先，我们参考之前方式，将顶点索引数组数据通过工具库bytemuck转换为字节数据。值得注意的是，这里的<strong>VERTEX_IDNEX_LIST</strong>的类型是<code>&amp;[u16]</code>，即每一个元素是<code>u16</code>基本类型，因此不需要像之前顶点Vertex结构体那样为其实现<code>bytemuck::Zeroable</code>和<code>bytemuck::Pod</code>trait，就可以转为字节数据。</p>
+<p>然后，我们同样通过device的<code>create_buffer_init</code>API来创建一个缓冲区实例，并传入字节数据，不过这里的<code>usage</code>字段我们需要传入枚举<code>wgpu::BufferUsage::INDEX</code>来表明创建的缓冲区是用来存放<strong>顶点索引</strong>数据，而不是其他类型的数据。</p>
+<p>最后，我们按照之前模式一样，创建并存放顶点缓冲区数据：同样在WgpuCtx结构体中增加<code>vertex_index_buffer</code>字段来存放我们创建的顶点索引缓冲区数据。</p>
+<p>至此，我们就完成了一个<strong>顶点索引</strong>缓冲区的创建工作了。那么接下来就是在渲染时消费到这个缓冲区数据。具体代码如下所示：</p>
+<p><img src="https://static-res.zhen.wang/images/post/2024-12-11/110.png" alt="110" /></p>
+<p>在原来<code>WgpuCtx::draw</code>方法代码基础上，我们增加了上述两行代码：</p>
+<pre data-lang="rust" style="background-color:#2b303b;color:#c0c5ce;" class="language-rust "><code class="language-rust" data-lang="rust"><span style="color:#65737e;">// 消费存放的 vertex_index_buffer
+</span><span>rpass.</span><span style="color:#96b5b4;">set_index_buffer</span><span>(</span><span style="color:#bf616a;">self</span><span>.vertex_index_buffer.</span><span style="color:#96b5b4;">slice</span><span>(..), wgpu::IndexFormat::Uint16); </span><span style="color:#65737e;">// 1.
+</span><span style="color:#65737e;">// 调用draw_indexed，传入对应数量的顶点数量
+</span><span>rpass.</span><span style="color:#96b5b4;">draw_indexed</span><span>(</span><span style="color:#d08770;">0</span><span>..</span><span style="color:#d08770;">VERTEX_INDEX_LIST</span><span>.</span><span style="color:#96b5b4;">len</span><span>() as </span><span style="color:#b48ead;">u32</span><span>, </span><span style="color:#d08770;">0</span><span>, </span><span style="color:#d08770;">0</span><span>..</span><span style="color:#d08770;">1</span><span>);
+</span></code></pre>
+<p>首先，调用渲染通道RenderPass的<code>set_index_buffer</code>API，传入我们存放的顶点索引缓冲实例的切片以及对应的数据类型格式（因为我们的每一个顶点的数据是<code>u16</code>，因此这里用枚举<code>wgpu::IndexFormat::Uint16</code>）；</p>
+<p>其次，调用<code>draw_indexed</code>API来传入具体顶点索引数组的长度，以及要从数组中哪个位置开始作为第一个索引（这里我们填入0），最后一个参数我们默认填入<code>0..1</code>表明只有一个实例。</p>
+<p>完成上述代码以后，我们再次运行项目，会发现得到了我们希望的效果：</p>
+<p><img src="https://static-res.zhen.wang/images/post/2024-12-11/120.png" alt="120" /></p>
+<h1 id="xie-zai-zui-hou">写在最后</h1>
+<p>实际上，无论是上一篇的顶点缓冲区还是本文的索引缓冲区。我们的核心思路都是创建一些能够表达信息的数据，再基于这些数据创建缓冲区实例。缓冲区通过类型来区分其作用。因此，后续的内容中如果出现了其他类型缓冲区，我相信读者能够理解对应的思路。</p>
+<p>读者如果看过<a rel="noopener" target="_blank" href="https://sotrh.github.io/learn-wgpu/">《learn wgpu》</a>的内容，会发现在《learn wgpu》中是将顶点缓冲区、顶点索引等内容放到了<a rel="noopener" target="_blank" href="https://sotrh.github.io/learn-wgpu/beginner/tutorial4-buffer/">一篇</a>中，但是笔者在编写的时候考虑到在上一篇（《Wgpu图文详解（03）缓冲区Buffer》）内容比较多，将顶点索引这块的内容再放进去会增加读者的阅读负担，因此将顶点索引的部分单独拆到了这一章中。同时，也是希望读者能够将本文作为对上一篇文章缓冲区内容的巩固。</p>
+<p>本章的代码仓库在这里：</p>
+<p><a rel="noopener" target="_blank" href="https://github.com/w4ngzhen/wgpu_winit_example/tree/main/ch04_vertex_index_buffer">ch04_vertex_index_buffer</a></p>
+<p>后续文章的相关代码也会在该仓库中添加，所以感兴趣的读者可以点个star，谢谢你们的支持！</p>
+
+    </div>
+</div>
+<script src="https://zhen.wang/libs/viewerjs@1.11.7/viewer.min.js"></script>
+<link rel="stylesheet" href="https://zhen.wang/libs/viewerjs@1.11.7/viewer.min.css"/>
+<script>
+  if (window.Viewer) {
+    document.querySelectorAll('img').forEach(img => {
+      new Viewer(img, {
+        inline: false,
+        navbar: false,
+        toolbar: {
+          zoomIn: 1,
+          zoomOut: 1,
+          reset: 1,
+          rotateLeft: 1,
+          rotateRight: 1,
+        },
+      });
+    });
+  }
+</script>
+
+
+</body>
+</html>

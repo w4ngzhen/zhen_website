@@ -1,0 +1,609 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="utf-8">
+    <meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover"
+          name="viewport">
+    
+    
+    <!-- umami web analysis -->
+    <script defer src="https://zhen.wang/libs/umami/umami.script.js"
+            data-website-id="d66cfe03-f6b3-4aa0-baf8-728700db1b09"></script>
+    
+    
+    
+    <link rel="icon" type="image/png" sizes="16x16" href="https://zhen.wang/images/blog-site-icon.svg">
+    <link rel="icon" type="image/png" sizes="32x32" href="https://zhen.wang/images/blog-site-icon.svg">
+    <title>zhen&#x27;s everything</title>
+    <link rel="stylesheet" href="https://zhen.wang/style.css">
+    
+<link rel="stylesheet" href="https://zhen.wang/article_content.css">
+<link rel="stylesheet" href="https://zhen.wang/article_markdown.css">
+
+</head>
+<body>
+
+<div id="article">
+    <header class="article-header">
+        
+<div class="base-title">
+    <a href="#" onclick="history.length > 1 ? history.back() : location.href = '/'; return false;">&LeftArrow; Back</a>
+    <h1>
+        【翻译转载】如果你想要构建一套基于ECS的GUI框架
+    </h1>
+</div>
+
+    </header>
+    <p class="article-date">2024-08-21</p>
+    
+    <!-- toc -->
+    <div class="article-toc">
+        <label class="toc-title" for="toc-trigger">目录</label>
+        <input id="toc-trigger" type="checkbox" checked/>
+        <div class="toc-content">
+            <ol class="toc">
+                
+                <li class="toc-item toc-level-1">
+                    <a class="toc-link" href="https://zhen.wang/article/【翻译转载】如果你想要构建一套基于ECS的GUI框架/#yi-zhe-xu">译者序</a>
+                    
+                </li>
+                
+                <li class="toc-item toc-level-1">
+                    <a class="toc-link" href="https://zhen.wang/article/【翻译转载】如果你想要构建一套基于ECS的GUI框架/#zheng-wen">正文</a>
+                    
+                    <ol class="toc-child">
+                        
+                        <li class="toc-item toc-level-2">
+                            <a href="https://zhen.wang/article/【翻译转载】如果你想要构建一套基于ECS的GUI框架/#wei-shen-me-bu-zhi-jie-yong-egui-huo-shi-dioxus-huo-shi-tauri-huo-shi-iced-huo-shi-yew">为什么不直接用egui（或是dioxus，或是tauri，或是iced，或是yew）？</a>
+                        </li>
+                        
+                        <li class="toc-item toc-level-2">
+                            <a href="https://zhen.wang/article/【翻译转载】如果你想要构建一套基于ECS的GUI框架/#yi-tao-guikuang-jia-lai-tong-ling-suo-you">一套GUI框架来统领所有？</a>
+                        </li>
+                        
+                        <li class="toc-item toc-level-2">
+                            <a href="https://zhen.wang/article/【翻译转载】如果你想要构建一套基于ECS的GUI框架/#ecszhong-de-gui-bevy-uishi-ji-shang-shi-ru-he-gong-zuo-de">ECS中的GUI：bevy_ui实际上是如何工作的？</a>
+                        </li>
+                        
+                        <li class="toc-item toc-level-2">
+                            <a href="https://zhen.wang/article/【翻译转载】如果你想要构建一套基于ECS的GUI框架/#wei-shen-me-bevy-ui-hen-zao-gao">为什么 bevy_ui 很糟糕？</a>
+                        </li>
+                        
+                        <li class="toc-item toc-level-2">
+                            <a href="https://zhen.wang/article/【翻译转载】如果你想要构建一套基于ECS的GUI框架/#bevy-uide-qian-jin-zhi-lu">bevy_ui的前进之路</a>
+                        </li>
+                        
+                    </ol>
+                    
+                </li>
+                
+                <li class="toc-item toc-level-1">
+                    <a class="toc-link" href="https://zhen.wang/article/【翻译转载】如果你想要构建一套基于ECS的GUI框架/#yi-zhe-xie-zai-zui-hou">译者写在最后</a>
+                    
+                </li>
+                
+            </ol>
+        </div>
+    </div>
+    
+    <!-- real content -->
+    <div class="article-content markdown-content">
+        <h1 id="yi-zhe-xu">译者序</h1>
+<p>本文原文地址：<a rel="noopener" target="_blank" href="https://www.leafwing-studios.com/blog/ecs-gui-framework/">So you want to build an ECS-backed GUI framework | Leafwing Studios (leafwing-studios.com)</a>。翻译和发布本文前，已经获得了原作者的许可。</p>
+<p>本人翻译这篇文章的主要是因为尽管该文是从 <strong>bevy_ui</strong> 这一具体的库出发，但其核心是讨论GUI框架的设计思路与范式，同时还介绍了很多已有成果，个人觉得如果有读者对基于Rust的GUI建设感兴趣的话，一定会从这篇文章中学到很多有价值的内容。当然，笔者只是利用自己欠佳的英语水平结合翻译软件来对原文进行了翻译，所以如有翻译上的问题，还请读者指出，感激不敬！</p>
+<p>此外，这篇文章由原作者于23年11月编写，当时 <strong>bevy</strong> 正值0.12版本，在翻译这篇文章的时候已经是24年的8月底，bevy的版本已经更新到了0.14，所以文中关于 <strong>bevy</strong> 、<strong>bevy_ui</strong> 的一些建设工作（如PR、讨论等）不一定具有时效性。</p>
+<blockquote>
+<p>原文标题为："So you want to build an ECS-backed GUI framework"，从文章上下文理解看来，实际上应该是"So (if) you want to build an ECS-backed GUI framework"</p>
+</blockquote>
+<h1 id="zheng-wen">正文</h1>
+<blockquote>
+<p><em>Challenges and opportunities in the future of <code>bevy_ui</code></em></p>
+<p>关于 <strong>bevy_ui</strong> 未来的挑战与机遇</p>
+<p>Alice I. Cecile, Rose Peck  |  2023-11-27</p>
+</blockquote>
+<p>如果你想要通过Rust（以及其生态）构建一个用户界面，那有什么工具能比<a rel="noopener" target="_blank" href="https://en.wikipedia.org/wiki/Entity_component_system">实体-组件-系统（ECS）框架</a>更合适呢？它不仅提供了一种类型安全的、流行的状态管理方案，而且最重要的是：这套体系的速度将非常快（显然无需进行基准测试）。</p>
+<p>当然，<a rel="noopener" target="_blank" href="https://bevyengine.org/">Bevy</a> 确实在这么做！实际上，它已经这样做了好几年。那么，为何它没有在竞争中脱颖而出，赢得数百万人的心，并取代 <a rel="noopener" target="_blank" href="https://areweguiyet.com/">areweguiyet.rs</a> 呢？</p>
+<blockquote>
+<p>译者注：<a rel="noopener" target="_blank" href="https://areweguiyet.com/">Are we GUI yet?</a>网站陈列了目前已知的所有基于Rust绑定或实现的GUI框架。这里的“取代”主要含义是为什么Bevy的基于ECS的GUI框架为什么做的并不出众，没有成为某种优秀的范例，进而让基于Rust的GUI框架<strong>结束</strong>百花齐放的局面。</p>
+</blockquote>
+<p>虽然基于ECS模式的GUI可能并不是传统方式，但现有技术表明这并非不可能。<a rel="noopener" target="_blank" href="https://github.com/SanderMertens/flecs">flecs</a>在<a rel="noopener" target="_blank" href="https://www.flecs.dev/flecs/flecsscripttutorial.html">这篇文档中</a>将许多核心思想进行了实现，同时也像 <a rel="noopener" target="_blank" href="https://github.com/jkb0o/belly">belly</a>，<a rel="noopener" target="_blank" href="https://github.com/bytestring-net/bevy-lunex">bevy_lunex</a>，<a rel="noopener" target="_blank" href="https://github.com/Anti-Alias/bevy_ui_dsl">bevy_ui_dsl</a>，<a rel="noopener" target="_blank" href="https://github.com/nicopap/cuicui_layout">cuicui_layout</a>以及<a rel="noopener" target="_blank" href="https://github.com/StarArawn/kayak_ui">kayak_ui</a>这些库进行了这方面的尝试，使得Bevy的ECS（模式）显现出了巨大的潜力。甚至还有一个名为Polyphony的，独立的，ECS先行的，基于Javascript编写的GUI库（关于它的讨论：<a rel="noopener" target="_blank" href="https://github.com/traffaillac/traffaillac.github.io/issues/1">Polyphony ECS GUI and future · Issue #1 · traffaillac/traffaillac.github.io</a>）。</p>
+<p>事实证明，困扰<a rel="noopener" target="_blank" href="https://docs.rs/bevy_ui/latest/bevy_ui/">bevy_ui</a>的大多数问题都不是由、由于使用ECS甚至使用Rust的决定引起的，而是一些无聊、乏味和令人沮丧的内容：编写GUI框架是一项涉及大量容易变动的工作。Bugs、模板代码和缺失的功能击碎了用户和开发人员逐步改进优化代码的意愿。</p>
+<p>但在我们深入讨论繁杂的细节之前，有一个重要的免责声明。Alice是Bevy的维护者（译者注：同时也是本文的作者），但不是项目负责人，甚至不是UI方面的专家。Rose是Foresight Spatial Labs的一名员工，她日常工作是使用Bevy和传统的web框架（React）来构建重GUI的应用程序。本文相关的论点、意见纯粹是我们自己的，不是最终定性的或官方的话！</p>
+<p>这篇文章旨在记录如何制作一个GUI框架，为什么我们要使用ECS，以及我们需要修复哪些部分才能使 <strong>bevy_ui</strong> 变得更优秀。（关于这些内容）我们在很多地方（<a rel="noopener" target="_blank" href="https://github.com/bevyengine/bevy/issues/254">这里</a>，<a rel="noopener" target="_blank" href="https://github.com/bevyengine/bevy/discussions/9538">这里</a>，<a rel="noopener" target="_blank" href="https://github.com/bevyengine/bevy/discussions/5604">这里</a>，以及<a rel="noopener" target="_blank" href="https://discord.com/channels/691052431525675048/743663673393938453">这里</a>）都有过很多重复的讨论，但很少有实质性，落地的实践活动（除了<a rel="noopener" target="_blank" href="https://github.com/bevyengine/bevy/pulls/ickshonpe">ickshonpe </a>，you rock）（译者注：这位<em>icksphonpe</em>给 <strong>bevy_ui</strong> 的部分提交了大量的优化、修复代码）。说“bevy_ui应该像我最喜欢的ui框架一样工作”很容易，但实际上将其转化为可行的设计、达成共识并其构建出来却要困难得多。</p>
+<p>通过编写一份关于需求、愿景和进展的最新、全面、通俗易懂的文档，我们希望Bevy社区能够团结起来解决 <strong>bevy_ui</strong> 今天遇到的问题，彻底排除各种可能性，并为关键的缺失部分提出可靠的设计。</p>
+<p>谁知道呢？也许十年后，你正在阅读这篇文章，梦想着编写自己的基于ECS驱动的GUI框架。</p>
+<p>在我感到非常疲惫、厌倦的过往中，有三类常见的关于 <strong>bevy_ui</strong> “脱轨”（译者注：原文为<code>"get derailed"</code>）的讨论：</p>
+<ol>
+<li>Bevy应该使用一套现有的GUI框架。</li>
+<li>一个同时适用于游戏和应用程序的GUI框架是不可能的。</li>
+<li>您无法在ECS中构建GUI框架。</li>
+</ol>
+<h2 id="wei-shen-me-bu-zhi-jie-yong-egui-huo-shi-dioxus-huo-shi-tauri-huo-shi-iced-huo-shi-yew">为什么不直接用<a rel="noopener" target="_blank" href="https://github.com/emilk/egui">egui</a>（或是<a rel="noopener" target="_blank" href="https://github.com/DioxusLabs/dioxus">dioxus</a>，或是<a rel="noopener" target="_blank" href="https://github.com/tauri-apps/tauri">tauri</a>，或是<a rel="noopener" target="_blank" href="https://github.com/iced-rs/iced">iced</a>，或是<a rel="noopener" target="_blank" href="https://github.com/yewstack/yew">yew</a>）？</h2>
+<p>现在已经有非常多的<a rel="noopener" target="_blank" href="https://blog.logrocket.com/state-rust-gui-libraries/">基于Rust的GUI框架</a>，其中一些甚至一直在积极地维护，编写文档以及增加基本功能！</p>
+<p>社区已经为其中一些制作了<a rel="noopener" target="_blank" href="https://github.com/mvlabat/bevy_egui">出色的crates</a>，像Foresight这样的公司甚至使用这些第三方GUI框架制作了<a rel="noopener" target="_blank" href="https://github.com/bevyengine/bevy/discussions/5522">复杂的生产应用程序</a>。</p>
+<p>Bevy想编写我们自己的ui实现，显然是"非我发明"综合症的典型案例（译者注：重复造轮子）。当我们可以使用现有的解决方案来编写即将到来的 Bevy Editor 时，为什么要将稀缺的精力(和决策)用于此？毕竟，我们可以<a rel="noopener" target="_blank" href="https://github.com/bevyengine/bevy/discussions/9538#discussioncomment-6984809">与Dioxus完成一次正式的合作</a>，以此省下很多年的工作量。</p>
+<p>然而，以下是我们基于技术以及社会方面考虑的，认为Bevy不应该这样做的原因：</p>
+<ol>
+<li>与引擎的其他部分保持一致性是非常有价值的：
+<ol>
+<li>为新用户提供了更简单、更一致的学习上的体验。</li>
+<li>这样做使得系统更容易维护。</li>
+<li>将所有更改保存在同一个代码仓库中，从而消除了在存在依赖树的情况下，对于版本发布要更加小心谨慎处理的必要。</li>
+<li>一致性让UI模块能够从引擎其他模块的改进中也受益，反之亦然。Cart相信许多挑战并非是UI模块独有的，我们对此表示赞同！</li>
+</ol>
+</li>
+<li>Bevy已经为GUI库需要完成的许多核心任务提供了一个很好的解决方案。
+<ol>
+<li>渲染、状态管理、资产asset、输入、窗口、异步等等。</li>
+<li>为什么我们要再次采用重复的、或许微妙不兼容的方法来完成这些任务？</li>
+</ol>
+</li>
+<li>将数据发送到外部UI框架和从外部UI框架接收数据本身就容易出错，逻辑会变得复杂，难以维护，并且充斥着很多样板代码。
+<ol>
+<li>我们不可避免的需要提供<em>集成层</em>来面对不匹配的数据模型。</li>
+<li>这并不是UI模块独有的：<a rel="noopener" target="_blank" href="https://github.com/dimforge/bevy_rapier">bevy_rapier</a>在物理方面也遇到了类似的问题（尽管它仍然是一个优秀的库）。</li>
+</ol>
+</li>
+<li>打破目前“屏幕上的盒子（boxes on a screen）”这一UI标准的设计思路，将会使得现状变得更加困难。
+<ol>
+<li>世界空间UI（World-space UI）是游戏的一个关键功能，涉及到：单元叠加（unit overlays）、VR菜单、计算机屏幕等等。</li>
+<li>游戏UI<a rel="noopener" target="_blank" href="https://forum.unity.com/threads/i-look-forward-to-a-better-ui-system.1156304/">往往希望与游戏世界状态紧密结合，并具有不同寻常的艺术效果</a>。</li>
+<li>使用第三方解决方案编写自定义着色器来覆盖某些节点的行为会变得更加困难。</li>
+</ol>
+</li>
+<li>现有的Rust GUI项目都没有很好地回答解决一个事实：借用检查器非常讨厌<strong>图</strong>这样数据结构以及讨厌拆分（数据）可变性。
+<ol>
+<li>通过添加<a rel="noopener" target="_blank" href="https://github.com/bevyengine/bevy/issues/3742">关系relations</a>，Bevy保证了一种在Rust中处理图数据关系的独特而强大的方法。</li>
+<li>Bevy的系统是一个灵活的、无panic的、快速且可靠的解决方案，用于共享对世界状态的可变访问。这背后有很多黑魔法，亲爱的上帝，我们不想解释两次了（译者注：可以在<a rel="noopener" target="_blank" href="https://taintedcoders.com/bevy/archetypes/">这里</a>了解）。</li>
+</ol>
+</li>
+<li>其他项目不由Bevy项目运营。
+<ol>
+<li>我们的目标可能会有所不同：例如，<a rel="noopener" target="_blank" href="https://www.egui.rs/">egui</a>是专注于简单、快速构建的UI，为了达到这一要求，它需要在性能和可定制性之间做出权衡取舍。</li>
+<li>改动会变得更难协调：我们需要迁移PR，并且无法快速添加编辑器所需的功能。</li>
+<li>上游的依赖库可能（<a rel="noopener" target="_blank" href="https://github.com/vislyhq/stretch/issues/86">再次</a>）被废弃。如果Bevy计划继续存在几十年，所依赖其他库的UI解决方案也会一并存在吗？</li>
+<li>我们无法保证某一个关键依赖项的质量。</li>
+<li>它给那些较小的所以依赖的第三方库带来了很大的维护压力，因为会让如此大的客户端向它们发出优化、fix的请求。</li>
+</ol>
+</li>
+<li>许多建议提到的第三方GUI库由于它们通常依赖于C、C++或JavaScript等其他语言生态，使Bevy的构建和分发过程变得非常复杂。</li>
+<li>不要太苛刻，但很多现有的Rust GUI解决方案，只是不是那么完美。
+<ol>
+<li>虽然我们有很多能够接受的选择，但它们都有不小的缺点。没有人真正成为赢家。</li>
+<li><a rel="noopener" target="_blank" href="https://areweguiyet.com/">Are we GUI yet?</a>说“根不深，但种子已经播下”（"The roots aren't deep but the seeds are planted."）是有原因的。</li>
+<li>在内心深处，我们都知道我们可以做得更好，并且我们应该做得更好。</li>
+</ol>
+</li>
+<li>喜欢第三方GUI解决方案的用户可以并且无论如何都会使用它们。</li>
+</ol>
+<p>我们会学习其他GUI框架吗？当然。我们会正式大规模采用它们吗？绝对不会。</p>
+<h2 id="yi-tao-guikuang-jia-lai-tong-ling-suo-you">一套GUI框架来统领所有？</h2>
+<p>在讨论 <strong>bevy_ui</strong> 时，另一个常见的友善问题是“我们真的能用一个UI框架来满足所有用户的需求吗”？</p>
+<p>我看到了一些潜在的分歧：</p>
+<ul>
+<li><a rel="noopener" target="_blank" href="https://github.com/bevyengine/bevy/issues/254#issuecomment-886235989">应用程序UI vs 简单游戏UI vs 复杂游戏UI</a></li>
+<li><a rel="noopener" target="_blank" href="https://github.com/bevyengine/bevy/issues/254#issuecomment-850216295">一些热爱CSS以及web应用开发的人 vs 恨它们的人</a></li>
+<li><a rel="noopener" target="_blank" href="https://github.com/bevyengine/bevy/discussions/9538#discussioncomment-7388170">程序化的程序员友好型GUI vs 资产驱动的艺术家友好型GUI</a></li>
+<li>立即模式GUI vs 保留模式GUI</li>
+</ul>
+<p>我相信你能想到更多，分歧很容易出现，也很有趣！理论上，我们可以<a rel="noopener" target="_blank" href="https://discussions.unity.com/t/why-is-unity-creating-yet-another-ui-system/850204">参考Unity</a>（译者注：原文“pull a Unity”，但译者觉得可以理解为参考Unity，意思是“再搞一个类似的”），并在Bevy中创建多个相互竞争的UI框架。但我们认为这将<a rel="noopener" target="_blank" href="https://arstechnica.com/information-technology/2014/10/googles-product-strategy-make-two-of-everything/">非常糟糕</a>，因为：</p>
+<ul>
+<li>这对用户来说非常困惑。</li>
+<li>它分散了开发人员的注意力。</li>
+<li>对于用户来说，很难权衡到底要使用哪种解决方案。</li>
+<li>在两个相互竞争的解决方案之间进行迁移会非常痛苦。</li>
+<li>在同一个项目中使用多个解决方案从根本上是站不住脚的。</li>
+<li>需要两倍的时间（如果你幸运的话）。</li>
+</ul>
+<p>幸运的是，“在多个用户群体的不同需求中找到正确的所需的东西”并不是UI独有的问题。我们有很好的工具在架构层面管理这一点：</p>
+<ul>
+<li>这个问题其实算是一种假设，因为实际上已经在web开发上得到了解决：
+<ul>
+<li>我们不会争辩说web UI是否是有史以来最伟大的UI解决方案（它有许多明显和不明显的缺陷）。</li>
+<li>但事实上人们已经成功构建了几乎任何一种你能想到的使用HTML/CSS/JavaScript来搭建的UI：网页、代码编辑器、游戏（浏览器和独立版）、CAD应用程序、终端等。有一个常见的笑话是“未来一切都是chrome（&lt;化学元素&gt;铬，但实际指Google的Chrome浏览器）”（谢谢<a rel="noopener" target="_blank" href="https://www.electronjs.org/">Electron</a>）</li>
+<li>值得说明的是，web UI技术栈并不是为大多数用例设计的。可以说，它不是为他们中的任何一个单独设计的！</li>
+</ul>
+</li>
+<li>模块化：确保用户可以移除或留下解决方案中某些他们不喜欢（或喜欢）的部分。
+<ul>
+<li>组件、系统、插件和Rust库crate的feature特性都非常适用于模块化！</li>
+<li>第三方UI库如今存在着，并将继续存在。</li>
+</ul>
+</li>
+<li>可扩展性：确保内部构件可访问且可构建。
+<ul>
+<li>公共组件以及资源真的很有用。</li>
+<li>想象一下，一个基于 <strong>bevy_ui</strong> 的可交互扩展库组成的丰富生态系统，所有这些库都建立在我们的核心渲染、交互和布局规范之上。</li>
+</ul>
+</li>
+<li>抽象设计中的渐进式披露（<a rel="noopener" target="_blank" href="https://www.uxpin.com/studio/blog/what-is-progressive-disclosure">Progressive Disclosure</a>）。
+<ul>
+<li>widget部件是由节点构建的。</li>
+<li>节点只是实体。</li>
+<li>在整个过程中，没有什么能阻止你在较低的层次进行hook（译者注：<a rel="noopener" target="_blank" href="https://zh.wikipedia.org/wiki/%E9%92%A9%E5%AD%90%E7%BC%96%E7%A8%8B">Hook</a>）。</li>
+</ul>
+</li>
+</ul>
+<p>如果用户可以将相同的ECS和渲染工具用于从像素艺术平台到单元着色视觉小说（cell-shaded visual novels）再到PBR竞技场射击游戏的一切实现，那么我们就可以创造出一个足够灵活、舒适的，适合每个人的UI解决方案。</p>
+<h2 id="ecszhong-de-gui-bevy-uishi-ji-shang-shi-ru-he-gong-zuo-de">ECS中的GUI：bevy_ui实际上是如何工作的？</h2>
+<p>解决了这些常见的反对意见后，我们有望开始讨论如何实际构建我们的UI框架。让我们考虑一下我们的实际产品需求，这样我们就可以看到 <strong>bevy_ui</strong> 的不足之处。</p>
+<p>不幸的是，对我们来说GUI框架是极其复杂的“野兽”。其中某些部分是如此重要，以至于将它们排除会破坏整个系统：</p>
+<ol>
+<li>存储节点树（Storing a tree of nodes）
+<ol>
+<li>几乎每个优秀的UI范式都有一个或多个嵌套的元素树。</li>
+<li>“节点”是这样的元素：UI中最小的不可再分割的原子。</li>
+<li>你需要把这些数据存储在某个地方！</li>
+<li>在 <strong>bevy_ui</strong> 中，节点树存储在世界World中：每个节点都是一个具有node组件的实体。</li>
+<li>UI实体通过使用父组件和子组件连接在一起。</li>
+</ol>
+</li>
+<li>布局（Layout）
+<ol>
+<li>一旦有了一组节点后，我们希望能够描述它们在屏幕上的位置。</li>
+<li>只是简单地指定绝对大小和位置并不是很稳健：当添加、删除节点，或屏幕大小更改时，这样的布局可能会遭到破坏。</li>
+<li>在 <strong>bevy_ui</strong> 中，通过<a rel="noopener" target="_blank" href="https://docs.rs/bevy/latest/bevy/ui/struct.Style.html">Style</a>组件指定布局（这名称得怪CSS，抱歉）。</li>
+<li><strong>bevy_ui</strong> 使用了<a rel="noopener" target="_blank" href="https://github.com/dioxuslabs/taffy">taffy</a>（Alice帮助维护！）：它支持<a rel="noopener" target="_blank" href="https://css-tricks.com/snippets/css/a-guide-to-flexbox/">flexbox弹性盒子</a>和<a rel="noopener" target="_blank" href="https://css-tricks.com/snippets/css/complete-guide-grid/">css-grid网格</a>的布局策略。</li>
+<li>如果你不想受到Web布局算法的约束，<a rel="noopener" target="_blank" href="https://github.com/vizia/morphorm">morphorm</a>（在我们看来）是一个更好的选择。</li>
+</ol>
+</li>
+<li>输入（Input）
+<ol>
+<li>以键盘按压、鼠标点击、鼠标移动、触摸屏点击、游戏手柄输入等形式收集用户输入。</li>
+<li>通常与“拾取（picking）”相匹配：根据位置找出鼠标指针事件关联的元素。</li>
+<li>理想情况下，为涵盖悬停、按下、释放和长按按钮等操作设计一套不错的抽象概念。</li>
+<li><strong>bevy_ui</strong> 依赖于 <strong>bevy_input</strong>，而 <strong>bevy_input</strong> 又从 <a rel="noopener" target="_blank" href="https://github.com/rust-windowing/winit">winit</a> 和 <a rel="noopener" target="_blank" href="https://docs.rs/gilrs/latest/gilrs/">gilrs</a> 这些底层库中获得数据。</li>
+</ol>
+</li>
+<li>文本（Text）
+<ol>
+<li>将字符串转换为像素以便于我们能够将它们绘制到屏幕上。</li>
+<li>在所包含文本的UI节点的边界内排列这些文本。</li>
+<li>精确的像素对渲染很重要，但大小尺寸作为节点布局的输入同样也重要。</li>
+<li><strong>bevy_ui</strong> 当前正使用 <a rel="noopener" target="_blank" href="https://crates.io/crates/glyph_brush">glyph_brush</a> 进行文字字符渲染。</li>
+<li><a rel="noopener" target="_blank" href="https://github.com/pop-os/cosmic-text">cosmic-text</a> 对非拉丁文字有更好的塑形（shaping）支持。</li>
+</ol>
+</li>
+<li>窗口管理（Window management）
+<ol>
+<li>创建一个（或n个）窗口来绘制UI。</li>
+<li><strong>bevy</strong> 使用 <a rel="noopener" target="_blank" href="https://github.com/rust-windowing/winit">winit</a>，你也应该用它。</li>
+</ol>
+</li>
+<li>渲染（Rendering）
+<ol>
+<li>将UI的元素绘制到用户屏幕上。</li>
+<li>Bevy使用 <a rel="noopener" target="_blank" href="https://docs.rs/bevy_render/latest/bevy_render/index.html">bevy_render</a>，而其内部进而使用 <a rel="noopener" target="_blank" href="https://docs.rs/wgpu/latest/wgpu/index.html">wgpu</a>。</li>
+<li>如果你正在构建自己的Rust GUI框架，试试<a rel="noopener" target="_blank" href="https://github.com/linebender/vello">vello</a>！</li>
+</ol>
+</li>
+<li>状态管理（State management）
+<ol>
+<li>保持对UI状态的持久性跟踪。</li>
+<li>填充的文本内容，单选按钮，动画进度，菜单是打开还是关闭，暗/亮模式等。</li>
+<li>在 <strong>bevy_ui</strong> 中，状态作为组件存储在实体上（或者少量的状态作为全局资源）。这工作得非常好！</li>
+</ol>
+</li>
+<li>数据传递（Data transfer）
+<ol>
+<li>将数据从UI传输到其他数据结构进行存储，反之亦然。</li>
+<li>在Bevy的上下文中，“其他数据存储”是存储您所有游戏/应用程序状态的ECS World世界。</li>
+<li>数据绑定是一种用于自动化此过程的抽象：自动和精细地进行数据的变更传递。</li>
+<li>目前，<strong>bevy_ui</strong>使用系统（system）在world其他部分来回发送数据。</li>
+</ol>
+</li>
+</ol>
+<p>在此基础上，您可能希望 <strong>bevy_ui</strong> 添加如下的功能：</p>
+<ol>
+<li>导航（Navigation，GUI页面上元素导航）
+<ol>
+<li>以有原则的离散的方式浏览GUI菜单元素：“tab键”是常见的键绑定。</li>
+<li>导航对键盘和游戏手柄都非常有用。</li>
+<li>传统应用程序的重要可访问性功能（accessibility，a11y）。</li>
+<li><strong>bevy_ui</strong> 对这块还没有第一方的解决方案。</li>
+</ol>
+</li>
+<li>样式（Styling）
+<ol>
+<li>widget部件和节点具有大量主要是样式性的属性。</li>
+<li>我们希望确保我们的应用程序具有一致的外观和体感，并能完成快速更换。</li>
+<li>对于应用程序（尤其是移动应用程序）来说，我们期望能够达到原生外观和体感。</li>
+<li>样式可能采取以下形式达成实际效果：
+<ol>
+<li>级联继承（如CSS）。</li>
+<li>选择器（如CSS中的选择器，或您可能使用在 <strong>bevy_ui</strong> 中提供的查询能力编写选择器）。</li>
+<li>全局主题，例如白天明亮模式以及夜间暗黑模式。</li>
+<li>widget部件支持某些特定样式。</li>
+</ol>
+</li>
+<li>样式通常需要有可预测的组合规则：当多个样式同时影响一个元素时会发生什么？</li>
+<li><strong>bevy_ui</strong> 目前没有任何第一方的抽象设计。</li>
+</ol>
+</li>
+<li>可组合、可重用Widget部件的抽象设计（An abstraction for composable, reusable widgets）
+<ol>
+<li>即使是简单的部件类型（单选按钮、文本输入框），代码编写使用起来也相当复杂！</li>
+<li>用户应该能够一次性编写这些代码，然后在整个项目中重用（reuse）它们，从而提高开发效率和以及保持UI一致性。</li>
+<li>部件可以由一个或多个节点/元素组成。</li>
+<li>每个部件的节点数量可以动态变化：想想不断增长的待办事项列表。</li>
+<li>部件需要能够接受参数来更改其内容或行为。例如，创建一个具有可自定义文本的可重用按钮。</li>
+<li><strong>bevy_ui</strong> 目前使用<a rel="noopener" target="_blank" href="https://docs.rs/bevy/latest/bevy/ecs/bundle/trait.Bundle.html">Bundle</a>类型，但由于无法处理多个节点，因此算是较为失败。</li>
+</ol>
+</li>
+<li>动作行为抽象（Action abstractions）
+<ol>
+<li>撤销-重做。</li>
+<li>可重新绑定热键。</li>
+<li>命令选项板。</li>
+<li><strong>bevy_ui</strong> 对此没有第一方解决方案，甚至第三方解决方案也不成熟（抱歉！）。</li>
+</ol>
+</li>
+<li>可访问性（Accessibility）
+<ol>
+<li>为UI创建并暴露机器程序友好的API：读取状态、控制渲染/显示、发送输入并检测这些输入更改时会发生什么。</li>
+<li>通常能够对键盘导航进行hook。</li>
+<li>提供API供屏幕阅读器等工具使用，这些工具提供了一个可供选择的用户界面，以满足残疾用户的需求。</li>
+<li><strong>bevy_a11y</strong> hook到<a rel="noopener" target="_blank" href="https://github.com/AccessKit/accesskit">accesskit</a>，你的GUI框架也应该如此。</li>
+<li>关于可访问性，存在很多事项需要讨论，但不幸的是，我们在这里没有具体事项统计。</li>
+</ol>
+</li>
+<li>本地化（Localization）
+<ol>
+<li>存在不止一种用户语言：你需要一种方法来变更UI元素（尤其是文本），以满足喜欢不同语言的用户的需求。</li>
+<li>有些语言是从右向左而不是从左向右阅读的，如果不考虑这一点，某些UI设计往往会倒退（backwards）。</li>
+<li>图标和表情符号在不同的地方也有不同的文化含义。</li>
+<li>说真的，用<a rel="noopener" target="_blank" href="https://crates.io/crates/fluent">fluent</a>就行了。</li>
+</ol>
+</li>
+<li>资产管理（Asset management）
+<ol>
+<li>UI经常使用预先渲染的图像或图标作为视觉效果，尤其是在游戏中。</li>
+<li>你可能想要自定义的UI的效果和图标等，或者以自己的方式显示图像和视频。</li>
+<li><strong>bevy_ui</strong> 使用<a rel="noopener" target="_blank" href="https://crates.io/crates/bevy_asset">bevy_asset</a>来完成它</li>
+</ol>
+</li>
+<li>动画（Animation）
+<ol>
+<li>小动画，特别是一些UI元素发生变化时的小动画，可以显著提高UI的精致度和丰富性。</li>
+<li>折叠/展开上下文菜单，滑动抽屉，旋转加载图标，淡入/淡出等动画效果。</li>
+<li><strong>bevy_ui</strong> 理论上与<a rel="noopener" target="_blank" href="https://crates.io/crates/bevy_animation">bevy_animation</a>集成在一起，但集成还没有完善（译者注：翻译这篇文章的时候，已经集成发布了）。</li>
+</ol>
+</li>
+<li>调试工具（Debug tools）
+<ol>
+<li>渲染后快速检测，修改UI节点树。</li>
+<li>调试工具对于定位bug和调试过程中摆弄（twiddling）样式非常有用。</li>
+<li><strong>bevy_ui</strong> 对此没有解决方案，但 <a rel="noopener" target="_blank" href="https://github.com/jakobhellermann/bevy-inspector-egui">bevy_inspector_egui</a> 做得很好。</li>
+</ol>
+</li>
+<li>UI序列化（内存中对象到文件）和反序列化（文件到内存中对象）(UI serialization (in-memory object to file) and deserialization (file to in-memory object))
+<ol>
+<li>如果我们可以根据存储在文件中的定义并构建UI，那么我们可以：
+<ol>
+<li>使得外部工具（如游戏编辑器）更容易构建UI。</li>
+<li>让客户端用户更容易自定义UI（想想Greasemonkey和游戏模组）。</li>
+<li>构建调试工具会更容易实现和使用。</li>
+<li>减少编译时间：只需热更新UI资产。</li>
+<li>允许完全控制用于定义对象的格式和语法（译者注：比如创造DSL）。</li>
+<li>提供了更好的模块化工具的潜力，可以在不修改源代码的情况下创建<a rel="noopener" target="_blank" href="https://github.com/bevyengine/bevy/issues/3877">更高级别的抽象和自动化迁移</a>。</li>
+</ol>
+</li>
+<li>在游戏中，这被称为“数据驱动”方式。</li>
+<li><strong>bevy_ui</strong> 当前使用场景scenes（来自<a rel="noopener" target="_blank" href="https://docs.rs/bevy_scene/latest/bevy_scene/index.html">bevy_scene</a>）来实现UI序列化和反序列化。</li>
+</ol>
+</li>
+<li>异步任务（Asynchronous tasks）
+<ol>
+<li>有的任务工作是由UI触发的，但是需要很长时间才能完成。</li>
+<li>当发生上述情况时，你肯定不希望你的程序处于一直UI冻结的状态。</li>
+<li>在 <strong>bevy_ui</strong> 中，使用 <a rel="noopener" target="_blank" href="https://docs.rs/bevy_tasks/latest/bevy_tasks/index.html">bevy_tasks</a> 来实现。</li>
+</ol>
+</li>
+</ol>
+<h2 id="wei-shen-me-bevy-ui-hen-zao-gao">为什么 bevy_ui 很糟糕？</h2>
+<p>通过hook到功能齐全（但尚未完成）的游戏引擎Bevy，bevy_ui 实际上在大多数这些领域都有初步的解决方案！</p>
+<p>那么，为什么绝大多数人认为它比Bevy更像Bavy呢（more Bavy than Bevy）？在听取和整理了用户使用 <strong>bevy_ui</strong> 的体验后，以下是 bevy 0.12版本中，按照对用户体验的主观印象进行排列的，关于 <strong>bevy_ui</strong> 的关键问题：</p>
+<ol>
+<li>
+<p>生成具有大量自定义属性的实体需要大量的样板：</p>
+<ol>
+<li>无限嵌套的以及随处可见的<code>..Default::default()</code>。</li>
+<li>当处理树中<a rel="noopener" target="_blank" href="https://github.com/bevyengine/bevy/blob/v0.12.0/examples/ui/ui.rs">排列的多个实体时</a>，情况会变得更糟。如前所述，你不能在此场景使用bundle。</li>
+<li>数据驱动的工作流并没有被广泛使用，因为Bevy的场景冗长且文档不足。</li>
+</ol>
+</li>
+<li>
+<p>Bevy需要为UI部件拥有一套真正的抽象：</p>
+<ol>
+<li>并非所有widget部件都可以有意义地表示为单个实体。</li>
+<li>Bevy提供了很少的预构建好的widget部件：我们只有按钮和图像。</li>
+<li>因为我们缺乏标准化的抽象，即使<a rel="noopener" target="_blank" href="https://github.com/bevyengine/bevy/pull/7116">添加最简单、最有用的widget部件</a>也会引起争议并陷入困境。（需要明确的是，这不是审稿人或作者的错）</li>
+</ol>
+</li>
+<li>
+<p>在schedule中使用系统不太适合数据绑定：</p>
+<ol>
+<li>UI的行为几乎总是一次性（one-off）的或非常离散稀疏的（very sparse）。（译者注：而ECS体系下的系统总是每一轮都在进行执行）</li>
+<li>从UI侧启动的任务要么通常很小，要么通常将其放入异步任务池中。</li>
+<li>我们真的希望能够引用一个单一的特定实体及其父实体和子实体。
+<ol>
+<li>解决这个问题需要创建几十个标记组件（Marker Component）：几乎每个按钮、文本框、图像、容器等都有一个。</li>
+</ol>
+</li>
+<li>99%的时间，这些处理UI事件的系统不会工作，比较浪费时间，因为schedule模块必须不断轮询以查看是否需要做任何事情。</li>
+</ol>
+</li>
+<li>
+<p>在 bevy_ecs 中管理和遍历层次结构（向上或向下）真的很糟糕：</p>
+<ol>
+<li><a rel="noopener" target="_blank" href="https://github.com/bevyengine/bevy/issues/3742">Relations关系</a>管理短时间还不会实现。</li>
+</ol>
+</li>
+<li>
+<p>Bevy的UI输入处理非常的原始：</p>
+<ol>
+<li>用于处理指针输入的<a rel="noopener" target="_blank" href="https://docs.rs/bevy/latest/bevy/ui/enum.Interaction.html">Interaction交互</a>组件使用起来非常<a rel="noopener" target="_blank" href="https://github.com/bevyengine/bevy/issues/7371">有限</a>了。</li>
+<li>对移动端<a rel="noopener" target="_blank" href="https://github.com/bevyengine/bevy/issues/15">多点触控</a>支持也非常<a rel="noopener" target="_blank" href="https://github.com/bevyengine/bevy/issues/2333">有限</a>。</li>
+<li><a rel="noopener" target="_blank" href="https://github.com/bevyengine/rfcs/pull/41">键盘和游戏手柄导航</a>目前是缺乏支持的（译者注：翻译此文章的时候已经支持了）。</li>
+<li>对于可配置的按键绑定，没有第一方<a rel="noopener" target="_blank" href="https://github.com/leafwing-studios/leafwing-input-manager">动作行为抽象</a>支持。</li>
+<li>Bevy的“picking选取”支持非常简单，且不容易扩展到非矩形元素或世界空间中的元素。（<a rel="noopener" target="_blank" href="https://crates.io/crates/bevy_mod_picking">bevy_mod_picking</a>加油！）</li>
+</ol>
+</li>
+<li>
+<p>Flexbox弹性盒子布局（以及小范围的CSS Grid网格）很难学习，有令人沮丧的边缘案例情况，还有糟糕的API。你能解释一下<code>flex-basis</code>是什么吗？</p>
+</li>
+<li>
+<p>由于不久前的<a rel="noopener" target="_blank" href="https://github.com/bevyengine/bevy/pull/10537">修复错误</a>，<strong>bevy_ui</strong> 中的字体渲染有时非常难看。</p>
+</li>
+<li>
+<p>Bevy缺失了样式抽象：</p>
+<ol>
+<li>如今我们已经完成了实现：只需修改组件即可！</li>
+</ol>
+</li>
+<li>
+<p>为 <strong>bevy_ui</strong> 添加非常规的视觉效果太难了：</p>
+<ol>
+<li>我们<a rel="noopener" target="_blank" href="https://github.com/bevyengine/bevy/pull/8973">缺少圆角</a>：这对美观的UI至关重要。（它们目前在UI方面非常流行。我们可以等几年让它们过时，但无论如何，它们都会在几年后回来。）</li>
+<li>我们也没有阴影，但没人在乎。</li>
+<li>我们缺少九宫格布局支持（<a rel="noopener" target="_blank" href="https://github.com/bevyengine/bevy/pull/10588">nine-patch support</a>）：这对美观但也灵活的基于资产定义的UI至关重要。</li>
+<li>在Bevy 0.12的UI材质（功能发布）之前，没有另外一条路可以让你在 <strong>bevy_ui</strong> 中添加自己的渲染抽象。</li>
+</ol>
+</li>
+<li>
+<p>用纯代码或通过手工编写场景文件来构建UI可能会很痛苦且容易出错：如果有一款可视化编辑器将会很棒。</p>
+</li>
+<li>
+<p><a rel="noopener" target="_blank" href="https://github.com/bevyengine/bevy/issues/5476">世界空间的UI</a>的支持程度很差，并且使用了一套<a rel="noopener" target="_blank" href="https://github.com/bevyengine/bevy/blob/v0.12.0/examples/2d/text2d.rs">完全不同的工具</a>。</p>
+<ol>
+<li>这对于游戏（生命条、单位帧）至关重要，对于GIS或CAD应用程序中的标记和标签等也非常有用。</li>
+</ol>
+</li>
+<li>
+<p><strong>bevy_ui</strong>没有对动画的一级支持。</p>
+</li>
+<li>
+<p><strong>bevy_ui</strong>节点都有<a rel="noopener" target="_blank" href="https://docs.rs/bevy/latest/bevy/transform/components/struct.Transform.html">Transform</a>和<a rel="noopener" target="_blank" href="https://docs.rs/bevy/latest/bevy/transform/components/struct.GlobalTransform.html">GlobalTransform</a> 组件，但不允许开发者使用它们。</p>
+</li>
+<li>
+<p>在Bevy中处理异步任务的人体工程学设计是令人沮丧的：需要对执行的任务进行手写代码跟踪和轮询太多。</p>
+</li>
+</ol>
+<p>在这些问题中，只有1（实体生成样板代码过多）、2（widget部件的抽象不足）、3（系统不适合UI事件回调）以及4（UI节点层次结构处理令人痛苦）是由于我们选择使用ECS架构而引起的。其余的都是标准的GUI问题：无论你使用什么范式，都需要解决这些问题。关键的是，每一个与ECS相关的问题都是Bevy应该为其他用例修复的：</p>
+<ol>
+<li>生成自定义实体（尤其是实体组合）对于常规的游戏代码来说很糟糕，场景scene也不是最佳实践。例如，我们生成一个玩家及其所有武器。</li>
+<li>Bevy缺少一种涵盖多实体层次结构的代码定义级别的抽象：bundle也支持的不够好。</li>
+<li>一次性系统适用于各种定制的复杂逻辑，我们需要创造一套开发模式来有效地使用它们。</li>
+<li>Bevy的对于处理层级继承等部分的实现从根本上来说是缓慢、脆弱和痛苦的。Relations关系设计需要首要一级支持。</li>
+</ol>
+<p>ECS和GUI之间没有根本上的模式不匹配或架构不兼容。<strong>bevy_ui</strong> 并不是一个有根本缺陷的概念设计，只是它的ECS部分的基础还不够好。</p>
+<h2 id="bevy-uide-qian-jin-zhi-lu">bevy_ui的前进之路</h2>
+<p>让 <strong>bevy_ui</strong> 真正强大还有很长的路要走，但我们可以一步一步脚踏实地。尽管我们面临着一些悬而未决的问题，以及即将对核心组件进行重写的事项，但这并不意味着 <strong>bevy_ui</strong> 中的所有内容都应该被毁灭移除。GUI框架涉及大量复杂的，独立的子组件：一个领域模块的改进不会因其他领域模块的重写而无效！</p>
+<p>我们可以把要做的工作分为三类：毫无争议的部分，有争议的部分以及待研究的部分。</p>
+<p>没有争议直截了当的部分只需要解决掉它们即可。这些任务可能很容易，也可能比较困难，但对于如何或是否应该这样做，不应该有太多的分歧。就目前，这类事项包括：</p>
+<ol>
+<li>检视以及合并<a rel="noopener" target="_blank" href="https://github.com/bevyengine/bevy/pull/8973">UI圆角支持</a>。</li>
+<li>检视以及合并<a rel="noopener" target="_blank" href="https://github.com/bevyengine/bevy/pull/10588">九宫格布局支持</a>。</li>
+<li>检视以及合并<a rel="noopener" target="_blank" href="https://github.com/bevyengine/bevy/pull/4482">实现动画插值与混合能力的Animatable特性</a>。</li>
+<li>检视以及合并<a rel="noopener" target="_blank" href="https://github.com/bevyengine/bevy/pull/10702">winit更新</a>，它包含了对各种BUG的修复以及功能优化。</li>
+<li>最后，检视并合并<a rel="noopener" target="_blank" href="https://github.com/bevyengine/bevy/pull/10193">将ab_glyph迁移为cosmic-text的PR</a>，该部分解锁了系统字体和复杂字体的使用。</li>
+<li>添加对<a rel="noopener" target="_blank" href="https://github.com/bevyengine/bevy/issues/5476">世界空间UI</a>的支持，开始着手查看和合并<a rel="noopener" target="_blank" href="https://github.com/bevyengine/bevy/pull/10559">基于摄像机驱动的UI的PR</a>。</li>
+<li>添加对<a rel="noopener" target="_blank" href="https://github.com/bevyengine/bevy/issues/6956">UI不透明度</a>变化的支持。</li>
+<li>添加更多关于 bevy_scene 的文档、示例和测试，使其更容易扩展和学习。</li>
+<li>为Bevy中的<a rel="noopener" target="_blank" href="https://github.com/bevyengine/bevy/issues/15">多点触控输入</a>添加更好的示例和功能。</li>
+<li>改进Bevy中关于处理异步任务的人体工程学设计。</li>
+<li>在taffy中添加<a rel="noopener" target="_blank" href="https://github.com/DioxusLabs/taffy/issues/308">Morphorm</a>和/或<a rel="noopener" target="_blank" href="https://cuicui.nicopap.ch/layout/index.html">cuicui_layout</a>布局策略，并在Bevy中暴露出来。</li>
+<li>添加数十个widget部件（但目前由于围绕良好的widget部件抽象还未达成共识）。</li>
+</ol>
+<p>有争议的事项是那些我们对其具备清晰的理解和广泛的共识，但完成它们会产生重大的架构影响的事项，比如：</p>
+<ol>
+<li>创建一套样式抽象设计，使其通过修改组件值来完成工作：
+<ol>
+<li>Alice写了一个非常古老的<a rel="noopener" target="_blank" href="https://github.com/bevyengine/rfcs/pull/1">RFC</a>来说明这是如何工作的，<a rel="noopener" target="_blank" href="https://github.com/UkoeHB/bevy_kot">bevy_kot</a>提供了一种样式级联的方式，viridia的<a rel="noopener" target="_blank" href="https://github.com/viridia/quill">quill</a>的实验也有一个很好的提案。</li>
+</ol>
+</li>
+<li>上游的<a rel="noopener" target="_blank" href="https://github.com/kgv/bevy_fluent">bevy_fluent</a>，将会在bevy项目的保护之下进行长期的维护。</li>
+<li>添加对<a rel="noopener" target="_blank" href="https://github.com/bevyengine/rfcs/pull/41">键盘以及游戏手柄的导航支持</a>，并将其加入到 <strong>bevy_a11y</strong> 中。</li>
+<li>为<a rel="noopener" target="_blank" href="https://github.com/bevyengine/bevy/issues/7371">如何处理指针事件和状态添加适当的抽象</a>。</li>
+<li>优化并实现<a rel="noopener" target="_blank" href="https://github.com/bevyengine/bevy/discussions/9538">Cart的bsn提案</a>，以提高场景的可用性：
+<ol>
+<li>这是受到现有作品（如<a rel="noopener" target="_blank" href="https://lib.rs/crates/cuicui_layout">cuicui</a>、<a rel="noopener" target="_blank" href="https://github.com/jkb0o/belly">belly</a>和<a rel="noopener" target="_blank" href="https://github.com/polako-rs/polako">polako</a>）的启发并与之密切相关。</li>
+</ol>
+</li>
+<li><a rel="noopener" target="_blank" href="https://github.com/bevyengine/bevy/issues/2565">添加类似bundle的抽象</a>，但适用于多级层次组合：
+<ol>
+<li>添加一个<code>bsn!</code>宏，以便更容易实例化Bevy实体，特别是使用较少样板代码的实体层次结构。</li>
+<li>添加一种通过派生宏从结构体生成这些多层次实体的方法。</li>
+<li>现有技术包括<a rel="noopener" target="_blank" href="https://docs.rs/bevy_proto/latest/bevy_proto/">bevy_proto</a>和<a rel="noopener" target="_blank" href="https://crates.io/crates/moonshine-spawn">moonshine-spawn</a>。</li>
+</ol>
+</li>
+<li>添加<a rel="noopener" target="_blank" href="https://github.com/bevyengine/bevy/issues/1402">插值颜色的方法</a>以提升UI动画效果。</li>
+<li>创建一个<a rel="noopener" target="_blank" href="https://github.com/bevyengine/bevy/issues/7876">UI特定的变换类型</a>，以实现更快的布局和更清晰，类型更安全的API。</li>
+<li>为 <strong>taffy</strong> 中添加在单个节点树中的混合布局策略的支持。</li>
+<li>在<a rel="noopener" target="_blank" href="https://github.com/vleue/bevy_easings">bevy_easings</a>和<a rel="noopener" target="_blank" href="https://github.com/djeedai/bevy_tweening">bevy_tweening</a>这两个库完成后，添加对动画缓动（easing）/tween的支持。</li>
+<li>使用上游的<a rel="noopener" target="_blank" href="https://github.com/leafwing-studios/leafwing-input-manager">leafwing-input-manager</a>库，用于提供对按键绑定的抽象。</li>
+<li>使用上游的<a rel="noopener" target="_blank" href="https://github.com/aevyrie/bevy_mod_picking">bevy_mod_picking</a>库，解锁高性能、灵活的元素选择。</li>
+<li>实现<a rel="noopener" target="_blank" href="https://github.com/bevyengine/bevy/issues/3742">Relations</a>，并将其应用到 <strong>bevy_ui</strong> 中。</li>
+</ol>
+<p>研究任务需要具备相关重要的设计专业知识，需要仔细考虑截然不同的提案，可能没有明确的要求需要干嘛：</p>
+<ol>
+<li>定义并实现一个<a rel="noopener" target="_blank" href="https://github.com/bevyengine/bevy/discussions/5604">标准的UI widget部件抽象</a>：
+<ol>
+<li>可组合的：widget部件可以与其他部件组合以创建新的部件类型。</li>
+<li>灵活的：我们应该能够使用这种抽象来支持从按钮到列表再到选项卡视图的所有内容。</li>
+<li>可配置的：用户可以更改widget部件某些重要属性来达成效果，而无需重复创建自己的类型。</li>
+<li>或许可以映射到一个或多个Bevy实体，使用普通系统就可以对widget部件进行动态更新。</li>
+<li>可在Bevy场景之间进行序列化。</li>
+</ol>
+</li>
+<li>弄清楚我们希望如何处理UI行为（和数据绑定），以避免因为使用ECS中的系统system而卷入其他的问题：
+<ol>
+<li>这是Alice创建<a rel="noopener" target="_blank" href="https://github.com/bevyengine/bevy/blob/v0.12.0/examples/ecs/one_shot_systems.rs">一次性系统</a>的最初动机。</li>
+<li><a rel="noopener" target="_blank" href="https://github.com/aevyrie/bevy_eventlistener">事件冒泡</a>和各种各样（<a rel="noopener" target="_blank" href="https://github.com/viridia/quill">quill</a>、<a rel="noopener" target="_blank" href="https://github.com/UkoeHB/bevy_kot">bevy_kot</a>）的响应式UI尝试（<a rel="noopener" target="_blank" href="https://crates.io/crates/futures-signals">futures-signals</a>、<a rel="noopener" target="_blank" href="https://github.com/aevyrie/bevy_rx">bevy_rx</a>、<a rel="noopener" target="_blank" href="https://github.com/TheRawMeatball/ui4">u4</a>）似乎是有趣的潜在工具库。</li>
+<li>虽然并不总是直接适用，但<a rel="noopener" target="_blank" href="https://raphlinus.github.io/rust/gui/2022/05/07/ui-architecture.html">Raph Levien在Xilem上的帖子</a>很有趣，值得一读。</li>
+<li>数据模型是一项关键的挑战：很容易陷入所有权问题。</li>
+</ol>
+</li>
+<li>弄清楚如何将数据绑定逻辑集成到Bevy场景中：
+<ol>
+<li><a rel="noopener" target="_blank" href="https://github.com/bevyengine/bevy/pull/10711">Callback  as Asset</a>这个PR看起来很有希望。</li>
+<li>Vultix<a rel="noopener" target="_blank" href="https://github.com/bevyengine/bevy/discussions/9538#discussioncomment-7667372">提出</a>了一种用<code>.bsn</code>文件定义数据绑定的语法和策略。</li>
+</ol>
+</li>
+<li>构建<a rel="noopener" target="_blank" href="https://github.com/orgs/bevyengine/projects/12">Bevy编辑器</a>，并实现使用编辑器构建GUI场景的能力：
+<ol>
+<li>这里存在一种“循环依赖”：<strong>bevy_ui</strong> 越好，编辑器构建起来就越容易（，编辑器构建越容易，使用 <strong>bevy_ui</strong> 构建GUI就越好用）</li>
+</ol>
+</li>
+</ol>
+<p>显然，还有很多工作要做！但关键的是，并没有什么是完全不可能的。如果我们（Bevy开发者社区）能够团结起来，一次一个稳步地解决这些问题，我们（Alice和Rose）真的认为 <strong>bevy_ui</strong> 总有一天会达到我们对引擎其他部分所期望的质量、灵活性和人体工程学的标准。</p>
+<p><em>感谢您的阅读：希望它具有教育意义、发人深省和/或有趣。如果你想在未来阅读更多这样的内容，可以考虑注册我们的<a rel="noopener" target="_blank" href="https://www.leafwing-studios.com/mailing-list/">电子邮件列表</a>或订阅我们的<a rel="noopener" target="_blank" href="https://www.leafwing-studios.com/rss.xml">RSS</a>。</em></p>
+<h1 id="yi-zhe-xie-zai-zui-hou">译者写在最后</h1>
+<p>尽管有翻译工具的帮助，但是为了读懂原作者的意思，还是需要结合Bevy这个库以及ECS概念。翻译这篇文章也花了一定的时间，感谢读者的耐心阅读。</p>
+<p>本文也会同步发布到本人的博客上：<a rel="noopener" target="_blank" href="https://zhen.wang">zhen.wang</a>，欢迎小伙伴访问。</p>
+
+    </div>
+</div>
+<script src="https://zhen.wang/libs/viewerjs@1.11.7/viewer.min.js"></script>
+<link rel="stylesheet" href="https://zhen.wang/libs/viewerjs@1.11.7/viewer.min.css"/>
+<script>
+  if (window.Viewer) {
+    document.querySelectorAll('img').forEach(img => {
+      new Viewer(img, {
+        inline: false,
+        navbar: false,
+        toolbar: {
+          zoomIn: 1,
+          zoomOut: 1,
+          reset: 1,
+          rotateLeft: 1,
+          rotateRight: 1,
+        },
+      });
+    });
+  }
+</script>
+
+
+</body>
+</html>
