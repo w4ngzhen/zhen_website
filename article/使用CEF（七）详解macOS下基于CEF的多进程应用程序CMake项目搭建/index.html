@@ -1,0 +1,579 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="utf-8">
+    <meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover"
+          name="viewport">
+    
+    
+    <!-- umami web analysis -->
+    <script defer src="https://zhen.wang/libs/umami/umami.script.js"
+            data-website-id="d66cfe03-f6b3-4aa0-baf8-728700db1b09"></script>
+    
+    
+    
+    <link rel="icon" type="image/png" sizes="16x16" href="https://zhen.wang/images/blog-site-icon.svg">
+    <link rel="icon" type="image/png" sizes="32x32" href="https://zhen.wang/images/blog-site-icon.svg">
+    <title>zhen&#x27;s everything</title>
+    <link rel="stylesheet" href="https://zhen.wang/style.css">
+    
+<link rel="stylesheet" href="https://zhen.wang/article_content.css">
+<link rel="stylesheet" href="https://zhen.wang/article_markdown.css">
+
+</head>
+<body>
+
+<div id="article">
+    <header class="article-header">
+        
+<div class="base-title">
+    <a href="#" onclick="history.length > 1 ? history.back() : location.href = '/'; return false;">&LeftArrow; Back</a>
+    <h1>
+        使用CEF（七）详解macOS下基于CEF的多进程应用程序CMake项目搭建
+    </h1>
+</div>
+
+    </header>
+    <p class="article-date">2023-12-12</p>
+    
+    <!-- toc -->
+    <div class="article-toc">
+        <label class="toc-title" for="toc-trigger">目录</label>
+        <input id="toc-trigger" type="checkbox" checked/>
+        <div class="toc-content">
+            <ol class="toc">
+                
+                <li class="toc-item toc-level-1">
+                    <a class="toc-link" href="https://zhen.wang/article/使用CEF（七）详解macOS下基于CEF的多进程应用程序CMake项目搭建/#qian-yan">前言</a>
+                    
+                </li>
+                
+                <li class="toc-item toc-level-1">
+                    <a class="toc-link" href="https://zhen.wang/article/使用CEF（七）详解macOS下基于CEF的多进程应用程序CMake项目搭建/#da-jian">搭建</a>
+                    
+                    <ol class="toc-child">
+                        
+                        <li class="toc-item toc-level-2">
+                            <a href="https://zhen.wang/article/使用CEF（七）详解macOS下基于CEF的多进程应用程序CMake项目搭建/#ji-chu-zhun-bei">基础准备</a>
+                        </li>
+                        
+                        <li class="toc-item toc-level-2">
+                            <a href="https://zhen.wang/article/使用CEF（七）详解macOS下基于CEF的多进程应用程序CMake项目搭建/#xiang-mu-gen-mu-lu-cmakepei-zhi">项目根目录CMake配置</a>
+                        </li>
+                        
+                        <li class="toc-item toc-level-2">
+                            <a href="https://zhen.wang/article/使用CEF（七）详解macOS下基于CEF的多进程应用程序CMake项目搭建/#zhu-jin-cheng-ying-yong-xiang-mu-pei-zhi">主进程应用项目配置</a>
+                        </li>
+                        
+                        <li class="toc-item toc-level-2">
+                            <a href="https://zhen.wang/article/使用CEF（七）详解macOS下基于CEF的多进程应用程序CMake项目搭建/#zi-jin-cheng-ying-yong-xiang-mu-pei-zhi">子进程应用项目配置</a>
+                        </li>
+                        
+                    </ol>
+                    
+                </li>
+                
+                <li class="toc-item toc-level-1">
+                    <a class="toc-link" href="https://zhen.wang/article/使用CEF（七）详解macOS下基于CEF的多进程应用程序CMake项目搭建/#xie-zai-zui-hou">写在最后</a>
+                    
+                </li>
+                
+            </ol>
+        </div>
+    </div>
+    
+    <!-- real content -->
+    <div class="article-content markdown-content">
+        <p>由于macOS下的应用程序结构导致了CEF这样的多进程架构程序在项目结构、运行架构上有很多细节需要关注，这一块的内容比起Windows要复杂的多，所以本文将会聚焦macOS下基于CEF的多进程应用架构的环境配置，并逐一说明了CMake的相关用法和CEF应用配置细节。</p>
+<span id="continue-reading"></span><h1 id="qian-yan">前言</h1>
+<p>在进行搭建之前，我们首先必须要弄清楚一个问题，我们最终到底要生成几个可执行应用。为什么要搞清楚这个问题呢？了解CEF的读者都知道，CEF属于多进程架构体系，包含有一个主进程管理整个浏览器应用（包括原生GUI窗体等），以及多种类型的子进程各自独立负责各自的职责（比如渲染进程以及GPU加速进程等）。</p>
+<p>笔者在以前的文章中曾介绍过CEF中提供的样例cefsimple在Windows操作系统上的构建流程，我们发现这个cefsimple项目在编译后会最终只生成了一个exe可执行程序，而在运行时为了达到多进程的目的，该exe首先作为主进程入口启动，内部在准备启动子进程的时候，其做法是调用该exe本身，并通过命令行参数的形式来区分主进程和其他子进程。也就是说，该exe应用内部不仅包含了主进程代码，也包含了子进程代码，源代码中会根据命令行参数（<code>--type=xxx</code>）通过分支让主进程和子进程走到不同的逻辑：</p>
+<p><img src="https://static-res.zhen.wang/images/post/2023-12-12/010-cef-exe-excute-flow.png" alt="010-cef-exe-excute-flow" /></p>
+<p>而在macOS下，由于macOS本身对于应用程序的权限管理与Windows存在差异，它具备有一套特殊的沙盒机制来保证应用程序彼此独立和安全。所以，我们不建议像Windows那样最终通过编译生成一个App Bundle，来多次启动自己。一个很直观的例子可以解释这一点：假设我们现在基于CEF的应用程序编译并构建了一个App Bundle，这个app内将主进程代码和子进程代码写在了一起，通过运行时逻辑来区分。此时，假设主进程需要macOS的“钥匙串”权限，读取用户的一些配置。由于macOS权限是给到Bundle应用层面的，所以尽管我们只想让主进程得到“钥匙串”访问权限，但因为主进程和子进程都是同一个Bundle，无形中导致了子进程也同样拥有了这个权限，而像渲染进程这样的子进程，里面会运行js代码、wasm等第三方代码逻辑，一旦出现了BUG，就会存在权限泄漏风险。如果我们把主进程和子进程分离到两个Bundle，主进程所在Bundle获取某些系统权限，而渲染进程获取某些必要权限，就能做到主进程和子进程权限分离的目的，为安全性提供了一定保证。</p>
+<p>所以，在了解了macOS下的CEF应用构建思路以后，我们开始搭建对应项目，并在搭建过程中对涉及的配置逐一解释，希望能够帮助读者理清项目脉络。</p>
+<h1 id="da-jian">搭建</h1>
+<h2 id="ji-chu-zhun-bei">基础准备</h2>
+<p>搭建的步骤分为以下几步：</p>
+<p>1）下载cef的二进制分发文件（<code>cef_binary_xxx</code>），将它解压存放到某个文件夹（可以不用放在项目目录下）；</p>
+<p>2）配置一个环境变量<code>CEF_ROOT</code>，需要该环境变量值配置为<code>cef_binary_xxx</code>所在目录：</p>
+<pre data-lang="powershell" style="background-color:#2b303b;color:#c0c5ce;" class="language-powershell "><code class="language-powershell" data-lang="powershell"><span>❯ echo $</span><span style="color:#bf616a;">CEF_ROOT
+</span><span>/Users/w4ngzhen/projects/thirds/cef_binary_119.</span><span style="color:#d08770;">4.7</span><span>+g55e15c8+chromium-</span><span style="color:#d08770;">119.0</span><span>.</span><span style="color:#d08770;">6045.</span><span>199_macosarm64
+</span><span style="color:#65737e;"># 配置完成后，请确保环境变量生效
+</span></code></pre>
+<p>3）创建项目目录<code>cef_app_macos_project</code>，该目录将会存放本次macOS下工程的所有配置、源代码。</p>
+<p>4）在项目根目录下创建<code>cmake</code>目录，并将步骤1中<code>cef_binary_xxx/cmake/FindCef.cmake</code>文件复制到<code>cmake</code>目录中：</p>
+<p><img src="https://static-res.zhen.wang/images/post/2023-12-12/020-copy-FindCEF.png" alt="020-copy-FindCEF" /></p>
+<h2 id="xiang-mu-gen-mu-lu-cmakepei-zhi">项目根目录CMake配置</h2>
+<p>前期工作准备好以后，我们在项目根目录下创建<code>CMakeLists.txt</code>文件，并编写如下内容：</p>
+<pre data-lang="cmake" style="background-color:#2b303b;color:#c0c5ce;" class="language-cmake "><code class="language-cmake" data-lang="cmake"><span style="color:#96b5b4;">CMAKE_MINIMUM_REQUIRED</span><span>(</span><span style="color:#bf616a;">VERSION </span><span>3.21)
+</span><span>
+</span><span style="color:#96b5b4;">PROJECT</span><span>(cef_app_macos_project </span><span style="color:#bf616a;">LANGUAGES </span><span>CXX)
+</span><span>
+</span><span style="color:#65737e;"># 基础配置
+</span><span style="color:#96b5b4;">SET</span><span>(</span><span style="color:#bf616a;">CMAKE_BUILD_TYPE </span><span>DEBUG)
+</span><span style="color:#96b5b4;">SET</span><span>(</span><span style="color:#bf616a;">CMAKE_CXX_STANDARD </span><span>17)
+</span><span style="color:#96b5b4;">SET</span><span>(</span><span style="color:#bf616a;">CMAKE_CXX_STANDARD_REQUIRED </span><span>ON)
+</span><span style="color:#96b5b4;">SET</span><span>(</span><span style="color:#bf616a;">CMAKE_INCLUDE_CURRENT_DIR </span><span>ON)
+</span><span>
+</span><span style="color:#65737e;"># ===== CEF =====
+</span><span style="color:#b48ead;">if </span><span>(NOT </span><span style="color:#bf616a;">DEFINED </span><span>ENV{CEF_ROOT})
+</span><span>    </span><span style="color:#96b5b4;">message</span><span>(</span><span style="color:#bf616a;">FATAL_ERROR </span><span>&quot;</span><span style="color:#a3be8c;">环境变量CEF_ROOT未定义！</span><span>&quot;)
+</span><span style="color:#b48ead;">endif </span><span>()
+</span><span style="color:#65737e;"># 执行下面之前，请确保环境变量CEF_ROOT已经配置为了对应cef_binary_xxx目录
+</span><span style="color:#96b5b4;">set</span><span>(</span><span style="color:#bf616a;">CMAKE_MODULE_PATH </span><span>${</span><span style="color:#bf616a;">CMAKE_MODULE_PATH</span><span>} &quot;$</span><span style="color:#a3be8c;">{</span><span style="color:#bf616a;">CMAKE_CURRENT_SOURCE_DIR</span><span style="color:#a3be8c;">}/cmake</span><span>&quot;)
+</span><span style="color:#96b5b4;">find_package</span><span>(CEF </span><span style="color:#bf616a;">REQUIRED</span><span>)
+</span><span>
+</span><span style="color:#65737e;"># ===== 子模块引入 =====
+</span><span style="color:#65737e;"># 1. CEF前置准备完成后，此处便可以使用变量 CEF_LIBCEF_DLL_WRAPPER_PATH ，该值会返回libcef_dll_wrapper的目录地址
+</span><span style="color:#96b5b4;">add_subdirectory</span><span>(${</span><span style="color:#bf616a;">CEF_LIBCEF_DLL_WRAPPER_PATH</span><span>} libcef_dll_wrapper)
+</span></code></pre>
+<p>关于CMake本身的基础配置定义我们不再赘述，这里主要解释一下关于CEF引入的部分。首先，我们并没有把<code>cef_bin_xxx</code>目录复制到项目根目录下，而是放在了“外部”，并通过环境变量<code>CEF_ROOT</code>指向了它。在上述CMake关于CEF配置部分，我们对<code>CMAKE_MODULE_PATH</code>路径值追加了<code>cef_app_macos_project/cmake</code>目录。</p>
+<blockquote>
+<p><code>${CMAKE_CURRENT_SOURCE_DIR}</code>就指代了项目根目录<code>cef_app_macos_project</code>。</p>
+</blockquote>
+<p>接下来，在<code>find_package(CEF REQUIRED)</code>的时候，CMake会搜索<code>CMAKE_MODULE_PATH</code>路径下的名为<code>FindCEF.cmake</code>的CMake配置，于是就能找到我们曾复制的<code>cef_app_macos_project/cmake/FindCEF.cmake</code>文件并进行加载。</p>
+<blockquote>
+<p>如果CMake初始化的时候出现了：</p>
+<p>CMake Error at CMakeLists.txt:20 (message):
+环境变量CEF_ROOT未定义！</p>
+<p>请确保CEF_ROOT环境变量确定配置了。</p>
+</blockquote>
+<p>对于<code>FindCEF.cmake</code>本身的内容，其核心逻辑就是读取环境变量<code>CEF_ROOT</code>值，然后定位到<code>cef_binary_xxx</code>目录，并加载<code>cef_binary_xxx/cmake/cef_variables.cmake</code>和<code>cef_binary_xxx/cmake/cef_macros.cmake</code>两个CMake配置文件。</p>
+<blockquote>
+<p>这两个文件的作用分别是定义一些CEF提供的变量和宏方法，以便在后续的CMake加载逻辑中使用。</p>
+</blockquote>
+<p>在<code>find_package</code>以后，我们调用了<code>add_subdirectory</code>指令，该指令第一个参数<code>${CEF_LIBCEF_DLL_WRAPPER_PATH}</code>就使用了来自<code>cef_variables.cmake</code>中定义值，指代了libcef_dll_wrapper代码工程的目录：</p>
+<p><img src="https://static-res.zhen.wang/images/post/2023-12-12/030-libcef_dll_wrapper_var_path.png" alt="030-libcef_dll_wrapper_var_path" /></p>
+<p>因此，这里的逻辑就是将<code>cef_binary_xxx/libcef_dll</code>目录作为了我们的CMake子模块工程，于是CMake会进一步加载<code>cef_binary_xxx/libcef_dll/CMakeLists.txt</code>文件并进行CMake相关文件的生成。细心的读者会注意到，这里还存在第二个参数<code>libcef_dll_wrapper</code>：</p>
+<p><img src="https://static-res.zhen.wang/images/post/2023-12-12/040-pin-add_subdir_param.png" alt="040-pin-add_subdir_param" /></p>
+<p>这里需要这个参数值的原因在于，<code>libcef_dll_wrapper</code>所在目录是一个<strong>外部路径</strong>，所以需要提供一个<strong>目录名</strong>作为的CMake文件二进制生成的路径。如果不提供，则会收到错误：</p>
+<p><img src="https://static-res.zhen.wang/images/post/2023-12-12/050-add_subdir_no-param-error.png" alt="050-add_subdir_no-param-error" /></p>
+<p>那么第二个参数具体影响了什么呢？如果读者使用CLion+CMake，会看到CLion会在项目根目录下生成<code>cmake-build-debug</code>目录，这个就是CMake生成文件目录，编译后的结果、CMake的过程文件都会在这个目录下找到（该目录其实就是cmake命令行的<code>-B</code>参数指定的路径，CLion默认指定的<code>项目根目录下/cmake-build-debug</code>目录）。在这里，当我们<code>add_subdirectory</code>添加了<code>libcef_dll_wrapper</code>子模块，经过CMake的初始化以后，会看到<code>cmake-build-debug/libcef_wrapper_dll</code>路径的产生：</p>
+<p><img src="https://static-res.zhen.wang/images/post/2023-12-12/060-cmake-bin-dir-generate.png" alt="060-cmake-bin-dir-generate.png" /></p>
+<p>至此，我们添加了对CEF的libcef_dll_wrapper子模块的引入，为了验证模块引入的正确性，我们尝试在当前<code>cef_app_macos_project</code>这个项目中对引入的子模块进行编译。有两种操作方式，方式1就是进入<code>cmake-build-debug</code>这个目录下使用命令：<code>cmake --build .</code>；当然，我们还可以使用IDE提供的更加便利的方式2：CLion直接使用GUI即可。</p>
+<p><img src="https://static-res.zhen.wang/images/post/2023-12-12/070-build-dll-wrapper.png" alt="070-build-dll-wrapper" /></p>
+<p>如果一切没有问题的情况下，我们可以在output目录中找到<code>libcef_dll_wrapper</code>的生成出来的库文件：</p>
+<p><img src="https://static-res.zhen.wang/images/post/2023-12-12/080-libcef_dll_wrapper-build-ok.png" alt="080-libcef_dll_wrapper-build-ok" /></p>
+<p>在继续后面的讲解前，我们先放慢脚步，对项目环境做一个总结。我们首先准备了两个目录，一个是我们自己的<code>cef_app_macos_project</code>目录，我们会在这个项目中“引入”CEF相关库，后续还会在里面编写我们自己的应用程序；另一个则是在外部的<code>cef_binary_xxx</code>目录，我们不会改动其中的内容。</p>
+<p>对于我们自己的<code>cef_app_macos_project</code>，在根目录下，我们编写了一个<code>CMakeLists.txt</code>，它是我们项目顶层的CMake配置，该文件核心配置逻辑分以下几步：</p>
+<ol>
+<li>一些基本的项目、编译配置；</li>
+<li>加载CEF的CMake配置；</li>
+<li>引入外部的<code>cef_binary_xxx</code>中的<code>libcef_dll_wrapper</code>模块作为CMake子模块。</li>
+</ol>
+<p>但请注意，目前我们仅仅是通过CMake提供的<code>add_subdirectory</code>命令，将<code>libcef_dll_wrapper</code>作为子模块引入，但目前还没有任何的应用在依赖它，接下来我们将进一步，开始配置主进程应用，并依赖该<code>libcef_dll_wrapper</code>。</p>
+<h2 id="zhu-jin-cheng-ying-yong-xiang-mu-pei-zhi">主进程应用项目配置</h2>
+<p>在项目根目录下，我们创建<code>cef_app</code>目录，该目录目前先存放CEF的macOS应用的<strong>主进程</strong>应用项目代码。我们在<code>cef_app</code>目录下创建<code>process_main.mm</code>，且暂时先编写一段简单的代码：</p>
+<pre data-lang="objc" style="background-color:#2b303b;color:#c0c5ce;" class="language-objc "><code class="language-objc" data-lang="objc"><span>#include &lt;iostream&gt;
+</span><span>
+</span><span>int main(int argc, char *argv[]) {
+</span><span>  std::cout &lt;&lt; &quot;hello, this is main process.&quot; &lt;&lt; std::endl;
+</span><span>  return 0;
+</span><span>}
+</span></code></pre>
+<blockquote>
+<p>PS：<code>.mm</code>为后缀文件是指Objective-C与C/C++混写的源代码文件后缀，所以这里我们是可以完全写C++代码的。</p>
+</blockquote>
+<p>然后，在<code>cef_app</code>目录中创建<code>CMakeLists.txt</code>文件，并编写如下的配置：</p>
+<pre data-lang="cmake" style="background-color:#2b303b;color:#c0c5ce;" class="language-cmake "><code class="language-cmake" data-lang="cmake"><span style="color:#65737e;"># ===== 主进程target配置 =====
+</span><span style="color:#65737e;"># 主进程target名称
+</span><span style="color:#96b5b4;">set</span><span>(</span><span style="color:#bf616a;">CEF_APP_TARGET </span><span>cef_app)
+</span><span style="color:#65737e;"># 最终 App Bundle生成的路径
+</span><span style="color:#96b5b4;">set</span><span>(</span><span style="color:#bf616a;">CEF_APP_BUNDLE </span><span>&quot;$</span><span style="color:#a3be8c;">{</span><span style="color:#bf616a;">CMAKE_CURRENT_BINARY_DIR</span><span style="color:#a3be8c;">}/</span><span>$</span><span style="color:#a3be8c;">{</span><span style="color:#bf616a;">CEF_APP_TARGET</span><span style="color:#a3be8c;">}.app</span><span>&quot;)
+</span><span style="color:#65737e;"># 添加项目所有的源文件：
+</span><span style="color:#96b5b4;">add_executable</span><span>(
+</span><span>        ${</span><span style="color:#bf616a;">CEF_APP_TARGET</span><span>}
+</span><span>        </span><span style="color:#bf616a;">MACOSX_BUNDLE </span><span style="color:#65737e;"># macOS 使用 &quot;MACOSX_BUNDLE&quot; 标识，最后编译产物是一个mac下的App Bundle
+</span><span>        process_main.mm
+</span><span>)
+</span><span style="color:#65737e;"># 使用CEF提供的预定义好的工具宏，该宏会帮助配置target一些编译上的配置
+</span><span style="color:#65737e;"># 如果出现不符合预期的编译结果、运行错误，可以检查该宏的内部实现
+</span><span style="color:#bf616a;">SET_EXECUTABLE_TARGET_PROPERTIES</span><span>(${</span><span style="color:#bf616a;">CEF_APP_TARGET</span><span>})
+</span><span style="color:#65737e;"># 添加对 libcef_dll_wrapper 库的依赖
+</span><span style="color:#65737e;"># 基于该配置，可以保证每次编译当前 cef_app target时候，确保 libcef_dll_wrapper 静态库编译完成
+</span><span style="color:#96b5b4;">add_dependencies</span><span>(${</span><span style="color:#bf616a;">CEF_APP_TARGET</span><span>} libcef_dll_wrapper)
+</span><span style="color:#65737e;"># 链接库配置
+</span><span style="color:#96b5b4;">target_link_libraries</span><span>(
+</span><span>        ${</span><span style="color:#bf616a;">CEF_APP_TARGET</span><span>}
+</span><span>        </span><span style="color:#bf616a;">PRIVATE
+</span><span>        </span><span style="color:#65737e;"># libcef_dll_wrapper库链接
+</span><span>        libcef_dll_wrapper
+</span><span>        </span><span style="color:#65737e;"># 该变量来自cef_variables.cmake中定义的配置
+</span><span>        </span><span style="color:#65737e;"># 主要是针对不同的平台，链接对应平台的一些标准库（Windows、Linux）或者framework（macOS）
+</span><span>        ${</span><span style="color:#bf616a;">CEF_STANDARD_LIBS</span><span>}
+</span><span>)
+</span><span style="color:#65737e;"># 主进程编译后，会在输出目录下生成一个名为 cef_app.app 的macOS App Bundle。
+</span><span style="color:#65737e;"># 该app内部 Contents/MacOS/cef_app 仅仅是包含了 add_executable 中的源码二进制，以及libcef_dll_wrapper静态库
+</span><span style="color:#65737e;"># 在macOS下，我们还需要将&quot;cef_binary_xxx/Debug或Release目录/Chromium Embedded Framework.framework&quot;复制到
+</span><span style="color:#65737e;"># cef_app.app/Contents/Frameworks目录下
+</span><span style="color:#65737e;"># 为了避免手动复制的麻烦，我们使用如下的指令完成复制工作
+</span><span style="color:#96b5b4;">add_custom_command</span><span>(
+</span><span>        </span><span style="color:#65737e;"># 对 CEF_APP_TARGET 进行操作
+</span><span>        </span><span style="color:#bf616a;">TARGET </span><span>${</span><span style="color:#bf616a;">CEF_APP_TARGET</span><span>}
+</span><span>        </span><span style="color:#65737e;"># 在构建完成后（POST_BUILD）
+</span><span>        </span><span style="color:#bf616a;">POST_BUILD
+</span><span>        </span><span style="color:#65737e;"># COMMAND ${CMAKE_COMMAND}：就是命令行执行 &quot;cmake&quot;
+</span><span>        </span><span style="color:#65737e;"># -E：指可以执行一些cmake内置的工具命令
+</span><span>        </span><span style="color:#65737e;"># copy_directory：进行目录复制操作
+</span><span>        </span><span style="color:#bf616a;">COMMAND </span><span>${</span><span style="color:#bf616a;">CMAKE_COMMAND</span><span>} -E copy_directory
+</span><span>        </span><span style="color:#65737e;"># 复制源目录、文件，
+</span><span>        </span><span style="color:#65737e;"># CEF_BINARY_DIR变量来源于cef_variables.cmake
+</span><span>        </span><span style="color:#65737e;"># 等价于&quot;cef_binary_xxx目录/Debug或Release目录/&quot;
+</span><span>        &quot;$</span><span style="color:#a3be8c;">{</span><span style="color:#bf616a;">CEF_BINARY_DIR</span><span style="color:#a3be8c;">}/Chromium Embedded Framework.framework</span><span>&quot;
+</span><span>        </span><span style="color:#65737e;"># 将上述 framework 复制到 当前生成的 cef_app.app/Contents/Frameworks/对应framework名称
+</span><span>        &quot;$</span><span style="color:#a3be8c;">{</span><span style="color:#bf616a;">CEF_APP_BUNDLE</span><span style="color:#a3be8c;">}/Contents/Frameworks/Chromium Embedded Framework.framework</span><span>&quot;
+</span><span>        </span><span style="color:#65737e;"># 不进行文本的解析，使用源文字，考虑会有表达式情况
+</span><span>        </span><span style="color:#bf616a;">VERBATIM
+</span><span>)
+</span><span style="color:#65737e;"># 简单配置Info.plist的一些值
+</span><span style="color:#96b5b4;">set_target_properties</span><span>(
+</span><span>        ${</span><span style="color:#bf616a;">CEF_APP_TARGET</span><span>}
+</span><span>        </span><span style="color:#bf616a;">PROPERTIES
+</span><span>        MACOSX_BUNDLE_BUNDLE_NAME ${</span><span style="color:#bf616a;">CEF_APP_TARGET</span><span>}
+</span><span>        MACOSX_BUNDLE_GUI_IDENTIFIER ${</span><span style="color:#bf616a;">CEF_APP_TARGET</span><span>}
+</span><span>)
+</span></code></pre>
+<p>我们接下来对上述的配置逐一解释：</p>
+<pre data-lang="cmake" style="background-color:#2b303b;color:#c0c5ce;" class="language-cmake "><code class="language-cmake" data-lang="cmake"><span style="color:#65737e;"># 主进程target名称
+</span><span style="color:#96b5b4;">set</span><span>(</span><span style="color:#bf616a;">CEF_APP_TARGET </span><span>cef_app)
+</span><span style="color:#65737e;"># 最终 App Bundle生成的路径
+</span><span style="color:#96b5b4;">set</span><span>(</span><span style="color:#bf616a;">CEF_APP_BUNDLE </span><span>&quot;$</span><span style="color:#a3be8c;">{</span><span style="color:#bf616a;">CMAKE_CURRENT_BINARY_DIR</span><span style="color:#a3be8c;">}/</span><span>$</span><span style="color:#a3be8c;">{</span><span style="color:#bf616a;">CEF_APP_TARGET</span><span style="color:#a3be8c;">}.app</span><span>&quot;)
+</span></code></pre>
+<p>上述配置了我们接下来将会定义的target的名称，以及后续生成的macOS特有的App Bundle的应用文件的路径，后续会使用到该值。</p>
+<pre data-lang="cmake" style="background-color:#2b303b;color:#c0c5ce;" class="language-cmake "><code class="language-cmake" data-lang="cmake"><span style="color:#96b5b4;">add_executable</span><span>(
+</span><span>        ${</span><span style="color:#bf616a;">CEF_APP_TARGET</span><span>}
+</span><span>        </span><span style="color:#bf616a;">MACOSX_BUNDLE </span><span style="color:#65737e;"># macOS 使用 &quot;MACOSX_BUNDLE&quot; 标识，最后编译产物是一个mac下的App Bundle
+</span><span>        process_main.mm
+</span><span>)
+</span></code></pre>
+<p><code>add_executable</code>部分定义最终生成的target，除了包含编写的源码路径（<code>process_main.mm</code>），这里还有一个很重要的参数<code>MACOS_BUNDLE</code>，配置该参数后，在macOS下，我们最终生成的可执行程序就不再是一个简单的命令行程序，而是macOS下的App Bundle。下图是没有配置该值前后的对比：</p>
+<p><img src="https://static-res.zhen.wang/images/post/2023-12-12/090-MACOS_BUNDLE-param-diff.png" alt="090-MACOS_BUNDLE-param-diff" /></p>
+<p>可以看到，没有配置<code>MACOSX_BUNDLE</code>时，最终项目会在输出目录（<code>${CMAKE_CURRENT_BINARY_DIR}</code>）下生成名为<code>cef_app</code>的可执行命令行程序；而配置以后，项目会在输出目录下生成<code>target名.app</code>，这里就是<code>cef_app.app</code>。</p>
+<pre data-lang="cmake" style="background-color:#2b303b;color:#c0c5ce;" class="language-cmake "><code class="language-cmake" data-lang="cmake"><span style="color:#65737e;"># 使用CEF提供的预定义好的工具宏，该宏会帮助配置target一些编译上的配置
+</span><span style="color:#65737e;"># 如果出现不符合预期的编译结果、运行错误，可以检查该宏的内部实现
+</span><span style="color:#bf616a;">SET_EXECUTABLE_TARGET_PROPERTIES</span><span>(${</span><span style="color:#bf616a;">CEF_APP_TARGET</span><span>})
+</span></code></pre>
+<p><code>SET_EXECUTABLE_TARGET_PROPERTIES</code><strong>不是CMake提供的指令，而是由CEF提供的</strong>，存放于<code>cef_macros.cmake</code>中的宏。该宏主要的功能是对目标target配置一些可执行程序所需要的编译参数等。如果读者在实践过程中，遇到了链接问题，可以优先检查这个宏中的实现。由于篇幅原因，这块后续单独出一篇文章水一水，&gt;_&lt;。</p>
+<pre data-lang="cmake" style="background-color:#2b303b;color:#c0c5ce;" class="language-cmake "><code class="language-cmake" data-lang="cmake"><span style="color:#65737e;"># 添加对 libcef_dll_wrapper 库的依赖
+</span><span style="color:#65737e;"># 基于该配置，可以保证每次编译当前 cef_app target时候，确保 libcef_dll_wrapper 静态库编译完成
+</span><span style="color:#96b5b4;">add_dependencies</span><span>(${</span><span style="color:#bf616a;">CEF_APP_TARGET</span><span>} libcef_dll_wrapper)
+</span></code></pre>
+<p><code>add_dependencies</code>的作用则是为当前target指定依赖。因为我们的项目本身会通过静态链接库的形式链接<code>libcef_dll_wrapper</code>，通过这<code>add_dependencies</code>能够保证最终构建过程中，确保优先将<code>libcef_dll_wrapper</code>编译出来，供后续链接过程使用。当然，你也可以不闲麻烦的手动先编译<code>libcef_dll_wrapper</code>，再编译这个<code>cef_app</code>。</p>
+<pre data-lang="cmake" style="background-color:#2b303b;color:#c0c5ce;" class="language-cmake "><code class="language-cmake" data-lang="cmake"><span style="color:#65737e;"># 链接库配置
+</span><span style="color:#96b5b4;">target_link_libraries</span><span>(
+</span><span>        ${</span><span style="color:#bf616a;">CEF_APP_TARGET</span><span>}
+</span><span>        </span><span style="color:#bf616a;">PRIVATE
+</span><span>        </span><span style="color:#65737e;"># libcef_dll_wrapper库链接
+</span><span>        libcef_dll_wrapper
+</span><span>        </span><span style="color:#65737e;"># 该变量来自cef_variables.cmake中定义的配置
+</span><span>        </span><span style="color:#65737e;"># 主要是针对不同的平台，链接对应平台的一些标准库（Windows、Linux）或者framework（macOS）
+</span><span>        ${</span><span style="color:#bf616a;">CEF_STANDARD_LIBS</span><span>}
+</span><span>)
+</span></code></pre>
+<p><code>target_link_libraries</code>处理则是配置当前target的链接库，包括不限于libcef_dll_wrapper的静态链接、各种平台特定的链接库等。最后一个参数变量<code>CEF_STANDARD_LIBS</code>，由CEF在<code>cef_variables.cmake</code>中定义，包含平台特定的链接库。</p>
+<blockquote>
+<p>例如，在Windows下我们可能需要<code>gdi32.lib</code>，在Linux构建窗体可能需要X11库，以及在macOS下需要<code>Cocoa</code>、<code>AppKit</code>等框架库。读者可以翻阅<code>cef_variables.cmake</code>中关于这个变量的配置了解具体的内容。</p>
+</blockquote>
+<pre data-lang="cmake" style="background-color:#2b303b;color:#c0c5ce;" class="language-cmake "><code class="language-cmake" data-lang="cmake"><span style="color:#65737e;"># 主进程编译后，会在输出目录下生成一个名为 cef_app.app 的macOS App Bundle。
+</span><span style="color:#65737e;"># 该app内部 Contents/MacOS/cef_app 仅仅是包含了 add_executable 中的源码二进制，以及libcef_dll_wrapper静态库
+</span><span style="color:#65737e;"># 在macOS下，我们还需要将&quot;cef_binary_xxx/Debug或Release目录/Chromium Embedded Framework.framework&quot;复制到
+</span><span style="color:#65737e;"># cef_app.app/Contents/Frameworks目录下
+</span><span style="color:#65737e;"># 为了避免手动复制的麻烦，我们使用如下的指令完成复制工作
+</span><span style="color:#96b5b4;">add_custom_command</span><span>(
+</span><span>        </span><span style="color:#65737e;"># 对 CEF_APP_TARGET 进行操作
+</span><span>        </span><span style="color:#bf616a;">TARGET </span><span>${</span><span style="color:#bf616a;">CEF_APP_TARGET</span><span>}
+</span><span>        </span><span style="color:#65737e;"># 在构建完成后（POST_BUILD）
+</span><span>        </span><span style="color:#bf616a;">POST_BUILD
+</span><span>        </span><span style="color:#65737e;"># COMMAND ${CMAKE_COMMAND}：就是命令行执行 &quot;cmake&quot;
+</span><span>        </span><span style="color:#65737e;"># -E：指可以执行一些cmake内置的工具命令
+</span><span>        </span><span style="color:#65737e;"># copy_directory：进行目录复制操作
+</span><span>        </span><span style="color:#bf616a;">COMMAND </span><span>${</span><span style="color:#bf616a;">CMAKE_COMMAND</span><span>} -E copy_directory
+</span><span>        </span><span style="color:#65737e;"># 复制源目录、文件，
+</span><span>        </span><span style="color:#65737e;"># CEF_BINARY_DIR变量来源于cef_variables.cmake
+</span><span>        </span><span style="color:#65737e;"># 等价于&quot;cef_binary_xxx目录/Debug或Release目录/&quot;
+</span><span>        &quot;$</span><span style="color:#a3be8c;">{</span><span style="color:#bf616a;">CEF_BINARY_DIR</span><span style="color:#a3be8c;">}/Chromium Embedded Framework.framework</span><span>&quot;
+</span><span>        </span><span style="color:#65737e;"># 将上述 framework 复制到 当前生成的 cef_app.app/Contents/Frameworks/对应framework名称
+</span><span>        &quot;$</span><span style="color:#a3be8c;">{</span><span style="color:#bf616a;">CEF_APP_BUNDLE</span><span style="color:#a3be8c;">}/Contents/Frameworks/Chromium Embedded Framework.framework</span><span>&quot;
+</span><span>        </span><span style="color:#65737e;"># 不进行文本的解析，使用源文字，考虑会有表达式情况
+</span><span>        </span><span style="color:#bf616a;">VERBATIM
+</span><span>)
+</span></code></pre>
+<p>倒数第二个指令<code>add_custom_command</code>，在介绍它的作用前，先简单说明在macOS下基于CEF的App Bundle的一应用结构。基于前面的配置，主进程编译后，会在输出目录下生成一个名为<code>cef_app.app</code>的macOS App Bundle，该Bundle内部<code>/Contents/MacOS/cef_app</code>可执行程序，就是链接了源码二进制、libcef_dll_wrapper静态库后的可执行二进制程序。然而，CEF核心库<code>Chromium Embedded Framework.framework</code>我们并没有静态链接到执行程序内，而是在实际运行过程中，动态加载这个framework。为了达到该目的，我们思路是通过脚本将<code>cef_binary_xxx</code>中提供的CEF的核心库framework拷贝到App Bundle中指定路径下。</p>
+<p>所以，在了解了App Bundle运行逻辑以后，关于<code>add_custom_command</code>作用就显而易见了，其逻辑就是配置在构建完成以后，通过CMake的工具指令（<code>-E copy_directories</code>）将<code>Chromium Embedded Framework.framework</code>整个内容复制到生成的Bundle的<code>/Contents/Frameworks</code>目录下：</p>
+<p><img src="https://static-res.zhen.wang/images/post/2023-12-12/100-copy-CEF-framework.png" alt="100-copy-CEF-framework" /></p>
+<p>在上面的讲解中我们大致理解了macOS的App Bundle的应用程序组织结构，细心的读者会发现，在构建后的Bundle中的根目录下有一个文件<code>Info.plist</code>：</p>
+<p><img src="https://static-res.zhen.wang/images/post/2023-12-12/110-info-plist-file.png" alt="110-info-plist-file" /></p>
+<p>该文件的核心作用是定义macOS下App Bundle的基础应用程序配置，包括不限于该应用的名称、应用ID、图标资源等。因为我们将主进程target定义为了<code>MACOS_BUNDLE</code>，CMake会在构建的时候，默认为我们的Bundle生成了一份plist并写入到Bundle中。同时我们会发现，<code>Info.plist</code>配置中关于<code>CFBundleName</code>、<code>CFBundleIdentifier</code>等值就是我们现在的target的名称：</p>
+<p><img src="https://static-res.zhen.wang/images/post/2023-12-12/120-info-plist-content.png" alt="120-info-plist-content" /></p>
+<p>原因在于配置文件中紧接着<code>add_custom_command</code>后面的<code>set_target_properties</code>：</p>
+<pre data-lang="cmake" style="background-color:#2b303b;color:#c0c5ce;" class="language-cmake "><code class="language-cmake" data-lang="cmake"><span style="color:#65737e;"># 简单配置Info.plist的一些值
+</span><span style="color:#96b5b4;">set_target_properties</span><span>(
+</span><span>        ${</span><span style="color:#bf616a;">CEF_APP_TARGET</span><span>}
+</span><span>        </span><span style="color:#bf616a;">PROPERTIES
+</span><span>        MACOSX_BUNDLE_BUNDLE_NAME ${</span><span style="color:#bf616a;">CEF_APP_TARGET</span><span>}
+</span><span>        MACOSX_BUNDLE_GUI_IDENTIFIER ${</span><span style="color:#bf616a;">CEF_APP_TARGET</span><span>}
+</span><span>)
+</span></code></pre>
+<p>使用<code>set_target_properties</code>指令指定了<code>MACOSX_BUNDLE_BUNDLE_NAME</code>和<code>MACOSX_BUNDLE_GUI_IDENTIFIER</code>的值。关于这段配置的说明，官方文档提到：https://cmake.org/cmake/help/latest/prop_tgt/MACOSX_BUNDLE_INFO_PLIST.html，我们可以直接通过相关属性值来替换CMake内置的plist模板文件内容。</p>
+<blockquote>
+<p>注意，CMake支持的变量只有上述官方文档提供的Key，如果有其他的Key需要处理，只能通过自己提供模板方法进行处理，这点会在后面构建子进程Bundle再次说明。</p>
+</blockquote>
+<p>至此，我们基本完成了在macOS对主进程的CMake配置。此时，请务必注意，记得在项目根目录的CMakeLists.txt追加如下将<code>cef_app</code>目录作为子模块引入的配置：</p>
+<pre data-lang="diff" style="background-color:#2b303b;color:#c0c5ce;" class="language-diff "><code class="language-diff" data-lang="diff"><span># 1. CEF前置准备完成后，此处便可以使用变量 CEF_LIBCEF_DLL_WRAPPER_PATH ，该值会返回libcef_dll_wrapper的目录地址
+</span><span>add_subdirectory(${CEF_LIBCEF_DLL_WRAPPER_PATH} libcef_dll_wrapper)
+</span><span style="color:#a3be8c;">+ # 2. 将cef_app作为子模块引入
+</span><span style="color:#a3be8c;">+ add_subdirectory(./cef_app)
+</span></code></pre>
+<p>当然，我们主进程应用的源代码还是只是简单的在控制台输出一段话，我们不着急编写主进程代码，接下来还需要配置对应的子进程项目。</p>
+<h2 id="zi-jin-cheng-ying-yong-xiang-mu-pei-zhi">子进程应用项目配置</h2>
+<p>我们在一开始已经提到过，在macOS建议将主进程和子进程分别构建为两个不同的App Bundle，这里我们有两种做法：</p>
+<ul>
+<li>
+<p>方式1：通过CMake的定义target，在前面主进程CMakeLists.txt中直接定义子进程的target，让构建系统同时生成另外的子进程应用。</p>
+</li>
+<li>
+<p>方式2：直接重新创建一个目录来定义子进程CMake模块并存放子进程模块代码。</p>
+</li>
+</ul>
+<p>这里笔者使用第一种方式来进行配置，或许配置上略显复杂，但只要读者一旦理解，笔者相信今后对于其他CMake项目配置应该也能很快上手。</p>
+<p>我们先在<code>cef_app</code>目录中创建一个名为<code>process_helper.mm</code>的文件，暂时作为子进程的入口源码：</p>
+<pre data-lang="objc" style="background-color:#2b303b;color:#c0c5ce;" class="language-objc "><code class="language-objc" data-lang="objc"><span>#include &lt;iostream&gt;
+</span><span>
+</span><span>int main(int argc, char *argv[]) {
+</span><span>  std::cout &lt;&lt; &quot;hello, this is sub helper process.&quot; &lt;&lt; std::endl;
+</span><span>  return 0;
+</span><span>}
+</span></code></pre>
+<p>同时，在该子模块目录下创建一个<code>templates</code>目录，并在其中创建<code>helper-Info.plist</code>文件，具体的意义和其内容我们后面介绍，这里读者可以将它理解为一份模板文件。</p>
+<p>此时，我们的项目结构如下：</p>
+<p><img src="https://static-res.zhen.wang/images/post/2023-12-12/130-sub-process-new-file.png" alt="130-sub-process-new-file" /></p>
+<blockquote>
+<p>为了阅读的方便，我们都将子进程叫做helper</p>
+</blockquote>
+<p>接下来，我们在<code>cef_app/CMakeLists.txt</code>内容的基础上，添加如下的针对helper子进程应用的配置：</p>
+<pre data-lang="cmake" style="background-color:#2b303b;color:#c0c5ce;" class="language-cmake "><code class="language-cmake" data-lang="cmake"><span style="color:#65737e;"># ===== 主进程target配置 =====
+</span><span style="color:#65737e;"># ... ...
+</span><span style="color:#65737e;"># ===== 子进程 helper target配置 =====
+</span><span style="color:#65737e;"># 定义helper子进程target名
+</span><span style="color:#96b5b4;">set</span><span>(</span><span style="color:#bf616a;">CEF_APP_HELPER_TARGET </span><span>&quot;</span><span style="color:#a3be8c;">cef_app_helper</span><span>&quot;)
+</span><span style="color:#65737e;"># 定义helper子进程构建后的app的名称
+</span><span style="color:#96b5b4;">set</span><span>(</span><span style="color:#bf616a;">CEF_APP_HELPER_OUTPUT_NAME </span><span>&quot;</span><span style="color:#a3be8c;">cef_app Helper</span><span>&quot;)
+</span><span style="color:#65737e;"># 注意，上述的名称都不是最终名称，它们更准确的意义是作为下面循环定义target的基础名称
+</span><span style="color:#65737e;"># 后续循环的时候，会基于上述名称进行拼接
+</span><span>
+</span><span style="color:#65737e;"># 创建多个不同类型helper的target
+</span><span style="color:#65737e;"># CEF_HELPER_APP_SUFFIXES来自cef_variables.cmake，是一个“字符串数组”，值有：
+</span><span style="color:#65737e;"># &quot;::&quot;、&quot; (Alerts):_alerts:.alerts&quot;、&quot; (GPU):_gpu:.gpu&quot;、
+</span><span style="color:#65737e;"># &quot; (Plugin):_plugin:.plugin&quot;、&quot; (Renderer):_renderer:.renderer&quot;
+</span><span style="color:#65737e;"># 这里通过foreach，实现对字符串数组的遍历，每一次循环会得到一个字符串，存放在“_suffix_list”
+</span><span style="color:#b48ead;">foreach </span><span>(_suffix_list ${</span><span style="color:#bf616a;">CEF_HELPER_APP_SUFFIXES</span><span>})
+</span><span>  </span><span style="color:#65737e;"># 将字符串转为&quot;;&quot;分割，这样可以使用CMake支持的list(GET)指令来读取每一节字符串
+</span><span>  </span><span style="color:#65737e;"># 以 &quot; (Renderer):_renderer:.renderer&quot; 为例
+</span><span>  </span><span style="color:#96b5b4;">string</span><span>(</span><span style="color:#bf616a;">REPLACE </span><span>&quot;</span><span style="color:#a3be8c;">:</span><span>&quot; &quot;</span><span style="color:#a3be8c;">;</span><span>&quot; _suffix_list ${</span><span style="color:#bf616a;">_suffix_list</span><span>}) </span><span style="color:#65737e;"># &quot; (Renderer);_renderer;.renderer&quot;
+</span><span>  </span><span style="color:#96b5b4;">list</span><span>(</span><span style="color:#bf616a;">GET </span><span>_suffix_list 0 _name_suffix) </span><span style="color:#65737e;"># &quot; (Renderer)&quot;
+</span><span>  </span><span style="color:#96b5b4;">list</span><span>(</span><span style="color:#bf616a;">GET </span><span>_suffix_list 1 _target_suffix) </span><span style="color:#65737e;"># &quot;_renderer&quot;
+</span><span>  </span><span style="color:#96b5b4;">list</span><span>(</span><span style="color:#bf616a;">GET </span><span>_suffix_list 2 _plist_suffix) </span><span style="color:#65737e;"># &quot;.renderer&quot;
+</span><span>  </span><span style="color:#65737e;"># 当然，需要注意 CEF_HELPER_APP_SUFFIXES 中有一个&quot;::&quot;的字符串，
+</span><span>  </span><span style="color:#65737e;"># 会使得 _name_suffix = &quot;&quot;、_target_suffix = &quot;&quot;、_plist_suffix = &quot;&quot;
+</span><span>
+</span><span>  </span><span style="color:#65737e;"># 定义一个Helper target以及BUNDLE名称
+</span><span>  </span><span style="color:#65737e;"># 以 &quot; (Renderer):_renderer:.renderer&quot; 为例
+</span><span>  </span><span style="color:#65737e;"># _helper_target = &quot;cef_app_helper&quot; + &quot;_renderer&quot; -&gt; &quot;cef_app_helper_renderer&quot;
+</span><span>  </span><span style="color:#65737e;"># _helper_output_name = &quot;cef_app Helper&quot; + &quot; (Renderer)&quot; -&gt; &quot;cef_app Helper (Renderer)&quot;
+</span><span>  </span><span style="color:#96b5b4;">set</span><span>(</span><span style="color:#bf616a;">_helper_target </span><span>&quot;$</span><span style="color:#a3be8c;">{</span><span style="color:#bf616a;">CEF_APP_HELPER_TARGET</span><span style="color:#a3be8c;">}</span><span>$</span><span style="color:#a3be8c;">{</span><span style="color:#bf616a;">_target_suffix</span><span style="color:#a3be8c;">}</span><span>&quot;)
+</span><span>  </span><span style="color:#96b5b4;">set</span><span>(</span><span style="color:#bf616a;">_helper_output_name </span><span>&quot;$</span><span style="color:#a3be8c;">{</span><span style="color:#bf616a;">CEF_APP_HELPER_OUTPUT_NAME</span><span style="color:#a3be8c;">}</span><span>$</span><span style="color:#a3be8c;">{</span><span style="color:#bf616a;">_name_suffix</span><span style="color:#a3be8c;">}</span><span>&quot;)
+</span><span>
+</span><span>  </span><span style="color:#65737e;"># 读取templates/helper-Info.plist模板文件内容到_plist_contents
+</span><span>  </span><span style="color:#65737e;"># 然后使用上面得到的 _helper_output_name、_plist_suffix等变量进行文本内容的替换操作
+</span><span>  </span><span style="color:#65737e;"># 以便得到当前正在处理的helper对应的一份Info.plist
+</span><span>  </span><span style="color:#96b5b4;">file</span><span>(</span><span style="color:#bf616a;">READ </span><span>&quot;$</span><span style="color:#a3be8c;">{</span><span style="color:#bf616a;">CMAKE_CURRENT_SOURCE_DIR</span><span style="color:#a3be8c;">}/templates/helper-Info.plist</span><span>&quot; _plist_contents)
+</span><span>  </span><span style="color:#96b5b4;">string</span><span>(</span><span style="color:#bf616a;">REPLACE </span><span>&quot;</span><span style="color:#96b5b4;">\$</span><span style="color:#a3be8c;">{HELPER_EXECUTABLE_NAME}</span><span>&quot; &quot;$</span><span style="color:#a3be8c;">{</span><span style="color:#bf616a;">_helper_output_name</span><span style="color:#a3be8c;">}</span><span>&quot; _plist_contents ${</span><span style="color:#bf616a;">_plist_contents</span><span>})
+</span><span>  </span><span style="color:#96b5b4;">string</span><span>(</span><span style="color:#bf616a;">REPLACE </span><span>&quot;</span><span style="color:#96b5b4;">\$</span><span style="color:#a3be8c;">{PRODUCT_NAME}</span><span>&quot; &quot;$</span><span style="color:#a3be8c;">{</span><span style="color:#bf616a;">_helper_output_name</span><span style="color:#a3be8c;">}</span><span>&quot; _plist_contents ${</span><span style="color:#bf616a;">_plist_contents</span><span>})
+</span><span>  </span><span style="color:#96b5b4;">string</span><span>(</span><span style="color:#bf616a;">REPLACE </span><span>&quot;</span><span style="color:#96b5b4;">\$</span><span style="color:#a3be8c;">{BUNDLE_ID_SUFFIX}</span><span>&quot; &quot;$</span><span style="color:#a3be8c;">{</span><span style="color:#bf616a;">_plist_suffix</span><span style="color:#a3be8c;">}</span><span>&quot; _plist_contents ${</span><span style="color:#bf616a;">_plist_contents</span><span>})
+</span><span>  </span><span style="color:#65737e;"># helper的Info.plist文件路径，例如：&quot;${CMAKE_CURRENT_BINARY_DIR}/helper-Info[_renderer].plist&quot;
+</span><span>  </span><span style="color:#96b5b4;">set</span><span>(</span><span style="color:#bf616a;">_helper_info_plist_file </span><span>&quot;$</span><span style="color:#a3be8c;">{</span><span style="color:#bf616a;">CMAKE_CURRENT_BINARY_DIR</span><span style="color:#a3be8c;">}/helper-Info</span><span>$</span><span style="color:#a3be8c;">{</span><span style="color:#bf616a;">_target_suffix</span><span style="color:#a3be8c;">}.plist</span><span>&quot;)
+</span><span>  </span><span style="color:#65737e;"># 通过CMake提供file(WRITE)命令，将前面定义的内容写入到对应.plist文件中
+</span><span>  </span><span style="color:#96b5b4;">file</span><span>(</span><span style="color:#bf616a;">WRITE </span><span>${</span><span style="color:#bf616a;">_helper_info_plist_file</span><span>} ${</span><span style="color:#bf616a;">_plist_contents</span><span>})
+</span><span>
+</span><span>  </span><span style="color:#65737e;"># 创建当前helper的executable target，当然，也是一个App Bundle
+</span><span>  </span><span style="color:#96b5b4;">add_executable</span><span>(${</span><span style="color:#bf616a;">_helper_target</span><span>}
+</span><span>      </span><span style="color:#bf616a;">MACOSX_BUNDLE
+</span><span>      process_helper.mm
+</span><span>  )
+</span><span>  </span><span style="color:#65737e;"># 与主进程应用一样，
+</span><span>  </span><span style="color:#65737e;"># 通过cef提供的SET_EXECUTABLE_TARGET_PROPERTIES宏，来设置编译参数、头文件路径等
+</span><span>  </span><span style="color:#bf616a;">SET_EXECUTABLE_TARGET_PROPERTIES</span><span>(${</span><span style="color:#bf616a;">_helper_target</span><span>})
+</span><span>  </span><span style="color:#65737e;"># 编译当前Helper target前，先编译 libcef_dll_wrapper target
+</span><span>  </span><span style="color:#96b5b4;">add_dependencies</span><span>(${</span><span style="color:#bf616a;">_helper_target</span><span>} libcef_dll_wrapper)
+</span><span>  </span><span style="color:#65737e;"># 当前Helper target的库链接
+</span><span>  </span><span style="color:#96b5b4;">target_link_libraries</span><span>(${</span><span style="color:#bf616a;">_helper_target</span><span>} libcef_dll_wrapper ${</span><span style="color:#bf616a;">CEF_STANDARD_LIBS</span><span>})
+</span><span>  </span><span style="color:#65737e;"># 定义当前Helper target的一些属性
+</span><span>  </span><span style="color:#96b5b4;">set_target_properties</span><span>(${</span><span style="color:#bf616a;">_helper_target</span><span>} </span><span style="color:#bf616a;">PROPERTIES
+</span><span>      </span><span style="color:#65737e;"># 这里使用“MACOSX_BUNDLE_INFO_PLIST”，
+</span><span>      </span><span style="color:#65737e;"># 来定义构建过程Bundle使用的Info.plist来源于前面我们通过模板文件生成的.plist
+</span><span>      MACOSX_BUNDLE_INFO_PLIST ${</span><span style="color:#bf616a;">_helper_info_plist_file</span><span>}
+</span><span>      </span><span style="color:#65737e;"># 定义最终生成的App Bundle的名称
+</span><span>      OUTPUT_NAME ${</span><span style="color:#bf616a;">_helper_output_name</span><span>}
+</span><span>  )
+</span><span>
+</span><span>  </span><span style="color:#65737e;"># 构建主进程应用前，会先构建当前Helper target
+</span><span>  </span><span style="color:#96b5b4;">add_dependencies</span><span>(${</span><span style="color:#bf616a;">CEF_APP_TARGET</span><span>} &quot;$</span><span style="color:#a3be8c;">{</span><span style="color:#bf616a;">_helper_target</span><span style="color:#a3be8c;">}</span><span>&quot;)
+</span><span>
+</span><span>  </span><span style="color:#65737e;"># 将构建的Helper App Bundle拷贝到主进程cef_app的Bundle中
+</span><span>  </span><span style="color:#96b5b4;">add_custom_command</span><span>(
+</span><span>      </span><span style="color:#bf616a;">TARGET </span><span>${</span><span style="color:#bf616a;">CEF_APP_TARGET</span><span>}
+</span><span>      </span><span style="color:#bf616a;">POST_BUILD
+</span><span>      </span><span style="color:#bf616a;">COMMAND </span><span>${</span><span style="color:#bf616a;">CMAKE_COMMAND</span><span>} -E copy_directory
+</span><span>      &quot;$</span><span style="color:#a3be8c;">{</span><span style="color:#bf616a;">CMAKE_CURRENT_BINARY_DIR</span><span style="color:#a3be8c;">}/</span><span>$</span><span style="color:#a3be8c;">{</span><span style="color:#bf616a;">_helper_output_name</span><span style="color:#a3be8c;">}.app</span><span>&quot;
+</span><span>      &quot;$</span><span style="color:#a3be8c;">{</span><span style="color:#bf616a;">CEF_APP_BUNDLE</span><span style="color:#a3be8c;">}/Contents/Frameworks/</span><span>$</span><span style="color:#a3be8c;">{</span><span style="color:#bf616a;">_helper_output_name</span><span style="color:#a3be8c;">}.app</span><span>&quot;
+</span><span>      </span><span style="color:#bf616a;">VERBATIM
+</span><span>  )
+</span><span style="color:#b48ead;">endforeach </span><span>()
+</span></code></pre>
+<p>让我们从头到尾一一道来。</p>
+<pre data-lang="cmake" style="background-color:#2b303b;color:#c0c5ce;" class="language-cmake "><code class="language-cmake" data-lang="cmake"><span style="color:#65737e;"># 定义helper子进程target名
+</span><span style="color:#96b5b4;">set</span><span>(</span><span style="color:#bf616a;">CEF_APP_HELPER_TARGET </span><span>&quot;</span><span style="color:#a3be8c;">cef_app_helper</span><span>&quot;)
+</span><span style="color:#65737e;"># 定义helper子进程构建后的app的名称
+</span><span style="color:#96b5b4;">set</span><span>(</span><span style="color:#bf616a;">CEF_APP_HELPER_OUTPUT_NAME </span><span>&quot;</span><span style="color:#a3be8c;">cef_app Helper</span><span>&quot;)
+</span><span style="color:#65737e;"># 注意，上述的名称都不是最终名称，它们更准确的意义是作为下面循环定义target的基础名称
+</span><span style="color:#65737e;"># 后续循环的时候，会基于上述名称进行拼接
+</span></code></pre>
+<p>首先，我们会定义helper子进程的target名称和输出应用名称。但需要注意的是，这里的名称不完全是最终输出的应用程序的名称。因为在后续的配置中，我们会使用CMake支持的循环命令来支持生成多个target。</p>
+<pre data-lang="cmake" style="background-color:#2b303b;color:#c0c5ce;" class="language-cmake "><code class="language-cmake" data-lang="cmake"><span style="color:#65737e;"># 创建多个不同类型helper的target
+</span><span style="color:#65737e;"># CEF_HELPER_APP_SUFFIXES来自cef_variables.cmake，是一个“字符串数组”，值有：
+</span><span style="color:#65737e;"># &quot;::&quot;、&quot; (Alerts):_alerts:.alerts&quot;、&quot; (GPU):_gpu:.gpu&quot;、
+</span><span style="color:#65737e;"># &quot; (Plugin):_plugin:.plugin&quot;、&quot; (Renderer):_renderer:.renderer&quot;
+</span><span style="color:#65737e;"># 这里通过foreach，实现对字符串数组的遍历，每一次循环会得到一个字符串，存放在“_suffix_list”
+</span><span style="color:#b48ead;">foreach </span><span>(_suffix_list ${</span><span style="color:#bf616a;">CEF_HELPER_APP_SUFFIXES</span><span>})
+</span><span> ... ...
+</span><span style="color:#b48ead;">endforeach </span><span>()
+</span></code></pre>
+<p>接着，我们使用CMake的<code>foreach</code>指令，来遍历变量<code>CEF_HELPER_APP_SUFFIXES</code>这个变量值。这个变量来自于cef提供的变量（cef_variables.cmake）：</p>
+<pre data-lang="cmake" style="background-color:#2b303b;color:#c0c5ce;" class="language-cmake "><code class="language-cmake" data-lang="cmake"><span>  </span><span style="color:#65737e;"># CEF Helper app suffixes.
+</span><span>  </span><span style="color:#65737e;"># Format is &quot;&lt;name suffix&gt;:&lt;target suffix&gt;:&lt;plist suffix&gt;&quot;.
+</span><span>  </span><span style="color:#96b5b4;">set</span><span>(</span><span style="color:#bf616a;">CEF_HELPER_APP_SUFFIXES
+</span><span>    &quot;</span><span style="color:#a3be8c;">::</span><span>&quot;
+</span><span>    &quot;</span><span style="color:#a3be8c;"> (Alerts):_alerts:.alerts</span><span>&quot;
+</span><span>    &quot;</span><span style="color:#a3be8c;"> (GPU):_gpu:.gpu</span><span>&quot;
+</span><span>    &quot;</span><span style="color:#a3be8c;"> (Plugin):_plugin:.plugin</span><span>&quot;
+</span><span>    &quot;</span><span style="color:#a3be8c;"> (Renderer):_renderer:.renderer</span><span>&quot;
+</span><span>    )
+</span></code></pre>
+<p>在这里通过CMake的遍历能力，我们每一次迭代都能读取到对应一条字符串并存放到<code>_suffix_list</code>变量中。</p>
+<p>接下来介绍在<code>foreach</code>包裹的内部配置：</p>
+<pre data-lang="cmake" style="background-color:#2b303b;color:#c0c5ce;" class="language-cmake "><code class="language-cmake" data-lang="cmake"><span>    </span><span style="color:#65737e;"># 将字符串转为&quot;;&quot;分割，这样可以使用CMake支持的list(GET)指令来读取每一节字符串
+</span><span>    </span><span style="color:#65737e;"># 以 &quot; (Renderer):_renderer:.renderer&quot; 为例
+</span><span>    </span><span style="color:#96b5b4;">string</span><span>(</span><span style="color:#bf616a;">REPLACE </span><span>&quot;</span><span style="color:#a3be8c;">:</span><span>&quot; &quot;</span><span style="color:#a3be8c;">;</span><span>&quot; _suffix_list ${</span><span style="color:#bf616a;">_suffix_list</span><span>}) </span><span style="color:#65737e;"># &quot; (Renderer);_renderer;.renderer&quot;
+</span><span>    </span><span style="color:#96b5b4;">list</span><span>(</span><span style="color:#bf616a;">GET </span><span>_suffix_list 0 _name_suffix) </span><span style="color:#65737e;"># &quot; (Renderer)&quot;
+</span><span>    </span><span style="color:#96b5b4;">list</span><span>(</span><span style="color:#bf616a;">GET </span><span>_suffix_list 1 _target_suffix) </span><span style="color:#65737e;"># &quot;_renderer&quot;
+</span><span>    </span><span style="color:#96b5b4;">list</span><span>(</span><span style="color:#bf616a;">GET </span><span>_suffix_list 2 _plist_suffix) </span><span style="color:#65737e;"># &quot;.renderer&quot;
+</span><span>    </span><span style="color:#65737e;"># 当然，需要注意 CEF_HELPER_APP_SUFFIXES 中有一个&quot;::&quot;的字符串，
+</span><span>    </span><span style="color:#65737e;"># 会使得 _name_suffix = &quot;&quot;、_target_suffix = &quot;&quot;、_plist_suffix = &quot;&quot;
+</span></code></pre>
+<p>我们将<code>_suffix_list</code>变量中所有的<code>:</code>字符替换为<code>;</code>，然后就可以使用CMake支持的<code>list(GET)</code>指令来读取每一节字符串。</p>
+<p>以 <code>" (Renderer):_renderer:.renderer"</code>为例，在替换后，通过<code>list(GET)</code>可以分别得到：</p>
+<ul>
+<li>_name_suffix = <code>" (Renderer)"</code></li>
+<li>_target_suffix = <code>"_renderer"</code></li>
+<li>_plist_suffix = <code>".renderer"</code></li>
+</ul>
+<p>这三个suffix将在后续的流程拼接出相关名称变量。但需要注意的是，在<code>CEF_HELPER_APP_SUFFIXES</code>中存在一个特殊的字符串：<code>"::"</code>。这个字符串会导致最后提取出来的前面三个suffix都是<code>""</code>（空字符串），这并不是BUG，后续会用到。</p>
+<pre data-lang="cmake" style="background-color:#2b303b;color:#c0c5ce;" class="language-cmake "><code class="language-cmake" data-lang="cmake"><span>    </span><span style="color:#65737e;"># 定义一个Helper target以及BUNDLE名称
+</span><span>    </span><span style="color:#65737e;"># 以 &quot; (Renderer):_renderer:.renderer&quot; 为例
+</span><span>    </span><span style="color:#65737e;"># _helper_target = &quot;cef_app_helper&quot; + &quot;_renderer&quot; -&gt; &quot;cef_app_helper_renderer&quot;
+</span><span>    </span><span style="color:#65737e;"># _helper_output_name = &quot;cef_app Helper&quot; + &quot; (Renderer)&quot; -&gt; &quot;cef_app Helper (Renderer)&quot;
+</span><span>    </span><span style="color:#96b5b4;">set</span><span>(</span><span style="color:#bf616a;">_helper_target </span><span>&quot;$</span><span style="color:#a3be8c;">{</span><span style="color:#bf616a;">CEF_APP_HELPER_TARGET</span><span style="color:#a3be8c;">}</span><span>$</span><span style="color:#a3be8c;">{</span><span style="color:#bf616a;">_target_suffix</span><span style="color:#a3be8c;">}</span><span>&quot;)
+</span><span>    </span><span style="color:#96b5b4;">set</span><span>(</span><span style="color:#bf616a;">_helper_output_name </span><span>&quot;$</span><span style="color:#a3be8c;">{</span><span style="color:#bf616a;">CEF_APP_HELPER_OUTPUT_NAME</span><span style="color:#a3be8c;">}</span><span>$</span><span style="color:#a3be8c;">{</span><span style="color:#bf616a;">_name_suffix</span><span style="color:#a3be8c;">}</span><span>&quot;)
+</span></code></pre>
+<p>接下来，我们开始消费suffix。首先，我们通过拼接操作得到<code>_helper_target</code>和<code>_helper_output_name</code>。这两个变量分别代表了当前正在构建的helper的真正target名和对应后续构建的应用名称。还是以 <code>" (Renderer):_renderer:.renderer"</code>为例。我们能够得到：</p>
+<ul>
+<li><code>_helper_target</code> = <code>"cef_app_helper" + "_renderer"</code> 得到 <code>"cef_app_helper_renderer"</code></li>
+<li><code>_helper_output_name</code> = <code>"cef_app Helper" + " (Renderer)"</code> 得到 <code>"cef_app Helper (Renderer)"</code></li>
+</ul>
+<pre data-lang="cmake" style="background-color:#2b303b;color:#c0c5ce;" class="language-cmake "><code class="language-cmake" data-lang="cmake"><span>    </span><span style="color:#65737e;"># 读取templates/helper-Info.plist模板文件内容到_plist_contents
+</span><span>    </span><span style="color:#65737e;"># 然后使用上面得到的 _helper_output_name、_plist_suffix等变量进行文本内容的替换操作
+</span><span>    </span><span style="color:#65737e;"># 以便得到当前正在处理的helper对应的一份Info.plist
+</span><span>    </span><span style="color:#96b5b4;">file</span><span>(</span><span style="color:#bf616a;">READ </span><span>&quot;$</span><span style="color:#a3be8c;">{</span><span style="color:#bf616a;">CMAKE_CURRENT_SOURCE_DIR</span><span style="color:#a3be8c;">}/templates/helper-Info.plist</span><span>&quot; _plist_contents)
+</span><span>    </span><span style="color:#96b5b4;">string</span><span>(</span><span style="color:#bf616a;">REPLACE </span><span>&quot;</span><span style="color:#96b5b4;">\$</span><span style="color:#a3be8c;">{HELPER_EXECUTABLE_NAME}</span><span>&quot; &quot;$</span><span style="color:#a3be8c;">{</span><span style="color:#bf616a;">_helper_output_name</span><span style="color:#a3be8c;">}</span><span>&quot; _plist_contents ${</span><span style="color:#bf616a;">_plist_contents</span><span>})
+</span><span>    </span><span style="color:#96b5b4;">string</span><span>(</span><span style="color:#bf616a;">REPLACE </span><span>&quot;</span><span style="color:#96b5b4;">\$</span><span style="color:#a3be8c;">{PRODUCT_NAME}</span><span>&quot; &quot;$</span><span style="color:#a3be8c;">{</span><span style="color:#bf616a;">_helper_output_name</span><span style="color:#a3be8c;">}</span><span>&quot; _plist_contents ${</span><span style="color:#bf616a;">_plist_contents</span><span>})
+</span><span>    </span><span style="color:#96b5b4;">string</span><span>(</span><span style="color:#bf616a;">REPLACE </span><span>&quot;</span><span style="color:#96b5b4;">\$</span><span style="color:#a3be8c;">{BUNDLE_ID_SUFFIX}</span><span>&quot; &quot;$</span><span style="color:#a3be8c;">{</span><span style="color:#bf616a;">_plist_suffix</span><span style="color:#a3be8c;">}</span><span>&quot; _plist_contents ${</span><span style="color:#bf616a;">_plist_contents</span><span>})
+</span><span>    </span><span style="color:#65737e;"># helper的Info.plist文件路径，例如：&quot;${CMAKE_CURRENT_BINARY_DIR}/helper-Info[_renderer].plist&quot;
+</span><span>    </span><span style="color:#96b5b4;">set</span><span>(</span><span style="color:#bf616a;">_helper_info_plist_file </span><span>&quot;$</span><span style="color:#a3be8c;">{</span><span style="color:#bf616a;">CMAKE_CURRENT_BINARY_DIR</span><span style="color:#a3be8c;">}/helper-Info</span><span>$</span><span style="color:#a3be8c;">{</span><span style="color:#bf616a;">_target_suffix</span><span style="color:#a3be8c;">}.plist</span><span>&quot;)
+</span><span>    </span><span style="color:#65737e;"># 通过CMake提供file(WRITE)命令，将前面定义的内容写入到对应.plist文件中
+</span><span>    </span><span style="color:#96b5b4;">file</span><span>(</span><span style="color:#bf616a;">WRITE </span><span>${</span><span style="color:#bf616a;">_helper_info_plist_file</span><span>} ${</span><span style="color:#bf616a;">_plist_contents</span><span>})
+</span></code></pre>
+<p>接下来，我们使用CMake提供的能力，读取了前面提到的存放在<code>cef_app/templates</code>目录下的<code>helper-Info.plist</code>文件。这是一个模板文件，打开后读者能从中看到一些<code>${XXX}</code>的占位字符串，我们会在这一步进行对应文本的替换。这里我们用到了CMake的几个知识点：</p>
+<ol>
+<li>file(READ)读取某个文件并存放到文本变量中；</li>
+<li>string(REPLAECE)替换文本变量中某些字符串并写回到变量中；</li>
+<li>file(WRITE)将文本数据写入到某个文件中。</li>
+</ol>
+<p>这一步我们还得到了<code>_helper_info_plist_file</code>变量，它指向了我们写入的plist文件，以便在后续配置中进行使用。</p>
+<pre data-lang="cmake" style="background-color:#2b303b;color:#c0c5ce;" class="language-cmake "><code class="language-cmake" data-lang="cmake"><span>    </span><span style="color:#65737e;"># 创建当前helper的executable target，当然，也是一个App Bundle
+</span><span>    </span><span style="color:#96b5b4;">add_executable</span><span>(${</span><span style="color:#bf616a;">_helper_target</span><span>}
+</span><span>            </span><span style="color:#bf616a;">MACOSX_BUNDLE
+</span><span>            process_helper.mm
+</span><span>    )
+</span><span>    </span><span style="color:#65737e;"># 与主进程应用一样，
+</span><span>    </span><span style="color:#65737e;"># 通过cef提供的SET_EXECUTABLE_TARGET_PROPERTIES宏，来设置编译参数、头文件路径等
+</span><span>    </span><span style="color:#bf616a;">SET_EXECUTABLE_TARGET_PROPERTIES</span><span>(${</span><span style="color:#bf616a;">_helper_target</span><span>})
+</span><span>    </span><span style="color:#65737e;"># 编译当前Helper target前，先编译 libcef_dll_wrapper target
+</span><span>    </span><span style="color:#96b5b4;">add_dependencies</span><span>(${</span><span style="color:#bf616a;">_helper_target</span><span>} libcef_dll_wrapper)
+</span><span>    </span><span style="color:#65737e;"># 当前Helper target的库链接
+</span><span>    </span><span style="color:#96b5b4;">target_link_libraries</span><span>(${</span><span style="color:#bf616a;">_helper_target</span><span>} libcef_dll_wrapper ${</span><span style="color:#bf616a;">CEF_STANDARD_LIBS</span><span>})
+</span><span>    </span><span style="color:#65737e;"># 定义当前Helper target的一些属性
+</span><span>    </span><span style="color:#96b5b4;">set_target_properties</span><span>(${</span><span style="color:#bf616a;">_helper_target</span><span>} </span><span style="color:#bf616a;">PROPERTIES
+</span><span>            </span><span style="color:#65737e;"># 这里使用“MACOSX_BUNDLE_INFO_PLIST”，
+</span><span>            </span><span style="color:#65737e;"># 来定义构建过程Bundle使用的Info.plist来源于前面我们通过模板文件生成的.plist
+</span><span>            MACOSX_BUNDLE_INFO_PLIST ${</span><span style="color:#bf616a;">_helper_info_plist_file</span><span>}
+</span><span>            </span><span style="color:#65737e;"># 定义最终生成的App Bundle的名称
+</span><span>            OUTPUT_NAME ${</span><span style="color:#bf616a;">_helper_output_name</span><span>}
+</span><span>    )
+</span></code></pre>
+<p>和前面主进程应用target类似。我们将helper的构建结果同样定义为App Bundle；使用<code>SET_EXECUTABLE_TARGET_PROPERTIES</code>来进行编译参数等设置；使用<code>add_dependencies</code>告诉CMake编译构建子进程target的时候，保证libcef_dll_wrapper优先于helper构建完成；使用<code>target_link_libraries</code>链接子进程Helper。但，最后一个<code>set_target_properties</code>和之前主进程target设置有所不同。在之前的主进程应用配置时，我们直接使用了诸如<code>MACOSX_BUNDLE_BUNDLE_NAME</code>、<code>MACOSX_BUNDLE_GUI_IDENTIFIER</code>等参数来让CMake使用内置的plist模板文件生成主进程应用App Bundle中的plist文件。但因为CMake内置的模板plist只能设置部分字段值，而在Helper配置的时候，我们需要更改更多的占位字段，所以我们自己提供了helper Bundle的模板plist，并通过内容读取、字符串替换的方式生成了对应Helper的Bundle的plist文件内容。要让CMake不再使用内置的模板plist，而是使用我们生成的plist文件，我们使用参数<code>MACOSX_BUNDLE_INFO_PLIST</code>指定前面生成好的plist文件路径。最后，我们还定义了<code>OUTPUT_NAME</code>这个参数，这个参数主要的作用是可以自定义生成的应用程序的名称，如果没有这个参数，我们最终在构建结果目录中生成应用名称就是target。</p>
+<pre data-lang="cmake" style="background-color:#2b303b;color:#c0c5ce;" class="language-cmake "><code class="language-cmake" data-lang="cmake"><span>    </span><span style="color:#65737e;"># 构建主进程应用前，会先构建当前Helper target
+</span><span>    </span><span style="color:#96b5b4;">add_dependencies</span><span>(${</span><span style="color:#bf616a;">CEF_APP_TARGET</span><span>} &quot;$</span><span style="color:#a3be8c;">{</span><span style="color:#bf616a;">_helper_target</span><span style="color:#a3be8c;">}</span><span>&quot;)
+</span></code></pre>
+<p>告诉CMake，构建主进程target应用的时候，会先构建当前Helper target。</p>
+<pre data-lang="cmake" style="background-color:#2b303b;color:#c0c5ce;" class="language-cmake "><code class="language-cmake" data-lang="cmake"><span>    </span><span style="color:#65737e;"># 将构建的Helper App Bundle拷贝到主进程cef_app的Bundle中
+</span><span>    </span><span style="color:#96b5b4;">add_custom_command</span><span>(
+</span><span>            </span><span style="color:#bf616a;">TARGET </span><span>${</span><span style="color:#bf616a;">CEF_APP_TARGET</span><span>}
+</span><span>            </span><span style="color:#bf616a;">POST_BUILD
+</span><span>            </span><span style="color:#bf616a;">COMMAND </span><span>${</span><span style="color:#bf616a;">CMAKE_COMMAND</span><span>} -E copy_directory
+</span><span>            &quot;$</span><span style="color:#a3be8c;">{</span><span style="color:#bf616a;">CMAKE_CURRENT_BINARY_DIR</span><span style="color:#a3be8c;">}/</span><span>$</span><span style="color:#a3be8c;">{</span><span style="color:#bf616a;">_helper_output_name</span><span style="color:#a3be8c;">}.app</span><span>&quot;
+</span><span>            &quot;$</span><span style="color:#a3be8c;">{</span><span style="color:#bf616a;">CEF_APP_BUNDLE</span><span style="color:#a3be8c;">}/Contents/Frameworks/</span><span>$</span><span style="color:#a3be8c;">{</span><span style="color:#bf616a;">_helper_output_name</span><span style="color:#a3be8c;">}.app</span><span>&quot;
+</span><span>            </span><span style="color:#bf616a;">VERBATIM
+</span><span>    )
+</span></code></pre>
+<p>在循环的最后，我们再次使用<code>add_custom_command</code>通过CMake提供的文件复制能力，让主进程应用构建完成以后，将当前子进程helper应用app复制到<code>主进程应用.app/Contents/Frameworks</code>目录下。至于为什么要这么做，我们将会在下一篇文章中介绍应用程序运行时架构来说明。</p>
+<p>基于现在完成的配置，我们可以通过对cef_app进行构建，检查最终构建的产物来验证项目的正确性。笔者使用CLion的GUI生成cef_app，最终会在输出目录中找到cef_app.app，同时会看到会生成多个helper的App Bundle，并已经成功复制到了对应目录中：</p>
+<p><img src="https://static-res.zhen.wang/images/post/2023-12-12/140-build-result.png" alt="140-build-result" /></p>
+<h1 id="xie-zai-zui-hou">写在最后</h1>
+<p>在本文，我们基本上完成了在macOS下基于CEF的多进程应用架构的项目CMake配置，并结合实际的配置，逐一说明了CMake的相关用法和配置细节。在下一篇文章中，我们会基于此文搭建的项目，逐步介绍并编写macOS下基于CEF应用程序的代码，其中会涉及到macOS下Cocoa框架知识简介。</p>
+<p>本文仓库链接：<a rel="noopener" target="_blank" href="https://github.com/w4ngzhen/cef_app_macos_project">w4ngzhen/cef_app_macos_project (github.com)</a></p>
+
+    </div>
+</div>
+<script src="https://zhen.wang/libs/viewerjs@1.11.7/viewer.min.js"></script>
+<link rel="stylesheet" href="https://zhen.wang/libs/viewerjs@1.11.7/viewer.min.css"/>
+<script>
+  if (window.Viewer) {
+    document.querySelectorAll('img').forEach(img => {
+      new Viewer(img, {
+        inline: false,
+        navbar: false,
+        toolbar: {
+          zoomIn: 1,
+          zoomOut: 1,
+          reset: 1,
+          rotateLeft: 1,
+          rotateRight: 1,
+        },
+      });
+    });
+  }
+</script>
+
+
+</body>
+</html>

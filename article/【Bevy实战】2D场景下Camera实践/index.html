@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="utf-8">
+    <meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover"
+          name="viewport">
+    
+    
+    <!-- umami web analysis -->
+    <script defer src="https://zhen.wang/libs/umami/umami.script.js"
+            data-website-id="d66cfe03-f6b3-4aa0-baf8-728700db1b09"></script>
+    
+    
+    
+    <link rel="icon" type="image/png" sizes="16x16" href="https://zhen.wang/images/blog-site-icon.svg">
+    <link rel="icon" type="image/png" sizes="32x32" href="https://zhen.wang/images/blog-site-icon.svg">
+    <title>zhen&#x27;s everything</title>
+    <link rel="stylesheet" href="https://zhen.wang/style.css">
+    
+<link rel="stylesheet" href="https://zhen.wang/article_content.css">
+<link rel="stylesheet" href="https://zhen.wang/article_markdown.css">
+
+</head>
+<body>
+
+<div id="article">
+    <header class="article-header">
+        
+<div class="base-title">
+    <a href="#" onclick="history.length > 1 ? history.back() : location.href = '/'; return false;">&LeftArrow; Back</a>
+    <h1>
+        【Bevy实战】2D场景下Camera实践
+    </h1>
+</div>
+
+    </header>
+    <p class="article-date">2024-09-26</p>
+    
+    <!-- toc -->
+    <div class="article-toc">
+        <label class="toc-title" for="toc-trigger">目录</label>
+        <input id="toc-trigger" type="checkbox" checked/>
+        <div class="toc-content">
+            <ol class="toc">
+                
+                <li class="toc-item toc-level-1">
+                    <a class="toc-link" href="https://zhen.wang/article/【Bevy实战】2D场景下Camera实践/#ji-ben-gai-nian">基本概念</a>
+                    
+                </li>
+                
+                <li class="toc-item toc-level-1">
+                    <a class="toc-link" href="https://zhen.wang/article/【Bevy实战】2D场景下Camera实践/#shi-kou-viewport">视口Viewport</a>
+                    
+                    <ol class="toc-child">
+                        
+                        <li class="toc-item toc-level-2">
+                            <a href="https://zhen.wang/article/【Bevy实战】2D场景下Camera实践/#guan-yu-2dshi-ti-de-wei-zhi-deng-chu-li">关于2D实体的位置等处理</a>
+                        </li>
+                        
+                    </ol>
+                    
+                </li>
+                
+                <li class="toc-item toc-level-1">
+                    <a class="toc-link" href="https://zhen.wang/article/【Bevy实战】2D场景下Camera实践/#duo-ge-camera">多个Camera</a>
+                    
+                    <ol class="toc-child">
+                        
+                        <li class="toc-item toc-level-2">
+                            <a href="https://zhen.wang/article/【Bevy实战】2D场景下Camera实践/#bu-tong-de-she-xiang-ji-xuan-ran-bu-tong-de-shi-ti">不同的摄像机渲染不同的实体</a>
+                        </li>
+                        
+                        <li class="toc-item toc-level-2">
+                            <a href="https://zhen.wang/article/【Bevy实战】2D场景下Camera实践/#guan-yu-duo-camerade-shi-ji-ying-yong">关于多Camera的实际应用</a>
+                        </li>
+                        
+                    </ol>
+                    
+                </li>
+                
+                <li class="toc-item toc-level-1">
+                    <a class="toc-link" href="https://zhen.wang/article/【Bevy实战】2D场景下Camera实践/#xie-zai-zui-hou">写在最后</a>
+                    
+                    <ol class="toc-child">
+                        
+                        <li class="toc-item toc-level-2">
+                            <a href="https://zhen.wang/article/【Bevy实战】2D场景下Camera实践/#xiang-guan-yue-du-yi-ji-can-kao">相关阅读以及参考</a>
+                        </li>
+                        
+                    </ol>
+                    
+                </li>
+                
+            </ol>
+        </div>
+    </div>
+    
+    <!-- real content -->
+    <div class="article-content markdown-content">
+        <p><a rel="noopener" target="_blank" href="https://github.com/bevyengine/bevy">Bevy</a>，一个用Rust构建的令人耳目一新的简单数据驱动游戏引擎。如果你是一名Rust开发者，同时又对游戏开发比较感兴趣，那么Bevy一定是你会接触甚至是使用的游戏引擎。当然，本文关注的重点并不是来介绍Bevy，以及它的一些基本概念，关于这块的内容读者完全可以到Bevy的官网、Github主页进行学习；同时，本文也不是一篇介绍Rust编程细节的文章，因此，本文面向的对象是有Rust开发经验（至少是要入门）的小伙伴。接下来就让我们开始本文的主要内容：Bevy在2D场景下的Camera实践。</p>
+<h1 id="ji-ben-gai-nian">基本概念</h1>
+<p>Camera摄影机驱动Bevy中的所有渲染。他们负责配置要绘制的内容、如何绘制以及在哪里绘制。为了更形象的讲解，我们先编写如下代码：</p>
+<blockquote>
+<p>PS：假设读者的其他环境、依赖已经配置Ok</p>
+</blockquote>
+<pre data-lang="rust" style="background-color:#2b303b;color:#c0c5ce;" class="language-rust "><code class="language-rust" data-lang="rust"><span style="color:#b48ead;">use </span><span>bevy::prelude::*;
+</span><span>
+</span><span style="color:#b48ead;">fn </span><span style="color:#8fa1b3;">main</span><span>() {
+</span><span>    App::new()
+</span><span>        .</span><span style="color:#96b5b4;">add_plugins</span><span>(DefaultPlugins)
+</span><span>        .</span><span style="color:#96b5b4;">add_systems</span><span>(Startup, startup)
+</span><span>        .</span><span style="color:#96b5b4;">run</span><span>();
+</span><span>}
+</span><span>
+</span><span>
+</span><span style="color:#b48ead;">fn </span><span style="color:#8fa1b3;">startup</span><span>(</span><span style="color:#b48ead;">mut </span><span style="color:#bf616a;">commands</span><span>: Commands, </span><span style="color:#bf616a;">asset_server</span><span>: Res&lt;AssetServer&gt;) {
+</span><span>    </span><span style="color:#b48ead;">let</span><span> icon: Handle&lt;Image&gt; = asset_server.</span><span style="color:#96b5b4;">load</span><span>(&quot;</span><span style="color:#a3be8c;">img1.png</span><span>&quot;);
+</span><span>    commands.</span><span style="color:#96b5b4;">spawn</span><span>(SpriteBundle {
+</span><span>        texture: icon.</span><span style="color:#96b5b4;">clone</span><span>(),
+</span><span>        ..</span><span style="color:#96b5b4;">default</span><span>()
+</span><span>    });
+</span><span>}
+</span></code></pre>
+<p>上述的代码核心过程：</p>
+<ol>
+<li>加载Bevy默认的插件</li>
+<li>启动阶段（Startup）生成一张精灵图（来自img1.png）</li>
+</ol>
+<p>此时我们运行项目，会发现仅有一个没有任何内容的，黑色背景的窗口：</p>
+<p><img src="https://static-res.zhen.wang/images/post/2024-09-26/010.png" alt="010" /></p>
+<p>造成这个现象的原因是：在默认的情况下，Bevy“游戏世界“中不存在摄像机Camera实体，因此无法将可渲染的内容”拍摄“下来并投射到屏幕上。为了解决这个问题也非常简单，在世界中增加一个摄像机实体即可：</p>
+<pre data-lang="diff" style="background-color:#2b303b;color:#c0c5ce;" class="language-diff "><code class="language-diff" data-lang="diff"><span>fn startup(mut commands: Commands, asset_server: Res&lt;AssetServer&gt;) {
+</span><span style="color:#a3be8c;">+   // add camera.
+</span><span style="color:#a3be8c;">+   commands.spawn(Camera2dBundle::default());
+</span><span>    // then spawn Sprite.
+</span><span>    let img1: Handle&lt;Image&gt; = asset_server.load(&quot;img1.png&quot;);
+</span><span>    commands.spawn(SpriteBundle {
+</span><span>        texture: img1.clone(),
+</span><span>        ..default()
+</span><span>    });
+</span><span>}
+</span></code></pre>
+<p>上述代码我们添加了一个2D摄像机的实体，此时再次运行程序可以看到如下的效果：</p>
+<p><img src="https://static-res.zhen.wang/images/post/2024-09-26/020.png" alt="020" /></p>
+<p>你可以将上面的2D渲染想象成如下的样子：</p>
+<p><img src="https://static-res.zhen.wang/images/post/2024-09-26/030.png" alt="030" /></p>
+<p>此时，让我们在项目工程中再增加一张图片，并且在之前生成实体的位置再生成一个新的Sprite：</p>
+<pre data-lang="rust" style="background-color:#2b303b;color:#c0c5ce;" class="language-rust "><code class="language-rust" data-lang="rust"><span style="color:#b48ead;">fn </span><span style="color:#8fa1b3;">startup</span><span>(</span><span style="color:#b48ead;">mut </span><span style="color:#bf616a;">commands</span><span>: Commands, </span><span style="color:#bf616a;">asset_server</span><span>: Res&lt;AssetServer&gt;) {
+</span><span>    </span><span style="color:#65737e;">// add camera.
+</span><span>    commands.</span><span style="color:#96b5b4;">spawn</span><span>(Camera2dBundle::default());
+</span><span>    </span><span style="color:#65737e;">// then spawn Sprite.
+</span><span>    </span><span style="color:#b48ead;">let</span><span> img1: Handle&lt;Image&gt; = asset_server.</span><span style="color:#96b5b4;">load</span><span>(&quot;</span><span style="color:#a3be8c;">img1.png</span><span>&quot;);
+</span><span>    commands.</span><span style="color:#96b5b4;">spawn</span><span>(SpriteBundle {
+</span><span>        texture: img1.</span><span style="color:#96b5b4;">clone</span><span>(),
+</span><span>        ..</span><span style="color:#96b5b4;">default</span><span>()
+</span><span>    });
+</span><span>    </span><span style="color:#65737e;">// add another Sprite with img2.png
+</span><span>    </span><span style="color:#b48ead;">let</span><span> img2: Handle&lt;Image&gt; = asset_server.</span><span style="color:#96b5b4;">load</span><span>(&quot;</span><span style="color:#a3be8c;">img2.png</span><span>&quot;);
+</span><span>    commands.</span><span style="color:#96b5b4;">spawn</span><span>(SpriteBundle {
+</span><span>        texture: img2.</span><span style="color:#96b5b4;">clone</span><span>(),
+</span><span>        ..</span><span style="color:#96b5b4;">default</span><span>()
+</span><span>    });
+</span><span>}
+</span></code></pre>
+<p>此时当我们再次运行程序时，可以看到img2.png的内容在img1.png之上：</p>
+<p><img src="https://static-res.zhen.wang/images/post/2024-09-26/040.png" alt="040" /></p>
+<p>不难理解，先生成的图片实体先渲染，后生成的图片实体后渲染。那么，假设我希望img1.png能够盖住img2.png呢？此时只需要将其位置组件的z轴设置为大于0即可（因为z轴默认是0）：</p>
+<pre data-lang="rust" style="background-color:#2b303b;color:#c0c5ce;" class="language-rust "><code class="language-rust" data-lang="rust"><span style="color:#b48ead;">fn </span><span style="color:#8fa1b3;">startup</span><span>(</span><span style="color:#b48ead;">mut </span><span style="color:#bf616a;">commands</span><span>: Commands, </span><span style="color:#bf616a;">asset_server</span><span>: Res&lt;AssetServer&gt;) {
+</span><span>    </span><span style="color:#65737e;">// add camera.
+</span><span>    commands.</span><span style="color:#96b5b4;">spawn</span><span>(Camera2dBundle::default());
+</span><span>    </span><span style="color:#65737e;">// then spawn Sprite.
+</span><span>    </span><span style="color:#b48ead;">let</span><span> img1: Handle&lt;Image&gt; = asset_server.</span><span style="color:#96b5b4;">load</span><span>(&quot;</span><span style="color:#a3be8c;">img1.png</span><span>&quot;);
+</span><span>    commands.</span><span style="color:#96b5b4;">spawn</span><span>(SpriteBundle {
+</span><span>        texture: img1.</span><span style="color:#96b5b4;">clone</span><span>(),
+</span><span>      	</span><span style="color:#65737e;">// add transform
+</span><span>        transform: Transform {
+</span><span>            translation: Vec3 {
+</span><span>                z: </span><span style="color:#d08770;">1.</span><span>, </span><span style="color:#65737e;">// &lt;- z &gt; 0
+</span><span>              	x: </span><span style="color:#d08770;">100.</span><span>,
+</span><span>                ..</span><span style="color:#96b5b4;">default</span><span>()
+</span><span>            },
+</span><span>            ..</span><span style="color:#96b5b4;">default</span><span>()
+</span><span>        },
+</span><span>        ..</span><span style="color:#96b5b4;">default</span><span>()
+</span><span>    });
+</span><span>    </span><span style="color:#65737e;">// add another Sprite with img2.png
+</span><span>		</span><span style="color:#65737e;">// ...
+</span><span>}
+</span></code></pre>
+<blockquote>
+<p>为了检查效果，笔者还将img1的位置进行一定的偏移。</p>
+</blockquote>
+<p>此时再次运行，可以看到img1已经在img2之上，盖住了img2：</p>
+<p><img src="https://static-res.zhen.wang/images/post/2024-09-26/050.png" alt="050" /></p>
+<p>同时，通过上面x轴偏移的效果我们也不难知道，在Bevy中的2D的坐标是以<strong>视口</strong>（我们马上介绍什么是视口Viewport）中心为原点的，并非传统GUI的top-left为原点的坐标系统。</p>
+<p>注意，视口并非窗口，只是在默认情况下，视口就是整个窗口范围。所以接下来，就让我们开始介绍视口的内容。</p>
+<h1 id="shi-kou-viewport">视口Viewport</h1>
+<p>通过查阅Camera2dBundle中的Camera组件细节，我们会发现Camera组件存在一个名为<code>viewport</code>的字段。根据其文档我们可以知道，这个字段可以用来配置将Camera摄取到的内容渲染到指定<code>RenderTarget</code>的矩形区域：</p>
+<p><img src="https://static-res.zhen.wang/images/post/2024-09-26/060.png" alt="060" /></p>
+<p>所以，在继续对视口相关内容进行介绍前，我们首先要知道上面提到的<code>RenderTarget</code>是个什么东西。继续翻阅Camera的代码内容，可以看到Camera还有一个字段<code>target</code>：</p>
+<p><img src="https://static-res.zhen.wang/images/post/2024-09-26/070.png" alt="070" /></p>
+<p>查看<code>RenderTarget</code>定义如下：</p>
+<p><img src="https://static-res.zhen.wang/images/post/2024-09-26/080.png" alt="080" /></p>
+<p>通过其文档我们得知，“target”指的是Camera摄取的内容应该渲染到哪个目标上。已知的有：</p>
+<ol>
+<li>Window窗体。这是默认的目标。</li>
+<li>Image图片。也就是说我们有望将游戏世界中的内容摄取并输送到一张图片上。</li>
+<li>纹理视图。这个暂时不在本文中进行讲解。</li>
+</ol>
+<p>在了解了上述的<code>RenderTarget</code>后，我们再回到<strong>视口viewport</strong>的相关内容。此时我们不难推断出，通过配置viewport，我们可以将Camera摄取到的内容输送到相关渲染目标的某个区域（毕竟无论是Window窗体还是Image图像等，它们都是一个平面2D的接收图像的区域罢了）。所以，接下来我们实践一下。将视口配置为一个 400 x 200 的区域：</p>
+<pre data-lang="rust" style="background-color:#2b303b;color:#c0c5ce;" class="language-rust "><code class="language-rust" data-lang="rust"><span style="color:#b48ead;">fn </span><span style="color:#8fa1b3;">startup</span><span>(</span><span style="color:#b48ead;">mut </span><span style="color:#bf616a;">commands</span><span>: Commands, </span><span style="color:#bf616a;">asset_server</span><span>: Res&lt;AssetServer&gt;) {
+</span><span>    </span><span style="color:#65737e;">// add camera.
+</span><span>    commands.</span><span style="color:#96b5b4;">spawn</span><span>(
+</span><span>        Camera2dBundle {
+</span><span>            camera: Camera {
+</span><span>              	</span><span style="color:#65737e;">// 配置视口的代码
+</span><span>                viewport: Some(Viewport {
+</span><span>                    physical_position: UVec2::new(</span><span style="color:#d08770;">50</span><span>, </span><span style="color:#d08770;">50</span><span>),
+</span><span>                    physical_size: UVec2::new(</span><span style="color:#d08770;">400</span><span>, </span><span style="color:#d08770;">200</span><span>),
+</span><span>                    ..</span><span style="color:#96b5b4;">default</span><span>()
+</span><span>                }),
+</span><span>                ..</span><span style="color:#96b5b4;">default</span><span>()
+</span><span>            },
+</span><span>            ..</span><span style="color:#96b5b4;">default</span><span>()
+</span><span>        }
+</span><span>    );
+</span><span>    </span><span style="color:#65737e;">// then spawn Sprite.
+</span><span>		</span><span style="color:#65737e;">// ...
+</span><span>    </span><span style="color:#65737e;">// add another Sprite with img2.png
+</span><span> 		</span><span style="color:#65737e;">// ...
+</span><span>}
+</span></code></pre>
+<p>上述代码中，我们给对应的Camera配置了视口：在渲染目标（目前就是当前这个窗口）的左上角（50，50）位置开始，宽400，高200的矩形区域。在其余代码保持不变的情况下，运行该程序能够得到如下的效果：</p>
+<p><img src="https://static-res.zhen.wang/images/post/2024-09-26/090.png" alt="090" /></p>
+<p>此时，我们可以用一张图例来更加形象的表达上述目前的情形：</p>
+<p><img src="https://static-res.zhen.wang/images/post/2024-09-26/100.png" alt="100" /></p>
+<h2 id="guan-yu-2dshi-ti-de-wei-zhi-deng-chu-li">关于2D实体的位置等处理</h2>
+<p>实际上，如果你对上面的内容了解了以后，就很容易知道应该如何处理2D实体的位置、缩放等。一般来说，我们可以有两种方式：</p>
+<ol>
+<li>调整世界中的实体的变换</li>
+<li>调整摄像机的变换（transform）</li>
+</ol>
+<p>假设整个世界中只有一个带有变换组件（Transform）的实体，假设我们希望对这个物体旋转180度，我们即可对这个实体的变换组件进行180旋转变换，也可以对摄像机进行180度的旋转变换。不过，从Bevy这一层次来说，要控制某个实体的位置大小等，最直观的还是对这个实体本身进行变换。</p>
+<h1 id="duo-ge-camera">多个Camera</h1>
+<p>一般情况下，我们很容易的产生多个Camera：</p>
+<p><img src="https://static-res.zhen.wang/images/post/2024-09-26/110.png" alt="110" /></p>
+<p>在前面的代码基础上，我们又Spawn了另一个Camera，这个Camera的视口我们设置到了另一个区域。此时运行程序，我们会发现效果如下：</p>
+<p><img src="https://static-res.zhen.wang/images/post/2024-09-26/120.png" alt="120" /></p>
+<p>如果你理解了前面的视口流程图，那么这个地方也不难理解：两个摄像机都在“摄取”游戏世界中的2D内容，但由于两个摄像机有不同的视口配置，因此将摄取到的内容渲染到渲染目标上Window上的时候，会将内容渲染到不同的位置：</p>
+<p><img src="https://static-res.zhen.wang/images/post/2024-09-26/130.png" alt="130" /></p>
+<p>当然，从上图你会发现控制台有这样一句不断打印的警告：</p>
+<pre style="background-color:#2b303b;color:#c0c5ce;"><code><span>WARN bevy_render::camera::camera: Camera order ambiguities detected for active cameras with the following priorities: {(0, Some(Window(NormalizedWindowRef(Entity { index: 0, generation: 1 }))))}. To fix this, ensure there is exactly one Camera entity spawned with a given order for a given RenderTarget. Ambiguities should be resolved because either (1) multiple active cameras were spawned accidentally, which will result in rendering multiple instances of the scene or (2) for cases where multiple active cameras is intentional, ambiguities could result in unpredictable render results.
+</span></code></pre>
+<p>核心意思是，如果场景中存在多个Camera且对应的渲染对象都是一个（比如本例中的同一个Window），需要每一个Camera一个特定的顺序，否则这种歧义可能会造成不可预测的渲染结果（Bevy内部的机制导致的，这里不深究）。所以，为了消除这一警告，我们只需要为不同的Camera设置不同的<code>order</code>：</p>
+<p><img src="https://static-res.zhen.wang/images/post/2024-09-26/140.png" alt="140" /></p>
+<h2 id="bu-tong-de-she-xiang-ji-xuan-ran-bu-tong-de-shi-ti">不同的摄像机渲染不同的实体</h2>
+<p>有的时候，我们确实需要有多个Camera，且它们各自需要“摄取”并渲染不同的实体。此时，为了实现这个效果，我们需要引入一个组件：RenderLayer。</p>
+<p><img src="https://static-res.zhen.wang/images/post/2024-09-26/150.png" alt="150" /></p>
+<p>我们将第一个Camera对应的实体和img1对应的实体都添加了<code>RenderLayer::layer(1)</code>，标识摄像机将只会“摄取”layer为1的所有实体。同样的，我们针对第二个Camera和img2添加<code>RenderLayer::layer(2)</code>：</p>
+<p><img src="https://static-res.zhen.wang/images/post/2024-09-26/160.png" alt="160" /></p>
+<p>就绪以后，运行程序，我们能看到如下效果：</p>
+<p><img src="https://static-res.zhen.wang/images/post/2024-09-26/170.png" alt="170" /></p>
+<p>左上角视口的Camera#1，只摄取了img1的内容；而右边的Camera#2则只摄取了img2的内容。</p>
+<h2 id="guan-yu-duo-camerade-shi-ji-ying-yong">关于多Camera的实际应用</h2>
+<p>上述内容，我们介绍了多Camera的一些效果。那么对于多Camera有什么实际的应用呢？笔者能想到有：</p>
+<ol>
+<li>ui和游戏世界渲染的分离</li>
+<li>某些小地图的呈现</li>
+</ol>
+<p>对于第一点来说，最直观的就是，也许我们制作的游戏类似这样的布局：</p>
+<p><img src="https://static-res.zhen.wang/images/post/2024-09-26/180.png" alt="180" /></p>
+<p>上述是游戏《Caves of Quad》的游戏界面,整体来看，我们就完全可以使用2个以上的Camera来分别渲染左侧的游戏部分和右侧的状态部分。</p>
+<p>对于第二点来说，像CS2中的投掷物预览效果，就可以单独用一个Camera来呈现：</p>
+<p><img src="https://static-res.zhen.wang/images/post/2024-09-26/190.png" alt="190" /></p>
+<h1 id="xie-zai-zui-hou">写在最后</h1>
+<p>本文的代码仓库为：<a rel="noopener" target="_blank" href="https://github.com/w4ngzhen/bevy_examples">w4ngzhen/bevy_examples (github.com)</a>。同时，后续我会添加更多的示例供读者参考。</p>
+<h2 id="xiang-guan-yue-du-yi-ji-can-kao">相关阅读以及参考</h2>
+<p><a rel="noopener" target="_blank" href="https://bevy-cheatbook.github.io/graphics/camera.html">Cameras - Unofficial Bevy Cheat Book (bevy-cheatbook.github.io)</a></p>
+<p><a rel="noopener" target="_blank" href="https://github.com/bevyengine/bevy/tree/latest/examples">bevy/examples at latest · bevyengine/bevy (github.com)</a></p>
+
+    </div>
+</div>
+<script src="https://zhen.wang/libs/viewerjs@1.11.7/viewer.min.js"></script>
+<link rel="stylesheet" href="https://zhen.wang/libs/viewerjs@1.11.7/viewer.min.css"/>
+<script>
+  if (window.Viewer) {
+    document.querySelectorAll('img').forEach(img => {
+      new Viewer(img, {
+        inline: false,
+        navbar: false,
+        toolbar: {
+          zoomIn: 1,
+          zoomOut: 1,
+          reset: 1,
+          rotateLeft: 1,
+          rotateRight: 1,
+        },
+      });
+    });
+  }
+</script>
+
+
+</body>
+</html>

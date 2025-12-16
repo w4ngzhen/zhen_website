@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="utf-8">
+    <meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover"
+          name="viewport">
+    
+    
+    <!-- umami web analysis -->
+    <script defer src="https://zhen.wang/libs/umami/umami.script.js"
+            data-website-id="d66cfe03-f6b3-4aa0-baf8-728700db1b09"></script>
+    
+    
+    
+    <link rel="icon" type="image/png" sizes="16x16" href="https://zhen.wang/images/blog-site-icon.svg">
+    <link rel="icon" type="image/png" sizes="32x32" href="https://zhen.wang/images/blog-site-icon.svg">
+    <title>zhen&#x27;s everything</title>
+    <link rel="stylesheet" href="https://zhen.wang/style.css">
+    
+<link rel="stylesheet" href="https://zhen.wang/article_content.css">
+<link rel="stylesheet" href="https://zhen.wang/article_markdown.css">
+
+</head>
+<body>
+
+<div id="article">
+    <header class="article-header">
+        
+<div class="base-title">
+    <a href="#" onclick="history.length > 1 ? history.back() : location.href = '/'; return false;">&LeftArrow; Back</a>
+    <h1>
+        详解prettier使用以及与主流IDE的配合
+    </h1>
+</div>
+
+    </header>
+    <p class="article-date">2023-07-17</p>
+    
+    <!-- toc -->
+    <div class="article-toc">
+        <label class="toc-title" for="toc-trigger">目录</label>
+        <input id="toc-trigger" type="checkbox" checked/>
+        <div class="toc-content">
+            <ol class="toc">
+                
+                <li class="toc-item toc-level-1">
+                    <a class="toc-link" href="https://zhen.wang/article/详解prettier使用以及与主流IDE的配合/#prettiershi-shen-me">prettier是什么</a>
+                    
+                </li>
+                
+                <li class="toc-item toc-level-1">
+                    <a class="toc-link" href="https://zhen.wang/article/详解prettier使用以及与主流IDE的配合/#an-zhuang-prettier">安装prettier</a>
+                    
+                </li>
+                
+                <li class="toc-item toc-level-1">
+                    <a class="toc-link" href="https://zhen.wang/article/详解prettier使用以及与主流IDE的配合/#clishi-yong-prettier">CLI使用prettier</a>
+                    
+                </li>
+                
+                <li class="toc-item toc-level-1">
+                    <a class="toc-link" href="https://zhen.wang/article/详解prettier使用以及与主流IDE的配合/#zhu-liu-idezhong-shi-yong-prettier">主流IDE中使用prettier</a>
+                    
+                    <ol class="toc-child">
+                        
+                        <li class="toc-item toc-level-2">
+                            <a href="https://zhen.wang/article/详解prettier使用以及与主流IDE的配合/#ideahe-webstorm">IDEA和WebStorm</a>
+                        </li>
+                        
+                        <li class="toc-item toc-level-2">
+                            <a href="https://zhen.wang/article/详解prettier使用以及与主流IDE的配合/#vscode">VSCode</a>
+                        </li>
+                        
+                    </ol>
+                    
+                </li>
+                
+                <li class="toc-item toc-level-1">
+                    <a class="toc-link" href="https://zhen.wang/article/详解prettier使用以及与主流IDE的配合/#zong-jie">总结</a>
+                    
+                </li>
+                
+            </ol>
+        </div>
+    </div>
+    
+    <!-- real content -->
+    <div class="article-content markdown-content">
+        <p>很多前端小伙伴在日常使用prettier的时候都或多或少有一点疑惑，prettier在每一个IDE中究竟是怎样工作起来的，为什么配置有时候生效，有时又毫无效果。为了让我们的前端小伙伴更加熟悉这块，本文将对prettier在主流IDE中的使用过程一探究竟。</p>
+<span id="continue-reading"></span><h1 id="prettiershi-shen-me">prettier是什么</h1>
+<p>在介绍prettier如何集成到IDE中之前，让我们了解下prettier是什么。prettier是一款代码格式化工具：</p>
+<ul>
+<li>一个“有态度”的代码格式化工具</li>
+<li>支持大量编程语言</li>
+<li>已集成到大多数编辑器中</li>
+</ul>
+<p>它的基本使用过程如下：</p>
+<p><img src="https://static-res.zhen.wang/images/post/2023-07-17/010-prettier-arch-simple.png" alt="010-prettier-arch-simple" /></p>
+<p>正如上面的流程图所示，prettier不过就是一个安装在机器上的软件，它接收源代码，配合prettier的配置，完成对源代码的格式化。那么如何安装prettier呢？</p>
+<h1 id="an-zhuang-prettier">安装prettier</h1>
+<p>prettier实际上是通过js编写的node模块。它可以有两种方式进行安装：</p>
+<ol>
+<li>作为全局工具进行全局级别安装：<code>npm install -g prettier</code>。这种方式下，只要你配置过了全局包所在路径到环境变量，那么你就可以在命令行中使用<code>prettier</code>命令行调用它。</li>
+<li>作为某个前端项目进行项目级别安装：在某个项目下<code>npm install -D pretter</code>或是<code>yarn add -D prettier</code>。这种方式下，prettier作为项目级别安装，只会在你的node_modules下安装prettier的包。此时，<strong>在项目根目录下</strong>，你就可以通过调用<code>npx prettier</code>来调用它。</li>
+</ol>
+<p>无论是哪种方式，我们的最终目的都是要安装好这个工具，并能调用它。例如，本人以全局安装方式安装了prettier以后，在命令行就能访问到它：</p>
+<pre data-lang="bash" style="background-color:#2b303b;color:#c0c5ce;" class="language-bash "><code class="language-bash" data-lang="bash"><span style="color:#bf616a;">$</span><span> which prettier
+</span><span style="color:#bf616a;">/usr/local/bin/prettier
+</span><span style="color:#bf616a;">$</span><span> prettier</span><span style="color:#bf616a;"> --version
+</span><span style="color:#bf616a;">3.0.0
+</span></code></pre>
+<h1 id="clishi-yong-prettier">CLI使用prettier</h1>
+<p>为了简单使用prettier，我们创建一个名为<code>prettier-demo</code>的目录，在里面编写一个demo.js：</p>
+<p><img src="https://static-res.zhen.wang/images/post/2023-07-17/020-prettie-usage-demo.png" alt="020-prettie-usage-demo" /></p>
+<p>demo.js代码有两个格式问题：</p>
+<ol>
+<li><code>return 'tom'</code>之前的有太多的空格；</li>
+<li><code>getName</code>换行不对劲。</li>
+</ol>
+<p>进入prettier-demo目录以后，我们在项目根目录下使用如下的命令行进行操作：</p>
+<p><img src="https://static-res.zhen.wang/images/post/2023-07-17/030-prettie-check-and-format.png" alt="030-prettie-check-and-format" /></p>
+<ol>
+<li>（可选）使用<code>prettier -c ./demo.js</code>来检查一下当前的文档是否存在有代码样式问题。这里prettier告诉我们代码存在样式问题；</li>
+<li>使用<code>prettier ./demo.js</code>对代码进行格式化。这里prettier帮助我们进行格式化处理，并输出到了控制台。由于prettier默认是将格式化后的代码输入到控制台的，为了能够直接将格式化代码写回到源文件，需要添加<code>--write</code>命令行：<code>prettiter --write ./demo.js</code>。结果如下，会看到格式化后的代码：</li>
+</ol>
+<p><img src="https://static-res.zhen.wang/images/post/2023-07-17/040-prettier-code-formatted.png" alt="040-prettier-code-formatted" /></p>
+<p>当然，prettier格式化代码的时候，需要的配置项还有很多，例如：是否行尾添加分号；tab等于多少空格；字符串使用单引号还是双引号等等规则配置。尽管这些配置是可以通过命令行参数形式传递，但是一旦规则数量太多，命令行很明显不是一个好的方式，而更加优雅的方式则是使用配置文件：<a rel="noopener" target="_blank" href="https://prettier.io/docs/en/configuration.html">Configuration File · Prettier</a></p>
+<p>配置文件最简单的方式，就是在项目根目录下添加一个名为<code>.prettierrc.json</code>的文件，然后在其中编写配置。例如，在本例中，我们在prettier-demo项目根目录下创建名为<code>.prettierrc.json</code>文件，并编写如下的内容：</p>
+<pre data-lang="json" style="background-color:#2b303b;color:#c0c5ce;" class="language-json "><code class="language-json" data-lang="json"><span>{
+</span><span>  &quot;</span><span style="color:#a3be8c;">tabWidth</span><span>&quot;: </span><span style="color:#d08770;">4</span><span>,
+</span><span>  &quot;</span><span style="color:#a3be8c;">semi</span><span>&quot;: </span><span style="color:#d08770;">true</span><span>,
+</span><span>  &quot;</span><span style="color:#a3be8c;">singleQuote</span><span>&quot;: </span><span style="color:#d08770;">false
+</span><span>}
+</span></code></pre>
+<p><code>"tabWidth": 4</code>表明一个tab等同于4个空格；<code>"semi": true</code>表明使用分号结尾；<code>"singleQuote": false</code>表明字符串等使用双引号。</p>
+<blockquote>
+<p>注意！这里只是一个演示demo，并不是格式化规范的最佳实践。</p>
+</blockquote>
+<p>至此，我们的demo目录结构如下：</p>
+<pre style="background-color:#2b303b;color:#c0c5ce;"><code><span>~/projects/web-projects/prettier-demo/
+</span><span>  - .prettierrc.json
+</span><span>  - demo.js
+</span></code></pre>
+<p>有了这套配置，让我们再次格式化代码（<code>prettier --write ./demo.js</code>），会发现prettier按照我们的配置规则进行了代码格式化：</p>
+<p><img src="https://static-res.zhen.wang/images/post/2023-07-17/050-prettier-code-by-config-file.png" alt="050-prettier-code-by-config-file" /></p>
+<h1 id="zhu-liu-idezhong-shi-yong-prettier">主流IDE中使用prettier</h1>
+<p>上面介绍了如何以原生的方式使用prettier。然而一般来说，我们都会使用IDE来进行应用开发，我们很少会为了使用prettier的格式化功能专门使用命令行。还好，无论是JetBrains系的IDEA或WebStorm还是VSCode，都有对应的插件来调用prettier。它们的整体思路大体都是一样的：</p>
+<p><img src="https://static-res.zhen.wang/images/post/2023-07-17/060-IDE-plugin-prettier.png" alt="060-IDE-plugin-prettier" /></p>
+<ol>
+<li>IDE安装prettier插件；</li>
+<li>prettier插件调用prettier工具</li>
+</ol>
+<p>接下来我们详细介绍这两种主流IDE的pretter环境配置过程。</p>
+<h2 id="ideahe-webstorm">IDEA和WebStorm</h2>
+<p>在IDEA和WebStorm中（后续统一使用IDEA进行讲解，他们是一样的机制），我们首先安装prettier插件：</p>
+<p><img src="https://static-res.zhen.wang/images/post/2023-07-17/070-IDEA-prettier-plugin-install.png" alt="070-IDEA-prettier-plugin-install" /></p>
+<p>安装完成以后，我们需要给IDEA配置一下prettier插件：</p>
+<p>在配置 | Languages &amp; Frameworks | JavaScript | Prettier 中，我们可以配置IDEA关于prettier插件本身的配置：</p>
+<p><img src="https://static-res.zhen.wang/images/post/2023-07-17/080-IDEA-prettier-plugin-config-disable.png" alt="080-IDEA-prettier-plugin-config-disable" /></p>
+<p>在这里，主要有三种方式：</p>
+<p><strong>选项1：Disable Prettier 禁用prettier</strong>。也就是说不会调用prettier进行格式化；</p>
+<p><strong>选项2：Automatic Prettier configuration 自动配置</strong></p>
+<p><img src="https://static-res.zhen.wang/images/post/2023-07-17/090-IDEA-prettier-plugin-config-automatic.png" alt="090-IDEA-prettier-plugin-config-automatic" /></p>
+<p>对于这种方式，IDEA会首先搜索项目node_modules下安装的prettier以及在项目目录中能定位到的<code>.prettierrc.*</code>配置文件，这块主要是IDEA自动检测。同时，默认会对js、ts、jsx、tsx等等前端文件提供格式化支持。</p>
+<p><strong>方式3：Manual Prettier configuration 手动配置</strong></p>
+<p><img src="https://static-res.zhen.wang/images/post/2023-07-17/100-IDEA-prettier-plugin-config-manual.png" alt="100-IDEA-prettier-plugin-config-manual" /></p>
+<p>当我们选择手动配置的时候，需要我们手动的选择应该使用哪个prettier工具。由于本demo中，我们是通过<code>npm -g</code>全局安装的prettier，所以我们手动选择全局安装的prettier工具。同时，依然默认对js、ts、jsx、tsx等等前端文件提供格式化支持。</p>
+<p>当然，无论是自动配置、手动配置，我们还会发现下面有这样一项配置：<code>Run on save</code>，配置了它以后，我们在在保存文件的时候，就会自动进行格式化处理。如果不配置该选贤，则我们需要在打开源代码文件以后，右键选择使用prettier进行格式化：</p>
+<p><img src="https://static-res.zhen.wang/images/post/2023-07-17/110-IDEA-prettier-format-by-options.png" alt="110-IDEA-prettier-format-by-options" /></p>
+<h2 id="vscode">VSCode</h2>
+<p>在VSCode中，使用prettier的思路是一样的。首先，我们安装prettier插件：</p>
+<p><img src="https://static-res.zhen.wang/images/post/2023-07-17/120-vscode-prettier-plugin-install.png" alt="120-vscode-prettier-plugin-install" /></p>
+<p>安装完成以后，我们会看到右下角插件的安装结果：</p>
+<p><img src="https://static-res.zhen.wang/images/post/2023-07-17/130-vscode-plugin-install-tip.png" alt="130-vscode-plugin-install-tip" /></p>
+<p>右键代码 - Format Document With...，可以选择使用prettier进行格式化：</p>
+<p><img src="https://static-res.zhen.wang/images/post/2023-07-17/140-vscode-plugin-format.png" alt="140-vscode-plugin-format" /></p>
+<p>格式化以后，我们会看到插件的输出，能够更加仔细的查看处理过程：</p>
+<p><img src="https://static-res.zhen.wang/images/post/2023-07-17/150-vscode-plugin-output.png" alt="150-vscode-plugin-output" /></p>
+<h1 id="zong-jie">总结</h1>
+<p>本文主要介绍了prettier的使用以及在主流IDE中的使用，希望读者阅读本文以后，能够了解prettier与IDE如何进行配合。</p>
+
+    </div>
+</div>
+<script src="https://zhen.wang/libs/viewerjs@1.11.7/viewer.min.js"></script>
+<link rel="stylesheet" href="https://zhen.wang/libs/viewerjs@1.11.7/viewer.min.css"/>
+<script>
+  if (window.Viewer) {
+    document.querySelectorAll('img').forEach(img => {
+      new Viewer(img, {
+        inline: false,
+        navbar: false,
+        toolbar: {
+          zoomIn: 1,
+          zoomOut: 1,
+          reset: 1,
+          rotateLeft: 1,
+          rotateRight: 1,
+        },
+      });
+    });
+  }
+</script>
+
+
+</body>
+</html>

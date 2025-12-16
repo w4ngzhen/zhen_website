@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="utf-8">
+    <meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover"
+          name="viewport">
+    
+    
+    <!-- umami web analysis -->
+    <script defer src="https://zhen.wang/libs/umami/umami.script.js"
+            data-website-id="d66cfe03-f6b3-4aa0-baf8-728700db1b09"></script>
+    
+    
+    
+    <link rel="icon" type="image/png" sizes="16x16" href="https://zhen.wang/images/blog-site-icon.svg">
+    <link rel="icon" type="image/png" sizes="32x32" href="https://zhen.wang/images/blog-site-icon.svg">
+    <title>zhen&#x27;s everything</title>
+    <link rel="stylesheet" href="https://zhen.wang/style.css">
+    
+<link rel="stylesheet" href="https://zhen.wang/article_content.css">
+<link rel="stylesheet" href="https://zhen.wang/article_markdown.css">
+
+</head>
+<body>
+
+<div id="article">
+    <header class="article-header">
+        
+<div class="base-title">
+    <a href="#" onclick="history.length > 1 ? history.back() : location.href = '/'; return false;">&LeftArrow; Back</a>
+    <h1>
+        Spring自动装配歧义性笔记
+    </h1>
+</div>
+
+    </header>
+    <p class="article-date">2018-03-11</p>
+    
+    <!-- real content -->
+    <div class="article-content markdown-content">
+        <span id="continue-reading"></span>
+<p><a href="/2018/03/10/Spring-Bean%E8%A3%85%E9%85%8D%E7%AC%94%E8%AE%B0/">前情提要</a>，如果系统中存在两个都实现了同一接口的类，Spring在进行@Autowired自动装配的时候，会选择哪一个？如下：</p>
+<pre data-lang="java" style="background-color:#2b303b;color:#c0c5ce;" class="language-java "><code class="language-java" data-lang="java"><span style="color:#65737e;">// 一下两个类均被标记为bean
+</span><span>@</span><span style="color:#bf616a;">Component
+</span><span style="color:#b48ead;">public class </span><span style="color:#ebcb8b;">CD </span><span style="color:#b48ead;">implements </span><span style="color:#a3be8c;">Playable </span><span style="color:#eff1f5;">{
+</span><span style="color:#eff1f5;">    @</span><span style="color:#bf616a;">Override
+</span><span style="color:#eff1f5;">    </span><span style="color:#b48ead;">public void </span><span style="color:#8fa1b3;">play</span><span style="color:#eff1f5;">() {
+</span><span style="color:#eff1f5;">        </span><span style="color:#ebcb8b;">System</span><span style="color:#eff1f5;">.out.</span><span style="color:#bf616a;">println</span><span style="color:#eff1f5;">(</span><span>&quot;</span><span style="color:#a3be8c;">CD is playing...</span><span>&quot;</span><span style="color:#eff1f5;">);
+</span><span style="color:#eff1f5;">    }
+</span><span style="color:#eff1f5;">}
+</span><span>@</span><span style="color:#bf616a;">Component
+</span><span style="color:#b48ead;">public class </span><span style="color:#ebcb8b;">Video </span><span style="color:#b48ead;">implements </span><span style="color:#a3be8c;">Playable </span><span style="color:#eff1f5;">{
+</span><span style="color:#eff1f5;">    @</span><span style="color:#bf616a;">Override
+</span><span style="color:#eff1f5;">    </span><span style="color:#b48ead;">public void </span><span style="color:#8fa1b3;">play</span><span style="color:#eff1f5;">() {
+</span><span style="color:#eff1f5;">        </span><span style="color:#ebcb8b;">System</span><span style="color:#eff1f5;">.out.</span><span style="color:#bf616a;">println</span><span style="color:#eff1f5;">(</span><span>&quot;</span><span style="color:#a3be8c;">Video is playing...</span><span>&quot;</span><span style="color:#eff1f5;">);
+</span><span style="color:#eff1f5;">    }
+</span><span style="color:#eff1f5;">}
+</span><span>
+</span><span style="color:#65737e;">//配置类仅打开自动扫描
+</span><span>@</span><span style="color:#bf616a;">Configuration
+</span><span>@</span><span style="color:#bf616a;">ComponentScan</span><span>(</span><span style="color:#bf616a;">basePackages </span><span>= &quot;</span><span style="color:#a3be8c;">zhen</span><span>&quot;
+</span><span>public class </span><span style="color:#ebcb8b;">MyConfig </span><span>{
+</span><span>}
+</span><span>
+</span><span style="color:#65737e;">//测试类
+</span><span>@</span><span style="color:#bf616a;">RunWith</span><span>(</span><span style="color:#ebcb8b;">SpringJUnit4ClassRunner</span><span>.</span><span style="color:#bf616a;">class</span><span>)
+</span><span>@</span><span style="color:#bf616a;">ContextConfiguration</span><span>(</span><span style="color:#bf616a;">classes </span><span>= </span><span style="color:#ebcb8b;">MyConfig</span><span>.</span><span style="color:#bf616a;">class</span><span>)
+</span><span>public class </span><span style="color:#ebcb8b;">MyConfigTest </span><span>{
+</span><span>    @</span><span style="color:#bf616a;">Autowired
+</span><span>    </span><span style="color:#ebcb8b;">Playable</span><span> playable;
+</span><span>    @</span><span style="color:#bf616a;">Test
+</span><span>    </span><span style="color:#b48ead;">public</span><span> void </span><span style="color:#bf616a;">checkNULL</span><span>() {
+</span><span>        </span><span style="color:#ebcb8b;">Assert</span><span>.</span><span style="color:#bf616a;">assertNotNull</span><span>(playable);
+</span><span>    }
+</span><span>}
+</span></code></pre>
+<p>此时再次运行测试类会发现，FAILD并且报错：</p>
+<p>Unsatisfied dependency expressed through field 'playable'; nested exception is org.springframework.beans.factory.NoUniqueBeanDefinitionException: No qualifying bean of type 'zhen.Playable' available: <strong>expected single matching bean but found 2: CD,video</strong> //  找到了两个都bean都能匹配</p>
+<p><strong>自动装配歧义性问题</strong></p>
+<p>上面的异常就是出现了歧义性。Spring为我们扫描了我们代码中的bean（这个部分是没有问题的），但是，在自动装配的过程中却由于歧义性而报错，并且，造成这样的歧义性还有由于Autowired这个注解仅仅按照类型进行装配——上面的CD与Video都实现了Playable接口，Autowired注解仅告诉Spring在测试类中的playable接受一个Playable类型的对象但是这里有两个bean：CD、video都是Playable类型的，所以Spring不知道。</p>
+<p>为了解决这个问题，我们需要通过一定的手段来限定：</p>
+<pre style="background-color:#2b303b;color:#c0c5ce;"><code><span>声明首选的bean
+</span><span>限定自动转配的bean
+</span></code></pre>
+<p><strong>声明首选的bean</strong></p>
+<p>根据名字我们很容易理解，就是声明在有歧义性情况下，Spring到底选择哪一个bean来装配。方式就是在bean组件下添加@Primary注解,例如在原先的CD的@Component下加上首选注解，再次运行测试代码，PASS。但是，这种方式通常只在同类型bean较少的或者是系统简单的情况使用，而且还存在一个情况：假如目前有两位开发人员，在各自的环境编写bean，他们都希望自己的bean是Primary的，都加该注解，实际上还是会报错，因为系统现在同样有两个Primary bean，Spring还是不能判断选择哪一个bean注入。</p>
+<p><strong>限定自动装配的bean——@Qualifier注解</strong></p>
+<p>首先，我们可以通过在@Component中加入字符串来更明确的指定bean id而不是使用Spring的默认bean id策略。就像如下：</p>
+<pre data-lang="java" style="background-color:#2b303b;color:#c0c5ce;" class="language-java "><code class="language-java" data-lang="java"><span>@</span><span style="color:#bf616a;">Component</span><span>(&quot;</span><span style="color:#a3be8c;">myCD</span><span>&quot;)
+</span><span style="color:#b48ead;">public class </span><span style="color:#ebcb8b;">CD </span><span style="color:#b48ead;">implements </span><span style="color:#a3be8c;">Playable </span><span style="color:#eff1f5;">{
+</span><span style="color:#eff1f5;">    </span><span style="color:#65737e;">// ...
+</span><span style="color:#eff1f5;">}
+</span><span>@</span><span style="color:#bf616a;">Component</span><span>(&quot;</span><span style="color:#a3be8c;">myVideo</span><span>&quot;)
+</span><span style="color:#b48ead;">public class </span><span style="color:#ebcb8b;">Video </span><span style="color:#b48ead;">implements </span><span style="color:#a3be8c;">Playable </span><span style="color:#eff1f5;">{
+</span><span style="color:#eff1f5;">    </span><span style="color:#65737e;">// ...
+</span><span style="color:#eff1f5;">}
+</span></code></pre>
+<p>当这样指定以后，我们在自动转配的地方，使用@Qualifier("指定id")来限定我们要注入的确定的bean：</p>
+<pre data-lang="java" style="background-color:#2b303b;color:#c0c5ce;" class="language-java "><code class="language-java" data-lang="java"><span>  ...
+</span><span>    @</span><span style="color:#bf616a;">Autowired
+</span><span>    @</span><span style="color:#bf616a;">Qualifier</span><span>(&quot;</span><span style="color:#a3be8c;">myCD</span><span>&quot;)
+</span><span>    </span><span style="color:#ebcb8b;">Playable</span><span> playable;
+</span><span>  ...
+</span></code></pre>
+<p>再次运行不会报错。</p>
+<p>关于@Qualifier，最佳的情形应该是来标记bean特性。但是，如果多个bean都有相同的特性，都是用了相同的标记的@Qualifier注解，那么同样又会出现歧义性问题。所以我们又要添加新的@Qualifier注解来进一步限定，这样做没有问题，但是Java语法规定，不允许在同一条目上重复出现相同类型的多个注解。你<strong>不能</strong>这么做：</p>
+<pre data-lang="java" style="background-color:#2b303b;color:#c0c5ce;" class="language-java "><code class="language-java" data-lang="java"><span style="color:#65737e;">// 编译器会报错
+</span><span>@</span><span style="color:#bf616a;">Qualifier</span><span>(&quot;</span><span style="color:#a3be8c;">myCD</span><span>&quot;)
+</span><span>@</span><span style="color:#bf616a;">Qaulifier</span><span>(&quot;</span><span style="color:#a3be8c;">JayChou</span><span>&quot;)
+</span><span style="color:#b48ead;">public class </span><span style="color:#ebcb8b;">CD </span><span style="color:#b48ead;">implements </span><span style="color:#a3be8c;">Playable </span><span style="color:#eff1f5;">{
+</span><span style="color:#eff1f5;">  ...
+</span><span style="color:#eff1f5;">}
+</span></code></pre>
+<p>为了结局这样的问题，我们可以创建自己的注解：</p>
+<pre data-lang="java" style="background-color:#2b303b;color:#c0c5ce;" class="language-java "><code class="language-java" data-lang="java"><span>@</span><span style="color:#bf616a;">Target</span><span>({</span><span style="color:#ebcb8b;">ElementType</span><span>.</span><span style="color:#d08770;">FIELD</span><span>, </span><span style="color:#ebcb8b;">ElementType</span><span>.</span><span style="color:#d08770;">CONSTRUCTOR</span><span>, </span><span style="color:#ebcb8b;">ElementType</span><span>.</span><span style="color:#d08770;">TYPE</span><span>, </span><span style="color:#ebcb8b;">ElementType</span><span>.</span><span style="color:#d08770;">METHOD</span><span>}) </span><span style="color:#65737e;">//字段注解  
+</span><span>@</span><span style="color:#bf616a;">Retention</span><span>(</span><span style="color:#ebcb8b;">RetentionPolicy</span><span>.</span><span style="color:#d08770;">RUNTIME</span><span>) </span><span style="color:#65737e;">//在运行期保留注解信息
+</span><span>@</span><span style="color:#bf616a;">Qualifier </span><span style="color:#65737e;">// 需要使用@Qualifier注解来限定
+</span><span style="color:#b48ead;">public @interface </span><span style="color:#ebcb8b;">MyCD </span><span style="color:#eff1f5;">{
+</span><span style="color:#eff1f5;">}
+</span><span>@</span><span style="color:#bf616a;">Target</span><span>({</span><span style="color:#ebcb8b;">ElementType</span><span>.</span><span style="color:#d08770;">FIELD</span><span>, </span><span style="color:#ebcb8b;">ElementType</span><span>.</span><span style="color:#d08770;">CONSTRUCTOR</span><span>, </span><span style="color:#ebcb8b;">ElementType</span><span>.</span><span style="color:#d08770;">TYPE</span><span>, </span><span style="color:#ebcb8b;">ElementType</span><span>.</span><span style="color:#d08770;">METHOD</span><span>})
+</span><span>@</span><span style="color:#bf616a;">Retention</span><span>(</span><span style="color:#ebcb8b;">RetentionPolicy</span><span>.</span><span style="color:#d08770;">RUNTIME</span><span>)
+</span><span>@</span><span style="color:#bf616a;">Qualifier
+</span><span style="color:#b48ead;">public @interface </span><span style="color:#ebcb8b;">JayChou </span><span style="color:#eff1f5;">{
+</span><span style="color:#eff1f5;">}
+</span></code></pre>
+<p>如此定义了注解以后，我们就可以在原先的@Component下如下定义：</p>
+<pre data-lang="java" style="background-color:#2b303b;color:#c0c5ce;" class="language-java "><code class="language-java" data-lang="java"><span>@</span><span style="color:#bf616a;">Component
+</span><span>@</span><span style="color:#bf616a;">MyCD
+</span><span>@</span><span style="color:#bf616a;">JayChou
+</span><span style="color:#b48ead;">public class </span><span style="color:#ebcb8b;">CD </span><span style="color:#b48ead;">implements </span><span style="color:#a3be8c;">Playable </span><span style="color:#eff1f5;">{
+</span><span style="color:#eff1f5;">  ...
+</span><span style="color:#eff1f5;">}
+</span></code></pre>
+<p>并且在测试类下如下声明：</p>
+<pre data-lang="java" style="background-color:#2b303b;color:#c0c5ce;" class="language-java "><code class="language-java" data-lang="java"><span>    @</span><span style="color:#bf616a;">Autowired
+</span><span>    @</span><span style="color:#bf616a;">MyCD
+</span><span>    @</span><span style="color:#bf616a;">JayChou
+</span><span>    </span><span style="color:#ebcb8b;">Playable</span><span> playable;
+</span></code></pre>
+<p>测试通过！</p>
+
+    </div>
+</div>
+<script src="https://zhen.wang/libs/viewerjs@1.11.7/viewer.min.js"></script>
+<link rel="stylesheet" href="https://zhen.wang/libs/viewerjs@1.11.7/viewer.min.css"/>
+<script>
+  if (window.Viewer) {
+    document.querySelectorAll('img').forEach(img => {
+      new Viewer(img, {
+        inline: false,
+        navbar: false,
+        toolbar: {
+          zoomIn: 1,
+          zoomOut: 1,
+          reset: 1,
+          rotateLeft: 1,
+          rotateRight: 1,
+        },
+      });
+    });
+  }
+</script>
+
+
+</body>
+</html>

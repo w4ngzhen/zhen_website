@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="utf-8">
+    <meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover"
+          name="viewport">
+    
+    
+    <!-- umami web analysis -->
+    <script defer src="https://zhen.wang/libs/umami/umami.script.js"
+            data-website-id="d66cfe03-f6b3-4aa0-baf8-728700db1b09"></script>
+    
+    
+    
+    <link rel="icon" type="image/png" sizes="16x16" href="https://zhen.wang/images/blog-site-icon.svg">
+    <link rel="icon" type="image/png" sizes="32x32" href="https://zhen.wang/images/blog-site-icon.svg">
+    <title>zhen&#x27;s everything</title>
+    <link rel="stylesheet" href="https://zhen.wang/style.css">
+    
+<link rel="stylesheet" href="https://zhen.wang/article_content.css">
+<link rel="stylesheet" href="https://zhen.wang/article_markdown.css">
+
+</head>
+<body>
+
+<div id="article">
+    <header class="article-header">
+        
+<div class="base-title">
+    <a href="#" onclick="history.length > 1 ? history.back() : location.href = '/'; return false;">&LeftArrow; Back</a>
+    <h1>
+        Java枚举细节
+    </h1>
+</div>
+
+    </header>
+    <p class="article-date">2018-05-18</p>
+    
+    <!-- toc -->
+    <div class="article-toc">
+        <label class="toc-title" for="toc-trigger">目录</label>
+        <input id="toc-trigger" type="checkbox" checked/>
+        <div class="toc-content">
+            <ol class="toc">
+                
+                <li class="toc-item toc-level-1">
+                    <a class="toc-link" href="https://zhen.wang/article/Java枚举细节/#mei-ju-de-jian-dan-shi-yong">枚举的简单使用</a>
+                    
+                </li>
+                
+                <li class="toc-item toc-level-1">
+                    <a class="toc-link" href="https://zhen.wang/article/Java枚举细节/#mei-ju-de-ben-zhi">枚举的本质</a>
+                    
+                </li>
+                
+                <li class="toc-item toc-level-1">
+                    <a class="toc-link" href="https://zhen.wang/article/Java枚举细节/#wei-shen-me-mei-ju-gou-zao-qi-bu-neng-fang-wen-mei-ju-de-jing-tai-yu">为什么枚举构造器不能访问枚举的静态域</a>
+                    
+                </li>
+                
+                <li class="toc-item toc-level-1">
+                    <a class="toc-link" href="https://zhen.wang/article/Java枚举细节/#shi-yong-chou-xiang-han-shu-wei-mei-ju-tong-yi-fang-fa">使用抽象函数为枚举统一方法</a>
+                    
+                </li>
+                
+            </ol>
+        </div>
+    </div>
+    
+    <!-- real content -->
+    <div class="article-content markdown-content">
+        <span id="continue-reading"></span><h4 id="mei-ju-de-jian-dan-shi-yong">枚举的简单使用</h4>
+<p>在java中，我们可以使用enum关键字来定义枚举：</p>
+<pre data-lang="java" style="background-color:#2b303b;color:#c0c5ce;" class="language-java "><code class="language-java" data-lang="java"><span style="color:#b48ead;">public enum </span><span style="color:#ebcb8b;">Color </span><span style="color:#eff1f5;">{
+</span><span style="color:#eff1f5;">    </span><span style="color:#d08770;">RED</span><span style="color:#eff1f5;">, </span><span style="color:#d08770;">GREEN</span><span style="color:#eff1f5;">, </span><span style="color:#d08770;">BLUE</span><span style="color:#eff1f5;">;
+</span><span style="color:#eff1f5;">}
+</span></code></pre>
+<p>就像上面一样，我们定义了一个名为Color的枚举类，包含了RED、GREEN、BLUE三个常量。当我们使用枚举类的时候，直接通过枚举类名.枚举常量即可。就像如下的形式：</p>
+<pre data-lang="java" style="background-color:#2b303b;color:#c0c5ce;" class="language-java "><code class="language-java" data-lang="java"><span>void </span><span style="color:#bf616a;">f</span><span>(</span><span style="color:#ebcb8b;">Color</span><span> c) {
+</span><span>    </span><span style="color:#b48ead;">switch </span><span>(c) {
+</span><span>        </span><span style="color:#b48ead;">case </span><span style="color:#d08770;">RED</span><span>: </span><span style="color:#ebcb8b;">System</span><span>.out.</span><span style="color:#bf616a;">println</span><span>(&quot;</span><span style="color:#a3be8c;">It&#39;s RED</span><span>&quot;); </span><span style="color:#b48ead;">break</span><span>;
+</span><span>        </span><span style="color:#b48ead;">case </span><span style="color:#d08770;">GREEN</span><span>: </span><span style="color:#ebcb8b;">System</span><span>.out.</span><span style="color:#bf616a;">println</span><span>(&quot;</span><span style="color:#a3be8c;">It&#39;s GREEN</span><span>&quot;); </span><span style="color:#b48ead;">break</span><span>;
+</span><span>        </span><span style="color:#b48ead;">default</span><span>: </span><span style="color:#ebcb8b;">System</span><span>.out.</span><span style="color:#bf616a;">println</span><span>(&quot;</span><span style="color:#a3be8c;">It&#39;s BLUE</span><span>&quot;);
+</span><span>    }
+</span><span>}
+</span><span style="color:#65737e;">// 调用
+</span><span style="color:#bf616a;">f</span><span>(</span><span style="color:#ebcb8b;">Color</span><span>.</span><span style="color:#d08770;">RED</span><span>);
+</span><span style="color:#65737e;">// 输出 &quot;It&#39;s RED&quot;
+</span></code></pre>
+<h4 id="mei-ju-de-ben-zhi">枚举的本质</h4>
+<p>虽然Java提供枚举类的定义，但是实际上他并不是Java中一个新的对象类型，我们通过对Color枚举类进行反编译，得到如下的反编译结果：</p>
+<pre data-lang="java" style="background-color:#2b303b;color:#c0c5ce;" class="language-java "><code class="language-java" data-lang="java"><span>$ javap </span><span style="color:#ebcb8b;">Color</span><span>.</span><span style="color:#bf616a;">class 
+</span><span style="color:#65737e;">// 反编译结果
+</span><span style="color:#ebcb8b;">Compiled</span><span> from &quot;</span><span style="color:#a3be8c;">Color.java</span><span>&quot;
+</span><span style="color:#b48ead;">public final class </span><span style="color:#ebcb8b;">EnumerationAndAnnotation</span><span>.</span><span style="color:#ebcb8b;">Color</span><span> extends java.lang.</span><span style="color:#ebcb8b;">Enum</span><span>&lt;</span><span style="color:#ebcb8b;">EnumerationAndAnnotation</span><span>.</span><span style="color:#ebcb8b;">Color</span><span>&gt; {
+</span><span>  </span><span style="color:#b48ead;">public static final </span><span style="color:#ebcb8b;">EnumerationAndAnnotation</span><span>.</span><span style="color:#ebcb8b;">Color </span><span style="color:#d08770;">RED</span><span>;
+</span><span>  </span><span style="color:#b48ead;">public static final </span><span style="color:#ebcb8b;">EnumerationAndAnnotation</span><span>.</span><span style="color:#ebcb8b;">Color </span><span style="color:#d08770;">GREEN</span><span>;
+</span><span>  </span><span style="color:#b48ead;">public static final </span><span style="color:#ebcb8b;">EnumerationAndAnnotation</span><span>.</span><span style="color:#ebcb8b;">Color </span><span style="color:#d08770;">BLUE</span><span>;
+</span><span>  </span><span style="color:#b48ead;">public static </span><span style="color:#ebcb8b;">EnumerationAndAnnotation</span><span>.</span><span style="color:#ebcb8b;">Color</span><span style="color:#b48ead;">[] </span><span style="color:#bf616a;">values</span><span>();
+</span><span>  </span><span style="color:#b48ead;">public static </span><span style="color:#ebcb8b;">EnumerationAndAnnotation</span><span>.</span><span style="color:#ebcb8b;">Color </span><span style="color:#bf616a;">valueOf</span><span>(java.lang.</span><span style="color:#ebcb8b;">String</span><span>);
+</span><span>  </span><span style="color:#b48ead;">static </span><span>{};
+</span><span>}
+</span></code></pre>
+<p>我们可以看到，枚举类实际上在编译的过程中，被编译器进行调整，它并不是一个新的类型，本质上依然是一个类（Color），这个类继承了java.lang.Enum<T>，而对于每一个枚举常量，实际上是public static final修饰的枚举类的静态实例对象。</p>
+<p>同时注意，编译器会为我们添加两个新的static方法：values() 和 valueOf(java.lang.String)，其实分别作用是返回枚举类中定义的所有的枚举常量，以及根据枚举名来获取枚举常量（注意，这里就是定义枚举常量的枚举名）。</p>
+<p>当然，由于每一个枚举常量实际上是实现了java.lang.Enum<T>的枚举类的一个静态实例对象，而这个过程是编译器为我们进行的，所以，自然，我们可以在枚举类中定义任何的方法、变量，以及构造函数的定义：</p>
+<pre data-lang="java" style="background-color:#2b303b;color:#c0c5ce;" class="language-java "><code class="language-java" data-lang="java"><span style="color:#b48ead;">public enum </span><span style="color:#ebcb8b;">Color </span><span style="color:#eff1f5;">{
+</span><span style="color:#eff1f5;">    </span><span style="color:#d08770;">RED</span><span style="color:#eff1f5;">(</span><span>&quot;</span><span style="color:#a3be8c;">RED</span><span>&quot;</span><span style="color:#eff1f5;">), </span><span style="color:#d08770;">GREEN</span><span style="color:#eff1f5;">(</span><span>&quot;</span><span style="color:#a3be8c;">GREEN</span><span>&quot;</span><span style="color:#eff1f5;">), </span><span style="color:#d08770;">BLUE</span><span style="color:#eff1f5;">(</span><span>&quot;</span><span style="color:#a3be8c;">BLUE</span><span>&quot;</span><span style="color:#eff1f5;">);
+</span><span style="color:#eff1f5;">    
+</span><span style="color:#eff1f5;">    </span><span style="color:#65737e;">// 定义类中的实例变量
+</span><span style="color:#eff1f5;">    </span><span style="color:#b48ead;">private </span><span style="color:#ebcb8b;">String </span><span style="color:#eff1f5;">colorName;
+</span><span style="color:#eff1f5;">    </span><span style="color:#65737e;">// 定义构造函数，注意上面的枚举常量必须满足这种构造方式
+</span><span style="color:#eff1f5;">    </span><span style="color:#8fa1b3;">Color</span><span style="color:#eff1f5;">(</span><span style="color:#ebcb8b;">String </span><span style="color:#bf616a;">colorName</span><span style="color:#eff1f5;">) {
+</span><span style="color:#eff1f5;">        </span><span style="color:#bf616a;">this</span><span style="color:#eff1f5;">.colorName </span><span>=</span><span style="color:#eff1f5;"> colorName;
+</span><span style="color:#eff1f5;">    }
+</span><span style="color:#eff1f5;">    </span><span style="color:#65737e;">// 定义实例对象的方法
+</span><span style="color:#eff1f5;">    </span><span style="color:#b48ead;">public void </span><span style="color:#8fa1b3;">printColorName</span><span style="color:#eff1f5;">() {
+</span><span style="color:#eff1f5;">        </span><span style="color:#ebcb8b;">System</span><span style="color:#eff1f5;">.out.</span><span style="color:#bf616a;">println</span><span style="color:#eff1f5;">(</span><span>&quot;</span><span style="color:#a3be8c;">Color name is </span><span>&quot; +</span><span style="color:#eff1f5;"> colorName);
+</span><span style="color:#eff1f5;">    }
+</span><span style="color:#eff1f5;">    </span><span style="color:#65737e;">// 重写toString方法
+</span><span style="color:#eff1f5;">    @</span><span style="color:#bf616a;">Override
+</span><span style="color:#eff1f5;">    </span><span style="color:#b48ead;">public </span><span style="color:#ebcb8b;">String </span><span style="color:#8fa1b3;">toString</span><span style="color:#eff1f5;">() {
+</span><span style="color:#eff1f5;">        </span><span style="color:#b48ead;">return</span><span style="color:#eff1f5;"> colorName;
+</span><span style="color:#eff1f5;">    }
+</span><span style="color:#eff1f5;">}
+</span></code></pre>
+<p>自然，我们可以枚举常量当作一个枚举的实例化对象，调用枚举类中的方法：</p>
+<pre data-lang="java" style="background-color:#2b303b;color:#c0c5ce;" class="language-java "><code class="language-java" data-lang="java"><span style="color:#b48ead;">public static</span><span> void </span><span style="color:#bf616a;">main</span><span>(</span><span style="color:#ebcb8b;">String</span><span style="color:#b48ead;">[]</span><span> args) {
+</span><span>    </span><span style="color:#ebcb8b;">System</span><span>.out.</span><span style="color:#bf616a;">println</span><span>(</span><span style="color:#ebcb8b;">Color</span><span>.</span><span style="color:#d08770;">RED</span><span>); </span><span style="color:#65737e;">// RED
+</span><span>    </span><span style="color:#ebcb8b;">Color</span><span>.</span><span style="color:#d08770;">RED</span><span>.</span><span style="color:#bf616a;">printColorName</span><span>();	</span><span style="color:#65737e;">// Color name is RED
+</span><span>}
+</span></code></pre>
+<h4 id="wei-shen-me-mei-ju-gou-zao-qi-bu-neng-fang-wen-mei-ju-de-jing-tai-yu">为什么枚举构造器不能访问枚举的静态域</h4>
+<p>查看下面这段代码：</p>
+<pre data-lang="java" style="background-color:#2b303b;color:#c0c5ce;" class="language-java "><code class="language-java" data-lang="java"><span style="color:#b48ead;">public enum </span><span style="color:#ebcb8b;">Color </span><span style="color:#eff1f5;">{
+</span><span style="color:#eff1f5;">    </span><span style="color:#d08770;">RED</span><span style="color:#eff1f5;">, </span><span style="color:#d08770;">GREEN</span><span style="color:#eff1f5;">, </span><span style="color:#d08770;">BLUE</span><span style="color:#eff1f5;">;
+</span><span style="color:#eff1f5;">    </span><span style="color:#b48ead;">private static int </span><span style="color:#eff1f5;">value </span><span>= </span><span style="color:#d08770;">0</span><span style="color:#eff1f5;">;
+</span><span style="color:#eff1f5;">    </span><span style="color:#8fa1b3;">Color</span><span style="color:#eff1f5;">() {
+</span><span style="color:#eff1f5;">        </span><span style="color:#ebcb8b;">System</span><span style="color:#eff1f5;">.out.</span><span style="color:#bf616a;">println</span><span style="color:#eff1f5;">(value); </span><span style="color:#65737e;">// 编译错误！构造器无法访问静态变量
+</span><span style="color:#eff1f5;">    }
+</span><span style="color:#eff1f5;">}
+</span></code></pre>
+<p>我们可以看到这里编译不通过，提示我们<strong>枚举构造器</strong>不能够访问枚举的静态域（以及静态变量）。我们知道，一般的类中，静态域以及静态变量是优于实例对象的变量、方法的初始化的。这里简要复习一下类中变量的加载机制：</p>
+<pre data-lang="java" style="background-color:#2b303b;color:#c0c5ce;" class="language-java "><code class="language-java" data-lang="java"><span style="color:#65737e;">// 辅助静态变量的初始化
+</span><span style="color:#b48ead;">class </span><span style="color:#ebcb8b;">Init </span><span style="color:#eff1f5;">{
+</span><span style="color:#eff1f5;">    </span><span style="color:#b48ead;">public </span><span style="color:#8fa1b3;">Init</span><span style="color:#eff1f5;">(</span><span style="color:#ebcb8b;">String </span><span style="color:#bf616a;">init</span><span style="color:#eff1f5;">) {
+</span><span style="color:#eff1f5;">        </span><span style="color:#ebcb8b;">System</span><span style="color:#eff1f5;">.out.</span><span style="color:#bf616a;">println</span><span style="color:#eff1f5;">(</span><span>&quot;</span><span style="color:#a3be8c;">Init()</span><span>&quot; +</span><span style="color:#eff1f5;"> init);
+</span><span style="color:#eff1f5;">    }
+</span><span style="color:#eff1f5;">}
+</span><span style="color:#b48ead;">class </span><span style="color:#ebcb8b;">Fa </span><span style="color:#eff1f5;">{
+</span><span style="color:#eff1f5;">    </span><span style="color:#65737e;">// 父类静态变量
+</span><span style="color:#eff1f5;">    </span><span style="color:#b48ead;">static final </span><span style="color:#ebcb8b;">Init </span><span style="color:#eff1f5;">initFa </span><span>= </span><span style="color:#b48ead;">new </span><span style="color:#ebcb8b;">Init</span><span style="color:#eff1f5;">(</span><span>&quot;</span><span style="color:#a3be8c;">Fa&#39;s static</span><span>&quot;</span><span style="color:#eff1f5;">);
+</span><span style="color:#eff1f5;">    </span><span style="color:#65737e;">// 父类实例变量
+</span><span style="color:#eff1f5;">    </span><span style="color:#ebcb8b;">Init </span><span style="color:#eff1f5;">initFa2 </span><span>= </span><span style="color:#b48ead;">new </span><span style="color:#ebcb8b;">Init</span><span style="color:#eff1f5;">(</span><span>&quot;</span><span style="color:#a3be8c;">Fa&#39;s no static</span><span>&quot;</span><span style="color:#eff1f5;">);
+</span><span style="color:#eff1f5;">    </span><span style="color:#65737e;">// 父类静态域
+</span><span style="color:#eff1f5;">    </span><span style="color:#b48ead;">static </span><span style="color:#eff1f5;">{
+</span><span style="color:#eff1f5;">        </span><span style="color:#ebcb8b;">System</span><span style="color:#eff1f5;">.out.</span><span style="color:#bf616a;">println</span><span style="color:#eff1f5;">(</span><span>&quot;</span><span style="color:#a3be8c;">Fa&#39;s static</span><span>&quot;</span><span style="color:#eff1f5;">);
+</span><span style="color:#eff1f5;">    }
+</span><span style="color:#eff1f5;">    </span><span style="color:#65737e;">// 父类构造方法
+</span><span style="color:#eff1f5;">    </span><span style="color:#8fa1b3;">Fa</span><span style="color:#eff1f5;">() {
+</span><span style="color:#eff1f5;">        </span><span style="color:#ebcb8b;">System</span><span style="color:#eff1f5;">.out.</span><span style="color:#bf616a;">println</span><span style="color:#eff1f5;">(</span><span>&quot;</span><span style="color:#a3be8c;">Fa()</span><span>&quot;</span><span style="color:#eff1f5;">);
+</span><span style="color:#eff1f5;">    }
+</span><span style="color:#eff1f5;">}
+</span><span style="color:#b48ead;">class </span><span style="color:#ebcb8b;">Su </span><span style="color:#b48ead;">extends </span><span style="color:#a3be8c;">Fa </span><span style="color:#eff1f5;">{
+</span><span style="color:#eff1f5;">    </span><span style="color:#65737e;">// 子类静态域
+</span><span style="color:#eff1f5;">    </span><span style="color:#b48ead;">static </span><span style="color:#eff1f5;">{
+</span><span style="color:#eff1f5;">        </span><span style="color:#ebcb8b;">System</span><span style="color:#eff1f5;">.out.</span><span style="color:#bf616a;">println</span><span style="color:#eff1f5;">(</span><span>&quot;</span><span style="color:#a3be8c;">Su&#39;s static</span><span>&quot;</span><span style="color:#eff1f5;">);
+</span><span style="color:#eff1f5;">    }
+</span><span style="color:#eff1f5;">    </span><span style="color:#65737e;">// 子类静态变量
+</span><span style="color:#eff1f5;">    </span><span style="color:#b48ead;">static final </span><span style="color:#ebcb8b;">Init </span><span style="color:#eff1f5;">initSu </span><span>= </span><span style="color:#b48ead;">new </span><span style="color:#ebcb8b;">Init</span><span style="color:#eff1f5;">(</span><span>&quot;</span><span style="color:#a3be8c;">Su&#39;s static</span><span>&quot;</span><span style="color:#eff1f5;">);
+</span><span style="color:#eff1f5;">    </span><span style="color:#65737e;">// 子类实例变量
+</span><span style="color:#eff1f5;">    </span><span style="color:#ebcb8b;">Init </span><span style="color:#eff1f5;">initSu2 </span><span>= </span><span style="color:#b48ead;">new </span><span style="color:#ebcb8b;">Init</span><span style="color:#eff1f5;">(</span><span>&quot;</span><span style="color:#a3be8c;">Su&#39;s no static</span><span>&quot;</span><span style="color:#eff1f5;">);
+</span><span style="color:#eff1f5;">    </span><span style="color:#65737e;">// 子类构造函数
+</span><span style="color:#eff1f5;">    </span><span style="color:#8fa1b3;">Su</span><span style="color:#eff1f5;">() {
+</span><span style="color:#eff1f5;">        </span><span style="color:#ebcb8b;">System</span><span style="color:#eff1f5;">.out.</span><span style="color:#bf616a;">println</span><span style="color:#eff1f5;">(</span><span>&quot;</span><span style="color:#a3be8c;">Su()</span><span>&quot;</span><span style="color:#eff1f5;">);
+</span><span style="color:#eff1f5;">    }
+</span><span style="color:#eff1f5;">}
+</span></code></pre>
+<p>接下来，我们new出Su实例对象，并观察输出结果：</p>
+<pre data-lang="java" style="background-color:#2b303b;color:#c0c5ce;" class="language-java "><code class="language-java" data-lang="java"><span style="color:#b48ead;">public static</span><span> void </span><span style="color:#bf616a;">main</span><span>(</span><span style="color:#ebcb8b;">String</span><span style="color:#b48ead;">[]</span><span> args) {
+</span><span>    </span><span style="color:#b48ead;">new </span><span style="color:#ebcb8b;">Su</span><span>();
+</span><span>}
+</span><span style="color:#65737e;">/* 输出
+</span><span style="color:#65737e;">Init()Fa&#39;s static 	// 1
+</span><span style="color:#65737e;">Fa&#39;s static			// 2
+</span><span style="color:#65737e;">Su&#39;s static			// 3
+</span><span style="color:#65737e;">Init()Su&#39;s static	// 4
+</span><span style="color:#65737e;">Init()Fa&#39;s no static// 5
+</span><span style="color:#65737e;">Fa()				// 6
+</span><span style="color:#65737e;">Init()Su&#39;s no static// 7
+</span><span style="color:#65737e;">Su()				// 8
+</span><span style="color:#65737e;">*/
+</span></code></pre>
+<p>我们可以看到，有static修饰的始终优于实例对象的相关的初始化的，在输出中 1 - 4 是static修饰部分，5 - 8是实例域部分。此外，在继承情形下，父类由于子，输出中 1- 2 是父类static域的初始化，3 - 4 是子类static域的初始化。在static域加载完成之后，才开始加载父类非static域，最后加载子类的非static域。注意，都为static修饰的情况下，加载顺序根绝定义时候的顺序而来，1、2与3、4就可以看出。</p>
+<p>看到这里，也许会有点疑问，既然静态域加载优于实例域（包含构造函数），那为什么在枚举类中就不行呢？让我们回到前面对枚举类的反编译，其实答案就出来了。反编译的过程我们可以看到，我们的枚举常量实际上是我们枚举类的静态实例化对象，在编译器的修改下，我们运行加载枚举类的过程中，枚举常量是static修饰的，其他静态域也是static修饰的，枚举常量又排在其他静态域的前面，按照上面的额初始化顺序，首先就会调用构造器实例化枚举常量对象，此时，枚举类中的其他静态域都还没来得及初始化，自然在构造函数中不能访问静态域了。有人可能想说，那我静态域放到枚举常量前面，让他先加载怎么样？很遗憾，Java不允许这样做：</p>
+<pre data-lang="java" style="background-color:#2b303b;color:#c0c5ce;" class="language-java "><code class="language-java" data-lang="java"><span style="color:#b48ead;">public enum </span><span style="color:#ebcb8b;">Color </span><span style="color:#eff1f5;">{ </span><span style="color:#65737e;">// 编译不通过！！！
+</span><span style="color:#eff1f5;">    </span><span style="color:#b48ead;">private static int </span><span style="color:#eff1f5;">value </span><span>= </span><span style="color:#d08770;">0</span><span style="color:#eff1f5;">;
+</span><span style="color:#eff1f5;">    </span><span style="color:#d08770;">RED</span><span style="color:#eff1f5;">, </span><span style="color:#d08770;">GREEN</span><span style="color:#eff1f5;">, </span><span style="color:#d08770;">BLUE</span><span style="color:#eff1f5;">;
+</span><span style="color:#eff1f5;">}
+</span></code></pre>
+<h4 id="shi-yong-chou-xiang-han-shu-wei-mei-ju-tong-yi-fang-fa">使用抽象函数为枚举统一方法</h4>
+<p>上面的内容探讨了枚举类的一些基础，这里提一些关于使用枚举的代码策略设计。
+有的时候，我们想要给枚举常量定义某一些通用的方法，同时，针对不同的枚举，该通用方法呈现不同的具体内容。例如，我现在有一个如下的Color枚举类，当针对不同的Color常量的时候，能有一个方式给我返回该颜色的十六进制颜色码。也许你会如下来实现</p>
+<pre data-lang="java" style="background-color:#2b303b;color:#c0c5ce;" class="language-java "><code class="language-java" data-lang="java"><span style="color:#b48ead;">public enum </span><span style="color:#ebcb8b;">Color </span><span style="color:#eff1f5;">{
+</span><span style="color:#eff1f5;">    </span><span style="color:#d08770;">RED</span><span style="color:#eff1f5;">, </span><span style="color:#d08770;">GREEN</span><span style="color:#eff1f5;">, </span><span style="color:#d08770;">BLUE</span><span style="color:#eff1f5;">;
+</span><span style="color:#eff1f5;">    </span><span style="color:#b48ead;">public </span><span style="color:#ebcb8b;">String </span><span style="color:#8fa1b3;">getHexCode</span><span style="color:#eff1f5;">() {
+</span><span style="color:#eff1f5;">        </span><span style="color:#b48ead;">switch </span><span style="color:#eff1f5;">(</span><span style="color:#bf616a;">this</span><span style="color:#eff1f5;">) {
+</span><span style="color:#eff1f5;">            </span><span style="color:#b48ead;">case </span><span style="color:#d08770;">RED</span><span>:
+</span><span style="color:#eff1f5;">                </span><span style="color:#b48ead;">return </span><span>&quot;</span><span style="color:#a3be8c;">#FF0000</span><span>&quot;</span><span style="color:#eff1f5;">;
+</span><span style="color:#eff1f5;">            </span><span style="color:#b48ead;">case </span><span style="color:#d08770;">GREEN</span><span>:
+</span><span style="color:#eff1f5;">                </span><span style="color:#b48ead;">return </span><span>&quot;</span><span style="color:#a3be8c;">#00FF00</span><span>&quot;</span><span style="color:#eff1f5;">;
+</span><span style="color:#eff1f5;">            </span><span style="color:#b48ead;">default</span><span>:
+</span><span style="color:#eff1f5;">                </span><span style="color:#b48ead;">return </span><span>&quot;</span><span style="color:#a3be8c;">#0000FF</span><span>&quot;</span><span style="color:#eff1f5;">;
+</span><span style="color:#eff1f5;">        }
+</span><span style="color:#eff1f5;">    }
+</span><span style="color:#eff1f5;">}
+</span></code></pre>
+<p>以上的方式较为简洁与易读，但是存在问题：枚举常量越来越多，case会不断增长，如果编写代码的过程由于不注意，增加颜色常量的时候，忘记了增加对应的case，那么编译是不会有任何的问题的，但是却隐含的将增加的颜色常量也返回的是BLUE的十六进制颜色码。</p>
+<p>鉴于上述的问题，我们需要某种方式来防止我们犯错，能够想到的，就是通过编译器来告诉我们。于是，我们在枚举类中定一个抽象方法getHexCode，于是乎，对于每一个枚举常量，编译器会提示我们实现具体实例的getHexCode：</p>
+<pre data-lang="java" style="background-color:#2b303b;color:#c0c5ce;" class="language-java "><code class="language-java" data-lang="java"><span style="color:#b48ead;">public enum </span><span style="color:#ebcb8b;">Color </span><span style="color:#eff1f5;">{
+</span><span style="color:#eff1f5;">    </span><span style="color:#d08770;">RED </span><span style="color:#eff1f5;">{
+</span><span style="color:#eff1f5;">        @</span><span style="color:#bf616a;">Override
+</span><span style="color:#eff1f5;">        </span><span style="color:#b48ead;">public </span><span style="color:#ebcb8b;">String </span><span style="color:#8fa1b3;">getHexCode</span><span style="color:#eff1f5;">() {
+</span><span style="color:#eff1f5;">            </span><span style="color:#b48ead;">return </span><span>&quot;</span><span style="color:#a3be8c;">#FF0000</span><span>&quot;</span><span style="color:#eff1f5;">;
+</span><span style="color:#eff1f5;">        }
+</span><span style="color:#eff1f5;">    }, </span><span style="color:#d08770;">GREEN </span><span style="color:#eff1f5;">{
+</span><span style="color:#eff1f5;">        @</span><span style="color:#bf616a;">Override
+</span><span style="color:#eff1f5;">        </span><span style="color:#b48ead;">public </span><span style="color:#ebcb8b;">String </span><span style="color:#8fa1b3;">getHexCode</span><span style="color:#eff1f5;">() {
+</span><span style="color:#eff1f5;">            </span><span style="color:#b48ead;">return </span><span>&quot;</span><span style="color:#a3be8c;">#00FF00</span><span>&quot;</span><span style="color:#eff1f5;">;
+</span><span style="color:#eff1f5;">        }
+</span><span style="color:#eff1f5;">    }, </span><span style="color:#d08770;">BLUE </span><span style="color:#eff1f5;">{
+</span><span style="color:#eff1f5;">        @</span><span style="color:#bf616a;">Override
+</span><span style="color:#eff1f5;">        </span><span style="color:#b48ead;">public </span><span style="color:#ebcb8b;">String </span><span style="color:#8fa1b3;">getHexCode</span><span style="color:#eff1f5;">() {
+</span><span style="color:#eff1f5;">            </span><span style="color:#b48ead;">return </span><span>&quot;</span><span style="color:#a3be8c;">#0000FF</span><span>&quot;</span><span style="color:#eff1f5;">;
+</span><span style="color:#eff1f5;">        }
+</span><span style="color:#eff1f5;">    };
+</span><span style="color:#eff1f5;">
+</span><span style="color:#eff1f5;">    </span><span style="color:#b48ead;">abstract public </span><span style="color:#ebcb8b;">String </span><span style="color:#8fa1b3;">getHexCode</span><span style="color:#eff1f5;">();
+</span><span style="color:#eff1f5;">}
+</span></code></pre>
+<p>在这样的定义下，代码牺牲了一定的简洁性，但是易读性丝毫不输于最开始的方式。针对Color枚举类，我们定义了抽象方法，表明了对于Color中的每一个枚举常量，都应该有getHexCode方法，返回自己的十六进制颜色码。如果我们新添加了枚举常量，而没有实现该方法，编译器会报错警告我们。</p>
+
+    </div>
+</div>
+<script src="https://zhen.wang/libs/viewerjs@1.11.7/viewer.min.js"></script>
+<link rel="stylesheet" href="https://zhen.wang/libs/viewerjs@1.11.7/viewer.min.css"/>
+<script>
+  if (window.Viewer) {
+    document.querySelectorAll('img').forEach(img => {
+      new Viewer(img, {
+        inline: false,
+        navbar: false,
+        toolbar: {
+          zoomIn: 1,
+          zoomOut: 1,
+          reset: 1,
+          rotateLeft: 1,
+          rotateRight: 1,
+        },
+      });
+    });
+  }
+</script>
+
+
+</body>
+</html>

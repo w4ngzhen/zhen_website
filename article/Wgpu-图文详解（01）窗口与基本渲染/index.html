@@ -1,0 +1,422 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="utf-8">
+    <meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover"
+          name="viewport">
+    
+    
+    <!-- umami web analysis -->
+    <script defer src="https://zhen.wang/libs/umami/umami.script.js"
+            data-website-id="d66cfe03-f6b3-4aa0-baf8-728700db1b09"></script>
+    
+    
+    
+    <link rel="icon" type="image/png" sizes="16x16" href="https://zhen.wang/images/blog-site-icon.svg">
+    <link rel="icon" type="image/png" sizes="32x32" href="https://zhen.wang/images/blog-site-icon.svg">
+    <title>zhen&#x27;s everything</title>
+    <link rel="stylesheet" href="https://zhen.wang/style.css">
+    
+<link rel="stylesheet" href="https://zhen.wang/article_content.css">
+<link rel="stylesheet" href="https://zhen.wang/article_markdown.css">
+
+</head>
+<body>
+
+<div id="article">
+    <header class="article-header">
+        
+<div class="base-title">
+    <a href="#" onclick="history.length > 1 ? history.back() : location.href = '/'; return false;">&LeftArrow; Back</a>
+    <h1>
+        Wgpu图文详解（01）窗口与基本渲染
+    </h1>
+</div>
+
+    </header>
+    <p class="article-date">2024-06-05</p>
+    
+    <!-- toc -->
+    <div class="article-toc">
+        <label class="toc-title" for="toc-trigger">目录</label>
+        <input id="toc-trigger" type="checkbox" checked/>
+        <div class="toc-content">
+            <ol class="toc">
+                
+                <li class="toc-item toc-level-1">
+                    <a class="toc-link" href="https://zhen.wang/article/Wgpu-图文详解（01）窗口与基本渲染/#xie-zai-qian-mian">写在前面</a>
+                    
+                </li>
+                
+                <li class="toc-item toc-level-1">
+                    <a class="toc-link" href="https://zhen.wang/article/Wgpu-图文详解（01）窗口与基本渲染/#da-jian-zhuo-mian-huan-jing">搭建桌面环境</a>
+                    
+                </li>
+                
+                <li class="toc-item toc-level-1">
+                    <a class="toc-link" href="https://zhen.wang/article/Wgpu-图文详解（01）窗口与基本渲染/#wgpushang-xia-wen-zhun-bei">Wgpu上下文准备</a>
+                    
+                    <ol class="toc-child">
+                        
+                        <li class="toc-item toc-level-2">
+                            <a href="https://zhen.wang/article/Wgpu-图文详解（01）窗口与基本渲染/#hui-zhi-tu-xing-zhun-bei-gong-zuo">绘制图形准备工作</a>
+                        </li>
+                        
+                        <li class="toc-item toc-level-2">
+                            <a href="https://zhen.wang/article/Wgpu-图文详解（01）窗口与基本渲染/#wgpushi-li-yu-biao-mian">Wgpu实例与表面</a>
+                        </li>
+                        
+                        <li class="toc-item toc-level-2">
+                            <a href="https://zhen.wang/article/Wgpu-图文详解（01）窗口与基本渲染/#gua-pei-qi-yu-luo-ji-she-bei-ming-ling-dui-lie">适配器与逻辑设备、命令队列</a>
+                        </li>
+                        
+                        <li class="toc-item toc-level-2">
+                            <a href="https://zhen.wang/article/Wgpu-图文详解（01）窗口与基本渲染/#biao-mian-pei-zhi">表面配置</a>
+                        </li>
+                        
+                    </ol>
+                    
+                </li>
+                
+                <li class="toc-item toc-level-1">
+                    <a class="toc-link" href="https://zhen.wang/article/Wgpu-图文详解（01）窗口与基本渲染/#jie-gou-diao-zheng-yu-cun-chu-xiang-guan-dui-xiang">结构调整与存储相关对象</a>
+                    
+                    <ol class="toc-child">
+                        
+                        <li class="toc-item toc-level-2">
+                            <a href="https://zhen.wang/article/Wgpu-图文详解（01）窗口与基本渲染/#guan-yu-chuang-ti-de-yin-yong-wen-ti">关于窗体的引用问题</a>
+                        </li>
+                        
+                    </ol>
+                    
+                </li>
+                
+                <li class="toc-item toc-level-1">
+                    <a class="toc-link" href="https://zhen.wang/article/Wgpu-图文详解（01）窗口与基本渲染/#hui-tu-xuan-ran">绘图渲染</a>
+                    
+                    <ol class="toc-child">
+                        
+                        <li class="toc-item toc-level-2">
+                            <a href="https://zhen.wang/article/Wgpu-图文详解（01）窗口与基本渲染/#biao-mian-yu-wen-li">表面与纹理</a>
+                        </li>
+                        
+                        <li class="toc-item toc-level-2">
+                            <a href="https://zhen.wang/article/Wgpu-图文详解（01）窗口与基本渲染/#wen-li-shi-tu">纹理视图</a>
+                        </li>
+                        
+                        <li class="toc-item toc-level-2">
+                            <a href="https://zhen.wang/article/Wgpu-图文详解（01）窗口与基本渲染/#ming-ling-bian-ma-qi">命令编码器</a>
+                        </li>
+                        
+                        <li class="toc-item toc-level-2">
+                            <a href="https://zhen.wang/article/Wgpu-图文详解（01）窗口与基本渲染/#ming-ling-ti-jiao-yu-hua-mian-cheng-xian">命令提交与画面呈现</a>
+                        </li>
+                        
+                        <li class="toc-item toc-level-2">
+                            <a href="https://zhen.wang/article/Wgpu-图文详解（01）窗口与基本渲染/#chuang-kou-chi-cun-bian-hua-wen-ti">窗口尺寸变化问题</a>
+                        </li>
+                        
+                    </ol>
+                    
+                </li>
+                
+                <li class="toc-item toc-level-1">
+                    <a class="toc-link" href="https://zhen.wang/article/Wgpu-图文详解（01）窗口与基本渲染/#xie-zai-zui-hou">写在最后</a>
+                    
+                </li>
+                
+            </ol>
+        </div>
+    </div>
+    
+    <!-- real content -->
+    <div class="article-content markdown-content">
+        <p>这是关于Rust Wgpu的介绍的系列文章，基于 winit 0.30.0 与 Wgpu 0.20.0。</p>
+<span id="continue-reading"></span><h1 id="xie-zai-qian-mian">写在前面</h1>
+<p>如果对Rust与Wgpu比较关注的同学可能在网络上搜到过<a rel="noopener" target="_blank" href="https://github.com/sotrh">@sotrh</a>国外大佬编写的<a rel="noopener" target="_blank" href="https://sotrh.github.io/learn-wgpu/">《Learn Wgpu》</a>，以及国内大佬<a rel="noopener" target="_blank" href="https://github.com/jinleili">@jinleili</a>的优秀翻译作品<a rel="noopener" target="_blank" href="https://jinleili.github.io/learn-wgpu-zh/">《学习 Wgpu》</a>。这些学习教程质量很高，在我学习Wgpu的过程中给了很大的帮助。那为什么还有我这个系列的文章呢？首先，大佬的系列目前winit使用0.29.x版本，而目前winit的0.30.x版本已经发布，且它们的API发生了较大的变化，这部分是需要重新适配的；其次，大佬的文章在基础框架搭建上介绍了Web的WASM环境，而本人更加偏向于桌面客户端环境，所以我的系列只会基于桌面客户端环境进行讲解；最后，本人在学习的过程中发现大佬们的文章更多的代码的介绍，而本人希望在代码的基础上增加一些更加形象的图文解释，便于大家对API使用有一个更加直观的理解。</p>
+<h1 id="da-jian-zhuo-mian-huan-jing">搭建桌面环境</h1>
+<p>在这部分中，我们将使用<a rel="noopener" target="_blank" href="https://docs.rs/winit/0.30.0/winit/index.html">winit 0.30.x</a>版本进行桌面环境搭建。在其他的教程中，使用的都是0.2x版本的winit，而0.30.x版本的winit的则引入了<code>ApplicationHandler</code>作为对应用程序的抽象，所以相对于0.2x版本的winit，我们的环境搭建会有一定的改变。</p>
+<blockquote>
+<p>关于winit的0.30版本的API以及与0.2x版本的区别，读者可以直接阅读我之前的文章<a rel="noopener" target="_blank" href="https://zhuanlan.zhihu.com/p/697751367">《Rust winit 0.30.0版本简介》</a>详细了解，这里我们假设读者已经了解了0.30版本的相关内容。</p>
+</blockquote>
+<p>为了不赘述项目搭建的过程细节，读者可以直接使用本系列的项目仓库下<a rel="noopener" target="_blank" href="https://github.com/w4ngzhen/wgpu_winit_example/tree/main/ch00_simple_winit">ch00_simple_winit目录</a>中的内容进行初始搭建。下面是一个基本的项目结构，以及其中的内容： <img src="https://static-res.zhen.wang/images/post/2024-06-05/010-init-project-arch.png" alt="010-init-project-arch" /></p>
+<p>如果初始项目没有问题，我们的运行以后应该有一个独立空白的窗口显示了出来：</p>
+<p><img src="https://static-res.zhen.wang/images/post/2024-06-05/020-a-simple-window.png" alt="020-a-simple-window" /></p>
+<p>接下来，让我们进入正题。</p>
+<h1 id="wgpushang-xia-wen-zhun-bei">Wgpu上下文准备</h1>
+<h2 id="hui-zhi-tu-xing-zhun-bei-gong-zuo">绘制图形准备工作</h2>
+<p>本系列是讲解Wgpu的实践文章，所以顺理成章，我们首先引入<a rel="noopener" target="_blank" href="http://docs.rs/wgpu">wgpu</a>作为依赖：</p>
+<pre data-lang="toml" style="background-color:#2b303b;color:#c0c5ce;" class="language-toml "><code class="language-toml" data-lang="toml"><span>[dependencies]
+</span><span style="color:#bf616a;">wgpu </span><span>= { </span><span style="color:#bf616a;">version </span><span>= &quot;</span><span style="color:#a3be8c;">0.20.0</span><span>&quot; }
+</span></code></pre>
+<p>然后，让我们聚焦项目下的src/app.rs中的resumed方法，因为我们的首个窗口就是在这个方法中创建，所以，对应的，我们会将Wgpu相关内容的创建也放到这其中。但是，因为Wgpu的上下文创建过程比较复杂冗长，将一大堆创建的代码都放到resumed方法中显得比较乱，所以，我们将Wgpu相关的创建代码单独提取出来，放到一个新的方法中，并在resumed方法中调用：</p>
+<p><img src="https://static-res.zhen.wang/images/post/2024-06-05/030-create-wgpu-ctx-mod.png" alt="030-create-wgpu-ctx-mod" /></p>
+<p>基于上述考虑，我们创建一个名为<code>wgpu_ctx.rs</code>的文件，并且在该文件中创建一个名为<code>WgpuCtx</code>的结构体，并将相关的Wgpu的构建代码放到这个文件中。此时代码如下：</p>
+<p><img src="https://static-res.zhen.wang/images/post/2024-06-05/040-wgpu-ctx-file.png" alt="040-wgpu-ctx-file" /></p>
+<pre data-lang="rust" style="background-color:#2b303b;color:#c0c5ce;" class="language-rust "><code class="language-rust" data-lang="rust"><span style="color:#b48ead;">pub struct </span><span>WgpuCtx {}
+</span><span>
+</span><span style="color:#b48ead;">impl </span><span>WgpuCtx {
+</span><span>    </span><span style="color:#b48ead;">pub fn </span><span style="color:#8fa1b3;">new</span><span>() -&gt; </span><span style="color:#b48ead;">Self </span><span>{
+</span><span>        todo!()
+</span><span>    }
+</span><span>}
+</span></code></pre>
+<p>注意，此时我们为Wgpu实现了一个<code>new</code>的空方法。</p>
+<h2 id="wgpushi-li-yu-biao-mian">Wgpu实例与表面</h2>
+<p>接下来，让我们逐步添加Wgpu相关的构建代码。首先最基础的第一步是创建一个<strong>Wgpu实例</strong>，我们通过<code>wgpu::Instance::new</code>方法创建Wgpu实例：</p>
+<pre data-lang="rust" style="background-color:#2b303b;color:#c0c5ce;" class="language-rust "><code class="language-rust" data-lang="rust"><span style="color:#b48ead;">impl </span><span>WgpuCtx {
+</span><span>    </span><span style="color:#b48ead;">pub fn </span><span style="color:#8fa1b3;">new</span><span>() -&gt; </span><span style="color:#b48ead;">Self </span><span>{
+</span><span>        </span><span style="color:#b48ead;">let</span><span> instance = wgpu::Instance::default();
+</span><span>        todo!()
+</span><span>    }
+</span><span>}
+</span></code></pre>
+<p>Wgpu实例可以认为是整个Wgpu上下文的入口点。我们后续会通过该实例来初始化后续流程以及构造更多与Wgpu相关的对象实例。接下来，我们构造第一个实例，<strong>表面surface</strong>：</p>
+<pre data-lang="rust" style="background-color:#2b303b;color:#c0c5ce;" class="language-rust "><code class="language-rust" data-lang="rust"><span style="color:#b48ead;">let</span><span> surface = instance.</span><span style="color:#96b5b4;">create_surface</span><span>(目标);
+</span></code></pre>
+<p>由于创建表面时，我们需要提供一个“目标”。在本例中，此时我们需要修改一下方法<code>pub fn new() -&gt; Self</code>的参数签名，使其能够接受一个<code>winit::window::Window</code>窗体的<strong>引用</strong>作为参数，稍后调用的地方，我们会将前面在App中创建的窗口传入到此处：</p>
+<pre data-lang="rust" style="background-color:#2b303b;color:#c0c5ce;" class="language-rust "><code class="language-rust" data-lang="rust"><span style="color:#65737e;">// 1. 方法参数新增：winit的Window实体的引用
+</span><span style="color:#b48ead;">pub fn </span><span style="color:#8fa1b3;">new</span><span>(</span><span style="color:#bf616a;">window</span><span>: &amp;Window) -&gt; </span><span style="color:#b48ead;">Self </span><span>{
+</span><span>    </span><span style="color:#b48ead;">let</span><span> instance = wgpu::Instance::default();
+</span><span>    </span><span style="color:#65737e;">// 2. 调用create_surface的时候，传入该引用
+</span><span>    </span><span style="color:#b48ead;">let</span><span> surface = instance.</span><span style="color:#96b5b4;">create_surface</span><span>(window).</span><span style="color:#96b5b4;">unwrap</span><span>();
+</span><span>    todo!()
+</span><span>}
+</span></code></pre>
+<p>为什么我们不能直接将内容绘制到<code>window</code>上，而是引入一个surface的概念呢？从工程角度来讲，这是一种解耦的设计，Wgpu关注的是将图形绘制到某个区域上，这个区域是抽象的，它可以是一个某个操作系统平台的窗口的内容区域，可以是Web应用上一个<code>&lt;canvas /&gt;</code>节点的内容区域，甚至是另一个surface作为目标：</p>
+<p><img src="https://static-res.zhen.wang/images/post/2024-06-05/050-create-surface.png" alt="050-create-surface" /></p>
+<p>在本例子中，因为是桌面端应用环境，所以我们依赖一个桌面窗口，来得到对应的表面。</p>
+<blockquote>
+<p>PS：后文还会介绍另一个与surface表面相关的重要概念，请读者继续耐心阅读</p>
+</blockquote>
+<h2 id="gua-pei-qi-yu-luo-ji-she-bei-ming-ling-dui-lie">适配器与逻辑设备、命令队列</h2>
+<p>目前为止，我们通过surface来抽象了一个绘制目标，这个目标目前是与我们的窗口相绑定。然而我们学习Wgpu最终目的是调用相关图形硬件的API，让图形硬件发挥绘图的能力，那么不难想到，我们后续肯定会使用类似于“Device设备”这种概念来抽象我们的图形硬件。这块的逻辑伪代码类似如下：</p>
+<pre style="background-color:#2b303b;color:#c0c5ce;"><code><span>let Wgpu实例;
+</span><span>let surface = Wgpu实例.create_surface(窗口);
+</span><span>let device = Wgpu实例.get_device(); // 这个device是对显卡的抽象。
+</span><span>// 此时我们就可以通过访问device的api，例如device.draw(三角形)，这样，surface上就能呈现三角形了
+</span></code></pre>
+<p>然而上面仅仅是我们想象的过程，Wgpu上下文构造过程远远没有这么简单。</p>
+<p>实际上，我们下一步的操作，需要<strong>先</strong>通过surface获得一个硬件适配器adapter，<strong>然后</strong>通过这个硬件适配器adapter获得一个逻辑设备实例device和对应的命令队列实例queue，具体代码如下：</p>
+<p><img src="https://static-res.zhen.wang/images/post/2024-06-05/060-get-adapter-and-device.png" alt="060-get-adapter-and-device" /></p>
+<p><strong>这段代码有两个注意点值得说明：</strong></p>
+<p>第一点，先看Rust语言层面上的东西。上述<code>instance.request_adapter</code>和<code>adapter.request_device</code>的方法签名都返回的是一个<code>std::Future</code>实例，我们需要使用<code>.await</code>以“同步”的方式（这里不是真正的同步）得到<code>Future</code>的结果，一旦出现了<code>.await</code>来等待一个Future的结果，我们需要将代码所在的方法签名加上<code>async</code>：</p>
+<pre data-lang="diff" style="background-color:#2b303b;color:#c0c5ce;" class="language-diff "><code class="language-diff" data-lang="diff"><span style="color:#bf616a;">- pub fn new(window: &amp;Window) -&gt; Self
+</span><span>// 加上“async”
+</span><span style="color:#a3be8c;">+ pub async fn new(window: &amp;Window) -&gt; Self
+</span></code></pre>
+<blockquote>
+<p>关于async/await的内容，请认真学习<a rel="noopener" target="_blank" href="https://course.rs/advance/async/getting-started.html#asyncawait-%E7%AE%80%E5%8D%95%E5%85%A5%E9%97%A8">async 编程入门 - Rust语言圣经</a>）</p>
+</blockquote>
+<p>第二点，观察代码流程我们会发现：先有硬件适配器adapter，然后通过adapter得到逻辑设备device和命令队列queue。读者可能会有疑问，为什么我们需要先有一个硬件适配器adapter的东西，而不是直接获取到一个device和queue，adapter和device之间的关系是怎么样的？在<a rel="noopener" target="_blank" href="https://developer.mozilla.org/en-US/docs/Web/API/WebGPU_API#general_model">MDN WebGPU general_model</a>有这样一张图可以解释：</p>
+<p><img src="https://static-res.zhen.wang/images/post/2024-06-05/070-basic-webgpu-stack.png" alt="070-basic-webgpu-stack" /></p>
+<blockquote>
+<p>wgpu 是<strong>基于 WebGPU API 规范 的、跨平台的、安全的、纯 Rust 图形 API</strong>，所以这里上面WebGPU的架构师适用本次讲解的内容。</p>
+</blockquote>
+<p>从上图以及官方文档的描述，笔者做一个简单的总结：</p>
+<ol>
+<li>adapter 代表了<strong>实际的物理 GPU</strong>。如果您的系统有多个 GPU，那么上面<code>instance.request_adapter</code>调用过程，传入不同的参数，可能会获取与之匹配的不同 GPU的适配器。</li>
+</ol>
+<blockquote>
+<p>另外，观察上面的<code>instance.request_adapter</code>的入参有个字段：<code>power_performance</code>，这个字段表示了你想要获取到是“高电池”还是“高功耗”的适配器，既然都能够描述电源功耗了，足以佐证这个adapter是接近底层的一个东西。</p>
+</blockquote>
+<ol start="2">
+<li>device 是应用间的<strong>逻辑设备</strong>，具有应用间隔离的意义。可以认为，device是底层硬件适配器adapter为你的应用划分出来的一个子逻辑设备。所以，打一个不恰当的比方，adapter和device就好像物理内存和逻辑内存的关系一样，前者是客观真实的，后者是软件层面逻辑划分的。</li>
+</ol>
+<p>另外，device和queue是同时获得的，这里其实很好理解：Wgpu把一个逻辑设备device和后续能够给这个设备发送指令进行计算命令队列queue做了解耦，并且一个逻辑设备对应一个命令队列。后文我们会进一步解释这个命令队列的具体功能。</p>
+<h2 id="biao-mian-pei-zhi">表面配置</h2>
+<p>到目前为止，我们并未完成渲染的所有代码，但此刻我们不得不引入绘图过程中一定会使用的“东西”：SurfaceConfiguration（表面配置）。surface作为绘图呈现区域的抽象，像一块画板，那么我们肯定能够通过一定的方式来配置这块“画板”的某些属性（例如，一块画板的大小）。Wgpu在API的设计上，并没有提供一堆的API来配置surface某些具体的渲染选项，而是提供了SurfaceConfiguration（表面配置），通过调用<code>surface.configure</code>API来对surface进行配置：</p>
+<pre data-lang="rust" style="background-color:#2b303b;color:#c0c5ce;" class="language-rust "><code class="language-rust" data-lang="rust"><span style="color:#b48ead;">let</span><span> deivce = ... </span><span style="color:#65737e;">// 我们在前面已经获得的逻辑设备
+</span><span style="color:#b48ead;">let</span><span> surface_config = ... </span><span style="color:#65737e;">// 构造一个SurfaceConfiguration实例
+</span><span>surface_config.xxx = xxx </span><span style="color:#65737e;">// 设置一些参数 
+</span><span>surface.</span><span style="color:#96b5b4;">configure</span><span>(&amp;deivce, &amp;surface_config); </span><span style="color:#65737e;">// 调用surface的API完成对surface的配置
+</span></code></pre>
+<p>上述的伪代码流程中，逻辑设备device实例我们已经在前文通过<code>adapter.request_device</code>获得了，那么这个SurfaceConfiguration实例应该怎样得到呢？答案就是通过调用<code>Surface</code>的<code>get_default_config</code>API获取：</p>
+<p><img src="https://static-res.zhen.wang/images/post/2024-06-05/080-get_default_config.png" alt="080-get_default_config" /></p>
+<p>该API传入3个参数（忽略<code>&amp;self</code>），其中，第一个参数需要传入硬件适配器adapter的引用，这里的具体原因暂不讨论，读者先简单理解为Wgpu内部会通过adapter获取一些上下文，照做即可。剩余两个参数是<code>表面宽度</code>和<code>表面高度</code>，这两个参数实际上就是该表面最终渲染的一个区域范围，且单位为<strong>物理像素</strong>。如果我们希望最终渲染内容到整个窗口上，那么这里传入宽高就需要和窗口实际的宽高保持一致：</p>
+<p><img src="https://static-res.zhen.wang/images/post/2024-06-05/090-config-surface.png" alt="090-config-surface" /></p>
+<pre data-lang="rust" style="background-color:#2b303b;color:#c0c5ce;" class="language-rust "><code class="language-rust" data-lang="rust"><span style="color:#65737e;">// ...
+</span><span style="color:#65737e;">// let adapter = ...
+</span><span style="color:#65737e;">// let (device, queue) = adapter.request_deivce(...)
+</span><span>
+</span><span style="color:#65737e;">// 获取窗口内部物理像素尺寸（没有标题栏）
+</span><span style="color:#b48ead;">let mut</span><span> size = window.</span><span style="color:#96b5b4;">inner_size</span><span>();
+</span><span style="color:#65737e;">// 至少（w = 1, h = 1），否则Wgpu会panic
+</span><span style="color:#b48ead;">let</span><span> width = size.width.</span><span style="color:#96b5b4;">max</span><span>(</span><span style="color:#d08770;">1</span><span>);
+</span><span style="color:#b48ead;">let</span><span> height = size.height.</span><span style="color:#96b5b4;">max</span><span>(</span><span style="color:#d08770;">1</span><span>);
+</span><span style="color:#65737e;">// 获取一个默认配置
+</span><span style="color:#b48ead;">let</span><span> surface_config = surface.</span><span style="color:#96b5b4;">get_default_config</span><span>(&amp;adapter, width, height).</span><span style="color:#96b5b4;">unwrap</span><span>();
+</span><span style="color:#65737e;">// 完成首次配置
+</span><span>surface.</span><span style="color:#96b5b4;">configure</span><span>(&amp;device, &amp;surface_config);
+</span></code></pre>
+<p>当然，我们可以将该配置存储起来，然后在某些场景下修改它，以达到动态变化的效果：</p>
+<p><img src="https://static-res.zhen.wang/images/post/2024-06-05/100-switch-surface-size.gif" alt="100-switch-surface-size" /></p>
+<p>上面的动图就是笔者完成整个窗口渲染以后，通过“回车键”的按键事件处理，来动态的控制表面的尺寸，进而达到尺寸来回切换的效果。上图的例子读者可以在本文完成以后，自行实践。</p>
+<blockquote>
+<p>注意：截止目前的代码，还无法完成上图的渲染，这里的效果主要作为SurfaceConfiguration能够动态配置的演示，还请读者耐心继续阅读。</p>
+</blockquote>
+<p>截至目前，我们已经接触到了关于Wgpu的6个“概念”：</p>
+<ol>
+<li>Wgpu实例</li>
+<li>表面Surface</li>
+<li>表面配置SurfaceConfiguration</li>
+<li>适配器Adapter</li>
+<li>逻辑设备Device</li>
+<li>命令队列Queue</li>
+</ol>
+<p>我们可以用下面的一张图来描述他们的产生关系和运作流程：</p>
+<p><img src="https://static-res.zhen.wang/images/post/2024-06-05/110-6-components.png" alt="110-6-components" /></p>
+<h1 id="jie-gou-diao-zheng-yu-cun-chu-xiang-guan-dui-xiang">结构调整与存储相关对象</h1>
+<p>在继续后文运行时在窗口渲染内容之前，我们需要为目前的代码结构进行适当的调整，以满足我们的工程需求和rust的编译需求。具体修改如下：</p>
+<p>**第一点：**在原有<code>WgpuCtx</code>结构体中将上述除Wgpu实例以外的其他5个实例（surface、surface_config、adapter、device以及queue）存储起来，形如：</p>
+<pre data-lang="rust" style="background-color:#2b303b;color:#c0c5ce;" class="language-rust "><code class="language-rust" data-lang="rust"><span style="color:#b48ead;">pub struct </span><span>WgpuCtx&lt;</span><span style="color:#b48ead;">&#39;window</span><span>&gt; {
+</span><span>    </span><span style="color:#bf616a;">surface</span><span>: wgpu::Surface&lt;</span><span style="color:#b48ead;">&#39;window</span><span>&gt;,
+</span><span>    </span><span style="color:#bf616a;">surface_config</span><span>: wgpu::SurfaceConfiguration,
+</span><span>    </span><span style="color:#bf616a;">adapter</span><span>: wgpu::Adapter,
+</span><span>    </span><span style="color:#bf616a;">device</span><span>: wgpu::Device,
+</span><span>    </span><span style="color:#bf616a;">queue</span><span>: wgpu::Queue,
+</span><span>}
+</span></code></pre>
+<p>这里有一个注意点是，<code>surface</code>字段的类型是<code>wgpu::Surface&lt;'window&gt;</code>，说明这个类型结构体内部是包含了关于窗口的引用的（该结构体具有名为<code>'window</code>生命周期参数），也就是说，这个<code>surface</code>字段数据的存活周期不能超过窗口本身。从事实的角度来考虑，也不难理解，<code>surface</code>表面由来自于窗口，是窗口的某种抽象，所以窗口肯定比这个surface存活的更久，不然窗口实例一旦没有，surface还存活，则必然会有悬垂引用了。</p>
+<p>在上述修改的基础山，由于<code>WgpuCtx</code>内部持有了包含引用的字段，为了满足rust的语法要求，我们需要给<code>WgpuCtx</code>结构体上也添加生命周期参数；同时，也需要给原来的<code>impl WgpuCtx</code>添加上生命周期参数。所以，关于第一点的改动结果如下：</p>
+<p><img src="https://static-res.zhen.wang/images/post/2024-06-05/120-struct-lifetime.png" alt="120-struct-lifetime" /></p>
+<p>**第二点：**我们补齐原先<code>pub async fn new(window: &amp;Window)</code>方法中的返回，并按照规范给该方法上的<code>&amp;Window</code>添加生命周期参数<code>'window'</code>：</p>
+<pre data-lang="rust" style="background-color:#2b303b;color:#c0c5ce;" class="language-rust "><code class="language-rust" data-lang="rust"><span style="color:#65737e;">// 添加生命周期参数：&#39;window
+</span><span style="color:#b48ead;">pub</span><span> async </span><span style="color:#b48ead;">fn </span><span style="color:#8fa1b3;">new</span><span>(</span><span style="color:#bf616a;">window</span><span>: &amp;</span><span style="color:#b48ead;">&#39;window</span><span> Window) -&gt; </span><span style="color:#b48ead;">Self </span><span>{
+</span><span>    </span><span style="color:#b48ead;">let</span><span> instance = ...
+</span><span>    </span><span style="color:#b48ead;">let</span><span> surface = ...
+</span><span>    </span><span style="color:#b48ead;">let</span><span> adapter = ...
+</span><span>    </span><span style="color:#b48ead;">let </span><span>(device, queue) = ...
+</span><span>    </span><span style="color:#b48ead;">let</span><span> surface_config = ...
+</span><span>    ...
+</span><span>		</span><span style="color:#65737e;">// 将上述的实例包装套WgpuCtx中进行返回
+</span><span>    WgpuCtx {
+</span><span>        surface,
+</span><span>        surface_config,
+</span><span>        adapter,
+</span><span>        device,
+</span><span>        queue,
+</span><span>    }
+</span><span>}
+</span></code></pre>
+<p>**第三点：**我们将该方法名由原来的<code>new</code>修改为<code>new_async</code>，并增加一个没有<code>async</code>标记的<code>new</code>方法作为同步版本方法：</p>
+<p><img src="https://static-res.zhen.wang/images/post/2024-06-05/130-new-func-modify.png" alt="130-new-func-modify" /></p>
+<p>这么做主要原因是，由于我们创建Wgpu上下文中有异步逻辑代码（<code>instance.request_adapter</code>和<code>adapter.request_device</code>方法都是异步的，我们使用了<code>.await</code>来以“同步形式”代码流程获取它们），所以该方法被<code>async</code>标记，由于<code>async/await</code>具有传染性，因此如果在另一处调用该创建方法的话，调用点如果使用了<code>.await</code>，则调用点所在方法也需要被<code>async</code>标记，这样的API不太符合人体工程学。所以，笔者将被<code>async</code>的方法改名为了<code>new_async</code>；同时，笔者期望暴露一个能够正常同步方式调用的代码，所以预留了一个没有被<code>async</code>标记的方式：<code>pub fn new()</code>。那么，这里面应该如何实现呢？答案就是用通过Rust社区提供的一些工具库来完成异步代码”转“同步代码。在这里，笔者使用<a rel="noopener" target="_blank" href="https://docs.rs/pollster/latest/pollster/">pollster - Rust (docs.rs)</a>这个库来完成这一目标。</p>
+<p>在引入该库以后（<code>pollster = { version = "0.3.0" }</code>），我们在新增的同步<code>new</code>方法中编写如下代码：</p>
+<pre data-lang="rust" style="background-color:#2b303b;color:#c0c5ce;" class="language-rust "><code class="language-rust" data-lang="rust"><span style="color:#b48ead;">pub fn </span><span style="color:#8fa1b3;">new</span><span>(</span><span style="color:#bf616a;">window</span><span>: &amp;Window) -&gt; </span><span style="color:#b48ead;">Self </span><span>{
+</span><span>    pollster::block_on(WgpuCtx::new_async(window))
+</span><span>}
+</span></code></pre>
+<blockquote>
+<p>关于pollster如何完成的异步代码转同步，不在本文中细讲，后续会单开一篇文章讲解，感兴趣的伙伴可以自行研究源码。</p>
+</blockquote>
+<p>至此，目前关于<code>wgpu_ctx.rs</code>文件中的代码如下：</p>
+<p><img src="https://static-res.zhen.wang/images/post/2024-06-05/140-wgpu-ctx-rs.png" alt="140-wgpu-ctx-rs" /></p>
+<h2 id="guan-yu-chuang-ti-de-yin-yong-wen-ti">关于窗体的引用问题</h2>
+<p>目前为止，我们完成了Wgpu上下文的代码调整，为了满足后续代码流程，我们需要在原先的<code>app.rs</code>中的<code>App</code>结构体中存储创建出来的上下文数据，这块的内容调整如下：</p>
+<p><img src="https://static-res.zhen.wang/images/post/2024-06-05/150-modify-app-rs.png" alt="150-modify-app-rs" /></p>
+<p>此时，当我们进行编译的时候会发现有如下报错：</p>
+<p><img src="https://static-res.zhen.wang/images/post/2024-06-05/160-compile-err.png" alt="160-compile-err" /></p>
+<p>让我们简单梳理一下，window在<code>fn resumed</code>方法中产生，期间，我们将window变量的引用交给了<code>WgpuCtx::new</code>方法，由其内部完成<code>WgpuCtx</code>上下文创建，并得到了一个<code>wgpu_ctx</code>实例存储了起来；然而，rust借用检查器认为<code>window</code>在<code>fn resumed</code>结束后被<code>drop</code>，它认为<code>window</code>变量活的没有<code>wgpu_ctx</code>长（<code>wgpu_ctx</code>是持有了<code>window</code>的引用的），所以报错了。这里最大的问题在于，我们明明将<code>window</code>变量通过<code>self.window = Some(window)</code>语句持有了起来，为什么Rust借用检查器还会认为window获得不够长呢？</p>
+<p>主要点在于，App结构体包含的<code>wgpu_ctx</code>和<code>window</code>都是Option类型的，那么我们可能出现这样的情况：<code>self.window</code>在某个时刻置为<code>None</code>，因此<code>self.window</code>所持有的<code>Option::Some</code>中持有的<code>window（实际的窗口实例）</code>就会被<code>drop</code>；假设此时，<code>self.wgpu_ctx</code>依然是<code>Some(WgpuCtx实例)</code>，又因为<code>self.wgpu_ctx</code>中的<code>Some</code>包裹的那个<code>WgpuCtx实例</code>中的<code>surface</code>字段内部是持有了<code>window</code>的引用的，所以此时就会变成一个悬垂引用。为了更好的理解，我们使用下图形象解释：</p>
+<p><img src="https://static-res.zhen.wang/images/post/2024-06-05/170-dangling-ref-err.png" alt="170-dangling-ref-err" /></p>
+<p>聪明的小伙伴可能会想，这个问题的核心是window实例与持有window实例引用的wgpu_ctx实例没有保持一致变量生命周期，那么我们能否将他们合并到同一结构体中，例如，我们让WgpuCtx内部增加window字段，直接作为owner持有创建出来的window：</p>
+<p><img src="https://static-res.zhen.wang/images/post/2024-06-05/180-window-move-to-ctx.png" alt="180-window-move-to-ctx" /></p>
+<p>**然而遗憾的是，这样做依然无法通过Rust借用检查。**这里读者可能会非常的困惑，window和持有window引用的字段明明都在同一个结构体中，很显然这些数据的生命周期是一致的，为什么还是不行？这个问题可以将问题简化为，<strong>为什么一个结构体无法同时持有某个数据和其数据的引用</strong>，就像下面这样：</p>
+<pre data-lang="rust" style="background-color:#2b303b;color:#c0c5ce;" class="language-rust "><code class="language-rust" data-lang="rust"><span style="color:#b48ead;">struct </span><span>Example&lt;</span><span style="color:#b48ead;">&#39;s</span><span>&gt; {
+</span><span>    </span><span style="color:#bf616a;">my_str</span><span>: String,
+</span><span>    </span><span style="color:#bf616a;">my_str_ref</span><span>: &amp;</span><span style="color:#b48ead;">&#39;s</span><span> String,
+</span><span>}
+</span><span style="color:#b48ead;">impl</span><span>&lt;</span><span style="color:#b48ead;">&#39;s</span><span>&gt; Example&lt;</span><span style="color:#b48ead;">&#39;s</span><span>&gt; {
+</span><span>    </span><span style="color:#b48ead;">pub fn </span><span style="color:#8fa1b3;">new</span><span>() -&gt; </span><span style="color:#b48ead;">Self </span><span>{
+</span><span>        </span><span style="color:#b48ead;">let</span><span> my_str: String = &quot;</span><span style="color:#a3be8c;">hello</span><span>&quot;.</span><span style="color:#96b5b4;">into</span><span>();
+</span><span>        </span><span style="color:#b48ead;">Self </span><span>{
+</span><span>            my_str,
+</span><span>            my_str_ref: &amp;my_str,
+</span><span>        }
+</span><span>    }
+</span><span>}
+</span></code></pre>
+<p>这个问题涉及到的内容更加深奥但非常经典，读者可以移步这里进行阅读：<a rel="noopener" target="_blank" href="https://stackoverflow.com/questions/32300132/why-cant-i-store-a-value-and-a-reference-to-that-value-in-the-same-struct">rust - Why can't I store a value and a reference to that value in the same struct? - Stack Overflow</a>。当然，笔者后续也会基于该回答写一篇文章进行详细讲解。</p>
+<p>回到我们的项目中来，为了解决引用的问题，我们可以使用<a rel="noopener" target="_blank" href="https://doc.rust-lang.org/std/sync/struct.Arc.html">Arc</a>来存储创建出来的window，通过<code>Arc::new()</code>构造的结构，可以将窗口实例放到堆上，并以支持原子访问方式的引用计数，类似于智能指针。这样可以解决上述引用共享问题。具体的改动如下：</p>
+<p><img src="https://static-res.zhen.wang/images/post/2024-06-05/190-arc-window.png" alt="190-arc-window" /></p>
+<p>完成上述更改以后，理论上来讲，本项目的代码能够编译通过了。</p>
+<p>接下来，我们还剩下最后一步：运行时渲染。因为目前的代码，仅仅是把渲染前的准备工作做了，我们还需要一个步骤，将内容“输送”到正在运行的窗口上。</p>
+<h1 id="hui-tu-xuan-ran">绘图渲染</h1>
+<p>为了达到上述运行时绘图的需求，我们首先在<code>WgpuCtx</code>实现中添加一个名为<code>pub fn draw()</code>的方法，接下来，我们会将相关的运行时绘图渲染的过程代码编写在该方法中：</p>
+<p><img src="https://static-res.zhen.wang/images/post/2024-06-05/200-draw-flow.png" alt="200-draw-flow" /></p>
+<h2 id="biao-mian-yu-wen-li">表面与纹理</h2>
+<p>上述代码中的步骤1，我们首先通过保存的<code>surface</code>实例调用其<code>get_current_texture</code>API得到了一个当前的texture纹理对象。这里有两个点需要解释：</p>
+<ol>
+<li>除了表面surface之外，为什么又多了一个纹理texture？</li>
+<li>什么叫获取”当前“纹理？纹理对象还会存在还有多个吗？</li>
+</ol>
+<p>要解释第一点，我们需要明确表面surface和纹理texture的关系。</p>
+<p>在wgpu中，通过创建一个<code>surface</code>对象，可以与用户的显示设备关联起来。surface是平台无关的抽象，意味着无论是在Windows、macOS、Linux还是Web上，wgpu都会处理底层细节，为你提供一个统一的接口来渲染到屏幕上。创建surface通常需要与特定平台的API交互，如在Web上可能涉及WebGL上下文，在桌面平台上可能涉及原生窗口系统。</p>
+<p>而对于纹理texture来说，<strong>它是一个可以在GPU上操作的数据结构</strong>，用于存储图像数据。它可以是2D、3D或者作为立方体贴图。texture可以用来存储从简单颜色到复杂的像素数据，这些数据可以被采样、过滤并用于渲染操作。</p>
+<p>总的来说，surface是实际的与系统平台相关的对象（平台无关的抽象是相对于使用者来说的，内部实现肯定跟具体平台相关），而texture纹理则是GPU这一侧的相关绘图数据对象。当在wgpu中进行渲染时，通常会将渲染的结果输出到一个texture上，这个texture随后被“呈现”（present）到surface上。即，<code>Surface</code>是显示输出的抽象，而<code>Texture</code>是存储图像数据的实体，两者共同协作完成图形的最终渲染和显示。打个比方来说，surface相当于一块<strong>画板</strong>，而texture则是画板上的一张通过各种画笔配合颜料绘图的结果。</p>
+<p>有了上述第一点的解释，再来回答第二个问题就很容易理解了。当我们呈现某些画面的时候（特别是动画），用现实的视角来看，我们首先使用一张画纸，在上面画上内容，把它贴到画板上；然后再拿出一张画纸，画下一帧的画面，把先前画板上的画纸取下来，把新的画纸贴上去，如此往复：</p>
+<p><img src="https://static-res.zhen.wang/images/post/2024-06-05/210-swap-chain.png" alt="210-swap-chain" /></p>
+<p>而类似的，wgpu允许你创建一个与surface关联的Swap Chain（这个后面会细讲），Swap Chain是一系列texture，每次渲染完一个frame帧（即一个texture）后，wgpu会自动将其交换并呈现到Surface上，从而实现动画或者连续图像更新的效果。</p>
+<p>所以，上述当我们实际在渲染的时候，则是在每一次调用绘图阶段的时候，通过<code>get_current_texture</code>API得到能够绘制的下一帧的texture纹理（虽然是<code>get_current</code>，但是实际上是获得准备下一次呈现的texture），在上面“作画”。</p>
+<h2 id="wen-li-shi-tu">纹理视图</h2>
+<p>在步骤2中，我们通过texture纹理的<code>create_view</code>API创建了一个TextureView纹理视图。上面我们解释了纹理的基本作用：存储图像数据的基本资源（1、2、3维数据，高度图、法线贴图）。而纹理视图是对纹理资源的一种解释方式或视角。它允许你指定如何访问纹理的一部分或以特定方式解释纹理数据。创建纹理视图时，你可以指定想要访问的纹理的哪一部分、使用的数据格式等。这样，同一个纹理资源就可以以多种方式复用，服务于不同的渲染需求，而无需复制底层纹理数据。</p>
+<p>在上面的代码中，我们使用了<code>TextureViewDescriptor::default()</code>默认配置，因此纹理视图对应的数据几乎可以等同于纹理本身，但是翻阅<code>TextureViewDescriptor</code>源码，我们是能够看到各种关于纹理子视图的定义的。由于篇幅的原因，这里不在详细叙述。</p>
+<h2 id="ming-ling-bian-ma-qi">命令编码器</h2>
+<p>接下来是上面代码中的步骤3部分。这块的代码不少，笔者暂时抛开里面一些配置细节，讲一下这的设计思路。首先，我们通过device逻辑设备的<code>create_command_encoder</code>API来创建一个“命令编码器”。这里有一个疑问，为什么又多了一个“命令编码器”的东西？</p>
+<p>让我们这样设想一下：假设现在给你一块GPU，要让它工作起来，你需要向里面输入一些<strong>二进制</strong>数据，这些数据包含了GPU执行的指令。然而，过于底层的二进制数据明显不符合软件工程，所以，我们设计一个名为“命令编码器”的对象，它提供了阅读友好的API来构造命令，然后提供一个“最终”的API来完成数据转换为底层二进制数据。是不是这样就能够理解了？所以，命令编码器是一个工程上的抽象，就像一个我们在某些领域接触的“builder”构造模式一样。</p>
+<p><img src="https://static-res.zhen.wang/images/post/2024-06-05/220-command-encoder-flow.png" alt="220-command-encoder-flow" /></p>
+<p>更正式一点的描述：开发者通过命令编码器的API来定义他们想要GPU执行的操作。这包括创建缓冲区、纹理、绘制指令、计算任务等，这些操作都是以一种高效、平台无关的方式表达的。这些表达最终可以被转化为相对应的更为底层的数据。</p>
+<p>有了上面的解释，实际上关于步骤3中具体的代码也就不难理解了，简单来说，就是在对应的TextureView纹理视图所关联的纹理区域上附着填充纯绿色（<code>load: wgpu::LoadOp::Clear(wgpu::Color::GREEN)</code>）。读者可以按照该部分具体代码内容，查阅相关配置字段的文档来理解具体的意义。</p>
+<h2 id="ming-ling-ti-jiao-yu-hua-mian-cheng-xian">命令提交与画面呈现</h2>
+<p>最后一部分最为简单，首先，我们调用命令编码器的<code>finish</code>方法，来完成一个命令编码器内容的“终结”，即命令准备完毕（类似于构造模式中，builder最后调用的<code>build</code>方法一样）。准备完毕后将命令提交给命令队列，即告诉wgpu，硬件渲染想要执行的命令已经告诉底层了。最后，我们调用当前纹理的<code>present</code>API，来告诉底层将该纹理“呈现”出来，即呈现到该纹理对应表面上（这里就是窗口上）。</p>
+<p>至此，我们几乎完成了从Wgpu上下文相关对象的准备，以及运行时渲染内容到窗口区域的逻辑。此刻关于<code>wgpu_ctx.rs</code>中的大体内容如下：</p>
+<p><img src="https://static-res.zhen.wang/images/post/2024-06-05/230-wgpu-ctx-arch.png" alt="230-wgpu-ctx-arch" /></p>
+<p>接下来，我们需要在实现了<code>ApplicationHandler</code>trait的<code>app.rs</code>中增加调用<code>WgpuCtx</code>的<code>draw</code>的代码，毕竟只有调用了该<code>draw</code>方法，内容才会真正呈现出来，具体代码如下：</p>
+<p><img src="https://static-res.zhen.wang/images/post/2024-06-05/240-call-draw-simple.png" alt="240-call-draw-simple" /></p>
+<p>上述代码，我们首先在<code>window_event</code>中处理了<code>Resized</code>事件，这个事件会在窗体首次创建出来以及每一次窗体尺寸发生变化的时候进行触发。当该事件触发的时候，我们使用之前存储的窗口实例window的<code>request_redraw</code>方法，来通知底层，将一次<strong>界面重绘任务</strong>添加到事件队列中，为下一步做准备。</p>
+<p>第二步，我们处理了<code>RedrawRequested</code>事件，我们在该事件处理中调用<code>WgpuCtx</code>的<code>draw</code>方法，完成一次通过wgpu调用底层硬件进行绘图的流程。</p>
+<blockquote>
+<p>由于某系统操作系统下，窗口尺寸变化不会直接触发<code>RedrawRequested</code>事件，所以兼容场景下，需要在<code>Resized</code>事件中进行手动的<code>window.request_redraw()</code>调用。</p>
+</blockquote>
+<p>完成上述代码编写后，当我们运行该应用程序时，理论上会看到一个充满绿色的窗口。</p>
+<h2 id="chuang-kou-chi-cun-bian-hua-wen-ti">窗口尺寸变化问题</h2>
+<p>上面我们已经将绿色作为背景色绘制到了窗口上，然而一旦我们尝试修改窗口的尺寸，将窗口拉大的时候，会发现界面有些不太正常：</p>
+<p><img src="https://static-res.zhen.wang/images/post/2024-06-05/250-resize-wrong-draw.gif" alt="250-resize-wrong-draw" /></p>
+<p>其实，聪明的读者已经想到了，我们每次渲染内容，都是使用的由窗口初始大小尺寸构造的表面配置：</p>
+<p><img src="https://static-res.zhen.wang/images/post/2024-06-05/260-size-config-never-change.png" alt="260-size-config-never-change" /></p>
+<p>为了将窗口的尺寸变化同步到表面配置中，我们给<code>WgpuCtx</code>新增一个API<code>resize</code>，同时，在原先<code>Resized</code>事件处理代码块中，在进行<code>request_redraw</code>前，先进行一次表面配置中尺寸的同步操作：</p>
+<p><img src="https://static-res.zhen.wang/images/post/2024-06-05/270-keep-size-sync.png" alt="270-keep-size-sync" /></p>
+<p>至此，我们基本完成了本文的所有代码，再次运行本应用，能够看到最终的效果：</p>
+<p><img src="https://static-res.zhen.wang/images/post/2024-06-05/280-final.gif" alt="280-final" /></p>
+<h1 id="xie-zai-zui-hou">写在最后</h1>
+<p>感谢读者能够读到这里，本文虽然很长，但个人认为说清楚了一些关于Wgpu的基本使用和一些很基础的概念，这块的内容也是不容易变化的部分，是作为后续系列文章的根基，相信读者掌握以后能够对后续的内容会更容易上手。对于代码方面，请读者不必担忧，本文的代码属于是Wgpu中比较固定的部分，后续的内容只会在本文的基础上进行局部增量的更新。</p>
+<p>本章代码读者可以在这里查阅：<a rel="noopener" target="_blank" href="https://github.com/w4ngzhen/wgpu_winit_example/tree/main/ch01_render_in_window">wgpu_winit_example/ch01_render_in_window</a>，对应仓库如下：</p>
+<p><a rel="noopener" target="_blank" href="https://github.com/w4ngzhen/wgpu_winit_example">w4ngzhen/wgpu_winit_example: WGPU code example using Winit 0.30.0+. (github.com)</a></p>
+<p>当然，后续文章的相关代码也会在该仓库中添加，所以感兴趣的读者可以点个star，谢谢你们的支持！</p>
+
+    </div>
+</div>
+<script src="https://zhen.wang/libs/viewerjs@1.11.7/viewer.min.js"></script>
+<link rel="stylesheet" href="https://zhen.wang/libs/viewerjs@1.11.7/viewer.min.css"/>
+<script>
+  if (window.Viewer) {
+    document.querySelectorAll('img').forEach(img => {
+      new Viewer(img, {
+        inline: false,
+        navbar: false,
+        toolbar: {
+          zoomIn: 1,
+          zoomOut: 1,
+          reset: 1,
+          rotateLeft: 1,
+          rotateRight: 1,
+        },
+      });
+    });
+  }
+</script>
+
+
+</body>
+</html>

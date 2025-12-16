@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="utf-8">
+    <meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover"
+          name="viewport">
+    
+    
+    <!-- umami web analysis -->
+    <script defer src="https://zhen.wang/libs/umami/umami.script.js"
+            data-website-id="d66cfe03-f6b3-4aa0-baf8-728700db1b09"></script>
+    
+    
+    
+    <link rel="icon" type="image/png" sizes="16x16" href="https://zhen.wang/images/blog-site-icon.svg">
+    <link rel="icon" type="image/png" sizes="32x32" href="https://zhen.wang/images/blog-site-icon.svg">
+    <title>zhen&#x27;s everything</title>
+    <link rel="stylesheet" href="https://zhen.wang/style.css">
+    
+<link rel="stylesheet" href="https://zhen.wang/article_content.css">
+<link rel="stylesheet" href="https://zhen.wang/article_markdown.css">
+
+</head>
+<body>
+
+<div id="article">
+    <header class="article-header">
+        
+<div class="base-title">
+    <a href="#" onclick="history.length > 1 ? history.back() : location.href = '/'; return false;">&LeftArrow; Back</a>
+    <h1>
+        IntelliJ中Spring识别BUG
+    </h1>
+</div>
+
+    </header>
+    <p class="article-date">2018-03-07</p>
+    
+    <!-- real content -->
+    <div class="article-content markdown-content">
+        <p>最近开始学习Spring，在看《Spring实战4th》3.3“处理自动装配的歧义性”那一部分时，书上提到（也从网上看到了类似的用法）:
+通过在一个类上加注@Component以及@Qualifier("x")可以为其配置限定符来标识区分同一个接口下的不同实现类，用以在需要进行@Autowired自动装配的地方使用@Qualifier("x")来指定特定的实现类对象bean。</p>
+<span id="continue-reading"></span>
+<p>但是本人在练习过程中，IntelliJ通过上述方式识别不了，只能在@Bean处添加@Qualifier("x")，在后续的测试中才能识别。如下：</p>
+<p>在Dessert的实现类Cake上加上@Component以及@Qualifier("Lovely")</p>
+<pre data-lang="java" style="background-color:#2b303b;color:#c0c5ce;" class="language-java "><code class="language-java" data-lang="java"><span>@</span><span style="color:#bf616a;">Component
+</span><span>@</span><span style="color:#bf616a;">Qualifier</span><span>(&quot;</span><span style="color:#a3be8c;">Lovely</span><span>&quot;)
+</span><span style="color:#b48ead;">public class </span><span style="color:#ebcb8b;">Cake </span><span style="color:#b48ead;">implements </span><span style="color:#a3be8c;">Dessert </span><span style="color:#eff1f5;">{ }
+</span></code></pre>
+<p>然后是配置类</p>
+<pre data-lang="java" style="background-color:#2b303b;color:#c0c5ce;" class="language-java "><code class="language-java" data-lang="java"><span>@</span><span style="color:#bf616a;">Configuration
+</span><span style="color:#b48ead;">public class </span><span style="color:#ebcb8b;">JavaConfig </span><span style="color:#eff1f5;">{
+</span><span style="color:#eff1f5;">    @</span><span style="color:#bf616a;">Bean
+</span><span style="color:#eff1f5;">    </span><span style="color:#ebcb8b;">Dessert </span><span style="color:#8fa1b3;">cake</span><span style="color:#eff1f5;">() {
+</span><span style="color:#eff1f5;">        </span><span style="color:#b48ead;">return new </span><span style="color:#ebcb8b;">Cake</span><span style="color:#eff1f5;">();
+</span><span style="color:#eff1f5;">    }
+</span><span style="color:#eff1f5;">
+</span><span style="color:#eff1f5;">    @</span><span style="color:#bf616a;">Bean
+</span><span style="color:#eff1f5;">    </span><span style="color:#ebcb8b;">Dessert </span><span style="color:#8fa1b3;">iceCream</span><span style="color:#eff1f5;">() {
+</span><span style="color:#eff1f5;">        </span><span style="color:#b48ead;">return new </span><span style="color:#ebcb8b;">IceCream</span><span style="color:#eff1f5;">();
+</span><span style="color:#eff1f5;">    }
+</span><span style="color:#eff1f5;">}
+</span></code></pre>
+<p>测试类中无法识别：</p>
+<pre data-lang="java" style="background-color:#2b303b;color:#c0c5ce;" class="language-java "><code class="language-java" data-lang="java"><span>@</span><span style="color:#bf616a;">RunWith</span><span>(</span><span style="color:#ebcb8b;">SpringJUnit4ClassRunner</span><span>.</span><span style="color:#bf616a;">class</span><span>)
+</span><span>@</span><span style="color:#bf616a;">ContextConfiguration</span><span>(</span><span style="color:#bf616a;">classes </span><span>= </span><span style="color:#ebcb8b;">JavaConfig</span><span>.</span><span style="color:#bf616a;">class</span><span>)
+</span><span style="color:#b48ead;">public class </span><span style="color:#ebcb8b;">PlateTest </span><span style="color:#eff1f5;">{
+</span><span style="color:#eff1f5;">    @</span><span style="color:#bf616a;">Autowired
+</span><span style="color:#eff1f5;">    @</span><span style="color:#bf616a;">Qualifier</span><span style="color:#eff1f5;">(</span><span>&quot;</span><span style="color:#a3be8c;">Lovely</span><span>&quot;</span><span style="color:#eff1f5;">) </span><span style="color:#65737e;">// IDEA 提示&quot;Cannot find bean with qualifier &#39;Lovely&#39; &quot;
+</span><span style="color:#eff1f5;">    </span><span style="color:#ebcb8b;">Dessert </span><span style="color:#eff1f5;">dessert;
+</span><span style="color:#eff1f5;">
+</span><span style="color:#eff1f5;">    @</span><span style="color:#bf616a;">Test
+</span><span style="color:#eff1f5;">    </span><span style="color:#b48ead;">public void </span><span style="color:#8fa1b3;">testNotNull</span><span style="color:#eff1f5;">() {
+</span><span style="color:#eff1f5;">        </span><span style="color:#ebcb8b;">Assert</span><span style="color:#eff1f5;">.</span><span style="color:#bf616a;">assertNotNull</span><span style="color:#eff1f5;">(dessert);
+</span><span style="color:#eff1f5;">    }
+</span><span style="color:#eff1f5;">}
+</span></code></pre>
+<p>但是，测试能PASS，应该是IntelliJ中的识别BUG。虽然是一个BUG，但是个人的理解是推荐在配置Bean中，进行限定，而不是在每一个类处进行限定。如下在JavaConfig类中进行配置：</p>
+<pre data-lang="java" style="background-color:#2b303b;color:#c0c5ce;" class="language-java "><code class="language-java" data-lang="java"><span>@</span><span style="color:#bf616a;">Bean
+</span><span>@</span><span style="color:#bf616a;">Qualifier</span><span>(&quot;</span><span style="color:#a3be8c;">Lovely</span><span>&quot;)
+</span><span style="color:#ebcb8b;">Dessert </span><span style="color:#bf616a;">cake</span><span>() {
+</span><span>  </span><span style="color:#b48ead;">return new </span><span style="color:#ebcb8b;">Cake</span><span>();
+</span><span>}
+</span></code></pre>
+<p>这样就不会出现报提示错。
+<strong>以上在运行过程均没有错误，只是IDE辅助出现了问题。</strong></p>
+
+    </div>
+</div>
+<script src="https://zhen.wang/libs/viewerjs@1.11.7/viewer.min.js"></script>
+<link rel="stylesheet" href="https://zhen.wang/libs/viewerjs@1.11.7/viewer.min.css"/>
+<script>
+  if (window.Viewer) {
+    document.querySelectorAll('img').forEach(img => {
+      new Viewer(img, {
+        inline: false,
+        navbar: false,
+        toolbar: {
+          zoomIn: 1,
+          zoomOut: 1,
+          reset: 1,
+          rotateLeft: 1,
+          rotateRight: 1,
+        },
+      });
+    });
+  }
+</script>
+
+
+</body>
+</html>

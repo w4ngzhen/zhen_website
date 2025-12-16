@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="utf-8">
+    <meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover"
+          name="viewport">
+    
+    
+    <!-- umami web analysis -->
+    <script defer src="https://zhen.wang/libs/umami/umami.script.js"
+            data-website-id="d66cfe03-f6b3-4aa0-baf8-728700db1b09"></script>
+    
+    
+    
+    <link rel="icon" type="image/png" sizes="16x16" href="https://zhen.wang/images/blog-site-icon.svg">
+    <link rel="icon" type="image/png" sizes="32x32" href="https://zhen.wang/images/blog-site-icon.svg">
+    <title>zhen&#x27;s everything</title>
+    <link rel="stylesheet" href="https://zhen.wang/style.css">
+    
+<link rel="stylesheet" href="https://zhen.wang/article_content.css">
+<link rel="stylesheet" href="https://zhen.wang/article_markdown.css">
+
+</head>
+<body>
+
+<div id="article">
+    <header class="article-header">
+        
+<div class="base-title">
+    <a href="#" onclick="history.length > 1 ? history.back() : location.href = '/'; return false;">&LeftArrow; Back</a>
+    <h1>
+        【个人笔记】VBox7安装Debian网络下载慢问题处理
+    </h1>
+</div>
+
+    </header>
+    <p class="article-date">2022-11-06</p>
+    
+    <!-- toc -->
+    <div class="article-toc">
+        <label class="toc-title" for="toc-trigger">目录</label>
+        <input id="toc-trigger" type="checkbox" checked/>
+        <div class="toc-content">
+            <ol class="toc">
+                
+                <li class="toc-item toc-level-1">
+                    <a class="toc-link" href="https://zhen.wang/article/【个人笔记】VBox7安装Debian网络下载慢问题处理/#zhun-bei-gong-zuo">准备工作</a>
+                    
+                </li>
+                
+                <li class="toc-item toc-level-1">
+                    <a class="toc-link" href="https://zhen.wang/article/【个人笔记】VBox7安装Debian网络下载慢问题处理/#an-zhuang-guo-cheng">安装过程</a>
+                    
+                </li>
+                
+            </ol>
+        </div>
+    </div>
+    
+    <!-- real content -->
+    <div class="article-content markdown-content">
+        <p>使用镜像安装Debian的过程中，会安装一些常用的软件包。但在安装软件包的阶段，默认情况下会通过网络进行下载。即使配置了国内的镜像，但是由于网络问题依然很慢。这个时候需要的在安装阶段选择从默认的DVD媒体安装。</p>
+<span id="continue-reading"></span>
+<h1 id="zhun-bei-gong-zuo">准备工作</h1>
+<p>从官网下载完整镜像：<a rel="noopener" target="_blank" href="https://cdimage.debian.org/debian-cd/current/amd64/iso-dvd/">完整DVD镜像</a>（该步骤一定要下载完整镜像，一般名称为：<code>debian-11.5.0-amd64-DVD-1.iso</code>，且大小应该超过了3GB）。</p>
+<h1 id="an-zhuang-guo-cheng">安装过程</h1>
+<p>安装首选需要选择完整镜像：</p>
+<p><img src="https://static-res.zhen.wang/images/post/2022-11-06/010-use-complete-image.png" alt="" /></p>
+<p>安装过程中的步骤的<code>Configure the package manager</code>中，需要确保两件事：</p>
+<ol>
+<li>
+<p>确保使用了DVD离线包</p>
+</li>
+<li>
+<p>手动关闭了网络连接。如此配置以后，安装的过程就一定无法从网络上下载了。</p>
+</li>
+</ol>
+<p><img src="https://static-res.zhen.wang/images/post/2022-11-06/020-close-net-connection.png" alt="" /></p>
+<p>上述步骤操作完成以后，进入下一步，会提示是否使用网络镜像（<code>Use a network mirror？</code>），<strong>此时一定要选择No不使用</strong>。</p>
+<p><img src="https://static-res.zhen.wang/images/post/2022-11-06/030-dont-use-net-mirrors.png" alt="" /></p>
+<p>上述操作完成后，Debian接下来的安装就会从离线包中去安装软件。我们稍后进入系统以后再更新软件包即可。</p>
+<p>后续按照一般的处理步骤进行即可。</p>
+
+    </div>
+</div>
+<script src="https://zhen.wang/libs/viewerjs@1.11.7/viewer.min.js"></script>
+<link rel="stylesheet" href="https://zhen.wang/libs/viewerjs@1.11.7/viewer.min.css"/>
+<script>
+  if (window.Viewer) {
+    document.querySelectorAll('img').forEach(img => {
+      new Viewer(img, {
+        inline: false,
+        navbar: false,
+        toolbar: {
+          zoomIn: 1,
+          zoomOut: 1,
+          reset: 1,
+          rotateLeft: 1,
+          rotateRight: 1,
+        },
+      });
+    });
+  }
+</script>
+
+
+</body>
+</html>

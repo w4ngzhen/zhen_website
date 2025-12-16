@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="utf-8">
+    <meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover"
+          name="viewport">
+    
+    
+    <!-- umami web analysis -->
+    <script defer src="https://zhen.wang/libs/umami/umami.script.js"
+            data-website-id="d66cfe03-f6b3-4aa0-baf8-728700db1b09"></script>
+    
+    
+    
+    <link rel="icon" type="image/png" sizes="16x16" href="https://zhen.wang/images/blog-site-icon.svg">
+    <link rel="icon" type="image/png" sizes="32x32" href="https://zhen.wang/images/blog-site-icon.svg">
+    <title>zhen&#x27;s everything</title>
+    <link rel="stylesheet" href="https://zhen.wang/style.css">
+    
+<link rel="stylesheet" href="https://zhen.wang/article_content.css">
+<link rel="stylesheet" href="https://zhen.wang/article_markdown.css">
+
+</head>
+<body>
+
+<div id="article">
+    <header class="article-header">
+        
+<div class="base-title">
+    <a href="#" onclick="history.length > 1 ? history.back() : location.href = '/'; return false;">&LeftArrow; Back</a>
+    <h1>
+        低代码平台前端的设计与实现（四）组件大纲树的构建设计
+    </h1>
+</div>
+
+    </header>
+    <p class="article-date">2023-03-05</p>
+    
+    <!-- toc -->
+    <div class="article-toc">
+        <label class="toc-title" for="toc-trigger">目录</label>
+        <input id="toc-trigger" type="checkbox" checked/>
+        <div class="toc-content">
+            <ol class="toc">
+                
+                <li class="toc-item toc-level-1">
+                    <a class="toc-link" href="https://zhen.wang/article/低代码平台前端的设计与实现（四）组件大纲树的构建设计/#shen-me-shi-zu-jian-da-gang-shu">什么是组件大纲树？</a>
+                    
+                </li>
+                
+                <li class="toc-item toc-level-1">
+                    <a class="toc-link" href="https://zhen.wang/article/低代码平台前端的设计与实现（四）组件大纲树的构建设计/#ru-he-she-ji-shi-xian-da-gang-shu-yu-she-ji-tai-uijie-mian-de-tong-yi">如何设计实现大纲树与设计态UI界面的统一？</a>
+                    
+                </li>
+                
+                <li class="toc-item toc-level-1">
+                    <a class="toc-link" href="https://zhen.wang/article/低代码平台前端的设计与实现（四）组件大纲树的构建设计/#da-gang-shu-zu-jian-shi-xian">大纲树组件实现</a>
+                    
+                    <ol class="toc-child">
+                        
+                        <li class="toc-item toc-level-2">
+                            <a href="https://zhen.wang/article/低代码平台前端的设计与实现（四）组件大纲树的构建设计/#treezu-jian-de-ji-ben-yong-fa">Tree组件的基本用法</a>
+                        </li>
+                        
+                        <li class="toc-item toc-level-2">
+                            <a href="https://zhen.wang/article/低代码平台前端的设计与实现（四）组件大纲树的构建设计/#zu-jian-da-gang-shu-mian-ban">组件大纲树面板</a>
+                        </li>
+                        
+                    </ol>
+                    
+                </li>
+                
+                <li class="toc-item toc-level-1">
+                    <a class="toc-link" href="https://zhen.wang/article/低代码平台前端的设计与实现（四）组件大纲树的构建设计/#fu-lu">附录</a>
+                    
+                </li>
+                
+            </ol>
+        </div>
+    </div>
+    
+    <!-- real content -->
+    <div class="article-content markdown-content">
+        <p>在上篇文章，我们已经设计了一个简单的设计态的Canvas，能够显示经过BuildEngine生成的ReactNode进行渲染。本文，我们将继续上一篇文章的成果，设计并实现一个能够显示组件节点大纲树的组件。</p>
+<span id="continue-reading"></span><h1 id="shen-me-shi-zu-jian-da-gang-shu">什么是组件大纲树？</h1>
+<p>我们希望用户能通过一个地方比较明显的看到当前整个ComponentNode的树状结构；当用户点击某个ComponentNode的时候，既能够在DesignCanvas上高亮当前选中的UI元素，同时对于组件大纲树上也能高亮对应的树状节点。</p>
+<blockquote>
+<p>PS：我们所设计的低开前端平台定位是轻量级。所以，我们在构建整个平台核心库的时候，并不会设计的非常复杂，本次我们将不会设计直接将元素进行拖拉拽到画布的内容，而是会围绕整个节点大纲树，来优化我们的低开体验。</p>
+</blockquote>
+<p><img src="https://static-res.zhen.wang/images/post/2023-03-05/010-effect.gif" alt="010-effect" /></p>
+<h1 id="ru-he-she-ji-shi-xian-da-gang-shu-yu-she-ji-tai-uijie-mian-de-tong-yi">如何设计实现大纲树与设计态UI界面的统一？</h1>
+<p>在本次设计与开发之前，我们需要回顾一下上篇文章中（<a rel="noopener" target="_blank" href="https://zhuanlan.zhihu.com/p/603528920">低代码平台前端的设计与实现（三）设计态画布DesignCanvas的设计与实现 - 知乎 (zhihu.com)</a>）关于DesignCanvas的设计。DesignCanvas的过程设计如下：</p>
+<p><img src="https://static-res.zhen.wang/images/post/2023-03-05/020-DesignCanvasOldVersion.png" alt="020-DesignCanvasOldVersion" /></p>
+<p>正如上图所示，DesignCanvas的执行过程中，<code>step4 -&gt; data5 -&gt; step6 -&gt; data7</code> 是在一个函数处理过程中的。</p>
+<p>为了实现本次的需求，我们可能需要对上述的过程进行一定的优化，达到UI的渲染与元素节点大纲树组件在同一个DesignCanvas中的渲染的目的。在讨论如何修改前，我们先采用一个流程图来展示这个过程：</p>
+<p><img src="https://static-res.zhen.wang/images/post/2023-03-05/030-DesignCanvasWithNodeTreeIdea.png" alt="030-DesignCanvasWithNodeTreeIdea" /></p>
+<p>从上图，我们可以很容易的知道，为了让ComponentNode树到UI界面的生成与ComponentNode树到节点大纲树的生成是一致且同步的。我们需要将ComponentNode object和selectedNodePath再交给组件大纲树进行渲染。</p>
+<p>在这样一套设计下，无论点击大纲树任意树节点，还是点击设计态UI界面的任意UI组件。我们都能够通过相关的事件（对于大纲树来说是树节点的点击事件；对于设计态UI界面上的UI组件来说是前面设计的wrapper的点击事件）拿到当前点击的元素的唯一path标识；然后，我们将拿到的path标识设置给selectedtNodePath这个state，最后再由该state来同时控制大纲树的节点高亮和设计态UI界面上的UI组件的边框高亮。这个过程由下面的流程图来简单描述：</p>
+<p><img src="https://static-res.zhen.wang/images/post/2023-03-05/040-selectedNodePathChangeEvent.png" alt="040-selectedNodePathChangeEvent" /></p>
+<h1 id="da-gang-shu-zu-jian-shi-xian">大纲树组件实现</h1>
+<p>首先，我们选择了antd5的Tree树形组件。对于该组件我们会以<strong>受控</strong>的方式来使用，具体来讲，Tree树形组件的<strong>节点选中</strong>通过属性<code>selectedKeys</code>控制；树形组件的<strong>节点展开</strong>通过属性<code>expandedKeys</code>来控制。当然，一旦我们选择该组件以受控方式使用，那么不可避免的需要用对应的<code>onSelect事件</code>和<code>onExpand事件</code>来获取当前状态值，再交给上述的<code>selectedKeys</code>和<code>expandedKeys</code>。</p>
+<h2 id="treezu-jian-de-ji-ben-yong-fa">Tree组件的基本用法</h2>
+<p>本节内容主要讲antd5的Tree树形组件的基本用法，目的是为了后面我们具体的大纲树组件做基础准备，可以完全当作独立的一节内容来看。</p>
+<p>Tree的selectedKeys接收的是一个数组，用以表现被选中的节点。但需要特别注意：</p>
+<p>Tree在默认的使用场景下是<strong>单个选中</strong>。也就是说，用户点击任意一个节点时，就选中该节点；点击其他节点，则选中其他节点。同一时间只会有一个被选中的节点。<code>selectedKeys</code>尽管是一个数组，但在单选场景下，要不是一个空数组来表示没有节点选中，要不是一个只有一个元素的数组，表示某一个节点选中。下面用一个Demo来演示：</p>
+<pre data-lang="js" style="background-color:#2b303b;color:#c0c5ce;" class="language-js "><code class="language-js" data-lang="js"><span> </span><span style="color:#65737e;">/**
+</span><span style="color:#65737e;"> * 首先准备一段测试数据：
+</span><span style="color:#65737e;"> * 1
+</span><span style="color:#65737e;"> * ├ 1-1
+</span><span style="color:#65737e;"> * └ 1-2
+</span><span style="color:#65737e;"> *   └ 1-2-1
+</span><span style="color:#65737e;"> * 注意：TREE_DATA是一个数组！
+</span><span style="color:#65737e;"> **/
+</span><span style="color:#b48ead;">const </span><span style="color:#bf616a;">TREE_DATA </span><span>= [
+</span><span>    {
+</span><span>        key: &#39;</span><span style="color:#a3be8c;">1</span><span>&#39;,
+</span><span>        title: &#39;</span><span style="color:#a3be8c;">title 1</span><span>&#39;,
+</span><span>        children: [{
+</span><span>            key: &#39;</span><span style="color:#a3be8c;">1-1</span><span>&#39;,
+</span><span>            title: &#39;</span><span style="color:#a3be8c;">title 1-1</span><span>&#39;
+</span><span>        }, {
+</span><span>            key: &#39;</span><span style="color:#a3be8c;">1-2</span><span>&#39;,
+</span><span>            title: &#39;</span><span style="color:#a3be8c;">title 1-2</span><span>&#39;,
+</span><span>            children: [{
+</span><span>                key: &#39;</span><span style="color:#a3be8c;">1-2-1</span><span>&#39;,
+</span><span>                title: &#39;</span><span style="color:#a3be8c;">title 1-2-1</span><span>&#39;
+</span><span>            }]
+</span><span>        }]
+</span><span>    }
+</span><span>]
+</span></code></pre>
+<p>然后，编写一段代码，将selectedKeys设置为<code>1-2-1</code>，也就是说，我们选中了上面的<code>1-2-1</code>节点：</p>
+<pre data-lang="tsx" style="background-color:#2b303b;color:#c0c5ce;" class="language-tsx "><code class="language-tsx" data-lang="tsx"><span style="color:#b48ead;">export const </span><span style="color:#8fa1b3;">TreeDemo </span><span>= () </span><span style="color:#b48ead;">=&gt; </span><span>{
+</span><span>    </span><span style="color:#b48ead;">return </span><span>&lt;</span><span style="color:#ebcb8b;">Tree </span><span style="color:#d08770;">selectedKeys</span><span>=</span><span style="color:#ab7967;">{</span><span>[&#39;</span><span style="color:#a3be8c;">1-2-1</span><span>&#39;]</span><span style="color:#ab7967;">} </span><span style="color:#d08770;">treeData</span><span>=</span><span style="color:#ab7967;">{</span><span style="color:#bf616a;">TREE_DATA</span><span style="color:#ab7967;">}</span><span>/&gt;
+</span><span>}
+</span><span style="color:#65737e;">// 再次强调，selectedKeys是一个数组，但是在默认情况下，该数组只有一个元素或者空。
+</span></code></pre>
+<p>这个例子的效果如下：</p>
+<p><img src="https://static-res.zhen.wang/images/post/2023-03-05/050-selectedKeys.gif" alt="selectedKeys" /></p>
+<p>从上面的gif可以看到界面渲染后，选中的节点就是<code>1-2-1</code>。同时，其他的节点无论我们如何点击，都不会有任何的效果（受控）。为了能够点击后，让Tree组件选中对应的节点，我们需要将<code>selectedKeys</code>至少作为一个state来存放，然后通过onSelect来设置该state：</p>
+<pre data-lang="tsx" style="background-color:#2b303b;color:#c0c5ce;" class="language-tsx "><code class="language-tsx" data-lang="tsx"><span style="color:#b48ead;">export const </span><span style="color:#8fa1b3;">TreeDemo </span><span>= () </span><span style="color:#b48ead;">=&gt; </span><span>{
+</span><span>    </span><span style="color:#65737e;">// 用一个state来表明当前选择的Keys
+</span><span>    </span><span style="color:#b48ead;">const </span><span>[</span><span style="color:#bf616a;">currSelectedKeys</span><span>, </span><span style="color:#bf616a;">setCurrSelectedKeys</span><span>] = </span><span style="color:#8fa1b3;">useState</span><span>&lt;string[]&gt;([]);
+</span><span>    </span><span style="color:#b48ead;">return </span><span>&lt;</span><span style="color:#ebcb8b;">Tree
+</span><span>        </span><span style="color:#d08770;">treeData</span><span>=</span><span style="color:#ab7967;">{</span><span style="color:#bf616a;">TREE_DATA</span><span style="color:#ab7967;">}
+</span><span>        </span><span style="color:#d08770;">selectedKeys</span><span>=</span><span style="color:#ab7967;">{</span><span style="color:#bf616a;">currSelectedKeys</span><span style="color:#ab7967;">}
+</span><span>        </span><span style="color:#d08770;">onSelect</span><span>=</span><span style="color:#ab7967;">{</span><span style="color:#bf616a;">selectedKeys </span><span style="color:#b48ead;">=&gt; </span><span>{
+</span><span>            </span><span style="color:#65737e;">// 当我们点击任何一个节点的时候，都会触发该onSelect，第一个参数则是即将选中的Keys
+</span><span>            </span><span style="color:#65737e;">// 当然，根据文档，我们重复点击同一节点，也会触发该onSelect事件，但参数 selectedKeys 会是一个空数组
+</span><span>            </span><span style="color:#ebcb8b;">console</span><span>.</span><span style="color:#96b5b4;">log</span><span>(&#39;</span><span style="color:#a3be8c;">onSelect, selectedKeys: </span><span>&#39;, </span><span style="color:#bf616a;">selectedKeys</span><span>);
+</span><span>            </span><span style="color:#8fa1b3;">setCurrSelectedKeys</span><span>(</span><span style="color:#bf616a;">selectedKeys </span><span style="color:#b48ead;">as </span><span>string[])
+</span><span>        }</span><span style="color:#ab7967;">}
+</span><span>    /&gt;
+</span><span>}
+</span></code></pre>
+<p>上述的过程，可以用如下的数据流来描述：</p>
+<p><img src="https://static-res.zhen.wang/images/post/2023-03-05/060-selectedKeys-workflow.png" alt="060-selectedKeys-workflow" /></p>
+<p>上述过程中，currSelectedKeys表明当前选中的Keys（默认的单选模式下，是一个长度为1或0的数组），传给Tree的属性<code>selectedKeys</code>，Tree组件的UI展示的过程中使用根据<code>selectedKeys</code>来高亮对应节点；当然，我们点击任意节点的时候，会触发onSelect事件，该事件第一个参数就是点击选中的节点的Keys，我们可以直接将这个值再次设置给currSelectedKeys这个state。在上述的代码下，我们可以看到效果如下：</p>
+<p><img src="https://static-res.zhen.wang/images/post/2023-03-05/070-selectedKeys-with-control.gif" alt="070-selectedKeys-with-control" /></p>
+<p>现在，我们分析了<code>selectedKeys</code>后，再来分析一下Tree树形组件的<code>expandedKeys</code>。这个属性是一个数组，控制整个Tree节点展开的Keys。我们首先将该值设置为：<code>['1']</code>：</p>
+<pre data-lang="diff" style="background-color:#2b303b;color:#c0c5ce;" class="language-diff "><code class="language-diff" data-lang="diff"><span>    ... ...
+</span><span>    return &lt;Tree
+</span><span>        treeData={TREE_DATA}
+</span><span>        selectedKeys={currSelectedKeys}
+</span><span>        onSelect={selectedKeys =&gt; {
+</span><span>           ... ...
+</span><span>        }}
+</span><span style="color:#a3be8c;">+       expandedKeys={[&#39;1&#39;]}
+</span><span>    /&gt;
+</span></code></pre>
+<p>然后查看Demo效果：</p>
+<p><img src="https://static-res.zhen.wang/images/post/2023-03-05/080-expandedKeys-without-control.gif" alt="080-expandedKeys-without-control" /></p>
+<p>可以看到，无论怎样点击节点左侧的三角，都无法展开或收起对应的子节点。类似的，我们使用一个state来存储展开的节点，然后使用onExpand事件来设置，即可达到效果：</p>
+<p><img src="https://static-res.zhen.wang/images/post/2023-03-05/090-expandedKeys-with-control.gif" alt="090-expandedKeys-with-control.gif" /></p>
+<h2 id="zu-jian-da-gang-shu-mian-ban">组件大纲树面板</h2>
+<p>有了上面关于antd5的Tree树形组件的受控方式的使用基础，我们开始设计我们自己的组件大纲树组件，这里我们为它取名为：<code>ComponentNodeTreeDesignPanel</code>。该组件的props如下：</p>
+<pre data-lang="typescript" style="background-color:#2b303b;color:#c0c5ce;" class="language-typescript "><code class="language-typescript" data-lang="typescript"><span style="color:#b48ead;">interface </span><span>ComponentNodeTreeDesignPanelProps {
+</span><span>    </span><span style="color:#65737e;">/**
+</span><span style="color:#65737e;">     * 根 ComponentNode
+</span><span style="color:#65737e;">     */
+</span><span>    </span><span style="color:#bf616a;">componentNode</span><span>: ComponentNode;
+</span><span>    </span><span style="color:#65737e;">/**
+</span><span style="color:#65737e;">     * 选中的元素节点
+</span><span style="color:#65737e;">     */
+</span><span>    </span><span style="color:#bf616a;">selectedComponentNodePath</span><span>: string;
+</span><span>    </span><span style="color:#65737e;">/**
+</span><span style="color:#65737e;">     * 点击选中Tree中的某个节点的事件回调
+</span><span style="color:#65737e;">     * </span><span style="color:#b48ead;">@param </span><span style="color:#bf616a;">selectedNodePath</span><span style="color:#65737e;"> 选中指定的节点的Path，
+</span><span style="color:#65737e;">     * 譬如：&quot;/page/panel@0/button@0&quot;
+</span><span style="color:#65737e;">     */
+</span><span>    </span><span style="color:#8fa1b3;">onComponentNodeSelected</span><span>: (</span><span style="color:#bf616a;">selectedNodePath</span><span>: string) </span><span style="color:#b48ead;">=&gt; </span><span>void;
+</span><span>}
+</span></code></pre>
+<p>我们再来讨论下这些属性如何关联内部的antd Tree树形组件的渲染与行为的。这里，我直接用一个流程图来描述：</p>
+<p><img src="https://static-res.zhen.wang/images/post/2023-03-05/100-ComponentNodeTreeDesignPanel-workflow.png" alt="100-ComponentNodeTreeDesignPanel-workflow" /></p>
+<p>上述过程具体为：</p>
+<ol>
+<li>
+<p>首先，为了呈现组件节点树状UI，很容易知道至少需要将ComponentNode对象传入，因为该对象本身就是树形的，只需要进行简单的数据转换即可完成Tree的树形数据格式，并渲染；</p>
+</li>
+<li>
+<p>其次，为了达到高亮对应的节点效果，则需要传入当前选中的节点的唯一标识<code>path</code>，在内部转换为selectedKeys和expandedKeys；</p>
+</li>
+<li>
+<p>最后，当我们点击Tree的节点时候，需要把对应的节点信息传到上层，让外部再次控制传入当前选中的ComponentNode的path，形成一个闭环的数据流。</p>
+</li>
+</ol>
+<p>当然，这里面还涉及一些转换，还有path的构成规则。这里不再赘述，感兴趣的读者可以阅读有关<code>ComponentNodeTreeDesignPanel</code>的组件代码。</p>
+<p>最终效果：</p>
+<p><img src="https://static-res.zhen.wang/images/post/2023-03-05/110-final-real-effect.gif" alt="110-final-real-effect" /></p>
+<h1 id="fu-lu">附录</h1>
+<p>本次的内容已经提交至Github，并在打上了相应的Git tag标识：</p>
+<p><a rel="noopener" target="_blank" href="https://github.com/w4ngzhen/lite-lc/tree/chapter_04">https://github.com/w4ngzhen/lite-lc/tree/chapter_04</a></p>
+<p>commit信息（倒序）：</p>
+<pre data-lang="text" style="background-color:#2b303b;color:#c0c5ce;" class="language-text "><code class="language-text" data-lang="text"><span>2. 修改DesignCanvas相关逻辑，实现ComponentNodeTreeDesignPanel组件与BuildEngine生成的组件对于选中的节点path，同步分别高亮树形节点和UI组件。
+</span><span>
+</span><span>1. 新增工具方法，支持根据 ComponentNode 的path，得到该节点的整个链路path形成的数组；新增 ComponentNodeTreeDesignPanel 组件，内部使用antd5的Tree树形控件呈现 ComponentNode 的树状结构，且通过外部传入的&quot;选中节点path&quot;属性，以受控方式控制高亮节点。
+</span></code></pre>
+
+    </div>
+</div>
+<script src="https://zhen.wang/libs/viewerjs@1.11.7/viewer.min.js"></script>
+<link rel="stylesheet" href="https://zhen.wang/libs/viewerjs@1.11.7/viewer.min.css"/>
+<script>
+  if (window.Viewer) {
+    document.querySelectorAll('img').forEach(img => {
+      new Viewer(img, {
+        inline: false,
+        navbar: false,
+        toolbar: {
+          zoomIn: 1,
+          zoomOut: 1,
+          reset: 1,
+          rotateLeft: 1,
+          rotateRight: 1,
+        },
+      });
+    });
+  }
+</script>
+
+
+</body>
+</html>

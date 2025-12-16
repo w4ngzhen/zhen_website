@@ -1,0 +1,333 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="utf-8">
+    <meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover"
+          name="viewport">
+    
+    
+    <!-- umami web analysis -->
+    <script defer src="https://zhen.wang/libs/umami/umami.script.js"
+            data-website-id="d66cfe03-f6b3-4aa0-baf8-728700db1b09"></script>
+    
+    
+    
+    <link rel="icon" type="image/png" sizes="16x16" href="https://zhen.wang/images/blog-site-icon.svg">
+    <link rel="icon" type="image/png" sizes="32x32" href="https://zhen.wang/images/blog-site-icon.svg">
+    <title>zhen&#x27;s everything</title>
+    <link rel="stylesheet" href="https://zhen.wang/style.css">
+    
+<link rel="stylesheet" href="https://zhen.wang/article_content.css">
+<link rel="stylesheet" href="https://zhen.wang/article_markdown.css">
+
+</head>
+<body>
+
+<div id="article">
+    <header class="article-header">
+        
+<div class="base-title">
+    <a href="#" onclick="history.length > 1 ? history.back() : location.href = '/'; return false;">&LeftArrow; Back</a>
+    <h1>
+        低代码平台前端的设计与实现（二）构建引擎BuildEngine切面处理设计
+    </h1>
+</div>
+
+    </header>
+    <p class="article-date">2022-12-03</p>
+    
+    <!-- toc -->
+    <div class="article-toc">
+        <label class="toc-title" for="toc-trigger">目录</label>
+        <input id="toc-trigger" type="checkbox" checked/>
+        <div class="toc-content">
+            <ol class="toc">
+                
+                <li class="toc-item toc-level-1">
+                    <a class="toc-link" href="https://zhen.wang/article/低代码平台前端的设计与实现（二）构建引擎BuildEngine切面处理设计/#qie-mian-she-ji">切面设计</a>
+                    
+                    <ol class="toc-child">
+                        
+                        <li class="toc-item toc-level-2">
+                            <a href="https://zhen.wang/article/低代码平台前端的设计与实现（二）构建引擎BuildEngine切面处理设计/#zu-jian-gou-jian-chu-li">组件构建处理</a>
+                        </li>
+                        
+                        <li class="toc-item toc-level-2">
+                            <a href="https://zhen.wang/article/低代码平台前端的设计与实现（二）构建引擎BuildEngine切面处理设计/#buildengineji-cheng">BuildEngine集成</a>
+                        </li>
+                        
+                    </ol>
+                    
+                </li>
+                
+                <li class="toc-item toc-level-1">
+                    <a class="toc-link" href="https://zhen.wang/article/低代码平台前端的设计与实现（二）构建引擎BuildEngine切面处理设计/#ji-ben-ce-shi">基本测试</a>
+                    
+                </li>
+                
+                <li class="toc-item toc-level-1">
+                    <a class="toc-link" href="https://zhen.wang/article/低代码平台前端的设计与实现（二）构建引擎BuildEngine切面处理设计/#fu-lu">附录</a>
+                    
+                </li>
+                
+            </ol>
+        </div>
+    </div>
+    
+    <!-- real content -->
+    <div class="article-content markdown-content">
+        <p>上一篇文章，我们介绍了如何设计并实现一个轻量级的根据JSON的渲染引擎，通过快速配置一份规范的JSON文本内容，就可以利用该JSON生成一个基础的UI界面。本文我们将回到低开的核心—页面拖拉拽，探讨关于页面拖拉拽的核心设计器Designer的一些<strong>基本前置需求</strong>，也就是构建引擎BuildEngine切面处理设计。</p>
+<span id="continue-reading"></span>
+<p>只要接触过低开平台的朋友都见过这样的场景，在设计器的画布中点击已经拖拉拽好的UI元素，会有一个边框，高亮显示当前的元素，还支持操作：</p>
+<p><img src="https://static-res.zhen.wang/images/post/2022-12-03/010-border-show.png" alt="010-border-show" /></p>
+<p>在上一篇文章我们介绍了创建的整个流程：由一个构建引擎（BuildEngine）通过读取JSON DSL的组件节点ComponentNode来匹配对应的节点类型来生成UI元素。</p>
+<p>为了实现设计器画布选中边框的需求，首先想到的一个解决方案就是仿照BuildEngine做一个类似的DesignerBuildEngine，里面的流程和BuildEngine大致相同，只是在生成最终的ReactNode节点的时候，在其外围使用某个元素进行包裹，具备边框等功能：</p>
+<pre data-lang="tsx" style="background-color:#2b303b;color:#c0c5ce;" class="language-tsx "><code class="language-tsx" data-lang="tsx"><span style="color:#65737e;">// DesignerBuileEngine伪代码
+</span><span style="color:#b48ead;">class </span><span style="color:#ebcb8b;">DesignerBuileEngine </span><span style="color:#eff1f5;">{
+</span><span style="color:#eff1f5;">   </span><span style="color:#8fa1b3;">innerBuild</span><span>() </span><span style="color:#eff1f5;">{
+</span><span style="color:#eff1f5;">     </span><span style="color:#65737e;">// 在返回某个ReactNode前，使用一个div包裹
+</span><span style="color:#eff1f5;">     </span><span style="color:#b48ead;">const </span><span style="color:#bf616a;">reactNode </span><span>= </span><span style="color:#bf616a;">xxx</span><span style="color:#eff1f5;">;
+</span><span style="color:#eff1f5;">     </span><span style="color:#b48ead;">return </span><span style="color:#bf616a;">React</span><span style="color:#eff1f5;">.</span><span style="color:#96b5b4;">createElement</span><span style="color:#eff1f5;">(
+</span><span style="color:#eff1f5;">       </span><span>&#39;</span><span style="color:#a3be8c;">div</span><span>&#39;</span><span style="color:#eff1f5;">, { 
+</span><span style="color:#eff1f5;">       </span><span style="color:#65737e;">// 边框样式等数据 
+</span><span style="color:#eff1f5;">       }, 
+</span><span style="color:#eff1f5;">       </span><span style="color:#bf616a;">reactNode</span><span style="color:#eff1f5;">);
+</span><span style="color:#eff1f5;">     }
+</span><span style="color:#eff1f5;">}
+</span></code></pre>
+<p>但是这并不是一个很优雅的设计，因为如果我们衍生出一个新的DesignerRenderEngine，那么我们需要同时维护一个设计态一个运行态两个Engine，尽管他们的处理流程大致相同。</p>
+<h1 id="qie-mian-she-ji">切面设计</h1>
+<h2 id="zu-jian-gou-jian-chu-li">组件构建处理</h2>
+<p>为了避免功能代码的冗余，也更方便后续的扩展性。我们考虑采用切面的设计方案。将整个处理流程的某些环节加入切面，以达到灵活处理的目的。切面的实现可以有很多种形式，例如一个回调函数，又或者传入一个对象实例（本质上还是回调）。作为一个轻量级低开模块，我们暂时设计一个简单的回调customCreateElement（createElement自定义实现），来完成build过程中，最后一步生成ReactNode的自定义处理：</p>
+<p><img src="https://static-res.zhen.wang/images/post/2022-12-03/020-BuildEngine-customCreateElement.png" alt="020-BuildEngine-customCreateElement" /></p>
+<p>该自定义创建方法将作为build的一个参数传入到构造过程中来进行调用，形如：</p>
+<pre data-lang="js" style="background-color:#2b303b;color:#c0c5ce;" class="language-js "><code class="language-js" data-lang="js"><span style="color:#65737e;">// 伪代码
+</span><span style="color:#b48ead;">class </span><span style="color:#ebcb8b;">BuildEngine </span><span style="color:#eff1f5;">{
+</span><span style="color:#eff1f5;">  </span><span style="color:#65737e;">// customCreateElement作为参数传入
+</span><span style="color:#eff1f5;">  </span><span style="color:#8fa1b3;">build</span><span>(</span><span style="color:#bf616a;">componentNode</span><span style="color:#eff1f5;">, </span><span style="color:#bf616a;">customCreateElement</span><span>) </span><span style="color:#eff1f5;">{
+</span><span style="color:#eff1f5;">    </span><span style="color:#bf616a;">this</span><span style="color:#eff1f5;">.</span><span style="color:#8fa1b3;">innerBuild</span><span style="color:#eff1f5;">(</span><span style="color:#bf616a;">componentNode</span><span style="color:#eff1f5;">, </span><span>&#39;</span><span style="color:#a3be8c;">/</span><span>&#39; + </span><span style="color:#bf616a;">componentNode</span><span style="color:#eff1f5;">.</span><span style="color:#bf616a;">componentName</span><span style="color:#eff1f5;">, </span><span style="color:#bf616a;">customCreateElement</span><span style="color:#eff1f5;">);
+</span><span style="color:#eff1f5;">  }
+</span><span style="color:#eff1f5;">  </span><span style="color:#65737e;">// innerBuild对应也需要将参数传入
+</span><span style="color:#eff1f5;">  </span><span style="color:#b48ead;">private </span><span style="color:#8fa1b3;">innerBuild</span><span>(</span><span style="color:#bf616a;">componentNode</span><span style="color:#eff1f5;">, </span><span style="color:#bf616a;">path</span><span style="color:#eff1f5;">, </span><span style="color:#bf616a;">customCreateElement</span><span>) </span><span style="color:#eff1f5;">{
+</span><span style="color:#eff1f5;">    </span><span style="color:#65737e;">// ... ...
+</span><span style="color:#eff1f5;">    </span><span style="color:#b48ead;">if </span><span style="color:#eff1f5;">(</span><span>typeof </span><span style="color:#bf616a;">customCreateElement </span><span>=== &#39;</span><span style="color:#a3be8c;">function</span><span>&#39;</span><span style="color:#eff1f5;">) {
+</span><span style="color:#eff1f5;">      </span><span style="color:#65737e;">// 如果存在外部传入的customCreateElement，则调用之
+</span><span style="color:#eff1f5;">      </span><span style="color:#b48ead;">return </span><span style="color:#8fa1b3;">customCreateElement</span><span style="color:#eff1f5;">(</span><span style="color:#bf616a;">CompConstructor</span><span style="color:#eff1f5;">, {</span><span>...</span><span style="color:#bf616a;">props</span><span style="color:#eff1f5;">}, </span><span style="color:#bf616a;">children</span><span style="color:#eff1f5;">);
+</span><span style="color:#eff1f5;">    }
+</span><span style="color:#eff1f5;">    </span><span style="color:#65737e;">// 否则，走默认的React.createElement
+</span><span style="color:#eff1f5;">    </span><span style="color:#b48ead;">return </span><span style="color:#bf616a;">React</span><span style="color:#eff1f5;">.</span><span style="color:#96b5b4;">createElement</span><span style="color:#eff1f5;">(</span><span style="color:#bf616a;">CompConstructor</span><span style="color:#eff1f5;">, {</span><span>...</span><span style="color:#bf616a;">props</span><span style="color:#eff1f5;">}, </span><span style="color:#bf616a;">children</span><span style="color:#eff1f5;">);
+</span><span style="color:#eff1f5;">  }
+</span><span style="color:#eff1f5;">}
+</span></code></pre>
+<p>根据上述的流程，我们先定义CustomCreateElement：</p>
+<pre data-lang="typescript" style="background-color:#2b303b;color:#c0c5ce;" class="language-typescript "><code class="language-typescript" data-lang="typescript"><span style="color:#b48ead;">import </span><span>{</span><span style="color:#bf616a;">ReactNode</span><span>} </span><span style="color:#b48ead;">from </span><span>&quot;</span><span style="color:#a3be8c;">react</span><span>&quot;;
+</span><span style="color:#b48ead;">import </span><span>{</span><span style="color:#bf616a;">ComponentNode</span><span>, </span><span style="color:#bf616a;">ComponentNodePropType</span><span>} </span><span style="color:#b48ead;">from </span><span>&quot;</span><span style="color:#a3be8c;">../../meta/ComponentNode</span><span>&quot;;
+</span><span>
+</span><span>
+</span><span style="color:#65737e;">/**
+</span><span style="color:#65737e;"> * CreateElement自定义实现方法参数上下文
+</span><span style="color:#65737e;"> * </span><span style="color:#b48ead;">@field</span><span style="color:#65737e;"> componentNode 组件节点数据
+</span><span style="color:#65737e;"> * </span><span style="color:#b48ead;">@field</span><span style="color:#65737e;"> path 组件节点的路径
+</span><span style="color:#65737e;"> * </span><span style="color:#b48ead;">@field</span><span style="color:#65737e;"> ComponentConstructor 已知匹配到的组件构造器
+</span><span style="color:#65737e;"> * </span><span style="color:#b48ead;">@field</span><span style="color:#65737e;"> props 从ComponentNode中取到的props
+</span><span style="color:#65737e;"> * </span><span style="color:#b48ead;">@field</span><span style="color:#65737e;"> children 已经创建完成的ReactNode数组或undefined
+</span><span style="color:#65737e;"> */
+</span><span style="color:#b48ead;">interface </span><span>CustomCreateElementHandleContext {
+</span><span>    </span><span style="color:#bf616a;">componentNode</span><span>: ComponentNode;
+</span><span>    </span><span style="color:#bf616a;">path</span><span>: string;
+</span><span>    </span><span style="color:#bf616a;">ComponentConstructor</span><span>: any;
+</span><span>    </span><span style="color:#bf616a;">props</span><span>: {
+</span><span>        [</span><span style="color:#bf616a;">propName</span><span>: string]: ComponentNodePropType
+</span><span>    };
+</span><span>    </span><span style="color:#bf616a;">children</span><span>?: ReactNode[];
+</span><span>}
+</span><span>
+</span><span style="color:#65737e;">/**
+</span><span style="color:#65737e;"> * 函数接口 CreateElement自定义实现方法类型定义
+</span><span style="color:#65737e;"> */
+</span><span style="color:#b48ead;">export interface </span><span>CustomCreateElementHandle {
+</span><span>
+</span><span>    </span><span style="color:#65737e;">/**
+</span><span style="color:#65737e;">     * CreateElement自定义实现方法类型定义
+</span><span style="color:#65737e;">     * </span><span style="color:#b48ead;">@param </span><span style="color:#bf616a;">context
+</span><span style="color:#65737e;">     */
+</span><span>    (</span><span style="color:#bf616a;">context</span><span>: CustomCreateElementHandleContext): ReactNode | undefined;
+</span><span>}
+</span></code></pre>
+<p>这里我们使用TS的函数接口，参数context包含的字段目前有：</p>
+<ol>
+<li>componentNode 组件节点数据。将该值传入，可以在后续的处理中，根据对应的ComponentNode原始数据方便的进行自定义扩展处理。</li>
+<li>path 组件节点的路径。将该值传入，可以在后续的处理中，根据对应的path方便的进行扩展处理。</li>
+<li>ComponentConstructor 已知匹配到的组件构造器。这里专门使用大驼峰，就是想指明是一个组件的构造器。</li>
+<li>props 从ComponentNode中取到的props。注意，这里是从ComponentNode中取到的未经任何处理的原始props。</li>
+<li>children 已经创建完成的ReactNode数组或undefined。</li>
+</ol>
+<p>如此，我们将构建引擎的中对于ReactNode节点的处理通过切面的方式，允许交给外部调用者方便进行灵活的定制开发。</p>
+<p>回顾整个构建的流程，假设在运行时模式下（RuntimeMode），我们可以都是按照JSON DSL通过映射到默认的组件构造器来直接创建对应的ReactNode；而当处于设计态（DesginMode）的时候，就可以通过<code>CustomCreateElementHandle</code>机制，让上一层进行一定的包裹，进而产生出设计态的效果。</p>
+<h2 id="buildengineji-cheng">BuildEngine集成</h2>
+<p>接下来，我们将上述的CustomCreateElementHandle集成到我们的BuildEngine中，考虑到后续还可能会有新的构建过程的一些上下文，我们先定义一个BuildOptions接口类型，方便后续构建过程中，扩展更多的功能。当然，现阶段定义如下：</p>
+<pre data-lang="typescript" style="background-color:#2b303b;color:#c0c5ce;" class="language-typescript "><code class="language-typescript" data-lang="typescript"><span style="color:#65737e;">/**
+</span><span style="color:#65737e;"> * 构建参数
+</span><span style="color:#65737e;"> */
+</span><span style="color:#b48ead;">export interface </span><span>BuildOptions {
+</span><span>    </span><span style="color:#65737e;">/**
+</span><span style="color:#65737e;">     * 允许外部使用者自定义组件的构建过程
+</span><span style="color:#65737e;">     */
+</span><span>    </span><span style="color:#bf616a;">onCustomCreateElement</span><span>?: CustomCreateElementHandle;
+</span><span>}
+</span></code></pre>
+<p>然后，我们适当修改原来的BuildEngine.build方法的入参，暴露buildOptions：</p>
+<pre data-lang="diff" style="background-color:#2b303b;color:#c0c5ce;" class="language-diff "><code class="language-diff" data-lang="diff"><span>// build方法和innerBuild均需要暴露
+</span><span style="color:#bf616a;">-    build(componentNode: ComponentNode) {
+</span><span style="color:#a3be8c;">+    build(componentNode: ComponentNode, buildOptions?: BuildOptions) {
+</span><span>
+</span><span style="color:#bf616a;">-    private innerBuild(componentNode: ComponentNode, path: string) {
+</span><span style="color:#a3be8c;">+    private innerBuild(componentNode: ComponentNode, path: string, buildOptions?: BuildOptions) {
+</span></code></pre>
+<p>对于innerBuild内部的实现，关于最后返回ReactNode的部分，适配onCustomCreateElement：</p>
+<pre data-lang="diff" style="background-color:#2b303b;color:#c0c5ce;" class="language-diff "><code class="language-diff" data-lang="diff"><span>// innerBuild内容
+</span><span>
+</span><span style="color:#a3be8c;">+        if (typeof buildOptions?.onCustomCreateElement === &#39;function&#39;) {
+</span><span style="color:#a3be8c;">+            // 如果外部提供了对应的自定义创建实现，则使用之
+</span><span style="color:#a3be8c;">+            return buildOptions.onCustomCreateElement({
+</span><span style="color:#a3be8c;">+                componentNode,
+</span><span style="color:#a3be8c;">+                path,
+</span><span style="color:#a3be8c;">+                ComponentConstructor: componentConstructor,
+</span><span style="color:#a3be8c;">+                props: {...props},
+</span><span style="color:#a3be8c;">+                children: childrenReactNode.length &gt; 0 ? childrenReactNode : undefined
+</span><span style="color:#a3be8c;">+            })
+</span><span style="color:#a3be8c;">+        }
+</span><span>				// 否则使用默认实现
+</span><span>        return React.createElement(
+</span><span>            componentConstructor,
+</span><span>            {...props, key: path},
+</span><span>            childrenReactNode.length &gt; 0 ? childrenReactNode : undefined
+</span><span>        )
+</span></code></pre>
+<p>至此，我们针对构建引擎BuildEngine设计了一个关键点的切面处理，为后续构建引擎支撑开发设计态提供了技术上的可能性。</p>
+<h1 id="ji-ben-ce-shi">基本测试</h1>
+<p>接下来，我在样例代码的地方，我们编写一个添加了onCustomCreateElement构建参数的Demo，来展示切面的效果。首先照旧，核心库里面导出对应的类型：</p>
+<pre data-lang="diff" style="background-color:#2b303b;color:#c0c5ce;" class="language-diff "><code class="language-diff" data-lang="diff"><span>  export * from &#39;./meta/ComponentNode&#39;;
+</span><span>  export * from &#39;./engine/BuildEngine&#39;;
+</span><span style="color:#a3be8c;">+ export * from &#39;./engine/aspect/CustomCreateElementHandle&#39;;
+</span></code></pre>
+<p>然后在，在样例工程中添加了一个新的样例页面CustomCreateElementExample：</p>
+<pre data-lang="tsx" style="background-color:#2b303b;color:#c0c5ce;" class="language-tsx "><code class="language-tsx" data-lang="tsx"><span style="color:#b48ead;">import </span><span>{</span><span style="color:#bf616a;">BuildEngine</span><span>} </span><span style="color:#b48ead;">from </span><span>&quot;</span><span style="color:#a3be8c;">@lite-lc/core</span><span>&quot;;
+</span><span style="color:#b48ead;">import </span><span>{</span><span style="color:#bf616a;">ChangeEvent</span><span>, </span><span style="color:#bf616a;">createElement</span><span>, </span><span style="color:#bf616a;">useState</span><span>} </span><span style="color:#b48ead;">from </span><span>&quot;</span><span style="color:#a3be8c;">react</span><span>&quot;;
+</span><span style="color:#b48ead;">import </span><span>{</span><span style="color:#bf616a;">Input</span><span>} </span><span style="color:#b48ead;">from </span><span>&#39;</span><span style="color:#a3be8c;">antd</span><span>&#39;;
+</span><span>
+</span><span style="color:#b48ead;">export function </span><span style="color:#8fa1b3;">CustomCreateElementExample</span><span>() {
+</span><span>
+</span><span>    </span><span style="color:#65737e;">// 使用构建引擎
+</span><span>    </span><span style="color:#b48ead;">const </span><span>[</span><span style="color:#bf616a;">buildEngine</span><span>] = </span><span style="color:#8fa1b3;">useState</span><span>(new BuildEngine());
+</span><span>
+</span><span>    </span><span style="color:#65737e;">// 使用state存储一个schema的字符串
+</span><span>    </span><span style="color:#b48ead;">const </span><span>[</span><span style="color:#bf616a;">componentNodeJson</span><span>, </span><span style="color:#bf616a;">setComponentNodeJson</span><span>] = </span><span style="color:#8fa1b3;">useState</span><span>(JSON.</span><span style="color:#96b5b4;">stringify</span><span>({
+</span><span>        &quot;</span><span style="color:#a3be8c;">componentName</span><span>&quot;: &quot;</span><span style="color:#a3be8c;">page</span><span>&quot;,
+</span><span>        &quot;</span><span style="color:#a3be8c;">children</span><span>&quot;: [
+</span><span>            {
+</span><span>                &quot;</span><span style="color:#a3be8c;">componentName</span><span>&quot;: &quot;</span><span style="color:#a3be8c;">button</span><span>&quot;,
+</span><span>                &quot;</span><span style="color:#a3be8c;">props</span><span>&quot;: {
+</span><span>                    &quot;</span><span style="color:#a3be8c;">size</span><span>&quot;: &quot;</span><span style="color:#a3be8c;">small</span><span>&quot;,
+</span><span>                    &quot;</span><span style="color:#a3be8c;">type</span><span>&quot;: &quot;</span><span style="color:#a3be8c;">primary</span><span>&quot;
+</span><span>                },
+</span><span>                &quot;</span><span style="color:#a3be8c;">children</span><span>&quot;: [
+</span><span>                    {
+</span><span>                        &quot;</span><span style="color:#a3be8c;">componentName</span><span>&quot;: &quot;</span><span style="color:#a3be8c;">text</span><span>&quot;,
+</span><span>                        &quot;</span><span style="color:#a3be8c;">props</span><span>&quot;: {
+</span><span>                            &quot;</span><span style="color:#a3be8c;">value</span><span>&quot;: &quot;</span><span style="color:#a3be8c;">hello, my button.</span><span>&quot;
+</span><span>                        }
+</span><span>                    }
+</span><span>                ]
+</span><span>            },
+</span><span>            {
+</span><span>                &quot;</span><span style="color:#a3be8c;">componentName</span><span>&quot;: &quot;</span><span style="color:#a3be8c;">input</span><span>&quot;
+</span><span>            }
+</span><span>        ]
+</span><span>    }, </span><span style="color:#d08770;">null</span><span>, </span><span style="color:#d08770;">2</span><span>))
+</span><span>
+</span><span>    </span><span style="color:#b48ead;">let </span><span style="color:#bf616a;">reactNode</span><span>;
+</span><span>    </span><span style="color:#b48ead;">try </span><span>{
+</span><span>        </span><span style="color:#b48ead;">const </span><span style="color:#bf616a;">eleNode </span><span>= JSON.</span><span style="color:#96b5b4;">parse</span><span>(</span><span style="color:#bf616a;">componentNodeJson</span><span>);
+</span><span>        </span><span style="color:#bf616a;">reactNode </span><span>= </span><span style="color:#bf616a;">buildEngine</span><span>.</span><span style="color:#8fa1b3;">build</span><span>(</span><span style="color:#bf616a;">eleNode</span><span>, {
+</span><span>            </span><span style="color:#8fa1b3;">onCustomCreateElement</span><span>: (</span><span style="color:#bf616a;">ctx</span><span>) </span><span style="color:#b48ead;">=&gt; </span><span>{
+</span><span>                </span><span style="color:#b48ead;">const </span><span>{</span><span style="color:#bf616a;">ComponentConstructor</span><span>, </span><span style="color:#bf616a;">props</span><span>, </span><span style="color:#bf616a;">path</span><span>, </span><span style="color:#bf616a;">children</span><span>} = </span><span style="color:#bf616a;">ctx</span><span>;
+</span><span>                </span><span style="color:#ebcb8b;">console</span><span>.</span><span style="color:#96b5b4;">debug</span><span>(&#39;</span><span style="color:#a3be8c;">path: </span><span>&#39;, </span><span style="color:#bf616a;">path</span><span>)
+</span><span>                </span><span style="color:#ebcb8b;">console</span><span>.</span><span style="color:#96b5b4;">debug</span><span>(&#39;</span><span style="color:#a3be8c;">props: </span><span>&#39;, </span><span style="color:#bf616a;">props</span><span>)
+</span><span>                </span><span style="color:#b48ead;">return </span><span style="color:#8fa1b3;">createElement</span><span>(</span><span style="color:#bf616a;">ComponentConstructor</span><span>, {
+</span><span>                    ...</span><span style="color:#bf616a;">props</span><span>,
+</span><span>                    key: </span><span style="color:#bf616a;">path
+</span><span>                }, </span><span style="color:#bf616a;">children</span><span>)
+</span><span>            }
+</span><span>        });
+</span><span>    } </span><span style="color:#b48ead;">catch </span><span>(</span><span style="color:#bf616a;">e</span><span>) {
+</span><span>        </span><span style="color:#65737e;">// 序列化出异常，返回JSON格式出错
+</span><span>        </span><span style="color:#bf616a;">reactNode </span><span>= &lt;</span><span style="color:#bf616a;">div</span><span>&gt;JSON格式出错&lt;/</span><span style="color:#bf616a;">div</span><span>&gt;
+</span><span>    }
+</span><span>
+</span><span>    </span><span style="color:#b48ead;">return </span><span>(
+</span><span>        &lt;</span><span style="color:#bf616a;">div </span><span style="color:#d08770;">style</span><span>=</span><span style="color:#ab7967;">{</span><span>{width: &#39;</span><span style="color:#a3be8c;">100%</span><span>&#39;, height: &#39;</span><span style="color:#a3be8c;">100%</span><span>&#39;, padding: &#39;</span><span style="color:#a3be8c;">10px</span><span>&#39;}</span><span style="color:#ab7967;">}</span><span>&gt;
+</span><span>            &lt;</span><span style="color:#bf616a;">div </span><span style="color:#d08770;">style</span><span>=</span><span style="color:#ab7967;">{</span><span>{width: &#39;</span><span style="color:#a3be8c;">100%</span><span>&#39;, height: &#39;</span><span style="color:#a3be8c;">calc(50%)</span><span>&#39;}</span><span style="color:#ab7967;">}</span><span>&gt;
+</span><span>                &lt;</span><span style="color:#ebcb8b;">Input.TextArea
+</span><span>                    </span><span style="color:#d08770;">rows</span><span>=</span><span style="color:#ab7967;">{</span><span style="color:#d08770;">4</span><span style="color:#ab7967;">}
+</span><span>                    </span><span style="color:#d08770;">value</span><span>=</span><span style="color:#ab7967;">{</span><span style="color:#bf616a;">componentNodeJson</span><span style="color:#ab7967;">}
+</span><span>                    </span><span style="color:#d08770;">onChange</span><span>=</span><span style="color:#ab7967;">{</span><span>(</span><span style="color:#bf616a;">e</span><span>: ChangeEvent&lt;HTMLTextAreaElement&gt;) </span><span style="color:#b48ead;">=&gt; </span><span>{
+</span><span>                        </span><span style="color:#b48ead;">const </span><span style="color:#bf616a;">value </span><span>= </span><span style="color:#bf616a;">e</span><span>.target.value;
+</span><span>                        </span><span style="color:#65737e;">// 编辑框发生修改，重新设置JSON
+</span><span>                        </span><span style="color:#8fa1b3;">setComponentNodeJson</span><span>(</span><span style="color:#bf616a;">value</span><span>);
+</span><span>                    }</span><span style="color:#ab7967;">}</span><span>/&gt;
+</span><span>            &lt;/</span><span style="color:#bf616a;">div</span><span>&gt;
+</span><span>            &lt;</span><span style="color:#bf616a;">div </span><span style="color:#d08770;">style</span><span>=</span><span style="color:#ab7967;">{</span><span>{width: &#39;</span><span style="color:#a3be8c;">100%</span><span>&#39;, height: &#39;</span><span style="color:#a3be8c;">calc(50%)</span><span>&#39;, border: &#39;</span><span style="color:#a3be8c;">1px solid gray</span><span>&#39;}</span><span style="color:#ab7967;">}</span><span>&gt;
+</span><span>                </span><span style="color:#ab7967;">{</span><span style="color:#bf616a;">reactNode</span><span style="color:#ab7967;">}
+</span><span>            &lt;/</span><span style="color:#bf616a;">div</span><span>&gt;
+</span><span>        &lt;/</span><span style="color:#bf616a;">div</span><span>&gt;
+</span><span>    );
+</span><span>}
+</span></code></pre>
+<p>这段代码和上一章中的SimpleExample的核心差别在于：</p>
+<pre data-lang="diff" style="background-color:#2b303b;color:#c0c5ce;" class="language-diff "><code class="language-diff" data-lang="diff"><span>        const eleNode = JSON.parse(componentNodeJson);
+</span><span style="color:#bf616a;">-       reactNode = buildEngine.build(eleNode);
+</span><span style="color:#a3be8c;">+       reactNode = buildEngine.build(eleNode, {
+</span><span style="color:#a3be8c;">+           onCustomCreateElement: (ctx) =&gt; {
+</span><span style="color:#a3be8c;">+               const {ComponentConstructor, props, path, children} = ctx;
+</span><span style="color:#a3be8c;">+               console.debug(&#39;path: &#39;, path)
+</span><span style="color:#a3be8c;">+               console.debug(&#39;props: &#39;, props)
+</span><span style="color:#a3be8c;">+               return createElement(ComponentConstructor, {
+</span><span style="color:#a3be8c;">+                   ...props,
+</span><span style="color:#a3be8c;">+                   key: path
+</span><span style="color:#a3be8c;">+               }, children)
+</span><span style="color:#a3be8c;">+           }
+</span><span style="color:#a3be8c;">+       });
+</span></code></pre>
+<p>原本直接调用buildEngine.build的地方，我们加入我们自定义的实现，并进行了打印。从下面的效果也能看出：</p>
+<p><img src="https://static-res.zhen.wang/images/post/2022-12-03/030-customCreateElement-effect.png" alt="030-customCreateElement-effect" /></p>
+<h1 id="fu-lu">附录</h1>
+<p>本文的所有内容已经提交至github仓库</p>
+<p><a rel="noopener" target="_blank" href="https://github.com/w4ngzhen/lite-lc">w4ngzhen/lite-lc (github.com)</a></p>
+<p>本章对应tag为chapter_02</p>
+
+    </div>
+</div>
+<script src="https://zhen.wang/libs/viewerjs@1.11.7/viewer.min.js"></script>
+<link rel="stylesheet" href="https://zhen.wang/libs/viewerjs@1.11.7/viewer.min.css"/>
+<script>
+  if (window.Viewer) {
+    document.querySelectorAll('img').forEach(img => {
+      new Viewer(img, {
+        inline: false,
+        navbar: false,
+        toolbar: {
+          zoomIn: 1,
+          zoomOut: 1,
+          reset: 1,
+          rotateLeft: 1,
+          rotateRight: 1,
+        },
+      });
+    });
+  }
+</script>
+
+
+</body>
+</html>

@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="utf-8">
+    <meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover"
+          name="viewport">
+    
+    
+    <!-- umami web analysis -->
+    <script defer src="https://zhen.wang/libs/umami/umami.script.js"
+            data-website-id="d66cfe03-f6b3-4aa0-baf8-728700db1b09"></script>
+    
+    
+    
+    <link rel="icon" type="image/png" sizes="16x16" href="https://zhen.wang/images/blog-site-icon.svg">
+    <link rel="icon" type="image/png" sizes="32x32" href="https://zhen.wang/images/blog-site-icon.svg">
+    <title>zhen&#x27;s everything</title>
+    <link rel="stylesheet" href="https://zhen.wang/style.css">
+    
+<link rel="stylesheet" href="https://zhen.wang/article_content.css">
+<link rel="stylesheet" href="https://zhen.wang/article_markdown.css">
+
+</head>
+<body>
+
+<div id="article">
+    <header class="article-header">
+        
+<div class="base-title">
+    <a href="#" onclick="history.length > 1 ? history.back() : location.href = '/'; return false;">&LeftArrow; Back</a>
+    <h1>
+        Java编译运行环境讨论（复古但能加深对Java项目的理解）
+    </h1>
+</div>
+
+    </header>
+    <p class="article-date">2018-03-30</p>
+    
+    <!-- real content -->
+    <div class="article-content markdown-content">
+        <p>如今我们大多数情况都会使用IDE来进行Java项目的开发，而一个如今众多优秀的IDE已经能够帮助我们自动的部署并调试运行我们的Java程序。然而在早期我们进行Java开始需要手动的建立逻辑包（package）与目录来管理我们的Java项目或是更高级一点的则是使用ant这样的构建工具。作为Javaer，对于Java的编译过程应当是熟悉的，这样即使脱离了IDE我们依然能够很好的理解Java的构建过程。</p>
+<span id="continue-reading"></span>
+<p>初级</p>
+<p>我们首先建立一个基础的项目文件夹java-demo，并在其中建立Main.java文件：</p>
+<pre data-lang="java" style="background-color:#2b303b;color:#c0c5ce;" class="language-java "><code class="language-java" data-lang="java"><span>$ vim </span><span style="color:#ebcb8b;">Main</span><span>.java
+</span><span style="color:#b48ead;">public class </span><span style="color:#ebcb8b;">Main </span><span style="color:#eff1f5;">{
+</span><span style="color:#eff1f5;">    </span><span style="color:#b48ead;">public static void </span><span style="color:#8fa1b3;">main</span><span style="color:#eff1f5;">(</span><span style="color:#ebcb8b;">String</span><span style="color:#b48ead;">[] </span><span style="color:#bf616a;">args</span><span style="color:#eff1f5;">) {
+</span><span style="color:#eff1f5;">        </span><span style="color:#ebcb8b;">System</span><span style="color:#eff1f5;">.out.</span><span style="color:#bf616a;">println</span><span style="color:#eff1f5;">(</span><span>&quot;</span><span style="color:#a3be8c;">Hello</span><span>&quot;</span><span style="color:#eff1f5;">);
+</span><span style="color:#eff1f5;">    }
+</span><span style="color:#eff1f5;">}
+</span><span>tips:
+</span><span>在Java中，.java文件中至多有一个共有类，并且文件名和改共有类相同，如果没有共有类，则任选一个类名作为文件名即可。
+</span></code></pre>
+<p>完成了我们的编辑工作之后，我们使用javac命令进行编译工作：</p>
+<pre data-lang="shell" style="background-color:#2b303b;color:#c0c5ce;" class="language-shell "><code class="language-shell" data-lang="shell"><span>$ javac -d . ./Main.java
+</span><span>$ ls
+</span><span>Main.class Main.java
+</span><span>tips:上述的-d .表示在当前目录下生成class文件
+</span></code></pre>
+<p>之后我们可以使用java命令运行得到的.class文件（不需要带.class文件后缀）</p>
+<pre data-lang="shell" style="background-color:#2b303b;color:#c0c5ce;" class="language-shell "><code class="language-shell" data-lang="shell"><span>$ java Main
+</span><span>Hello
+</span></code></pre>
+<p>初级++</p>
+<p>在上述的示例中，我们并没有在代码中对我们的Java程序打包（package xxx;），我们知道Java中对程序进行package有很重要的意义：能够模块化程序，通过定义不同的包来实现模块化的开发，同时也能够帮助其他接手或者学习代码的人能够有很好的引导作用，能够明白整个Java项目模块的分布。</p>
+<p>所以我们现在需要在代码中定义包，从而模块化我们的代码，这里我们在Main.java代码的第一句加上这样一句代码：</p>
+<pre data-lang="java" style="background-color:#2b303b;color:#c0c5ce;" class="language-java "><code class="language-java" data-lang="java"><span style="color:#b48ead;">package </span><span>src.main;
+</span><span>tips: 这句话代表了我先要把该Main类定义在包src包中的main包中
+</span></code></pre>
+<p>然后我们删除刚刚编译过的class文件，为了之后的生成class文件的删除方便，我们在java-demo文件夹下创建一个target文件夹，为以后的class文件的生成目标文件夹。</p>
+<pre data-lang="shell" style="background-color:#2b303b;color:#c0c5ce;" class="language-shell "><code class="language-shell" data-lang="shell"><span>当前工作目录以及文件结构如下：
+</span><span>$ pwd
+</span><span>xxx/java-demo
+</span><span># 目录结构
+</span><span>./
+</span><span>├── Main.java
+</span><span>└── target
+</span></code></pre>
+<p>接着我们重新编译</p>
+<pre data-lang="shell" style="background-color:#2b303b;color:#c0c5ce;" class="language-shell "><code class="language-shell" data-lang="shell"><span>$ javac -d ./target Main.java
+</span><span>$ ls
+</span><span>Main.java target
+</span><span>进入target目录之后，我们可以看到如下的结构：
+</span><span>./
+</span><span>└── src
+</span><span>    └── main
+</span><span>        └── Main.class
+</span></code></pre>
+<p>我们可以看到，即使我们并没在原先的工作目录下创建src/main/Main.java这样的源码结构，只是在代码中定义了逻辑上的src.main，在javac之后，java会为我们自动生成这样的目录结构。</p>
+<p>接下来我们通过java命令运行Main.class。这里有很重要的一点，通过我们上面的代码定义，<strong>我们最终生成的是一个名为src.main.Main类，不是单纯的名为Main类</strong>，不能像上面java Main那样去直接运行这个Java程序，同时我们应当在目标类生成的根目录下去运行java命令：</p>
+<pre data-lang="shell" style="background-color:#2b303b;color:#c0c5ce;" class="language-shell "><code class="language-shell" data-lang="shell"><span># 在target目录下
+</span><span>$ java src.main.Main(或者java src/main/Main)
+</span><span>Hello
+</span></code></pre>
+<p>即使我们进入到了target/src/main目录中（只要不是target/这样的目标根目录），直接使用java Main或者是java src.main.Main都是不行的。前者会提示：“错误: 找不到或无法加载主类 Main”， 原因就是我们定义是一个src.main.Main的类，很显然这里没有类名为Main的类；后者会提示：“错误: 找不到或无法加载主类 src.main.Main”，原因则是当我们使用java命令去运行譬如src.main.Main等在非默认包下的类时，java命令会自动将src.main.Main转换为 <strong>$classpath/</strong> src/main/Main这样路径下的类文件，而你有没有定义classpath，那么java会在当前（这个例子就是main目录类），再找src/main/Main类，这里当然没有，所以报错。诚然，你可以在使用java命令时通过-classpath来指定类加载根路径，但是这样显然没有直接在类编译根目录下来的直接。</p>
+<p>（初级++）++</p>
+<p>目前为止，我们只讨论了只有一个类的情况，当我们在一个类中通过import来引入其他类的时候，又该注意什么呢？</p>
+<p>首先我们重构整个文件目录结构如下：</p>
+<pre data-lang="shell" style="background-color:#2b303b;color:#c0c5ce;" class="language-shell "><code class="language-shell" data-lang="shell"><span>xxx/java-demo
+</span><span>    ├── dir1
+</span><span>    │   └── Main.java
+</span><span>    ├── dir2
+</span><span>    │   └── Sub.java
+</span><span>    └── target
+</span></code></pre>
+<p>首先在Sub.java中我们编写如下的代码：</p>
+<pre data-lang="java" style="background-color:#2b303b;color:#c0c5ce;" class="language-java "><code class="language-java" data-lang="java"><span style="color:#b48ead;">package </span><span>myutil;
+</span><span style="color:#b48ead;">public class </span><span style="color:#ebcb8b;">Sub </span><span style="color:#eff1f5;">{
+</span><span style="color:#eff1f5;">    </span><span style="color:#65737e;">// 静态工具方法
+</span><span style="color:#eff1f5;">    </span><span style="color:#b48ead;">public static void </span><span style="color:#8fa1b3;">printWithFormat</span><span style="color:#eff1f5;">(</span><span style="color:#ebcb8b;">String </span><span style="color:#bf616a;">str</span><span style="color:#eff1f5;">) {
+</span><span style="color:#eff1f5;">      </span><span style="color:#ebcb8b;">System</span><span style="color:#eff1f5;">.out.</span><span style="color:#bf616a;">println</span><span style="color:#eff1f5;">(</span><span>&quot;</span><span style="color:#a3be8c;">&gt;&gt;&gt;</span><span>&quot; +</span><span style="color:#eff1f5;"> str </span><span>+ &quot;</span><span style="color:#a3be8c;">&lt;&lt;&lt;</span><span>&quot;</span><span style="color:#eff1f5;">);
+</span><span style="color:#eff1f5;">  }
+</span><span style="color:#eff1f5;">}
+</span></code></pre>
+<p>然后编写Main.java中的代码：</p>
+<pre data-lang="java" style="background-color:#2b303b;color:#c0c5ce;" class="language-java "><code class="language-java" data-lang="java"><span style="color:#b48ead;">package </span><span>main;
+</span><span style="color:#65737e;">// 引入Sub类
+</span><span style="color:#b48ead;">import </span><span>myutil.</span><span style="color:#ebcb8b;">Sub</span><span>;
+</span><span style="color:#b48ead;">public class </span><span style="color:#ebcb8b;">Main </span><span style="color:#eff1f5;">{
+</span><span style="color:#eff1f5;">    </span><span style="color:#b48ead;">public static void </span><span style="color:#8fa1b3;">main</span><span style="color:#eff1f5;">(</span><span style="color:#ebcb8b;">String</span><span style="color:#b48ead;">[] </span><span style="color:#bf616a;">args</span><span style="color:#eff1f5;">) {
+</span><span style="color:#eff1f5;">        </span><span style="color:#65737e;">// 调用Sub类中的静态方法
+</span><span style="color:#eff1f5;">        </span><span style="color:#ebcb8b;">Sub</span><span style="color:#eff1f5;">.</span><span style="color:#bf616a;">printWithFormat</span><span style="color:#eff1f5;">(</span><span>&quot;</span><span style="color:#a3be8c;">Hello</span><span>&quot;</span><span style="color:#eff1f5;">);
+</span><span style="color:#eff1f5;">    }
+</span><span style="color:#eff1f5;">}
+</span></code></pre>
+<p>这里我们定义了dir1、2两个文件加，虽然和Main类与Sub类中package的包名不同，但是，当我们在编译时，只要指定了正确目录下的对应的java类即可，就像我们可以进入dir1类中使用如下命令：</p>
+<pre data-lang="shell" style="background-color:#2b303b;color:#c0c5ce;" class="language-shell "><code class="language-shell" data-lang="shell"><span>$ pwd
+</span><span>xxx/java-demo/dir1
+</span><span>$ javac -d ../target/ ./Main.java ../dir2/Sub.java # 自行理解对应文件的位置关系
+</span></code></pre>
+<p>接着我们查看对应的target下生成的class文件：</p>
+<pre data-lang="shell" style="background-color:#2b303b;color:#c0c5ce;" class="language-shell "><code class="language-shell" data-lang="shell"><span>target/
+</span><span>├── main
+</span><span>│   └── Main.class
+</span><span>└── myutil
+</span><span>    └── Sub.class
+</span></code></pre>
+<p>同样的，我们按照**初级++**中提到的，在根目录下，使用java main.Main命令，可以看到，没有问题：</p>
+<pre data-lang="shell" style="background-color:#2b303b;color:#c0c5ce;" class="language-shell "><code class="language-shell" data-lang="shell"><span>$ java main.Main
+</span><span>&gt;&gt;&gt;Hello&lt;&lt;&lt;
+</span></code></pre>
+<p>关于java编译运行的路径相关的注意点大致就讲这些，以后会继续补充相关的更多的注意点。</p>
+
+    </div>
+</div>
+<script src="https://zhen.wang/libs/viewerjs@1.11.7/viewer.min.js"></script>
+<link rel="stylesheet" href="https://zhen.wang/libs/viewerjs@1.11.7/viewer.min.css"/>
+<script>
+  if (window.Viewer) {
+    document.querySelectorAll('img').forEach(img => {
+      new Viewer(img, {
+        inline: false,
+        navbar: false,
+        toolbar: {
+          zoomIn: 1,
+          zoomOut: 1,
+          reset: 1,
+          rotateLeft: 1,
+          rotateRight: 1,
+        },
+      });
+    });
+  }
+</script>
+
+
+</body>
+</html>

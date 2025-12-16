@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="utf-8">
+    <meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover"
+          name="viewport">
+    
+    
+    <!-- umami web analysis -->
+    <script defer src="https://zhen.wang/libs/umami/umami.script.js"
+            data-website-id="d66cfe03-f6b3-4aa0-baf8-728700db1b09"></script>
+    
+    
+    
+    <link rel="icon" type="image/png" sizes="16x16" href="https://zhen.wang/images/blog-site-icon.svg">
+    <link rel="icon" type="image/png" sizes="32x32" href="https://zhen.wang/images/blog-site-icon.svg">
+    <title>zhen&#x27;s everything</title>
+    <link rel="stylesheet" href="https://zhen.wang/style.css">
+    
+<link rel="stylesheet" href="https://zhen.wang/article_content.css">
+<link rel="stylesheet" href="https://zhen.wang/article_markdown.css">
+
+</head>
+<body>
+
+<div id="article">
+    <header class="article-header">
+        
+<div class="base-title">
+    <a href="#" onclick="history.length > 1 ? history.back() : location.href = '/'; return false;">&LeftArrow; Back</a>
+    <h1>
+        树莓派3B搭建NODE-RED运行环境并构建数据流
+    </h1>
+</div>
+
+    </header>
+    <p class="article-date">2018-04-12</p>
+    
+    <!-- real content -->
+    <div class="article-content markdown-content">
+        <p><strong>树莓派搭建Node-RED环境</strong></p>
+<p>树莓派自2015年开始是默认就带NODE-RED的，但是如今已是2018年：）自带的版本已经很老了，可通过下面的命令进行自动升级NODE.JS和NODE-RED</p>
+<span id="continue-reading"></span><pre data-lang="shell" style="background-color:#2b303b;color:#c0c5ce;" class="language-shell "><code class="language-shell" data-lang="shell"><span>bash &lt;(curl -sL https://raw.githubusercontent.com/node-red/raspbian-deb-package/master/resources/update-nodejs-and-nodered)
+</span><span># 如果出现失败请多尝试几次
+</span><span>
+</span><span># 之后进入如下界面，展示更新进度
+</span><span>  Stop Node-RED                       ✔
+</span><span>  Remove old version of Node-RED      ✔
+</span><span>  Remove old version of Node.js
+</span><span>  Install Node.js
+</span><span>  Clean npm cache
+</span><span>  Install Node-RED core
+</span><span>  Move global nodes to local
+</span><span>  Install extra Pi nodes
+</span><span>  Npm rebuild existing nodes
+</span><span>  Add menu shortcut
+</span><span>  Update systemd script
+</span><span>  Update update script
+</span><span>
+</span><span>Any errors will be logged to   /var/log/nodered-install.log
+</span></code></pre>
+<p>一段时间过后，升级完毕：</p>
+<pre data-lang="shell" style="background-color:#2b303b;color:#c0c5ce;" class="language-shell "><code class="language-shell" data-lang="shell"><span>All done.
+</span><span>  You can now start Node-RED with the command  node-red-start
+</span><span>  or using the icon under   Menu / Programming / Node-RED
+</span><span>  Then point your browser to localhost:1880 or http://{your_pi_ip-address}:1880
+</span></code></pre>
+<p>根据提示我么可以知道，通过如下的命令启用NODE-RED服务，并且访问树莓派地址并加上1880端口访问WEB下的NODE-RED：</p>
+<pre data-lang="shell" style="background-color:#2b303b;color:#c0c5ce;" class="language-shell "><code class="language-shell" data-lang="shell"><span>$ node-red-start
+</span><span>Start Node-RED
+</span><span>
+</span><span>Once Node-RED has started, point a browser at http://192.168.2.7:1880 # 这里是树莓派分配到IP地址
+</span><span>On Pi Node-RED works better with the Firefox or Chrome browser
+</span><span>
+</span><span>Use   node-red-stop                          to stop Node-RED
+</span><span>Use   node-red-start                         to start Node-RED again
+</span><span>Use   node-red-log                           to view the recent log output
+</span><span>Use   sudo systemctl enable nodered.service  to autostart Node-RED at every boot
+</span><span>Use   sudo systemctl disable nodered.service to disable autostart on boot
+</span><span>
+</span><span>To find more nodes and example flows - go to http://flows.nodered.org
+</span><span>
+</span><span>Starting as a systemd service.
+</span><span>Started Node-RED graphical event wiring tool..
+</span><span>12 Apr 04:33:27 - [info]
+</span><span>Welcome to Node-RED
+</span></code></pre>
+<p>然后我们打开浏览器访问web网页，能够看到如下的界面：
+<img src="https://static-res.zhen.wang/images/post/2018-04-12-nodered/node-red-web.png" alt="node-red-web" />
+Node-RED  UI——显示节点选择板（左）、流的编辑界面（中心）和输出窗格（右）</p>
+<p>左侧里面全是node-red包含的节点，而节点就是node-red的基本单位，它包含了生成数据的节点、处理数据的节点以及最终输出的节点。</p>
+<p>中间是我们的工作区，在该区域内，我们按照正确的形式构建节点，来形成一套数据流生成、处理过程。</p>
+<p>右侧是输出窗格可以切换信息和调试选项卡等。选择信息后，将显示所选节点的文档。当调试被选中时，它将显示调试节点的信息、错误和警告。</p>
+<p>作为Node-red最基本的单位：节点。在Node-red中主要分为3类：</p>
+<p>1、输入节点（例如inject）
+2、处理节点（例如function）
+3、输出节点（例如debug）</p>
+<p>输入节点</p>
+<p>输入节点允许数据输入到整个流工作空间中。它们至少有一个输出（端点由右边的小灰色方块表示）。同时也可以将其他服务数据连接到输入节点，例如TCP、WebSockets、UDP等节点，或利用手动输入数据到一个流之中。</p>
+<p>处理节点</p>
+<p>处理节点主要功能是处理数据。它们有一个输入端点和一个或多个输出端点。我们通常使用function节点来处理收到的数据。当然它页可以转换数据类型（例如：JSON、CSV、XML）节点。</p>
+<p>输出节点</p>
+<p>输出节点允许在Node-RED的流之外发送数据。它们的左侧有一个输入端点。使用输出节点将数据发送到其他服务，TCP等或者使用调试节点输出到调试窗进行观察。</p>
+<p>而对于各种数据来说，其本质的最简单的数据结构如下：</p>
+<pre data-lang="json" style="background-color:#2b303b;color:#c0c5ce;" class="language-json "><code class="language-json" data-lang="json"><span>msg={
+</span><span>  </span><span style="background-color:#bf616a;color:#2b303b;">payload</span><span>:</span><span style="background-color:#bf616a;color:#2b303b;">”负载数据”</span><span>
+</span><span>}
+</span></code></pre>
+<p>即每一条数据都会有其本身的负载数据。</p>
+<p>讲完了基础的知识，我们来通过动手实践来更加直观的了解node-red</p>
+<p><strong>构建时间戳流</strong></p>
+<p>这个例子十分简单，我们不需要任何的处理节点，只需要一个输入和一个输出就可以了：</p>
+<p>我们首先从左侧拉取一个inject输入节点，放置到工作空间中，它会自动变为默认的时间戳节点，单击这个时间戳节点，查看右侧信息栏，我们能看到这个节点的描述：这个时间戳节点能够生成自1970年1月1号以来的所过的毫秒数
+<img src="https://static-res.zhen.wang/images/post/2018-04-12-nodered/inject-timestamp.png" alt="inject-timestamp" />
+通过双击该节点我们还可以看到更加具体的细节：
+<img src="https://static-res.zhen.wang/images/post/2018-04-12-nodered/inject-detail.png" alt="inject-detail" /></p>
+<p>接下来我们拉取一个debug节点到工作空间中，它会自动转变为msg.payload节点，这个节点就是会将数据直接输出：
+<img src="https://static-res.zhen.wang/images/post/2018-04-12-nodered/debug-node-info.png" alt="debug-node-info" />
+接下来我们连接两个节点，同时可以看到每个节点上面都有一个小蓝点，意味着我们的节点只放置到了工作空间中，但是并没有部署：
+<img src="https://static-res.zhen.wang/images/post/2018-04-12-nodered/node-linked.png" alt="node-linked" />
+点击右上角的部署之后，我们发现小蓝点消失了。接下来我们让时间戳节点产生时间数据并输出查看。首先点击右侧的调试窗口，然后点击时间戳节点左侧的蓝色矩形按钮：
+<img src="https://static-res.zhen.wang/images/post/2018-04-12-nodered/clickit.png" alt="clickit" />
+点击过程中我们可以看到提示我们注入成功，并且在右侧的还能看到输出的数据：
+<img src="https://static-res.zhen.wang/images/post/2018-04-12-nodered/successinject.png" alt="successinject" />
+此外，当我们双击debug节点，然后在输出那一栏选择“完整消息”，我们发现输出节点变成了“msg”即整个msg消息体，同时再次部署并点击时间戳产生数据，我们发现输出的信息变得更加完整：
+<img src="https://static-res.zhen.wang/images/post/2018-04-12-nodered/completeinfo.png" alt="completeinfo" /></p>
+<p>最后，让我们产生编程界的经典输出：Hello, World!</p>
+<p>首先双击“注入节点”，我们不选时间戳类型了，而是替换为文字列：
+<img src="https://static-res.zhen.wang/images/post/2018-04-12-nodered/change2String.png" alt="change2String" />
+再次部署并点击消息注入按钮（就是蓝色矩形）
+得到如下的结果：
+<img src="https://static-res.zhen.wang/images/post/2018-04-12-nodered/injecthw.png" alt="injecthw" /></p>
+<p>至此，我们成功的使用Node-RED构建了我们的第一条简单的流。</p>
+
+    </div>
+</div>
+<script src="https://zhen.wang/libs/viewerjs@1.11.7/viewer.min.js"></script>
+<link rel="stylesheet" href="https://zhen.wang/libs/viewerjs@1.11.7/viewer.min.css"/>
+<script>
+  if (window.Viewer) {
+    document.querySelectorAll('img').forEach(img => {
+      new Viewer(img, {
+        inline: false,
+        navbar: false,
+        toolbar: {
+          zoomIn: 1,
+          zoomOut: 1,
+          reset: 1,
+          rotateLeft: 1,
+          rotateRight: 1,
+        },
+      });
+    });
+  }
+</script>
+
+
+</body>
+</html>

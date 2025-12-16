@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="utf-8">
+    <meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover"
+          name="viewport">
+    
+    
+    <!-- umami web analysis -->
+    <script defer src="https://zhen.wang/libs/umami/umami.script.js"
+            data-website-id="d66cfe03-f6b3-4aa0-baf8-728700db1b09"></script>
+    
+    
+    
+    <link rel="icon" type="image/png" sizes="16x16" href="https://zhen.wang/images/blog-site-icon.svg">
+    <link rel="icon" type="image/png" sizes="32x32" href="https://zhen.wang/images/blog-site-icon.svg">
+    <title>zhen&#x27;s everything</title>
+    <link rel="stylesheet" href="https://zhen.wang/style.css">
+    
+<link rel="stylesheet" href="https://zhen.wang/article_content.css">
+<link rel="stylesheet" href="https://zhen.wang/article_markdown.css">
+
+</head>
+<body>
+
+<div id="article">
+    <header class="article-header">
+        
+<div class="base-title">
+    <a href="#" onclick="history.length > 1 ? history.back() : location.href = '/'; return false;">&LeftArrow; Back</a>
+    <h1>
+        使用node-gyp编写简单的node原生模块
+    </h1>
+</div>
+
+    </header>
+    <p class="article-date">2021-06-25</p>
+    
+    <!-- toc -->
+    <div class="article-toc">
+        <label class="toc-title" for="toc-trigger">目录</label>
+        <input id="toc-trigger" type="checkbox" checked/>
+        <div class="toc-content">
+            <ol class="toc">
+                
+                <li class="toc-item toc-level-1">
+                    <a class="toc-link" href="https://zhen.wang/article/编写一个简单的node原生模块/#ji-yu-node-addon-api">基于node-addon-api</a>
+                    
+                </li>
+                
+            </ol>
+        </div>
+    </div>
+    
+    <!-- real content -->
+    <div class="article-content markdown-content">
+        <p>通过样例，让我们了解如何编写一个node的原生模块。当然，这篇文章还有一个目的，是为了方便以后编写关于node-gyp的文章，搭建初始环境。</p>
+<span id="continue-reading"></span><h1 id="ji-yu-node-addon-api">基于node-addon-api</h1>
+<p>基于node-addon-api的nodejs插件，使用的是node的头文件：<code>#include &lt;node.h&gt;</code>。</p>
+<p><strong>hello_world.cc</strong></p>
+<pre data-lang="c" style="background-color:#2b303b;color:#c0c5ce;" class="language-c "><code class="language-c" data-lang="c"><span style="color:#b48ead;">#include </span><span>&lt;</span><span style="color:#a3be8c;">node.h</span><span>&gt;
+</span><span>
+</span><span style="color:#b48ead;">void </span><span style="color:#8fa1b3;">Method</span><span>(</span><span style="color:#b48ead;">const</span><span> v8::FunctionCallbackInfo&lt;v8::Value&gt;&amp; </span><span style="color:#bf616a;">args</span><span>) {
+</span><span>  v8::Isolate* isolate = args.</span><span style="color:#bf616a;">GetIsolate</span><span>();
+</span><span>  args.</span><span style="color:#bf616a;">GetReturnValue</span><span>().</span><span style="color:#bf616a;">Set</span><span>(v8::String::</span><span style="color:#bf616a;">NewFromUtf8</span><span>(
+</span><span>      isolate, &quot;</span><span style="color:#a3be8c;">world</span><span>&quot;).</span><span style="color:#bf616a;">ToLocalChecked</span><span>());
+</span><span>}
+</span><span>
+</span><span style="color:#b48ead;">void </span><span style="color:#8fa1b3;">Initialize</span><span>(v8::Local&lt;v8::Object&gt; </span><span style="color:#bf616a;">exports</span><span>) {
+</span><span>  </span><span style="color:#bf616a;">NODE_SET_METHOD</span><span>(exports, &quot;</span><span style="color:#a3be8c;">hello</span><span>&quot;, Method);
+</span><span>}
+</span><span>
+</span><span style="color:#bf616a;">NODE_MODULE</span><span>(NODE_GYP_MODULE_NAME, Initialize)
+</span></code></pre>
+<p><strong>binding.gyp</strong></p>
+<pre style="background-color:#2b303b;color:#c0c5ce;"><code><span>{
+</span><span>  &quot;targets&quot;: [
+</span><span>    {
+</span><span>      &quot;target_name&quot;: &quot;hello_world&quot;,
+</span><span>      &quot;sources&quot;: [ &quot;hello_world.cc&quot; ]
+</span><span>    }
+</span><span>  ]
+</span><span>}
+</span></code></pre>
+<p><strong>index.js</strong></p>
+<pre data-lang="js" style="background-color:#2b303b;color:#c0c5ce;" class="language-js "><code class="language-js" data-lang="js"><span style="color:#b48ead;">const </span><span style="color:#bf616a;">binding </span><span>= </span><span style="color:#96b5b4;">require</span><span>(&#39;</span><span style="color:#a3be8c;">./build/Release/hello_world</span><span>&#39;);
+</span><span>
+</span><span style="color:#ebcb8b;">console</span><span>.</span><span style="color:#96b5b4;">log</span><span>(</span><span style="color:#bf616a;">binding</span><span>.</span><span style="color:#8fa1b3;">hello</span><span>());
+</span></code></pre>
+<p><strong>package.json</strong></p>
+<pre data-lang="json" style="background-color:#2b303b;color:#c0c5ce;" class="language-json "><code class="language-json" data-lang="json"><span>...  
+</span><span>  &quot;</span><span style="color:#a3be8c;">scripts</span><span>&quot;: {
+</span><span>    &quot;</span><span style="color:#a3be8c;">build</span><span>&quot;: &quot;</span><span style="color:#a3be8c;">node-gyp configure &amp;&amp; node-gyp build</span><span>&quot;,
+</span><span>    &quot;</span><span style="color:#a3be8c;">run:demo</span><span>&quot;: &quot;</span><span style="color:#a3be8c;">node index.js</span><span>&quot;
+</span><span>  },
+</span><span>...
+</span></code></pre>
+<p><strong>整体结构</strong></p>
+<p><img src="https://static-res.zhen.wang/images/post/2021-06-25-simple-node-gyp-demo/node-addon-simple-demo-proj-arch.jpg" alt="" /></p>
+<p>按照如下命令依次运行：</p>
+<pre data-lang="shell" style="background-color:#2b303b;color:#c0c5ce;" class="language-shell "><code class="language-shell" data-lang="shell"><span>$ npm run build
+</span><span>// 使用node-gyp配置并构建
+</span><span>$ npm run run:demo
+</span><span>// 运行Demo
+</span></code></pre>
+<p>输出如下：</p>
+<pre data-lang="bash" style="background-color:#2b303b;color:#c0c5ce;" class="language-bash "><code class="language-bash" data-lang="bash"><span style="color:#bf616a;">D:</span><span style="color:#96b5b4;">\P</span><span style="color:#bf616a;">rojects</span><span style="color:#96b5b4;">\n</span><span style="color:#bf616a;">ode-addon-demo</span><span>&gt;npm run run:demo
+</span><span>
+</span><span>&gt; node-addon-demo@1.0.0 </span><span style="color:#bf616a;">run:demo
+</span><span>&gt; node </span><span style="color:#bf616a;">index.js
+</span><span>
+</span><span style="color:#bf616a;">world
+</span></code></pre>
+<p>附上GitHub地址：<a rel="noopener" target="_blank" href="https://github.com/w4ngzhen/node-addon-demo">w4ngzhen/node-addon-demo (github.com)</a>，方便以后快速完成环境搭建。</p>
+
+    </div>
+</div>
+<script src="https://zhen.wang/libs/viewerjs@1.11.7/viewer.min.js"></script>
+<link rel="stylesheet" href="https://zhen.wang/libs/viewerjs@1.11.7/viewer.min.css"/>
+<script>
+  if (window.Viewer) {
+    document.querySelectorAll('img').forEach(img => {
+      new Viewer(img, {
+        inline: false,
+        navbar: false,
+        toolbar: {
+          zoomIn: 1,
+          zoomOut: 1,
+          reset: 1,
+          rotateLeft: 1,
+          rotateRight: 1,
+        },
+      });
+    });
+  }
+</script>
+
+
+</body>
+</html>

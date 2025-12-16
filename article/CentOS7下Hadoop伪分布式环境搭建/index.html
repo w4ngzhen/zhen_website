@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="utf-8">
+    <meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover"
+          name="viewport">
+    
+    
+    <!-- umami web analysis -->
+    <script defer src="https://zhen.wang/libs/umami/umami.script.js"
+            data-website-id="d66cfe03-f6b3-4aa0-baf8-728700db1b09"></script>
+    
+    
+    
+    <link rel="icon" type="image/png" sizes="16x16" href="https://zhen.wang/images/blog-site-icon.svg">
+    <link rel="icon" type="image/png" sizes="32x32" href="https://zhen.wang/images/blog-site-icon.svg">
+    <title>zhen&#x27;s everything</title>
+    <link rel="stylesheet" href="https://zhen.wang/style.css">
+    
+<link rel="stylesheet" href="https://zhen.wang/article_content.css">
+<link rel="stylesheet" href="https://zhen.wang/article_markdown.css">
+
+</head>
+<body>
+
+<div id="article">
+    <header class="article-header">
+        
+<div class="base-title">
+    <a href="#" onclick="history.length > 1 ? history.back() : location.href = '/'; return false;">&LeftArrow; Back</a>
+    <h1>
+        CentOS7下Hadoop伪分布式环境搭建
+    </h1>
+</div>
+
+    </header>
+    <p class="article-date">2018-03-08</p>
+    
+    <!-- real content -->
+    <div class="article-content markdown-content">
+        <span id="continue-reading"></span>
+<p>前期准备</p>
+<p><strong>1.配置hostname(可选，了解)</strong></p>
+<p>在CentOS中，有三种定义的主机名:静态的（static），瞬态的（transient），和灵活的（pretty）。“静态”主机名也称为内核主机名，是系统在启动时从/etc/hostname自动初始化的主机名。“瞬态”主机名是在系统运行时临时分配的主机名，例如，通过DHCP或mDNS服务器分配。静态主机名和瞬态主机名都遵从作为互联网域名同样的字符限制规则。而另一方面，“灵活”主机名则允许使用自由形式（包括特殊/空白字符）的主机名，以展示给终端用户（如Linuxidc）。</p>
+<p>在CentOS7以前，配置主机的静态hostname是在/etc/sysconfig/network中配置HOSTNAME字段值来配置，而CentOS7之后若要配置静态的hostname是需要在/etc/hostname中进行。</p>
+<p>进入Linux系统，命令行下输入hostname可以看到当前的hostname，而通常默认的hostname是local.localadmin。</p>
+<p>本次试验环境在CentOS7下，所以我们编辑/etc/hostname文件，试验hostname为：hadoop.w4ng，填入其中，重启Linux，可以看到已经生效。
+<img src="https://static-res.zhen.wang/images/post/2018-03-08-hadoop-install/hostname.png" alt="hostname.png" /></p>
+<p><strong>2.配置静态IP</strong></p>
+<p>同样，在CentOS7以后，其网卡配置已经有原先的/etc/sysconfig/network/network-scripts下面的ifcfg-eth0等改名为乐ifcfg-enpXsY（en表示ethnet，p表示pci设备，s表示soket）
+<img src="https://static-res.zhen.wang/images/post/2018-03-08-hadoop-install/ll-network-scripts.png" alt="ll-network-scripts.png" />
+本人这里有两个ifcfg文件是因为配置了两块网卡<a rel="noopener" target="_blank" href="http://blog.csdn.net/wangshfa/article/details/8813505">分别做NAT以及与虚拟机Host-Only两个功能，实现双网卡上网</a></p>
+<p>打开ifcfg-enp0s8，配置如下：</p>
+<pre data-lang="shell" style="background-color:#2b303b;color:#c0c5ce;" class="language-shell "><code class="language-shell" data-lang="shell"><span>DEVICE=enp0s8 #设备名
+</span><span>HWADDR=08:00:27:10:6B:6B #硬件地址
+</span><span>TYPE=Ethernet #类型
+</span><span>BOOTPROTO=static #静态IP(必备)
+</span><span>IPADDR=192.168.56.88 #IP地址
+</span><span>NETMASK=255.255.255.0 #子网掩码
+</span><span>ONBOOT=yes #设备开机自动启动该网卡
+</span></code></pre>
+<p><strong>3.配置hosts</strong></p>
+<p>打开/etc/hosts
+配置为如下的：</p>
+<pre data-lang="shell" style="background-color:#2b303b;color:#c0c5ce;" class="language-shell "><code class="language-shell" data-lang="shell"><span>127.0.0.1   localhost localhost.localdomain localhost4 localhost4.localdomain4
+</span><span>::1         localhost localhost.localdomain localhost6 localhost6.localdomain6
+</span><span>192.168.56.88   hadoop.w4ng
+</span></code></pre>
+<p>配置hosts的理由是后期hadoop配置中相关的主机填写我们都是使用域名的形式，而IP地址与域名的转换在这里进行查询（还有DNS，但是这里不讨论）。</p>
+<p><strong>4.关闭防火墙</strong></p>
+<p>CentOS7与6的防火墙不一样。在7中使用firewall来管理防火墙，而6是使用iptables来进行管理的。<a rel="noopener" target="_blank" href="https://www.cnblogs.com/silent2012/archive/2015/07/28/4682770.html">当然，我们可以卸载7的firewall安装6的iptables来管理</a>。本人就切换回了6的防火墙管理方式。</p>
+<pre data-lang="shell" style="background-color:#2b303b;color:#c0c5ce;" class="language-shell "><code class="language-shell" data-lang="shell"><span>[root@localhost ~]#servcie iptables stop  # 临时关闭防火墙
+</span><span>[root@localhost ~]#chkconfig iptables off # 永久关闭防火墙
+</span></code></pre>
+<p><strong>5.JDK与Hadoop的安装</strong></p>
+<p><a rel="noopener" target="_blank" href="http://www.oracle.com/technetwork/java/javase/downloads/index.html">下载JDK8</a>
+<a rel="noopener" target="_blank" href="http://hadoop.apache.org/releases.html">下载Hadoop3-binary</a>
+下载完毕将文件传到主机中。</p>
+<p>在/usr/local/下创建java文件夹，并将JDK解压至该文件夹下。
+在根目录下创建/bigdata文件夹，并将Hadoop解压至其中。</p>
+<pre data-lang="shell" style="background-color:#2b303b;color:#c0c5ce;" class="language-shell "><code class="language-shell" data-lang="shell"><span>解压命令 tar -zxv -f [原压缩文件.tar.gz] -C [目标文件夹目录] # 实际命令没有中括号，其次，命令参数重-z对应gz压缩文件，若为bz2则使用-j
+</span></code></pre>
+<p>在JDK解压完成后，在~/.bash_profile中配置环境变量 <a rel="noopener" target="_blank" href="http://blog.csdn.net/field_yang/article/details/51087178">点这里看/etc/bashrc、<del>/.bashrc、</del>/.bash_profile关系</a></p>
+<pre data-lang="shell" style="background-color:#2b303b;color:#c0c5ce;" class="language-shell "><code class="language-shell" data-lang="shell"><span>export JAVA_HOME=/usr/local/java/jdkx.x.x_xxx
+</span><span>export PATH=$PATH:$JAVA_HOME/bin
+</span></code></pre>
+<p>配置完成，保存退出并 source ~/.bash_profile</p>
+<p>hadoop无需配置环境变量</p>
+<p><strong>6.配置hadoop</strong></p>
+<p>在hadoop的home下，进入etc文件夹，有五个主要的文件需要进行配置：</p>
+<pre style="background-color:#2b303b;color:#c0c5ce;"><code><span>hadoop-env.sh
+</span><span>core-site.xml
+</span><span>hdfs-site.xml
+</span><span>mapred-site.xml
+</span><span>yarn-site.xml
+</span></code></pre>
+<p>基本配置如下</p>
+<pre style="background-color:#2b303b;color:#c0c5ce;"><code><span>1.配置 hadoop-env.sh
+</span><span>export JAVA_HOME
+</span><span>#找到该处，填写上上面配置的JAVA_HOME，因为hadoop是基于Java的，需要Java的环境
+</span><span>
+</span><span>2.配置 core-site.xml
+</span><span>&lt;configuration&gt;
+</span><span>    &lt;property&gt;
+</span><span>        &lt;name&gt;fs.defaultFS&lt;/name&gt;
+</span><span>        &lt;value&gt;hdfs://hostnameXXX:9000&lt;/value&gt;
+</span><span>    &lt;/property&gt;
+</span><span>    &lt;!-- 配置hadoop文件系统目录 --&gt;
+</span><span>    &lt;property&gt;
+</span><span>        &lt;name&gt;hadoop.tmp.dir&lt;/name&gt;
+</span><span>        &lt;value&gt;/bigData/tmp&lt;/value&gt;
+</span><span>    &lt;/property&gt;
+</span><span>&lt;/configuration&gt;
+</span><span>
+</span><span>3.配置 hdfs-site.xml
+</span><span>&lt;configuration&gt;
+</span><span>    &lt;property&gt;
+</span><span>        &lt;name&gt;dfs.replication&lt;/name&gt;
+</span><span>        &lt;value&gt;1&lt;/value&gt;
+</span><span>    &lt;/property&gt;
+</span><span>&lt;/configuration&gt;
+</span><span>
+</span><span>4.配置 mapred-site.xml
+</span><span>&lt;configuration&gt;
+</span><span>    &lt;property&gt;
+</span><span>        &lt;name&gt;mapreduce.framework.name&lt;/name&gt;
+</span><span>        &lt;value&gt;yarn&lt;/value&gt;
+</span><span>    &lt;/property&gt;
+</span><span>&lt;/configuration&gt;
+</span><span>
+</span><span>5.配置 yarn-site.xml
+</span><span>&lt;configuration&gt;
+</span><span>    &lt;property&gt;
+</span><span>        &lt;name&gt;yarn.resourecemanager.hostname&lt;/name&gt;
+</span><span>        &lt;value&gt;hostnameXXX&lt;/value&gt;
+</span><span>    &lt;/property&gt;
+</span><span>    &lt;property&gt;
+</span><span>        &lt;name&gt;yarn.nodemanager.aux-services&lt;/name&gt;
+</span><span>        &lt;value&gt;mapreduce_shuffle&lt;/value&gt;
+</span><span>    &lt;/property&gt;
+</span><span>&lt;/configuration&gt;
+</span></code></pre>
+<p>然后配置相关服务启动过程中需要的配置变量：
+进入${HADOOP_HOME}/sbin中，在start-dfs.sh与stop-dfs.sh中添加字段：</p>
+<pre style="background-color:#2b303b;color:#c0c5ce;"><code><span>HDFS_DATANODE_USER=root
+</span><span>HDFS_DATANODE_SECURE_USER=hdfs
+</span><span>HDFS_NAMENODE_USER=root
+</span><span>HDFS_SECONDARYNAMENODE_USER=root
+</span></code></pre>
+<p>在start-yarn.sh与stop-yarn.sh中添加：</p>
+<pre style="background-color:#2b303b;color:#c0c5ce;"><code><span>YARN_RESOURCEMANAGER_USER=root
+</span><span>HADOOP_SECURE_DN_USER=yarn
+</span><span>YARN_NODEMANAGER_USER=root
+</span></code></pre>
+<p>配置完成以后，进行hadoop的文件系统格式化，执行</p>
+<pre style="background-color:#2b303b;color:#c0c5ce;"><code><span>${HADOOP_HOME}/bin/hdfs namenode -format
+</span></code></pre>
+<p>最后是启动服务：</p>
+<pre style="background-color:#2b303b;color:#c0c5ce;"><code><span>执行${HADOOP_HOME}/sbin/start-all.sh  # 他会去调用start-dfs.sh与start-yarn.sh
+</span></code></pre>
+<p>根据配置中我们都是配置的root用户，显然需要我们以root身份进行，且过程中需要root密码。当然，通过ssh免密可以方便很多。启动完成以后，命令行中使用jps命令打印Java进程，会看到下图五个进程（忽略Jps进程）：
+<img src="https://static-res.zhen.wang/images/post/2018-03-08-hadoop-install/jps.png" alt="jps.png" />
+当然，Hadoop在服务启动以后以提供web端：</p>
+<pre style="background-color:#2b303b;color:#c0c5ce;"><code><span>visit hdfs manage page
+</span><span>xxx.xxx.xxx.xxx:50070
+</span><span>visit yarn manage page
+</span><span>xxx.xxx.xxx.xxx:8088
+</span></code></pre>
+
+    </div>
+</div>
+<script src="https://zhen.wang/libs/viewerjs@1.11.7/viewer.min.js"></script>
+<link rel="stylesheet" href="https://zhen.wang/libs/viewerjs@1.11.7/viewer.min.css"/>
+<script>
+  if (window.Viewer) {
+    document.querySelectorAll('img').forEach(img => {
+      new Viewer(img, {
+        inline: false,
+        navbar: false,
+        toolbar: {
+          zoomIn: 1,
+          zoomOut: 1,
+          reset: 1,
+          rotateLeft: 1,
+          rotateRight: 1,
+        },
+      });
+    });
+  }
+</script>
+
+
+</body>
+</html>

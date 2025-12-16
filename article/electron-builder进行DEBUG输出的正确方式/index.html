@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="utf-8">
+    <meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover"
+          name="viewport">
+    
+    
+    <!-- umami web analysis -->
+    <script defer src="https://zhen.wang/libs/umami/umami.script.js"
+            data-website-id="d66cfe03-f6b3-4aa0-baf8-728700db1b09"></script>
+    
+    
+    
+    <link rel="icon" type="image/png" sizes="16x16" href="https://zhen.wang/images/blog-site-icon.svg">
+    <link rel="icon" type="image/png" sizes="32x32" href="https://zhen.wang/images/blog-site-icon.svg">
+    <title>zhen&#x27;s everything</title>
+    <link rel="stylesheet" href="https://zhen.wang/style.css">
+    
+<link rel="stylesheet" href="https://zhen.wang/article_content.css">
+<link rel="stylesheet" href="https://zhen.wang/article_markdown.css">
+
+</head>
+<body>
+
+<div id="article">
+    <header class="article-header">
+        
+<div class="base-title">
+    <a href="#" onclick="history.length > 1 ? history.back() : location.href = '/'; return false;">&LeftArrow; Back</a>
+    <h1>
+        electron-builder进行DEBUG输出的正确方式
+    </h1>
+</div>
+
+    </header>
+    <p class="article-date">2021-04-18</p>
+    
+    <!-- toc -->
+    <div class="article-toc">
+        <label class="toc-title" for="toc-trigger">目录</label>
+        <input id="toc-trigger" type="checkbox" checked/>
+        <div class="toc-content">
+            <ol class="toc">
+                
+                <li class="toc-item toc-level-1">
+                    <a class="toc-link" href="https://zhen.wang/article/electron-builder进行DEBUG输出的正确方式/#qian-yan">前言</a>
+                    
+                </li>
+                
+                <li class="toc-item toc-level-1">
+                    <a class="toc-link" href="https://zhen.wang/article/electron-builder进行DEBUG输出的正确方式/#ben-di-nodeyu-electronnei-bu-de-node">本地node与electron内部的node</a>
+                    
+                </li>
+                
+                <li class="toc-item toc-level-1">
+                    <a class="toc-link" href="https://zhen.wang/article/electron-builder进行DEBUG输出的正确方式/#electron-builderdiao-shi-shu-chu-zheng-que-fang-shi">electron-builder调试输出正确方式</a>
+                    
+                    <ol class="toc-child">
+                        
+                        <li class="toc-item toc-level-2">
+                            <a href="https://zhen.wang/article/electron-builder进行DEBUG输出的正确方式/#debughuan-jing-bian-liang">DEBUG环境变量</a>
+                        </li>
+                        
+                        <li class="toc-item toc-level-2">
+                            <a href="https://zhen.wang/article/electron-builder进行DEBUG输出的正确方式/#verbosecan-shu">verbose参数</a>
+                        </li>
+                        
+                    </ol>
+                    
+                </li>
+                
+            </ol>
+        </div>
+    </div>
+    
+    <!-- real content -->
+    <div class="article-content markdown-content">
+        <h1 id="qian-yan">前言</h1>
+<p>使用Electron进行打包通常会用到electron-builder或者electron-packager两种工具。在使用electron-builder的时候，由于对机制的不熟悉，我们在打包过程中常常遇到很多环境错误，但最终只是一些简单的错误信息，难以排查问题。本文将介绍electron-builder进行DEBUG输出的正确方式来帮助排查打包过程中的各种问题。</p>
+<span id="continue-reading"></span><h1 id="ben-di-nodeyu-electronnei-bu-de-node">本地node与electron内部的node</h1>
+<p>在对Electron进行打包的时候，需要对当前Electron项目中使用到的node原生C/C++模块进行额外的平台编译，这个过程被称为<code>rebuild</code>。有这样的一个步骤，是因为electron在运行主进程脚本的时候，是跑在了electron内部的一个nodejs环境的，electron内部的nodejs与开发机器上的nodejs并不一定是相同的。为了验证这一论点，我们进行如下的一个测试，来分别打印本地机器安装的node的版本和electon内部的node版本：</p>
+<p><img src="https://static-res.zhen.wang/images/post/2021-04-18-electron-builder/test-show-version1.png" alt="" /></p>
+<p>接下来是electron主进程脚本的node版本显示（main.js）：</p>
+<p><img src="https://static-res.zhen.wang/images/post/2021-04-18-electron-builder/test-show-version2.png" alt="" /></p>
+<p>接下来是分别运行<code>npm run show-local-node-version</code>和<code>npm run start</code>：</p>
+<p><img src="https://static-res.zhen.wang/images/post/2021-04-18-electron-builder/show-local-and-inner-version.png" alt="" /></p>
+<p>可以看到输出确实和我们的理解是一致的，版本为11.2.0的electron内部的node版本呢是12，而我们本地机器上的node是14。这也侧面说明了为什么一般的electron应用程序会很大，因为一份electron应用程序，就有一个node的运行时。</p>
+<h1 id="electron-builderdiao-shi-shu-chu-zheng-que-fang-shi">electron-builder调试输出正确方式</h1>
+<p>electron-builder进行打包的时候，会建议你在此之前使用<code>electron-builder install-app-deps</code>的命令。该命令的作用就是针对即将打包的electron程序对应的node版本进行原生模块的编译工作，以达到模块运行时匹配。实际上，<code>install-app-deps</code>内部依然使用了<code>node-gyp</code>相关知识，关于这一块的知识，读者可以翻阅我之前的文章《node-pre-gyp以及node-gyp的源码简单解析（以安装sqlite3为例）》来了解，这里不再赘述。本文着重介绍electron-builder如何进行debug打印，好知道打包的过程中发生了什么。</p>
+<ol>
+<li>首先我们准备在项目中，安装一个需要根据平台原生编译的npm包：<code>images</code>。</li>
+<li>然后在package.json中的scripts中添加一段脚本：<code>"installappdeps": "electron-builder install-app-deps"</code></li>
+<li>最后调用命令<code>npm rum installappdeps</code>执行该脚本</li>
+</ol>
+<p><img src="https://static-res.zhen.wang/images/post/2021-04-18-electron-builder/images-install-and-run-install-app-deps.png" alt="" /></p>
+<h2 id="debughuan-jing-bian-liang">DEBUG环境变量</h2>
+<p>在<a rel="noopener" target="_blank" href="https://www.electron.build/#debug">官方文档</a>中指出了，你可以设置环境变量的方式来方便输出：</p>
+<p>Set the <code>DEBUG</code> environment variable to debug what electron-builder is doing:</p>
+<p>设置<code>DEBUG</code>环境变量值为字符串<code>electron-builder</code>：</p>
+<pre data-lang="bash" style="background-color:#2b303b;color:#c0c5ce;" class="language-bash "><code class="language-bash" data-lang="bash"><span style="color:#bf616a;">DEBUG</span><span>=</span><span style="color:#a3be8c;">electron-builder
+</span></code></pre>
+<p><code>FPM_DEBUG</code> 环境变量，将会显示更多关于构建Linux平台程序的细节（除了snap和appimage）。</p>
+<ul>
+<li><strong>cmd（Windows CMD）</strong></li>
+</ul>
+<p>On <a rel="noopener" target="_blank" href="https://github.com/visionmedia/debug#windows-command-prompt-notes">Windows</a> the environment variable is set using the set command：</p>
+<p>在Windows CMD设置环境变量可以使用如下命令：</p>
+<pre data-lang="cmd" style="background-color:#2b303b;color:#c0c5ce;" class="language-cmd "><code class="language-cmd" data-lang="cmd"><span style="color:#b48ead;">set </span><span style="color:#bf616a;">DEBUG</span><span>=</span><span style="color:#a3be8c;">electron-builder
+</span></code></pre>
+<ul>
+<li><strong>PowerShell</strong></li>
+</ul>
+<p>PowerShell uses different syntax to set environment variables：</p>
+<p>PowerShell使用不同的语法来设置环境变量：</p>
+<pre data-lang="powershell" style="background-color:#2b303b;color:#c0c5ce;" class="language-powershell "><code class="language-powershell" data-lang="powershell"><span>$</span><span style="color:#bf616a;">env:DEBUG</span><span>=electron-builder
+</span></code></pre>
+<p>在我们的机器上，我们同样设置该环境变量，然后执行：</p>
+<p><img src="https://static-res.zhen.wang/images/post/2021-04-18-electron-builder/install-app-deps-with-DEBUG.png" alt="" /></p>
+<p>发现输出了大量的关于electron-builder的DEBUG打印，为我们了解<code>electron-builder install-app-deps</code>提供了更多的信息。</p>
+<h2 id="verbosecan-shu">verbose参数</h2>
+<p>然而，有的时候光是设置上述<code>DEBUG</code>环境变量还不够，因为electron-builder内部在进行rebuild操作的时候，还会以子进程方式调用<code>node-gyp</code>等工具，这些工具可不会查看上面的环境变量来输出调试信息的。我们需要在electron-builder调用node-gyp的时候，还能够打印这些工具的调试信息。熟悉node的读者可能会说，那我使用<code>electron-builder</code>的时候，传入<code>--verbose</code>怎么样？就像如下的方式：</p>
+<pre data-lang="json" style="background-color:#2b303b;color:#c0c5ce;" class="language-json "><code class="language-json" data-lang="json"><span>&quot;</span><span style="color:#a3be8c;">installappdeps</span><span>&quot;: &quot;</span><span style="color:#a3be8c;">electron-builder install-app-deps --verbose</span><span>&quot;
+</span></code></pre>
+<p>不幸的是，虽然<code>--verbose</code>能被node-gyp识别，无法被electron-builder识别，。当你直接这么调用的时候，会出错：</p>
+<p><img src="https://static-res.zhen.wang/images/post/2021-04-18-electron-builder/electron-cannot-recognise-verbose.png" alt="" /></p>
+<p>那么要如何解决这个问题呢？正确的做法是编写两个<code>scripts</code>：</p>
+<pre style="background-color:#2b303b;color:#c0c5ce;"><code><span>  &quot;scripts&quot;: {
+</span><span>	......
+</span><span>    &quot;installappdeps&quot;: &quot;electron-builder install-app-deps&quot;,
+</span><span>    &quot;installappdeps-with-verbose&quot;: &quot;npm run installappdeps --verbose&quot;
+</span><span>  },
+</span></code></pre>
+<p>然后在想要进行verbose打印的时候，执行<code>npm rum installappdeps-with-verbose</code>：</p>
+<p><img src="https://static-res.zhen.wang/images/post/2021-04-18-electron-builder/after-use-two-scripts-output.png" alt="" /></p>
+<p>可以看到，在install-app-deps的DEBUG打印前，我们还看到node给出的一些额外信息。</p>
+
+    </div>
+</div>
+<script src="https://zhen.wang/libs/viewerjs@1.11.7/viewer.min.js"></script>
+<link rel="stylesheet" href="https://zhen.wang/libs/viewerjs@1.11.7/viewer.min.css"/>
+<script>
+  if (window.Viewer) {
+    document.querySelectorAll('img').forEach(img => {
+      new Viewer(img, {
+        inline: false,
+        navbar: false,
+        toolbar: {
+          zoomIn: 1,
+          zoomOut: 1,
+          reset: 1,
+          rotateLeft: 1,
+          rotateRight: 1,
+        },
+      });
+    });
+  }
+</script>
+
+
+</body>
+</html>

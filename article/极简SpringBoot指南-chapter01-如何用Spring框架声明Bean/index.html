@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="utf-8">
+    <meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover"
+          name="viewport">
+    
+    
+    <!-- umami web analysis -->
+    <script defer src="https://zhen.wang/libs/umami/umami.script.js"
+            data-website-id="d66cfe03-f6b3-4aa0-baf8-728700db1b09"></script>
+    
+    
+    
+    <link rel="icon" type="image/png" sizes="16x16" href="https://zhen.wang/images/blog-site-icon.svg">
+    <link rel="icon" type="image/png" sizes="32x32" href="https://zhen.wang/images/blog-site-icon.svg">
+    <title>zhen&#x27;s everything</title>
+    <link rel="stylesheet" href="https://zhen.wang/style.css">
+    
+<link rel="stylesheet" href="https://zhen.wang/article_content.css">
+<link rel="stylesheet" href="https://zhen.wang/article_markdown.css">
+
+</head>
+<body>
+
+<div id="article">
+    <header class="article-header">
+        
+<div class="base-title">
+    <a href="#" onclick="history.length > 1 ? history.back() : location.href = '/'; return false;">&LeftArrow; Back</a>
+    <h1>
+        极简SpringBoot指南-Chapter01-如何用Spring框架声明Bean
+    </h1>
+</div>
+
+    </header>
+    <p class="article-date">2021-08-10</p>
+    
+    <!-- toc -->
+    <div class="article-toc">
+        <label class="toc-title" for="toc-trigger">目录</label>
+        <input id="toc-trigger" type="checkbox" checked/>
+        <div class="toc-content">
+            <ol class="toc">
+                
+                <li class="toc-item toc-level-1">
+                    <a class="toc-link" href="https://zhen.wang/article/极简SpringBoot指南-chapter01-如何用Spring框架声明Bean/#cang-ku-di-zhi">仓库地址</a>
+                    
+                </li>
+                
+                <li class="toc-item toc-level-1">
+                    <a class="toc-link" href="https://zhen.wang/article/极简SpringBoot指南-chapter01-如何用Spring框架声明Bean/#chapter01-ru-he-yong-springkuang-jia-sheng-ming-bean">Chapter01-如何用Spring框架声明Bean</a>
+                    
+                    <ol class="toc-child">
+                        
+                        <li class="toc-item toc-level-2">
+                            <a href="https://zhen.wang/article/极简SpringBoot指南-chapter01-如何用Spring框架声明Bean/#qian-yan">前言</a>
+                        </li>
+                        
+                        <li class="toc-item toc-level-2">
+                            <a href="https://zhen.wang/article/极简SpringBoot指南-chapter01-如何用Spring框架声明Bean/#yi-shi-yong-componentzhu-jie">一 使用@Component注解</a>
+                        </li>
+                        
+                        <li class="toc-item toc-level-2">
+                            <a href="https://zhen.wang/article/极简SpringBoot指南-chapter01-如何用Spring框架声明Bean/#er-javalei-pei-zhi-sheng-ming">二 Java类配置声明</a>
+                        </li>
+                        
+                        <li class="toc-item toc-level-2">
+                            <a href="https://zhen.wang/article/极简SpringBoot指南-chapter01-如何用Spring框架声明Bean/#san-xmlpei-zhi-sheng-ming-bean-xuan-du">三 XML配置声明Bean（选读）</a>
+                        </li>
+                        
+                        <li class="toc-item toc-level-2">
+                            <a href="https://zhen.wang/article/极简SpringBoot指南-chapter01-如何用Spring框架声明Bean/#cang-ku-di-zhi-1">仓库地址</a>
+                        </li>
+                        
+                    </ol>
+                    
+                </li>
+                
+            </ol>
+        </div>
+    </div>
+    
+    <!-- real content -->
+    <div class="article-content markdown-content">
+        <h2 id="cang-ku-di-zhi">仓库地址</h2>
+<p><a rel="noopener" target="_blank" href="https://github.com/w4ngzhen/springboot-simple-guide">w4ngzhen/springboot-simple-guide: This is a project that guides SpringBoot users to get started quickly through a series of examples (github.com)</a></p>
+<h1 id="chapter01-ru-he-yong-springkuang-jia-sheng-ming-bean">Chapter01-如何用Spring框架声明Bean</h1>
+<span id="continue-reading"></span><h2 id="qian-yan">前言</h2>
+<p>在上一章中，我们已经掌握了Spring最基本的使用方式：</p>
+<ol>
+<li>通过使用<code>@Component</code>注解标记我们的类作为一个Bean组件。</li>
+<li>使用Spring上下文对象从IOC容器中拿到Bean组件。</li>
+</ol>
+<p>在这一章中，我们将进一步学习使用Spring框架声明Bean的三种方式：</p>
+<ol>
+<li><code>@Component</code>注解</li>
+<li>XML配置声明</li>
+<li>Java类配置声明（<code>@Configuration</code>）</li>
+</ol>
+<p><em>PS：Spring声明Bean的方式不止这三种，请自行搜索了解：Spring声明Bean的方式。</em></p>
+<h2 id="yi-shi-yong-componentzhu-jie">一 使用<code>@Component</code>注解</h2>
+<p><code>@Component</code>注解我们已经很熟悉了，这里还是需要简单提一下。创建类Apple：</p>
+<pre data-lang="java" style="background-color:#2b303b;color:#c0c5ce;" class="language-java "><code class="language-java" data-lang="java"><span style="color:#65737e;">// 使用注解 @Component 标记，并且我们还自定义了Bean的名称
+</span><span>@</span><span style="color:#bf616a;">Component</span><span>(&quot;</span><span style="color:#a3be8c;">myApple</span><span>&quot;) 
+</span><span style="color:#b48ead;">public class </span><span style="color:#ebcb8b;">Apple </span><span style="color:#eff1f5;">{
+</span><span style="color:#eff1f5;">
+</span><span style="color:#eff1f5;">    </span><span style="color:#b48ead;">public </span><span style="color:#8fa1b3;">Apple</span><span style="color:#eff1f5;">() {
+</span><span style="color:#eff1f5;">        </span><span style="color:#ebcb8b;">System</span><span style="color:#eff1f5;">.out.</span><span style="color:#bf616a;">println</span><span style="color:#eff1f5;">(</span><span>&quot;</span><span style="color:#a3be8c;">Apple 无参构造函数</span><span>&quot;</span><span style="color:#eff1f5;">);
+</span><span style="color:#eff1f5;">    }
+</span><span style="color:#eff1f5;">
+</span><span style="color:#eff1f5;">}
+</span></code></pre>
+<p>获取并打印：</p>
+<pre data-lang="java" style="background-color:#2b303b;color:#c0c5ce;" class="language-java "><code class="language-java" data-lang="java"><span>@</span><span style="color:#bf616a;">SpringBootApplication
+</span><span style="color:#b48ead;">public class </span><span style="color:#ebcb8b;">Chapter01App </span><span style="color:#eff1f5;">{
+</span><span style="color:#eff1f5;">    </span><span style="color:#b48ead;">public static void </span><span style="color:#8fa1b3;">main</span><span style="color:#eff1f5;">(</span><span style="color:#ebcb8b;">String</span><span style="color:#b48ead;">[] </span><span style="color:#bf616a;">args</span><span style="color:#eff1f5;">) {
+</span><span style="color:#eff1f5;">        </span><span style="color:#ebcb8b;">ConfigurableApplicationContext</span><span style="color:#eff1f5;"> context </span><span>=
+</span><span style="color:#eff1f5;">                </span><span style="color:#ebcb8b;">SpringApplication</span><span style="color:#eff1f5;">.</span><span style="color:#bf616a;">run</span><span style="color:#eff1f5;">(</span><span style="color:#ebcb8b;">Chapter01App</span><span style="color:#eff1f5;">.</span><span style="color:#bf616a;">class</span><span style="color:#eff1f5;">, args);
+</span><span style="color:#eff1f5;">        </span><span style="color:#65737e;">// 注意BeanName我们填写的&quot;myApple&quot;，和 @Component(&quot;myApple&quot;) 对应
+</span><span style="color:#eff1f5;">        </span><span style="color:#ebcb8b;">Object</span><span style="color:#eff1f5;"> myApple </span><span>=</span><span style="color:#eff1f5;"> context.</span><span style="color:#bf616a;">getBean</span><span style="color:#eff1f5;">(</span><span>&quot;</span><span style="color:#a3be8c;">myApple</span><span>&quot;</span><span style="color:#eff1f5;">);
+</span><span style="color:#eff1f5;">        </span><span style="color:#ebcb8b;">System</span><span style="color:#eff1f5;">.out.</span><span style="color:#bf616a;">println</span><span style="color:#eff1f5;">(myApple);
+</span><span style="color:#eff1f5;">    }
+</span><span style="color:#eff1f5;">}
+</span></code></pre>
+<h2 id="er-javalei-pei-zhi-sheng-ming">二 Java类配置声明</h2>
+<p>Java类配置声明是指，我们使用某个Java作为Spring的配置，通过Java代码本身来定义Bean。这样做的好处我们后文会提到。</p>
+<p>首先编写我们的Bean类：</p>
+<pre data-lang="java" style="background-color:#2b303b;color:#c0c5ce;" class="language-java "><code class="language-java" data-lang="java"><span style="color:#65737e;">/**
+</span><span style="color:#65737e;"> * Banana类，不需要使用任何注解
+</span><span style="color:#65737e;"> */
+</span><span style="color:#65737e;">public class Banana {
+</span><span style="color:#65737e;">    public Banana() {
+</span><span style="color:#65737e;">        System.out.println(&quot;Banana 无参构造函数&quot;);
+</span><span style="color:#65737e;">    }
+</span><span style="color:#65737e;">}
+</span></code></pre>
+<p>然后，我们编写一个<strong>配置类</strong>，其特征是在类上有注解<code>@Configuration</code>：</p>
+<pre data-lang="java" style="background-color:#2b303b;color:#c0c5ce;" class="language-java "><code class="language-java" data-lang="java"><span>@</span><span style="color:#bf616a;">Configuration </span><span style="color:#65737e;">// 添加注解表明是一个Spring配置类
+</span><span style="color:#b48ead;">public class </span><span style="color:#ebcb8b;">Chapter01Configuration </span><span style="color:#eff1f5;">{
+</span><span style="color:#eff1f5;">    @</span><span style="color:#bf616a;">Bean </span><span style="color:#65737e;">// 使用&#39;@Bean&#39;在方法上，表明我们声明了一个Bean
+</span><span style="color:#eff1f5;">    </span><span style="color:#b48ead;">public </span><span style="color:#ebcb8b;">Banana </span><span style="color:#8fa1b3;">myBanana</span><span style="color:#eff1f5;">() { </span><span style="color:#65737e;">// 方法名即为Bean的名称
+</span><span style="color:#eff1f5;">        </span><span style="color:#ebcb8b;">System</span><span style="color:#eff1f5;">.out.</span><span style="color:#bf616a;">println</span><span style="color:#eff1f5;">(</span><span>&quot;</span><span style="color:#a3be8c;">进入Banana Bean创建函数</span><span>&quot;</span><span style="color:#eff1f5;">);
+</span><span style="color:#eff1f5;">        </span><span style="color:#b48ead;">return new </span><span style="color:#ebcb8b;">Banana</span><span style="color:#eff1f5;">();
+</span><span style="color:#eff1f5;">    }
+</span><span style="color:#eff1f5;">}
+</span></code></pre>
+<p>最后，我们在启动类上添加注入，表明扫描该配置类：</p>
+<pre data-lang="java" style="background-color:#2b303b;color:#c0c5ce;" class="language-java "><code class="language-java" data-lang="java"><span>@</span><span style="color:#bf616a;">SpringBootApplication
+</span><span style="color:#65737e;">// &#39;@Import&#39; 注解用于指定我们需要的配置类
+</span><span style="color:#65737e;">// 默认情况下，会自动扫描当前启动类所在包及其子包的Configuration，
+</span><span style="color:#65737e;">// 所以不需要特别指定，这里主要是演示
+</span><span>@</span><span style="color:#bf616a;">Import</span><span>(</span><span style="color:#ebcb8b;">Chapter01Configuration</span><span>.</span><span style="color:#bf616a;">class</span><span>)
+</span><span style="color:#b48ead;">public class </span><span style="color:#ebcb8b;">Chapter01App </span><span style="color:#eff1f5;">{
+</span><span style="color:#eff1f5;">    </span><span style="color:#b48ead;">public static void </span><span style="color:#8fa1b3;">main</span><span style="color:#eff1f5;">(</span><span style="color:#ebcb8b;">String</span><span style="color:#b48ead;">[] </span><span style="color:#bf616a;">args</span><span style="color:#eff1f5;">) {
+</span><span style="color:#eff1f5;">        </span><span style="color:#ebcb8b;">ConfigurableApplicationContext</span><span style="color:#eff1f5;"> context </span><span>=
+</span><span style="color:#eff1f5;">                </span><span style="color:#ebcb8b;">SpringApplication</span><span style="color:#eff1f5;">.</span><span style="color:#bf616a;">run</span><span style="color:#eff1f5;">(</span><span style="color:#ebcb8b;">Chapter01App</span><span style="color:#eff1f5;">.</span><span style="color:#bf616a;">class</span><span style="color:#eff1f5;">, args);
+</span><span style="color:#eff1f5;">        </span><span style="color:#ebcb8b;">Object</span><span style="color:#eff1f5;"> myBanana </span><span>=</span><span style="color:#eff1f5;"> context.</span><span style="color:#bf616a;">getBean</span><span style="color:#eff1f5;">(</span><span>&quot;</span><span style="color:#a3be8c;">myBanana</span><span>&quot;</span><span style="color:#eff1f5;">);
+</span><span style="color:#eff1f5;">        </span><span style="color:#ebcb8b;">System</span><span style="color:#eff1f5;">.out.</span><span style="color:#bf616a;">println</span><span style="color:#eff1f5;">(myBanana);
+</span><span style="color:#eff1f5;">    }
+</span><span style="color:#eff1f5;">}
+</span></code></pre>
+<p>在这个例子中，各位读者可能会比较绕，这里再整理以下思路。</p>
+<p>首先，我们创建了一个普普通通的Java类Banana，对于这个类，我们没有用到任何有关Spring框架的东西。</p>
+<p>其次，我们创建了一个配置类Chapter01Configuration，通过类名我们知道，Spring对于配置类的名称没有任何的限制，只要是合法的都行。这个类与Spring框架唯一的联系就是使用了注解<code>@Configuration</code>，意味着我们标记了这个类为一个Spring的配置类。</p>
+<p>那么配置类能干什么呢？就是我们第三步的操作：我们在配置类中编写了一个方法<code>public Banana myBanana();</code>，并且在其方法上使用了注解<code>@Bean</code>，通过该注解，表明我们定义了一个Bean，这个Bean的名称就是方法名"myBanana"，这个Bean的类型就是Banana。</p>
+<h2 id="san-xmlpei-zhi-sheng-ming-bean-xuan-du">三 XML配置声明Bean（选读）</h2>
+<p>还记得上面的我们通过注解的形式来声明我们的Bean吗？实际上，初期的Spring的IOC容器的初始化，是通过配置文件进行的，尽管如今Spring以及SpringBoot项目绝大多数情况都使用的是<strong>注解方式</strong>以及<strong>Java类配置</strong>，但是使用XML的配置方式，我也希望大家能够了解。</p>
+<p>首先，我们依然创建一个普通的Java类Coconut：</p>
+<pre data-lang="java" style="background-color:#2b303b;color:#c0c5ce;" class="language-java "><code class="language-java" data-lang="java"><span style="color:#b48ead;">public class </span><span style="color:#ebcb8b;">Coconut </span><span style="color:#eff1f5;">{
+</span><span style="color:#eff1f5;">
+</span><span style="color:#eff1f5;">    </span><span style="color:#65737e;">/**
+</span><span style="color:#65737e;">     * 定义字段：重量，可以通过下面的getter和setter获取和设置该值
+</span><span style="color:#65737e;">     */
+</span><span style="color:#65737e;">    private int weight;
+</span><span style="color:#65737e;">
+</span><span style="color:#65737e;">    public Coconut() {
+</span><span style="color:#65737e;">        System.out.println(&quot;Coconut 无参构造函数&quot;);
+</span><span style="color:#65737e;">    }
+</span><span style="color:#65737e;">
+</span><span style="color:#65737e;">    public int getWeight() {
+</span><span style="color:#65737e;">        return weight;
+</span><span style="color:#65737e;">    }
+</span><span style="color:#65737e;">
+</span><span style="color:#65737e;">    public void setWeight(int weight) {
+</span><span style="color:#65737e;">        this.weight = weight;
+</span><span style="color:#65737e;">    }
+</span><span style="color:#65737e;">}
+</span></code></pre>
+<p>从这个类可以看到，我们没有使用任何的有关Spring相关的注解（尤其是<code>@Component</code>注解），但是注意，这个类我们稍微添加了些内容，增加了一个字段weight，用于记录Coconut的重量。那么接下来，Spring的IOC容器，如何初始化我们的Coconut实例呢？只需两步：</p>
+<ol>
+<li>创建一个xml文件，在xml文件中，使用Spring框架约定的格式定义Bean</li>
+<li>在启动类上，指定Spring框架加载该xml</li>
+</ol>
+<p>**首先我们看步骤1，创建xml文件。**在<code>项目目录/src/main/resources</code>目录下，创建任意自定义的名称的XML文件，为了便于我们识别，本人创建的是：<code>chapter01_03_use_xml_beans.xml</code>，初始内容下：</p>
+<pre data-lang="xml" style="background-color:#2b303b;color:#c0c5ce;" class="language-xml "><code class="language-xml" data-lang="xml"><span>&lt;?</span><span style="color:#bf616a;">xml </span><span style="color:#d08770;">version</span><span>=&quot;</span><span style="color:#a3be8c;">1.0</span><span>&quot; </span><span style="color:#d08770;">encoding</span><span>=&quot;</span><span style="color:#a3be8c;">UTF-8</span><span>&quot;?&gt;
+</span><span>&lt;</span><span style="color:#bf616a;">beans </span><span style="color:#d08770;">xmlns</span><span>=&quot;</span><span style="color:#a3be8c;">http://www.springframework.org/schema/beans</span><span>&quot;
+</span><span>       </span><span style="color:#d08770;">xmlns:xsi</span><span>=&quot;</span><span style="color:#a3be8c;">http://www.w3.org/2001/XMLSchema-instance</span><span>&quot;
+</span><span>       </span><span style="color:#d08770;">xsi:schemaLocation</span><span>=&quot;</span><span style="color:#a3be8c;">http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd</span><span>&quot;&gt;
+</span><span>
+</span><span>&lt;/</span><span style="color:#bf616a;">beans</span><span>&gt;
+</span></code></pre>
+<p><em>PS：使用IDEA的时候，可以在相关文件夹上<code>右键 — New — XML Configuration File — Spring Config</code>来快速创建具有初始内容的xml。</em></p>
+<p>可以看到xml初始内容的根节点<code>&lt;beans&gt;</code>就可以猜测到我们可以在其中添加子节点<code>&lt;bean&gt;</code>。OK，我们来定义我们的bean：</p>
+<pre data-lang="xml" style="background-color:#2b303b;color:#c0c5ce;" class="language-xml "><code class="language-xml" data-lang="xml"><span>&lt;?</span><span style="color:#bf616a;">xml </span><span style="color:#d08770;">version</span><span>=&quot;</span><span style="color:#a3be8c;">1.0</span><span>&quot; </span><span style="color:#d08770;">encoding</span><span>=&quot;</span><span style="color:#a3be8c;">UTF-8</span><span>&quot;?&gt;
+</span><span>&lt;</span><span style="color:#bf616a;">beans </span><span style="color:#d08770;">xmlns</span><span>=&quot;</span><span style="color:#a3be8c;">http://www.springframework.org/schema/beans</span><span>&quot;
+</span><span>       </span><span style="color:#d08770;">xmlns:xsi</span><span>=&quot;</span><span style="color:#a3be8c;">http://www.w3.org/2001/XMLSchema-instance</span><span>&quot;
+</span><span>       </span><span style="color:#d08770;">xsi:schemaLocation</span><span>=&quot;</span><span style="color:#a3be8c;">http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd</span><span>&quot;&gt;
+</span><span>
+</span><span>    </span><span style="color:#65737e;">&lt;!-- 定义了一个Bean，名称是myCoconut --&gt;
+</span><span>    &lt;</span><span style="color:#bf616a;">bean </span><span style="color:#d08770;">name</span><span>=&quot;</span><span style="color:#a3be8c;">myCoconut</span><span>&quot; </span><span style="color:#d08770;">class</span><span>=&quot;</span><span style="color:#a3be8c;">com.compilemind.guide.chapter01._03_use_xml.Coconut</span><span>&quot;&gt;
+</span><span>        </span><span style="color:#65737e;">&lt;!-- 对于Coconut的weight属性，我们设置它的初始值100 --&gt;
+</span><span>        &lt;</span><span style="color:#bf616a;">property </span><span style="color:#d08770;">name</span><span>=&quot;</span><span style="color:#a3be8c;">weight</span><span>&quot; </span><span style="color:#d08770;">value</span><span>=&quot;</span><span style="color:#a3be8c;">100</span><span>&quot;/&gt;
+</span><span>    &lt;/</span><span style="color:#bf616a;">bean</span><span>&gt;
+</span><span>
+</span><span>&lt;/</span><span style="color:#bf616a;">beans</span><span>&gt;
+</span></code></pre>
+<p>其实，通过xml，我认为不需要赘述什么。我们首先使用节点<code>&lt;bean&gt;</code>来定义我们的Bean，指明了他的name，以及他是由哪个类来创建的。并且，我们还在其子节点<code>&lt;propertiy&gt;</code>定义了Coconut的weight的初始值。</p>
+<p>现在，我们已经通过xml，配置好了我们的Bean。怎么让Spring框架识别并初始化我们的Bean呢？很简单，只需要使用<code>@ImportResource</code>来配置我们要加载的xml是哪个即可：</p>
+<pre data-lang="java" style="background-color:#2b303b;color:#c0c5ce;" class="language-java "><code class="language-java" data-lang="java"><span>
+</span><span>@</span><span style="color:#bf616a;">SpringBootApplication
+</span><span style="color:#65737e;">// &#39;@ImportResource&#39; 注解用于加载我们指定的xml配置
+</span><span>@</span><span style="color:#bf616a;">ImportResource</span><span>(&quot;</span><span style="color:#a3be8c;">classpath:chapter01_03_use_xml_beans.xml</span><span>&quot;)
+</span><span style="color:#b48ead;">public class </span><span style="color:#ebcb8b;">Chapter01App </span><span style="color:#eff1f5;">{
+</span><span style="color:#eff1f5;">    </span><span style="color:#b48ead;">public static void </span><span style="color:#8fa1b3;">main</span><span style="color:#eff1f5;">(</span><span style="color:#ebcb8b;">String</span><span style="color:#b48ead;">[] </span><span style="color:#bf616a;">args</span><span style="color:#eff1f5;">) {
+</span><span style="color:#eff1f5;">        
+</span><span style="color:#eff1f5;">        </span><span style="color:#ebcb8b;">ConfigurableApplicationContext</span><span style="color:#eff1f5;"> context </span><span>=
+</span><span style="color:#eff1f5;">                </span><span style="color:#ebcb8b;">SpringApplication</span><span style="color:#eff1f5;">.</span><span style="color:#bf616a;">run</span><span style="color:#eff1f5;">(</span><span style="color:#ebcb8b;">Chapter01App</span><span style="color:#eff1f5;">.</span><span style="color:#bf616a;">class</span><span style="color:#eff1f5;">, args);
+</span><span style="color:#eff1f5;">        
+</span><span style="color:#eff1f5;">		</span><span style="color:#ebcb8b;">Object</span><span style="color:#eff1f5;"> myCoconut </span><span>=</span><span style="color:#eff1f5;"> context.</span><span style="color:#bf616a;">getBean</span><span style="color:#eff1f5;">(</span><span>&quot;</span><span style="color:#a3be8c;">myCoconut</span><span>&quot;</span><span style="color:#eff1f5;">);
+</span><span style="color:#eff1f5;">        </span><span style="color:#b48ead;">if </span><span style="color:#eff1f5;">(myCoconut </span><span>instanceof </span><span style="color:#ebcb8b;">Coconut</span><span style="color:#eff1f5;">) {
+</span><span style="color:#eff1f5;">            </span><span style="color:#b48ead;">int</span><span style="color:#eff1f5;"> weight </span><span>= </span><span style="color:#eff1f5;">((</span><span style="color:#ebcb8b;">Coconut</span><span style="color:#eff1f5;">) myCoconut).</span><span style="color:#bf616a;">getWeight</span><span style="color:#eff1f5;">();
+</span><span style="color:#eff1f5;">            </span><span style="color:#ebcb8b;">System</span><span style="color:#eff1f5;">.out.</span><span style="color:#bf616a;">println</span><span style="color:#eff1f5;">(</span><span>&quot;</span><span style="color:#a3be8c;">Coconut重量是：</span><span>&quot; +</span><span style="color:#eff1f5;"> weight);
+</span><span style="color:#eff1f5;">        }
+</span><span style="color:#eff1f5;">        
+</span><span style="color:#eff1f5;">    }
+</span><span style="color:#eff1f5;">}
+</span></code></pre>
+<p><em>PS：对于<code>classpath:xxx</code>的知识点，请自行了解，搜索关键字：<code>Spring classpath</code>。</em></p>
+<h2 id="cang-ku-di-zhi-1">仓库地址</h2>
+<p><a rel="noopener" target="_blank" href="https://github.com/w4ngzhen/springboot-simple-guide">w4ngzhen/springboot-simple-guide: This is a project that guides SpringBoot users to get started quickly through a series of examples (github.com)</a></p>
+
+    </div>
+</div>
+<script src="https://zhen.wang/libs/viewerjs@1.11.7/viewer.min.js"></script>
+<link rel="stylesheet" href="https://zhen.wang/libs/viewerjs@1.11.7/viewer.min.css"/>
+<script>
+  if (window.Viewer) {
+    document.querySelectorAll('img').forEach(img => {
+      new Viewer(img, {
+        inline: false,
+        navbar: false,
+        toolbar: {
+          zoomIn: 1,
+          zoomOut: 1,
+          reset: 1,
+          rotateLeft: 1,
+          rotateRight: 1,
+        },
+      });
+    });
+  }
+</script>
+
+
+</body>
+</html>
