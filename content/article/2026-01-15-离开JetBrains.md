@@ -1,6 +1,6 @@
 +++
 
-title = "离开"JetBrains""
+title = "离开JetBrains"
 date = "2026-01-15"
 [extra]
 
