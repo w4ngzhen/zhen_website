@@ -1,7 +1,7 @@
 {
 	"Zola Post Frontmatter": {
 	"scope": "markdown",
-	"prefix": "zola",
+	"prefix": "zola post frontmatter",
 	"body": [
 		"+++",
 		"",
