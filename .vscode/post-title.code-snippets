@@ -1,0 +1,20 @@
+{
+	"Zola Post Frontmatter": {
+	"scope": "markdown",
+	"prefix": "zola",
+	"body": [
+		"+++",
+		"",
+		"title = \"${1:${TM_FILENAME_BASE}}\"",
+		"date = \"${CURRENT_YEAR}-${CURRENT_MONTH}-${CURRENT_DATE}\"",
+		"",
+		"[extra]",
+		"$2",
+		"",
+		"+++",
+		"",
+		"$0"
+	],
+	"description": "Zola post frontmatter with filename as title and current date"
+}
+}
