@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="utf-8">
+    <meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover"
+          name="viewport">
+    
+    
+    <!-- umami web analysis -->
+    <script defer src="https://zhen.wang/libs/umami/umami.script.js"
+            data-website-id="d66cfe03-f6b3-4aa0-baf8-728700db1b09"></script>
+    
+    
+    
+    <link rel="icon" type="image/png" sizes="16x16" href="https://zhen.wang/images/blog-site-icon.svg">
+    <link rel="icon" type="image/png" sizes="32x32" href="https://zhen.wang/images/blog-site-icon.svg">
+    <title>zhen&#x27;s everything</title>
+    <link rel="stylesheet" href="https://zhen.wang/style.css">
+    
+<link rel="stylesheet" href="https://zhen.wang/article_content.css">
+<link rel="stylesheet" href="https://zhen.wang/article_markdown.css">
+
+</head>
+<body>
+
+<div id="article">
+    <header class="article-header">
+        
+<div class="base-title">
+    <a href="#" onclick="history.length > 1 ? history.back() : location.href = '/'; return false;">&LeftArrow; Back</a>
+    <h1>
+        理解Rust引用及其生命周期标识（上）
+    </h1>
+</div>
+
+    </header>
+    <p class="article-date">2025-02-28</p>
+    
+    <!-- toc -->
+    <div class="article-toc">
+        <label class="toc-title" for="toc-trigger">目录</label>
+        <input id="toc-trigger" type="checkbox" checked/>
+        <div class="toc-content">
+            <ol class="toc">
+                
+                <li class="toc-item toc-level-1">
+                    <a class="toc-link" href="https://zhen.wang/article/理解Rust引用及其生命周期标识（上）/#xie-zai-qian-mian">写在前面</a>
+                    
+                </li>
+                
+                <li class="toc-item toc-level-1">
+                    <a class="toc-link" href="https://zhen.wang/article/理解Rust引用及其生命周期标识（上）/#bao-han-yin-yong-de-fang-fa">包含引用的方法</a>
+                    
+                    <ol class="toc-child">
+                        
+                        <li class="toc-item toc-level-2">
+                            <a href="https://zhen.wang/article/理解Rust引用及其生命周期标识（上）/#guan-yu-sheng-ming-zhou-qi-biao-ji">关于生命周期标记</a>
+                        </li>
+                        
+                        <li class="toc-item toc-level-2">
+                            <a href="https://zhen.wang/article/理解Rust引用及其生命周期标识（上）/#te-shu-qing-kuang">特殊情况</a>
+                        </li>
+                        
+                    </ol>
+                    
+                </li>
+                
+                <li class="toc-item toc-level-1">
+                    <a class="toc-link" href="https://zhen.wang/article/理解Rust引用及其生命周期标识（上）/#yu-gao-bao-han-yin-yong-de-jie-gou-ti">预告：包含引用的结构体</a>
+                    
+                </li>
+                
+            </ol>
+        </div>
+    </div>
+    
+    <!-- real content -->
+    <div class="article-content markdown-content">
+        <h1 id="xie-zai-qian-mian">写在前面</h1>
+<p>作为Rust开发者，你是否还没有完全理解引用及其生命周期？是否处于教程一看就会，但在实际开发过程中不知所措？本文将由浅入深，手把手教你彻底理解Rust引用与生命周期。</p>
+<p><strong>关于本文的理解门槛</strong></p>
+<p>本文主要面向的是已经基本上了解过Rust这门语言，对引用以及生命周期（及其标识）有基本的了解，但对于包含生命周期标识的复杂场景理解吃力的Rust开发者。因此本文不会赘述讨论关于引用的语法形式，像是如果连下面的例子为什么会报错都不清楚原因的话，那么本篇就不太适合阅读了。</p>
+<pre data-lang="rust" style="background-color:#2b303b;color:#c0c5ce;" class="language-rust "><code class="language-rust" data-lang="rust"><span style="color:#b48ead;">fn </span><span style="color:#8fa1b3;">main</span><span>() {
+</span><span>    </span><span style="color:#b48ead;">let</span><span> r;
+</span><span>    {
+</span><span>        </span><span style="color:#b48ead;">let</span><span> x = </span><span style="color:#d08770;">5</span><span>;
+</span><span>        r = &amp;x;
+</span><span>    }
+</span><span>    println!(&quot;</span><span style="color:#a3be8c;">r: </span><span style="color:#d08770;">{}</span><span>&quot;, r);
+</span><span>}
+</span></code></pre>
+<h1 id="bao-han-yin-yong-de-fang-fa">包含引用的方法</h1>
+<p>让我们从一个最简单的例子开始，假设有如下的方法签名：</p>
+<pre data-lang="rust" style="background-color:#2b303b;color:#c0c5ce;" class="language-rust "><code class="language-rust" data-lang="rust"><span style="color:#b48ead;">fn </span><span style="color:#8fa1b3;">func</span><span>(</span><span style="color:#bf616a;">num</span><span>: &amp;</span><span style="color:#b48ead;">i32</span><span>) -&gt; &amp;</span><span style="color:#b48ead;">i32</span><span>;
+</span></code></pre>
+<p>大多数的教程都会告诉你：“入参是一个引用，返回也是一个引用，在这里，返回的引用的生命周期不能超过入参引用的生命周期，... ...”。这样说确实没有错，但这句话本质上是一个结论，对于不熟悉Rust生命周期的人来说，无法清晰地理解其中的逻辑原理，是不会真正掌握这块的内容。</p>
+<p>接下来让我们进入正题。回到上面的例子，观察这个方法签名，我们已经知道了这个方法有一个引用作为入参，且返回的也是一个引用。那它们俩有没有关联呢？答案就是：在这种场景中，即使没有生命周期标识，它俩也一定存在关系。</p>
+<p>在讲原因前，让我们先理解一个基本的事实：<strong>引用不可能凭空产生，它一定是来源于某个实际变量</strong>。有了这个基本的事实，让我们再来分析这个方法签名。</p>
+<p>首先入参是一个引用。考虑到“引用一定存在来源”，那么这个入参引用会来自于什么呢？很容易想到，就是调用该方法时，外部某个变量借用而来的到的引用，作为了此时的入参：</p>
+<pre data-lang="rust" style="background-color:#2b303b;color:#c0c5ce;" class="language-rust "><code class="language-rust" data-lang="rust"><span style="color:#65737e;">// 一些代码...
+</span><span style="color:#b48ead;">let</span><span> data: </span><span style="color:#b48ead;">i32 </span><span>= </span><span style="color:#d08770;">100</span><span>;
+</span><span style="color:#65737e;">// 调用方法
+</span><span style="color:#96b5b4;">func</span><span>(&amp;data); </span><span style="color:#65737e;">// &lt;- 方法的入参这个引用，来源于调用方法前某个变量借用而来得到的引用
+</span></code></pre>
+<p>入参引用我们分析好了，接下里让我们来分析返回值。返回值是一个引用，我们依然套用上面的“引用一定有其来源”来思考，这里返回的引用的来源是什么呢？首先我们考虑这里返回的引用会不会是方法中的局部变量借用而来，很显然不可能。假设代码如下：</p>
+<pre data-lang="rust" style="background-color:#2b303b;color:#c0c5ce;" class="language-rust "><code class="language-rust" data-lang="rust"><span style="color:#b48ead;">fn </span><span style="color:#8fa1b3;">func</span><span>(</span><span style="color:#bf616a;">num</span><span>: &amp;</span><span style="color:#b48ead;">i32</span><span>) -&gt; &amp;</span><span style="color:#b48ead;">i32 </span><span>{
+</span><span>    </span><span style="color:#b48ead;">let</span><span> some_data: </span><span style="color:#b48ead;">i32 </span><span>= </span><span style="color:#d08770;">100</span><span>;
+</span><span>    </span><span style="color:#b48ead;">let</span><span> some_ref: &amp;</span><span style="color:#b48ead;">i32 </span><span>= &amp;some_data;
+</span><span>    some_ref </span><span style="color:#65737e;">// 
+</span><span>}
+</span></code></pre>
+<p>在这里，我们在方法体内部创建了一个i32类型的变量，得到它的引用，再通过方法返回。然而，<code>some_data</code>是方法的局部变量，一旦<code>func</code>方法执行完毕，<code>some_data</code>变量对应的内存就会被释放，那么返回给外部的<code>some_ref</code>就成了无效的悬垂引用（Dangling References），引用着一段无效的内存。对于这种情况，Rust编译器可以非常容易的推断出你的代码语义，并禁止这种情况出现，No Way！因此，该方法返回的引用的来源就不可能是一个方法中的局部变量。</p>
+<blockquote>
+<p>稍有经验的读者可能会想到使用<code>'static</code>这个特殊的生命周期标识来绕过我们的例子，但请不要着急，在本文的后面我们会提到的。当然，如果你还不太明白<code>'static</code>，那么太好了，可以完全忽略这段话。</p>
+</blockquote>
+<p>既然不可能是来源于借用一个局部变量得到的结果，那么对于这个例子来说，我们就只能让其和入参进行关联了，例如编写如下的代码：</p>
+<pre data-lang="rust" style="background-color:#2b303b;color:#c0c5ce;" class="language-rust "><code class="language-rust" data-lang="rust"><span style="color:#b48ead;">fn </span><span style="color:#8fa1b3;">func</span><span>(</span><span style="color:#bf616a;">num</span><span>: &amp;</span><span style="color:#b48ead;">i32</span><span>) -&gt; &amp;</span><span style="color:#b48ead;">i32 </span><span>{
+</span><span>    num </span><span style="color:#65737e;">// &lt;- 咱们直接把入参引用返回出去
+</span><span>}
+</span></code></pre>
+<p>虽然这个例子很简单，但是我们可以从中联想：虽然我们无法知道这个例子中<code>func</code>方法的具体实现，但这里方法的入参引用和出参引用之间，会因为“引用一定要有来源”这一事实，而形成一种关系：</p>
+<p><img src="https://static-res.zhen.wang/images/post/2025-02-28/010.png" alt="010" /></p>
+<p>也就是说，<code>num_ref</code> 来源于 <code>num</code>，而<code>return_ref</code> 又来源于 <code>num_ref</code>：</p>
+<p><img src="https://static-res.zhen.wang/images/post/2025-02-28/020.png" alt="020" /></p>
+<p>既然存在来源关系，那么按照朴素的思维逻辑，被产出者不能存活的比被来源者还久（“我”来源于“你”，而“你”先没了，那“我”咋办 &gt;_&lt; ）。</p>
+<p>因此，那我们可以非常自然地给出结论：<code>num_ref</code>不能存活的比<code>num</code>久，而<code>return_ref</code>不能存活的比<code>num_ref</code>久。也就是说，对于这个方法：</p>
+<pre data-lang="rust" style="background-color:#2b303b;color:#c0c5ce;" class="language-rust "><code class="language-rust" data-lang="rust"><span style="color:#b48ead;">fn </span><span style="color:#8fa1b3;">func</span><span>(</span><span style="color:#bf616a;">num</span><span>: &amp;</span><span style="color:#b48ead;">i32</span><span>)  -&gt; &amp;</span><span style="color:#b48ead;">i32</span><span>;
+</span></code></pre>
+<p>也就是说，入参引用的要比返回的引用存活的更长才行。</p>
+<p>值得注意的是，在本例中，目前为止，我们完全没有把Rust生命周期那套东西搬出来，仅仅是通过简单的关系逻辑梳理，就能分析出上述”生命周期“的关系。</p>
+<p>此外，在这个场景中，我们即使不给方法上添加生命周期标识，也能通过Rust编译器的检查，毕竟，这里单个入参引用和出参引用一定有来源关系。</p>
+<h2 id="guan-yu-sheng-ming-zhou-qi-biao-ji">关于生命周期标记</h2>
+<p>其实一直以来，笔者都认为“生命周期标记” 这个命名存在一定的误导性。在笔者看来，这个东西更加适合叫做 “<strong>引用关系标记</strong>”，所以在本文，接下来内容中，笔者都将使用 “引用关系标记” 来书写表述。还是上面的例子，当我们手动加上引用关系标记以后如下所示：</p>
+<pre data-lang="rust" style="background-color:#2b303b;color:#c0c5ce;" class="language-rust "><code class="language-rust" data-lang="rust"><span style="color:#b48ead;">fn </span><span style="color:#8fa1b3;">func</span><span>&lt;</span><span style="color:#b48ead;">&#39;a</span><span>&gt;(</span><span style="color:#bf616a;">num</span><span>: &amp;</span><span style="color:#b48ead;">&#39;a i32</span><span>) -&gt; &amp;</span><span style="color:#b48ead;">&#39;a i32</span><span>;
+</span></code></pre>
+<p>上述方法签名表达了这样一种意思：入参引用与返回的引用存在关联关系，因为它俩都用了同一个 <strong>引用关系标记（‘a）</strong> 来标识。当然，我们前面已经分析知道了，在单个引用入参，然后返回引用的场景下，入参引用与出参引用会存在关系。因此，这里的引用关系标记可以移除。</p>
+<p>那我们可以是不是可以完全不用引用关系标记呢？让我们用一个非常经典的例子来进一步分析说明：</p>
+<pre data-lang="rust" style="background-color:#2b303b;color:#c0c5ce;" class="language-rust "><code class="language-rust" data-lang="rust"><span style="color:#b48ead;">fn </span><span style="color:#8fa1b3;">func</span><span>(</span><span style="color:#bf616a;">num_ref1</span><span>: &amp;</span><span style="color:#b48ead;">i32</span><span>, </span><span style="color:#bf616a;">num_ref2</span><span>: &amp;</span><span style="color:#b48ead;">i32</span><span>) -&gt; &amp;</span><span style="color:#b48ead;">i32</span><span>;
+</span></code></pre>
+<p>上面的方法签名有2个输入引用和1个输出引用。同样基于 “引用一定存在来源” 的思路来分析引用，入参的<code>num1</code>、<code>num2</code>和之前一样就是来自调用该方法时，外部某个变量借用而来的引用。</p>
+<p>然而，当我们试图分析返回的引用的来源时，会发现有点困难了。返回的<code>&amp;i32</code>首先不可能是方法内局部变量借用而来，所以依然与入参引用有关，那究竟是与<code>num1</code>有关还是与<code>num2</code>有关呢？回答是：没法确定。比如下面的例子：</p>
+<pre data-lang="rust" style="background-color:#2b303b;color:#c0c5ce;" class="language-rust "><code class="language-rust" data-lang="rust"><span style="color:#b48ead;">fn </span><span style="color:#8fa1b3;">func</span><span>(</span><span style="color:#bf616a;">num_ref1</span><span>: &amp;</span><span style="color:#b48ead;">i32</span><span>, </span><span style="color:#bf616a;">num_ref2</span><span>: &amp;</span><span style="color:#b48ead;">i32</span><span>) -&gt; &amp;</span><span style="color:#b48ead;">i32 </span><span>{
+</span><span>    num_ref1
+</span><span>}
+</span></code></pre>
+<p>这种情况，一看就知道，返回的引用只与<code>num1</code>这个输入引用有关系。然而，如果这个方法的实现改为了：</p>
+<pre data-lang="rust" style="background-color:#2b303b;color:#c0c5ce;" class="language-rust "><code class="language-rust" data-lang="rust"><span style="color:#65737e;">/// 伪代码
+</span><span style="color:#b48ead;">fn </span><span style="color:#8fa1b3;">func</span><span>(</span><span style="color:#bf616a;">num_ref1</span><span>: &amp;</span><span style="color:#b48ead;">i32</span><span>, </span><span style="color:#bf616a;">num_ref2</span><span>: &amp;</span><span style="color:#b48ead;">i32</span><span>) -&gt; &amp;</span><span style="color:#b48ead;">i32 </span><span>{
+</span><span>    如果运行时，此刻的秒钟为偶数
+</span><span>        返回 num_ref1
+</span><span>    否则
+</span><span>        返回 num_ref2
+</span><span>}
+</span></code></pre>
+<p>此刻，返回引用究竟与<code>num1</code>有关还是与<code>num2</code>有关，就需要根据实际运行时情况而动态变化了，我们只能说：可能与输入引用<code>num1</code>有关，可能与输入引用<code>num2</code>有关。这时候关系图就如下所示：</p>
+<p><img src="https://static-res.zhen.wang/images/post/2025-02-28/030.png" alt="030" /></p>
+<p>前面也提到，A来源于B，那么A的存活不能超过B，否则，B都没了，A就没有存在的价值了。现在根据上述的关系图，在某些时候，<code>return_ref</code>会来源于<code>num_ref1</code>，因此<code>return_ref</code>的存活不能超过<code>num_ref1</code>；在另外的某些时候，<code>return_ref</code>会来源于<code>num_ref2</code>，因此<code>return_ref</code>的存活不能超过<code>num_ref2</code>。既然两种情况都会出现，<strong>同时又为了保证无论任何情况下都不会出现悬垂引用</strong>，我们能很自然的会做出这样的限定：<code>return_ref</code>不能超过入参<code>num_ref1</code>和<code>num_ref2</code>中最短的那个引用的存活时间。</p>
+<p>然而，当我们按照上述思路，不加任何的引用关系标记，Rust是编译不通过的。因为我们确实在实际的场景中，会存在这样的逻辑：</p>
+<pre data-lang="rust" style="background-color:#2b303b;color:#c0c5ce;" class="language-rust "><code class="language-rust" data-lang="rust"><span style="color:#b48ead;">fn </span><span style="color:#8fa1b3;">func</span><span>(</span><span style="color:#bf616a;">num_ref1</span><span>: &amp;</span><span style="color:#b48ead;">i32</span><span>, </span><span style="color:#bf616a;">num_ref2</span><span>: &amp;</span><span style="color:#b48ead;">i32</span><span>) -&gt; &amp;</span><span style="color:#b48ead;">i32 </span><span>{
+</span><span>    num_ref1 </span><span style="color:#65737e;">// &lt;- 确实只与num_ref1有关，跟num_ref2没有任何关系
+</span><span>}
+</span></code></pre>
+<p>你可能会觉得这可以让Rust编译器来进行分析。然而，方法逻辑的实现千千万万，Rust不能case by case的方式来理解你程序的业务逻辑，进而推断出返回的引用究竟与输入的一堆引用的中哪些有关。</p>
+<p>因此，Rust干脆说：“嗨，引用关系你标识出来吧，我只关心引用的存活周期是否满足就好了”。也就是说，Rust编译器在处理引用安全性这方面只做好借用检查与引用生命周期的判断，至于一个方法的输入、输出的引用的关系，程序员标记好即可，这样，Rust编译器只需要关心方法签名就行。</p>
+<p>至此，让我们再通过几个例子来巩固目前讲的内容。</p>
+<p>示例1：输出引用与输入的n个引用都有关</p>
+<pre data-lang="rust" style="background-color:#2b303b;color:#c0c5ce;" class="language-rust "><code class="language-rust" data-lang="rust"><span style="color:#b48ead;">fn </span><span style="color:#8fa1b3;">fun1</span><span>&lt;</span><span style="color:#b48ead;">&#39;a</span><span>&gt;(</span><span style="color:#bf616a;">num1</span><span>: &amp;</span><span style="color:#b48ead;">&#39;a i32</span><span>, </span><span style="color:#bf616a;">num2</span><span>: &amp;</span><span style="color:#b48ead;">&#39;a i32</span><span>) -&gt; &amp;</span><span style="color:#b48ead;">&#39;a i32 </span><span>{
+</span><span>    </span><span style="color:#b48ead;">if </span><span>*num1 &gt; *num2 {
+</span><span>        num1
+</span><span>    } </span><span style="color:#b48ead;">else </span><span>{
+</span><span>        num2
+</span><span>    }
+</span><span>}
+</span></code></pre>
+<p>这种场景下，我们一般使用同一引用关系标记（这里就是<code>'a</code>）把它们都“关联“起来。在编译器的视角来看：”噢，这个方法返回的引用与入参的两个引用都有关系，那么作为编译器的我，要保证返回的引用存活时间不能比入参两个引用中最短的那个都存活的更长，这样才能无论哪种情况，都不会出现悬垂引用。“</p>
+<p>示例2：输出引用只与输入的某些有关</p>
+<pre data-lang="rust" style="background-color:#2b303b;color:#c0c5ce;" class="language-rust "><code class="language-rust" data-lang="rust"><span style="color:#b48ead;">fn </span><span style="color:#8fa1b3;">fun2</span><span>&lt;</span><span style="color:#b48ead;">&#39;a</span><span>, </span><span style="color:#b48ead;">&#39;b</span><span>&gt;(</span><span style="color:#bf616a;">num1</span><span>: &amp;</span><span style="color:#b48ead;">&#39;a i32</span><span>, </span><span style="color:#bf616a;">num2</span><span>: &amp;</span><span style="color:#b48ead;">&#39;b i32</span><span>) -&gt; &amp;</span><span style="color:#b48ead;">&#39;a i32 </span><span>{
+</span><span>    num1
+</span><span>}
+</span></code></pre>
+<p>在这个例子中，我们引入了两个引用关系标记（<code>'a</code>、<code>'b</code>），同时，返回引用标记的是<code>'a</code>，与输入引用中<code>num1</code>保持一致。那么编译器在编译过程中进行生命周期检查的时候，其视角就是：“返回引用<strong>只与</strong><code>num1</code>这个引用参数存在关系，那么我接下来进行检查的时候，只需要检查一下，返回的引用存活周期不要超过<code>num1</code>这个引用的存活周期即可，其他就不用管了”。同时，这个例子还可以修改为：</p>
+<pre data-lang="rust" style="background-color:#2b303b;color:#c0c5ce;" class="language-rust "><code class="language-rust" data-lang="rust"><span style="color:#b48ead;">fn </span><span style="color:#8fa1b3;">fun2</span><span>&lt;</span><span style="color:#b48ead;">&#39;a</span><span>&gt;(</span><span style="color:#bf616a;">num1</span><span>: &amp;</span><span style="color:#b48ead;">&#39;a i32</span><span>, </span><span style="color:#bf616a;">num2</span><span>: &amp;&#39;_ </span><span style="color:#b48ead;">i32</span><span>) -&gt; &amp;</span><span style="color:#b48ead;">&#39;a i32 </span><span>{
+</span><span>    num1
+</span><span>}
+</span></code></pre>
+<blockquote>
+<p>既然与第二个参数没关系，那第二个参数就写成<code>'_</code>吧。</p>
+</blockquote>
+<h2 id="te-shu-qing-kuang">特殊情况</h2>
+<p>基于前面我们提到的“引用一定有来源”，所以一般情况下这种事不会出现的：</p>
+<pre data-lang="rust" style="background-color:#2b303b;color:#c0c5ce;" class="language-rust "><code class="language-rust" data-lang="rust"><span style="color:#b48ead;">fn </span><span style="color:#8fa1b3;">fun</span><span>() -&gt; &amp;</span><span style="color:#b48ead;">i32</span><span>;
+</span></code></pre>
+<p>方法没有入参，又能返回一个<code>i32</code>变量的引用，似乎引用的来源只能是方法中局部变量借用而来，但我们知道这是不被允许的。</p>
+<p>但我们还可以这样编写：</p>
+<pre data-lang="rust" style="background-color:#2b303b;color:#c0c5ce;" class="language-rust "><code class="language-rust" data-lang="rust"><span style="color:#b48ead;">const </span><span style="color:#d08770;">NUM</span><span>: </span><span style="color:#b48ead;">i32 </span><span>= </span><span style="color:#d08770;">5</span><span>;
+</span><span>
+</span><span style="color:#b48ead;">fn </span><span style="color:#8fa1b3;">fun</span><span>() -&gt; &amp;</span><span style="color:#b48ead;">&#39;static i32 </span><span>{
+</span><span>    &amp;</span><span style="color:#d08770;">NUM
+</span><span>}
+</span><span>
+</span><span style="color:#b48ead;">fn </span><span style="color:#8fa1b3;">main</span><span>() {
+</span><span>    println!(&quot;</span><span style="color:#a3be8c;">num: </span><span style="color:#d08770;">{}</span><span>&quot;, </span><span style="color:#96b5b4;">fun</span><span>()); </span><span style="color:#65737e;">// 可以输出：“num: 5”
+</span><span>}
+</span></code></pre>
+<p>一个常量，因为其生命周期贯穿整个程序，活得最久，因此我们可以在方法中返回一个常量的引用，但需要注意的是，我们使用<code>'static</code>这个特殊的生命周期标记。</p>
+<h1 id="yu-gao-bao-han-yin-yong-de-jie-gou-ti">预告：包含引用的结构体</h1>
+<p>实际上，除开方法可能会包含输入、输出引用以外。我们还会面临包含引用的结构体。考虑到读者最好对于本文能够好消化，笔者决定将包含引用的结构体的情况放到下一篇文章中来继续探讨。</p>
+
+    </div>
+</div>
+<script src="https://zhen.wang/libs/viewerjs@1.11.7/viewer.min.js"></script>
+<link rel="stylesheet" href="https://zhen.wang/libs/viewerjs@1.11.7/viewer.min.css"/>
+<script>
+  if (window.Viewer) {
+    document.querySelectorAll('img').forEach(img => {
+      new Viewer(img, {
+        inline: false,
+        navbar: false,
+        toolbar: {
+          zoomIn: 1,
+          zoomOut: 1,
+          reset: 1,
+          rotateLeft: 1,
+          rotateRight: 1,
+        },
+      });
+    });
+  }
+</script>
+
+
+</body>
+</html>

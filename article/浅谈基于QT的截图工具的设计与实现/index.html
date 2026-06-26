@@ -1,0 +1,512 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="utf-8">
+    <meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover"
+          name="viewport">
+    
+    
+    <!-- umami web analysis -->
+    <script defer src="https://zhen.wang/libs/umami/umami.script.js"
+            data-website-id="d66cfe03-f6b3-4aa0-baf8-728700db1b09"></script>
+    
+    
+    
+    <link rel="icon" type="image/png" sizes="16x16" href="https://zhen.wang/images/blog-site-icon.svg">
+    <link rel="icon" type="image/png" sizes="32x32" href="https://zhen.wang/images/blog-site-icon.svg">
+    <title>zhen&#x27;s everything</title>
+    <link rel="stylesheet" href="https://zhen.wang/style.css">
+    
+<link rel="stylesheet" href="https://zhen.wang/article_content.css">
+<link rel="stylesheet" href="https://zhen.wang/article_markdown.css">
+
+</head>
+<body>
+
+<div id="article">
+    <header class="article-header">
+        
+<div class="base-title">
+    <a href="#" onclick="history.length > 1 ? history.back() : location.href = '/'; return false;">&LeftArrow; Back</a>
+    <h1>
+        浅谈基于QT的截图工具的设计与实现
+    </h1>
+</div>
+
+    </header>
+    <p class="article-date">2023-08-31</p>
+    
+    <!-- toc -->
+    <div class="article-toc">
+        <label class="toc-title" for="toc-trigger">目录</label>
+        <input id="toc-trigger" type="checkbox" checked/>
+        <div class="toc-content">
+            <ol class="toc">
+                
+                <li class="toc-item toc-level-1">
+                    <a class="toc-link" href="https://zhen.wang/article/浅谈基于QT的截图工具的设计与实现/#qian-yan-qthui-tu-ji-chu">前言：QT绘图基础</a>
+                    
+                </li>
+                
+                <li class="toc-item toc-level-1">
+                    <a class="toc-link" href="https://zhen.wang/article/浅谈基于QT的截图工具的设计与实现/#zheng-wen-jie-tu-si-lu">正文：截图思路</a>
+                    
+                    <ol class="toc-child">
+                        
+                        <li class="toc-item toc-level-2">
+                            <a href="https://zhen.wang/article/浅谈基于QT的截图工具的设计与实现/#qu-yu-jie-qu-zhuang-tai">区域截取状态</a>
+                        </li>
+                        
+                        <li class="toc-item toc-level-2">
+                            <a href="https://zhen.wang/article/浅谈基于QT的截图工具的设计与实现/#bu-huo-wan-cheng-zhuang-tai-yu-zheng-ti-liu-zhuan">捕获完成状态与整体流转</a>
+                        </li>
+                        
+                        <li class="toc-item toc-level-2">
+                            <a href="https://zhen.wang/article/浅谈基于QT的截图工具的设计与实现/#wan-cheng-tu-xiang-jie-qu">完成图像截取</a>
+                        </li>
+                        
+                    </ol>
+                    
+                </li>
+                
+                <li class="toc-item toc-level-1">
+                    <a class="toc-link" href="https://zhen.wang/article/浅谈基于QT的截图工具的设计与实现/#zui-hou">最后</a>
+                    
+                </li>
+                
+            </ol>
+        </div>
+    </div>
+    
+    <!-- real content -->
+    <div class="article-content markdown-content">
+        <p>本人一直在做属于自己的一款跨平台的截图软件（<a rel="noopener" target="_blank" href="https://github.com/w4ngzhen/capi">w4ngzhen/capi(github.com)</a>），在软件编写的过程中有一些心得体会，所以有了本文。其实这篇文章酝酿了很久，现在这款软件有了雏形，也有空梳理并写下这篇循序渐进的介绍截图工具的设计与实现的文章了。</p>
+<span id="continue-reading"></span><h1 id="qian-yan-qthui-tu-ji-chu">前言：QT绘图基础</h1>
+<p>在介绍截图工具设计与实现前，让我们先通过介绍QT的绘图基础知识，让读者有一个比较感性的认识。</p>
+<blockquote>
+<p>本文理论上并非是完整的QT框架使用介绍，但是我们总是需要用一款支持绘图的GUI框架来介绍关于截图的知识，于是笔者就拿较为熟悉的QT框架来说明。但只要读者理解到了截图工具的本质，举一反三，其它的GUI框架也能完成截图的目的。</p>
+</blockquote>
+<p>对于绘图来说，我们通常遵循“<strong>数据驱动渲染</strong>的模型。具体一点，我们会围绕数据展开绘图，图像的绘制总是来源于数据的定义。那么如何实现动态图形呢？只需要通过某些操作改变数据即可。</p>
+<p>这样的模型，数据的修改和数据的渲染是解耦的，我们编写处理绘图部分的时候，只需要根据已有的数据进行绘制，可以完全不用关心数据是怎么变化的；而当操作数据的时候，完全可以不用关心渲染部分。基于该模型，可以让我们在开发类似于截图软件的时候，极大降低心智负担。</p>
+<p><img src="https://static-res.zhen.wang/images/post/2023-08-31/010-data-opr-render.png" alt="010-data-opr-render" /></p>
+<p>回到实际的部分，我们先使用QT编写一个窗体widget，然后重写窗体的<code>paintEvent</code>方法：</p>
+<pre data-lang="c++" style="background-color:#2b303b;color:#c0c5ce;" class="language-c++ "><code class="language-c++" data-lang="c++"><span style="color:#b48ead;">class </span><span style="color:#ebcb8b;">DemoWidget</span><span style="color:#eff1f5;">: </span><span style="color:#b48ead;">public </span><span style="color:#a3be8c;">QWidget </span><span style="color:#eff1f5;">{
+</span><span style="color:#b48ead;">public</span><span style="color:#eff1f5;">:
+</span><span style="color:#eff1f5;">  </span><span style="color:#b48ead;">void </span><span style="color:#8fa1b3;">paintEvent</span><span style="color:#eff1f5;">(QPaintEvent </span><span>*</span><span style="color:#bf616a;">event</span><span style="color:#eff1f5;">) </span><span style="color:#b48ead;">override </span><span style="color:#eff1f5;">{
+</span><span style="color:#eff1f5;">    QPainter </span><span style="color:#bf616a;">painter</span><span style="color:#eff1f5;">(</span><span style="color:#bf616a;">this</span><span style="color:#eff1f5;">);
+</span><span style="color:#eff1f5;">    painter.</span><span style="color:#bf616a;">setPen</span><span style="color:#eff1f5;">(</span><span style="color:#bf616a;">QPen</span><span style="color:#eff1f5;">(Qt::red));
+</span><span style="color:#eff1f5;">    painter.</span><span style="color:#bf616a;">drawRect</span><span style="color:#eff1f5;">(</span><span style="color:#d08770;">10</span><span style="color:#eff1f5;">, </span><span style="color:#d08770;">10</span><span style="color:#eff1f5;">, </span><span style="color:#d08770;">100</span><span style="color:#eff1f5;">, </span><span style="color:#d08770;">60</span><span style="color:#eff1f5;">);
+</span><span style="color:#eff1f5;">  }
+</span><span style="color:#eff1f5;">}</span><span>;
+</span></code></pre>
+<p><code>paintEvent</code>函数体代码就三行：</p>
+<ol>
+<li>使用当前窗体指针构造一个QPainter（<code>QPainter painter(this);</code>）；</li>
+<li>设置画笔的颜色；</li>
+<li>在坐标<code>(10, 10)</code>处绘制一个宽100像素，高60像素的矩形。</li>
+</ol>
+<p>然后，我们编写main方法，创建这个DemoWidget类的实例，将它show出来：</p>
+<pre data-lang="c++" style="background-color:#2b303b;color:#c0c5ce;" class="language-c++ "><code class="language-c++" data-lang="c++"><span style="color:#b48ead;">int </span><span style="color:#8fa1b3;">main</span><span>(</span><span style="color:#b48ead;">int </span><span style="color:#bf616a;">argc</span><span>, </span><span style="color:#b48ead;">char </span><span>*</span><span style="color:#bf616a;">argv</span><span>[]) {
+</span><span>  QApplication </span><span style="color:#bf616a;">a</span><span>(argc, argv);
+</span><span>  DemoWidget w;
+</span><span>  w.</span><span style="color:#bf616a;">resize</span><span>(</span><span style="color:#d08770;">200</span><span>, </span><span style="color:#d08770;">100</span><span>);
+</span><span>  w.</span><span style="color:#bf616a;">show</span><span>();
+</span><span>  </span><span style="color:#b48ead;">return </span><span>QApplication::</span><span style="color:#bf616a;">exec</span><span>();
+</span><span>}
+</span></code></pre>
+<p>整体代码和运行效果如下：</p>
+<p><img src="https://static-res.zhen.wang/images/post/2023-08-31/020-demo-widget-draw-rect.png" alt="020-demo-widget-draw-rect" /></p>
+<p>没错，QT中在一个窗体中进行绘图就是这么简单。接下来让我们更进一步，将矩形数据（x，y，w，h）提升到到类成员变量层级，并让painter绘制矩形的时候读取类成员变量：</p>
+<pre data-lang="diff" style="background-color:#2b303b;color:#c0c5ce;" class="language-diff "><code class="language-diff" data-lang="diff"><span>class DemoWidget: public QWidget {
+</span><span>public:
+</span><span>  void paintEvent(QPaintEvent *event) override {
+</span><span>    QPainter painter(this);
+</span><span>    painter.setPen(QPen(Qt::red));
+</span><span style="color:#bf616a;">-   painter.drawRect(10, 10, 100, 60);
+</span><span style="color:#a3be8c;">+   painter.drawRect(x_, y_, w_, h_); // 读取类成员变量
+</span><span>  }
+</span><span style="color:#a3be8c;">+ private:
+</span><span style="color:#a3be8c;">+  int x_ = 10, y_ = 10, w_ = 100, h_ = 60;
+</span><span>};
+</span></code></pre>
+<p>然后，我们重写QWidget的onKeyPress事件，代码如下：</p>
+<pre data-lang="cpp" style="background-color:#2b303b;color:#c0c5ce;" class="language-cpp "><code class="language-cpp" data-lang="cpp"><span style="color:#b48ead;">void </span><span style="color:#8fa1b3;">keyPressEvent</span><span>(QKeyEvent *</span><span style="color:#bf616a;">event</span><span>) </span><span style="color:#b48ead;">override </span><span>{
+</span><span>  </span><span style="color:#b48ead;">auto</span><span> key = event-&gt;</span><span style="color:#bf616a;">key</span><span>();
+</span><span>  </span><span style="color:#b48ead;">switch </span><span>(key) {
+</span><span>    </span><span style="color:#b48ead;">case</span><span> Qt::Key_Up: y_ -= </span><span style="color:#d08770;">5</span><span>;
+</span><span>      </span><span style="color:#b48ead;">break</span><span>;
+</span><span>    </span><span style="color:#b48ead;">case</span><span> Qt::Key_Down: y_ += </span><span style="color:#d08770;">5</span><span>;
+</span><span>      </span><span style="color:#b48ead;">break</span><span>;
+</span><span>    </span><span style="color:#b48ead;">case</span><span> Qt::Key_Left: x_ -= </span><span style="color:#d08770;">5</span><span>;
+</span><span>      </span><span style="color:#b48ead;">break</span><span>;
+</span><span>    </span><span style="color:#b48ead;">case</span><span> Qt::Key_Right: x_ += </span><span style="color:#d08770;">5</span><span>;
+</span><span>      </span><span style="color:#b48ead;">break</span><span>;
+</span><span>    </span><span style="color:#b48ead;">default</span><span>:</span><span style="color:#b48ead;">break</span><span>;
+</span><span>  }
+</span><span>}
+</span></code></pre>
+<p>这段代码的作用是当我们按下方向键后，就能够修改<code>x_</code>、<code>y_</code>变量的值，于是矩形的xy坐标会按照对应方向移动5像素。理论上讲，如果此时触发绘图事件，而我们使用painter又在读取类成员变量<code>x_</code>，<code>y_</code>等数据进行矩形绘制，那么就会看到矩形跟随方向键在上下左右移动。</p>
+<p><img src="https://static-res.zhen.wang/images/post/2023-08-31/030-data-opr-render-rect-pos.png" alt="030-data-opr-render-rect-pos" /></p>
+<p>然而，当我们操作时候却发现无论怎么按方向键界面似乎没有任何反应：</p>
+<p><img src="https://static-res.zhen.wang/images/post/2023-08-31/040-no-update-keypress.gif" alt="040-no-update-keypress" /></p>
+<p>为什么呢？让我们引入qdebug向控制台输出一些信息一探究竟：</p>
+<p><img src="https://static-res.zhen.wang/images/post/2023-08-31/050-qdebug.png" alt="050-qdebug" /></p>
+<p>应用运行以后，通过QDebug，我们可以在调试模式下看到控制台的输出内容：</p>
+<p><img src="https://static-res.zhen.wang/images/post/2023-08-31/060-console-output-without-update.gif" alt="060-console-output-without-update" /></p>
+<p>通过控制台可以看到，一开始触发了几次绘图事件（<code>paintEvent</code>）。之后，当我们按下方向键时，触发了按键事件（<code>keyPressEvent</code>），此时<code>x_</code>和<code>y_</code>的值的确已经发生了改变，但是控件上的矩形没有任何的变化。实际上，造成这种问题的根本原因在于我们重写的绘图事件没有触发，于是导致最新的效果并没有绘制到界面上，所以看不出效果。</p>
+<p>那么，QT的绘图事件什么时候触发呢？大致会有一下几种情况：</p>
+<ol>
+<li>当控件第一次显示时，系统会自动产生一个绘图事件。比如上面的动图中第一次的<code>paintEvent</code>。</li>
+<li>窗体失去焦点，获得焦点等，之后几次<code>paintEvent</code>出发就是因此产生的。</li>
+<li>当窗口控件被其他部件遮挡，然后又显示出来时，会对隐藏的区域产生一个重绘事件。比如最小化再出现。</li>
+<li>重新调整窗口大小时。</li>
+<li><code>repaint()</code>与<code>update()</code>函数被调用时。</li>
+</ol>
+<p>上面的例子中，在按下方向键以后界面没有效果，如果此时我们最小化它再恢复它，就会看到绘图事件被触发，同时界面也有所改变：</p>
+<p><img src="https://static-res.zhen.wang/images/post/2023-08-31/070-minimize-trigger-paint.gif" alt="070-minimize-trigger-paint" /></p>
+<p>当然，我们不可能为了触发绘图事件而手动操作窗体。为了达到触发绘图事件的目的，我们一般会调用控件的<code>update</code>方法系列方法或<code>repaint</code>的系列方法，来主动告诉QT需要进行控件的重新绘制，进而让QT触发<code>paintEvent</code>，绘制界面：</p>
+<p><img src="https://static-res.zhen.wang/images/post/2023-08-31/080-update-for-paintEvent.png" alt="080-update-for-paintEvent" /></p>
+<p>再次运行程序，并按下方向键，我们可以清楚的看到<code>paintEvent</code>在每次按下方向键以后都被调用，同时，矩形也表现出移动的效果：</p>
+<p><img src="https://static-res.zhen.wang/images/post/2023-08-31/090-update-effective.gif" alt="090-update-effective" /></p>
+<p>这里我们调用的是<code>update</code>方法，同时，我们还提到QT还提供一个<code>repaint</code>方法，二者区别在于：<code>repaint</code>一旦调用，QT内部就会立刻调用触发<code>paintEvent</code>，而<code>update</code>只是将触发绘图事件的任务放到事件队列，等统一事件调用。所以，绝对不能在<code>paintEvent</code>中调用<code>repaint</code>，这样会死循环。</p>
+<p>此外使用<code>update</code>还有一个优点在于，QT会将多个<code>update</code>的请求通过算法机制尽可能的合并为一个<code>paintEvent</code>，从而提高运行的效率。比如，我们可以在调用<code>update</code>的地方多赋值几次调用：</p>
+<p><img src="https://static-res.zhen.wang/images/post/2023-08-31/100-many-update.png" alt="100-many-update" /></p>
+<p>在实际调用中，只会触发一次<code>paintEvent</code>：</p>
+<p><img src="https://static-res.zhen.wang/images/post/2023-08-31/110-update-many-trigger-paintEvent.gif" alt="110-update-many-trigger-paintEvent" /></p>
+<p>如果换成调用5次<code>repaint</code>就会发现每调用一次就会触发一次<code>paintEvent</code>，读者可以自行测试。</p>
+<h1 id="zheng-wen-jie-tu-si-lu">正文：截图思路</h1>
+<p>在介绍了QT绘图基础以后，我们终于可以开始讨论正题了：截图工具的设计与实现。实际上，截图工具实现起来并不复杂。可以想象一下，我们首先通过某种API获取到桌面屏幕的图片，然后把这个图片放到一个窗体里面，最后再把这个窗体最大化的方式展现在屏幕上。此时就达到了我们截取了屏幕并让整个屏幕“冻结”，等待我们操作的效果。</p>
+<p><img src="https://static-res.zhen.wang/images/post/2023-08-31/115-screen-capture.gif" alt="115-screen-capture" /></p>
+<p>此时窗体全屏幕覆盖，接下来我们就需要在上面进行某个区域的获取。</p>
+<blockquote>
+<p>PS：这个动图使用了跨平台视频剪辑工具Kdenlive制作，并转为gif，有空写一个教程，哈哈。</p>
+</blockquote>
+<h2 id="qu-yu-jie-qu-zhuang-tai">区域截取状态</h2>
+<p>一般来说，截图过程就是按下鼠标，然后移动鼠标，此时界面上会显示整个鼠标拖拽产生的一个区域，直到松开鼠标，这个区域就被“截取”下来了：</p>
+<p><img src="https://static-res.zhen.wang/images/post/2023-08-31/120-make-capturing.gif" alt="120-make-capturing" /></p>
+<p>想要实现这样的效果并不复杂，代码如下何解释如下：</p>
+<p><img src="https://static-res.zhen.wang/images/post/2023-08-31/130-prepare-and-draw-rect.png" alt="130-prepare-and-draw-rect" /></p>
+<p>在上图代码中我分别标注了两个部分：</p>
+<ol>
+<li>捕获指定区域所需要的数据；</li>
+<li>将指定数据转化为图形进行绘制。</li>
+</ol>
+<p>首先讲解第一部分：捕获指定区域所需要的数据。这里我使用了三组数据，分别是：鼠标按下的起始位置、鼠标当前的位置、是否处于捕获中状态。不难看出，只需要这三组数据，我们就可以描述这样一个画面：如果没有在捕获状态，那么界面上不会出现矩形；如果处于捕获状态，那么我们使用起始位置和当前位置得到一个矩形：</p>
+<p><img src="https://static-res.zhen.wang/images/post/2023-08-31/140-capturing-mouse-pos.png" alt="140-capturing-mouse-pos" /></p>
+<p>在<code>paintEvent</code>中的代码实现也正是如此：</p>
+<pre data-lang="cpp" style="background-color:#2b303b;color:#c0c5ce;" class="language-cpp "><code class="language-cpp" data-lang="cpp"><span>  </span><span style="color:#b48ead;">void </span><span style="color:#8fa1b3;">paintEvent</span><span>(QPaintEvent *</span><span style="color:#bf616a;">event</span><span>) </span><span style="color:#b48ead;">override </span><span>{
+</span><span>    </span><span style="color:#b48ead;">if </span><span>(!isCapturing) {
+</span><span>      </span><span style="color:#b48ead;">return</span><span>;
+</span><span>    }
+</span><span>    QPainter </span><span style="color:#bf616a;">painter</span><span>(</span><span style="color:#bf616a;">this</span><span>);
+</span><span>    painter.</span><span style="color:#bf616a;">setPen</span><span>(</span><span style="color:#bf616a;">QPen</span><span>(Qt::red));
+</span><span>    </span><span style="color:#b48ead;">int</span><span> w = </span><span style="color:#96b5b4;">abs</span><span>(currX - startX);
+</span><span>    </span><span style="color:#b48ead;">int</span><span> h = </span><span style="color:#96b5b4;">abs</span><span>(currY - startY);
+</span><span>    painter.</span><span style="color:#bf616a;">drawRect</span><span>(startX, startY, w, h);
+</span><span>  }
+</span></code></pre>
+<p>也就是说，按照数据驱动渲染的模型，我们完成了由数据到渲染的部分：</p>
+<p><img src="https://static-res.zhen.wang/images/post/2023-08-31/150-data-render-but-not-opr.png" alt="150-data-render-but-not-opr" /></p>
+<p>接下来，<strong>我们完全只需要关注如何修改数据即可</strong>。在本例中，我们的操作行为是按下鼠标开始截取区域，移动过程中界面绘制开始点和当前鼠标构成的矩形，松开鼠标完成区域截取。很明显，我们会利用到鼠标事件。在QT中提供了三个鼠标事件供我们使用：</p>
+<ol>
+<li>mousePresssEvent，鼠标按下事件；</li>
+<li>mouseReleaseEvent，鼠标松开事件；</li>
+<li>mouseMoveEvent，鼠标移动事件。</li>
+</ol>
+<p>当我们按下鼠标的时候，就进入了“捕获状态”（<code>isCapturing</code>置为<code>true</code>），并且记录鼠标此时按下的位置（<code>startX</code>和<code>startY</code>）；在鼠标移动过程中，不断的更新当前鼠标位置（设置<code>currX</code>和<code>currY</code>）；松开鼠标时就退出“捕获状态”（<code>isCapturing</code>置为<code>false</code>）。代码如下：</p>
+<pre data-lang="cpp" style="background-color:#2b303b;color:#c0c5ce;" class="language-cpp "><code class="language-cpp" data-lang="cpp"><span>  </span><span style="color:#b48ead;">void </span><span style="color:#8fa1b3;">mousePressEvent</span><span>(QMouseEvent *</span><span style="color:#bf616a;">event</span><span>) </span><span style="color:#b48ead;">override </span><span>{
+</span><span>    isCapturing = </span><span style="color:#d08770;">true</span><span>;
+</span><span>    startX = event-&gt;</span><span style="color:#bf616a;">pos</span><span>().</span><span style="color:#bf616a;">x</span><span>();
+</span><span>    startY = event-&gt;</span><span style="color:#bf616a;">pos</span><span>().</span><span style="color:#bf616a;">y</span><span>();
+</span><span>    </span><span style="color:#bf616a;">this</span><span>-&gt;</span><span style="color:#bf616a;">update</span><span>();
+</span><span>  }
+</span><span>  </span><span style="color:#b48ead;">void </span><span style="color:#8fa1b3;">mouseReleaseEvent</span><span>(QMouseEvent *</span><span style="color:#bf616a;">event</span><span>) </span><span style="color:#b48ead;">override </span><span>{
+</span><span>    isCapturing = </span><span style="color:#d08770;">false</span><span>;
+</span><span>    </span><span style="color:#bf616a;">this</span><span>-&gt;</span><span style="color:#bf616a;">update</span><span>();
+</span><span>  }
+</span><span>  </span><span style="color:#b48ead;">void </span><span style="color:#8fa1b3;">mouseMoveEvent</span><span>(QMouseEvent *</span><span style="color:#bf616a;">event</span><span>) </span><span style="color:#b48ead;">override </span><span>{
+</span><span>    </span><span style="color:#b48ead;">auto</span><span> pos = event-&gt;</span><span style="color:#bf616a;">pos</span><span>();
+</span><span>    currX = pos.</span><span style="color:#bf616a;">x</span><span>();
+</span><span>    currY = pos.</span><span style="color:#bf616a;">y</span><span>();
+</span><span>    </span><span style="color:#bf616a;">this</span><span>-&gt;</span><span style="color:#bf616a;">update</span><span>();
+</span><span>  }
+</span></code></pre>
+<p><strong>注意事项1</strong>：这里每一个操作都要调用<code>update</code>告诉QT需要触发绘图事件，否则你会发现界面上没有任何的动静。另外，怎么知道什么时候应该调用<code>update</code>方法呢？很简单，只要在某处的代码修改了<code>paintEvent</code>中所依赖的数据，就应该在之后调用<code>update</code>。</p>
+<p><strong>注意事项2</strong>：在QT中，<code>mouseMoveEvent</code>并不是随时都在触发，该事件默认只有在鼠标按下以后的移动过程才会触发，QT这样设计考虑的点是因为鼠标的移动是很频繁的，随时触发会降低性能。如果你在某些场景下就是需要随时出发移动事件，需要在控件的构造函数中调用<code>"setMouseTracking(true);"</code>（可以看代码清单图中11行）。</p>
+<p>区域捕获到这里就结束了吗？非也。让我们来演示上面代码的问题：</p>
+<p><img src="https://static-res.zhen.wang/images/post/2023-08-31/160-make-capturing-bug.gif" alt="160-make-capturing-bug" /></p>
+<p>很明显可以看到，当我们将鼠标向右下拖动的时候，矩形很正常的在动态显示，而向左上角拖动的时候，就出现了问题。原因在于，QT的<code>drawRect</code>等API绘制矩形的时候，位置参数总是矩形的左上角位置，而我们总是将鼠标按下的位置作为左上角位置。然而，鼠标按下的位置就应该是矩形的左上角吗？不总是。当我们拖动鼠标向右下角移动的时候，左上角的start位置确实是可以作为矩形的xy坐标。但一旦我们将鼠标移动到左上角，位于起始位置的左边和上边的时候，就应该用当前鼠标的位置作为矩形的左上角了：</p>
+<p><img src="https://static-res.zhen.wang/images/post/2023-08-31/170-capturing-mouse-pos-correct.png" alt="170-capturing-mouse-pos-correct" /></p>
+<p>于是，我们需要适当修改以下paintEvent中的代码：</p>
+<pre data-lang="diff" style="background-color:#2b303b;color:#c0c5ce;" class="language-diff "><code class="language-diff" data-lang="diff"><span>  void paintEvent(QPaintEvent *event) override {
+</span><span>    if (!isCapturing) {
+</span><span>      return;
+</span><span>    }
+</span><span>    QPainter painter(this);
+</span><span>    painter.setPen(QPen(Qt::red));
+</span><span>    int w = abs(currX - startX);
+</span><span>    int h = abs(currY - startY);
+</span><span style="color:#a3be8c;">+   int left = startX &lt; currX ? startX : currX;
+</span><span style="color:#a3be8c;">+   int top = startY &lt; currY ? startY : currY;
+</span><span style="color:#bf616a;">-   painter.drawRect(startX, startY, w, h);
+</span><span style="color:#a3be8c;">+   painter.drawRect(left, top, w, h);
+</span><span>  }
+</span></code></pre>
+<p>就能看到合适的效果了：</p>
+<p><img src="https://static-res.zhen.wang/images/post/2023-08-31/180-capturing-rect-correct-pos.gif" alt="180-capturing-rect-correct-pos" /></p>
+<h2 id="bu-huo-wan-cheng-zhuang-tai-yu-zheng-ti-liu-zhuan">捕获完成状态与整体流转</h2>
+<p>一般截图工具都会在我们松开鼠标的时候，将被截取的区域固定下来，然后我们可以在上面写写画画（譬如添加额外的标记、文字等）。为了达到这个目的，我们首先要考虑如何将一个区域“固定”下来。在前面，我们引入了一个状态：“是否正在捕获中”（使用<code>isCapturing</code>作为标记）。在这里，为了描述“区域截取完成之后”的情形，我们需要引入一个新的状态：截取完成。于是，在整个截图操作的过程中，我们的状态流转如下：</p>
+<p><img src="https://static-res.zhen.wang/images/post/2023-08-31/190-state-flow.png" alt="190-state-flow" /></p>
+<p>为了后续代码更好的设计，我们使用枚举来表达状态：</p>
+<pre data-lang="cpp" style="background-color:#2b303b;color:#c0c5ce;" class="language-cpp "><code class="language-cpp" data-lang="cpp"><span style="color:#b48ead;">enum </span><span>Status {
+</span><span>  Explore = </span><span style="color:#d08770;">0</span><span>,
+</span><span>  Capturing,
+</span><span>  Captured
+</span><span>};
+</span></code></pre>
+<p>这里的<code>Status::Capturing</code>和<code>Status::Captured</code>不必多说，要单独解释一下<code>Explore</code>单词的含义。实际上，<code>Explore</code>就是指上面的“默认”，只是在笔者看来，当我们还没有进行截图的时候，鼠标就是在整个窗口上移动“探索”，所以笔者将这个状态取名为<code>Explore</code>。</p>
+<p>然后，我们需要对现有的代码进行适当的修改。首先是成员变量，由于我们引入了枚举来表达截图的状态，所以原先<code>isCapturing</code>字段就可以舍弃，取而代之的是使用枚举并默认为<code>Status::Explore</code>。同时，我们还需要引入一个矩形数据变量，来存储当我们松开鼠标的时候，截取到的区域的矩形信息。于是变动如下：</p>
+<pre data-lang="diff" style="background-color:#2b303b;color:#c0c5ce;" class="language-diff "><code class="language-diff" data-lang="diff"><span>private:
+</span><span>  int startX = 0, startY = 0;
+</span><span>  int currX = 0, currY = 0;
+</span><span style="color:#bf616a;">- bool isCapturing;
+</span><span style="color:#a3be8c;">+ QRect capturedRect; // 存储截取的区域信息，这里使用QT的QRect类
+</span><span style="color:#a3be8c;">+ Status status = Explore; // 替换原有的bool，并默认为Explore状态
+</span></code></pre>
+<p>对于数据的定义发生了变化，我们优先考虑渲染部分的变化，也就是<code>paintEvent</code>需要做出适配。正对不同的状态，<code>paintEvent</code>会绘制不同的效果：</p>
+<ol>
+<li><code>Explore</code>态，我们认为界面上什么操作也没有，所以什么都不需要做；</li>
+<li><code>Capturing</code>态，其实就是我们上面<code>isCapturing</code>为<code>true</code>的处理；</li>
+<li><code>Captured</code>态，截取完成后，我们把截取到的区域用蓝色矩形框住，而矩形数据就是上面新增的成员变量<code>capturedRect</code>。</li>
+</ol>
+<p>于是，整个代码如下：</p>
+<pre data-lang="cpp" style="background-color:#2b303b;color:#c0c5ce;" class="language-cpp "><code class="language-cpp" data-lang="cpp"><span style="color:#b48ead;">void </span><span style="color:#8fa1b3;">paintEvent</span><span>(QPaintEvent *</span><span style="color:#bf616a;">event</span><span>) </span><span style="color:#b48ead;">override </span><span>{
+</span><span>  </span><span style="color:#b48ead;">if </span><span>(status == Explore) {
+</span><span>    </span><span style="color:#b48ead;">return</span><span>;
+</span><span>  }
+</span><span>  </span><span style="color:#b48ead;">if </span><span>(status == Capturing) {
+</span><span>    QPainter </span><span style="color:#bf616a;">painter</span><span>(</span><span style="color:#bf616a;">this</span><span>);
+</span><span>    painter.</span><span style="color:#bf616a;">setPen</span><span>(</span><span style="color:#bf616a;">QPen</span><span>(Qt::red));
+</span><span>    </span><span style="color:#b48ead;">int</span><span> w = </span><span style="color:#96b5b4;">abs</span><span>(currX - startX);
+</span><span>    </span><span style="color:#b48ead;">int</span><span> h = </span><span style="color:#96b5b4;">abs</span><span>(currY - startY);
+</span><span>    </span><span style="color:#b48ead;">int</span><span> left = startX &lt; currX ? startX : currX;
+</span><span>    </span><span style="color:#b48ead;">int</span><span> top = startY &lt; currY ? startY : currY;
+</span><span>    painter.</span><span style="color:#bf616a;">drawRect</span><span>(left, top, w, h);
+</span><span>    </span><span style="color:#b48ead;">return</span><span>;
+</span><span>  }
+</span><span>  </span><span style="color:#b48ead;">if </span><span>(status == Captured) {
+</span><span>    QPainter </span><span style="color:#bf616a;">painter</span><span>(</span><span style="color:#bf616a;">this</span><span>);
+</span><span>    painter.</span><span style="color:#bf616a;">setPen</span><span>(</span><span style="color:#bf616a;">QPen</span><span>(Qt::blue));
+</span><span>    painter.</span><span style="color:#bf616a;">drawRect</span><span>(capturedRect);
+</span><span>    </span><span style="color:#b48ead;">return</span><span>;
+</span><span>  }
+</span><span>}
+</span></code></pre>
+<p>同样的，考虑完了数据以及如何绘制以后，我们需要回到模型的“数据操作”部分，考虑这些数据是如何变化的。按照上面的<code>"默认" -&gt; "截图中" -&gt; "截图后"</code>状态流转图，我们就可以很轻易写出数据修改的代码。</p>
+<p>首先是鼠标按下事件。当鼠标按下的时候，如果我们处于<code>Explore</code>，那么就进入<code>Capturing</code>，<strong>并记录鼠标起始位置</strong>；如果处于<code>Captured</code>，那么就什么也不干（理论上是不会有<code>Capturing</code>情况下的鼠标按下事件的），代码如下：</p>
+<pre data-lang="cpp" style="background-color:#2b303b;color:#c0c5ce;" class="language-cpp "><code class="language-cpp" data-lang="cpp"><span style="color:#b48ead;">void </span><span style="color:#8fa1b3;">mousePressEvent</span><span>(QMouseEvent *</span><span style="color:#bf616a;">event</span><span>) </span><span style="color:#b48ead;">override </span><span>{
+</span><span>  </span><span style="color:#b48ead;">switch </span><span>(status) {
+</span><span>    </span><span style="color:#b48ead;">case</span><span> Explore: {
+</span><span>      status = Capturing; </span><span style="color:#65737e;">// 进入Capturing
+</span><span>      startX = event-&gt;</span><span style="color:#bf616a;">pos</span><span>().</span><span style="color:#bf616a;">x</span><span>();
+</span><span>      startY = event-&gt;</span><span style="color:#bf616a;">pos</span><span>().</span><span style="color:#bf616a;">y</span><span>();
+</span><span>      </span><span style="color:#b48ead;">break</span><span>;
+</span><span>    }
+</span><span>    </span><span style="color:#b48ead;">default</span><span>:</span><span style="color:#b48ead;">break</span><span>;  </span><span style="color:#65737e;">// 其余状态都不关心
+</span><span>  }
+</span><span>  </span><span style="color:#bf616a;">this</span><span>-&gt;</span><span style="color:#bf616a;">update</span><span>();
+</span><span>}
+</span></code></pre>
+<p>接着是鼠标松开事件。当鼠标松开的时候，如果是<code>Explore</code>（理论上是不会出现的）或<code>Captured</code>，就什么也不做；如果是<code>Capturing</code>，则进行<code>Captured</code>状态，<strong>同时要存储下此时截取的区域</strong>，代码如下：</p>
+<pre data-lang="cpp" style="background-color:#2b303b;color:#c0c5ce;" class="language-cpp "><code class="language-cpp" data-lang="cpp"><span style="color:#b48ead;">void </span><span style="color:#8fa1b3;">mouseReleaseEvent</span><span>(QMouseEvent *</span><span style="color:#bf616a;">event</span><span>) </span><span style="color:#b48ead;">override </span><span>{
+</span><span>  </span><span style="color:#b48ead;">switch </span><span>(status) {
+</span><span>    </span><span style="color:#b48ead;">case</span><span> Capturing: {
+</span><span>      </span><span style="color:#65737e;">// 进入Captured态
+</span><span>      status = Captured;
+</span><span>      </span><span style="color:#65737e;">// 保存区域
+</span><span>      </span><span style="color:#b48ead;">int</span><span> w = </span><span style="color:#96b5b4;">abs</span><span>(currX - startX);
+</span><span>      </span><span style="color:#b48ead;">int</span><span> h = </span><span style="color:#96b5b4;">abs</span><span>(currY - startY);
+</span><span>      </span><span style="color:#b48ead;">int</span><span> left = startX &lt; currX ? startX : currX;
+</span><span>      </span><span style="color:#b48ead;">int</span><span> top = startY &lt; currY ? startY : currY;
+</span><span>      capturedRect = </span><span style="color:#bf616a;">QRect</span><span>(left, top, w, h);
+</span><span>      </span><span style="color:#b48ead;">break</span><span>;
+</span><span>    }
+</span><span>    </span><span style="color:#b48ead;">default</span><span>: </span><span style="color:#b48ead;">break</span><span>;
+</span><span>  }
+</span><span>  </span><span style="color:#bf616a;">this</span><span>-&gt;</span><span style="color:#bf616a;">update</span><span>();
+</span><span>}
+</span></code></pre>
+<p>然后是鼠标移动过程的状态处理。如果是<code>Explore</code>或是<code>Captured</code>，那么什么也不做；如果是<code>Capturing</code>，那么不断更新当前鼠标位置，代码如下：</p>
+<pre data-lang="cpp" style="background-color:#2b303b;color:#c0c5ce;" class="language-cpp "><code class="language-cpp" data-lang="cpp"><span style="color:#b48ead;">void </span><span style="color:#8fa1b3;">mouseMoveEvent</span><span>(QMouseEvent *</span><span style="color:#bf616a;">event</span><span>) </span><span style="color:#b48ead;">override </span><span>{
+</span><span>  </span><span style="color:#b48ead;">switch </span><span>(status) {
+</span><span>    </span><span style="color:#b48ead;">case</span><span> Capturing: {
+</span><span>      </span><span style="color:#b48ead;">auto</span><span> pos = event-&gt;</span><span style="color:#bf616a;">pos</span><span>();
+</span><span>      currX = pos.</span><span style="color:#bf616a;">x</span><span>();
+</span><span>      currY = pos.</span><span style="color:#bf616a;">y</span><span>();
+</span><span>      </span><span style="color:#b48ead;">break</span><span>;
+</span><span>    }
+</span><span>    </span><span style="color:#b48ead;">default</span><span>:</span><span style="color:#b48ead;">break</span><span>;
+</span><span>  }
+</span><span>  </span><span style="color:#bf616a;">this</span><span>-&gt;</span><span style="color:#bf616a;">update</span><span>();
+</span><span>}
+</span></code></pre>
+<p>此时，我们还差一个将状态从<code>Caputred</code>切回到<code>Explore</code>的处理，我们重写<code>keyPressEvent</code>事件的，如果在Captured状态按下了<code>ECS</code>，就进入<code>Explore</code>态：</p>
+<pre data-lang="cpp" style="background-color:#2b303b;color:#c0c5ce;" class="language-cpp "><code class="language-cpp" data-lang="cpp"><span style="color:#b48ead;">void </span><span style="color:#8fa1b3;">keyPressEvent</span><span>(QKeyEvent *</span><span style="color:#bf616a;">event</span><span>) </span><span style="color:#b48ead;">override </span><span>{
+</span><span>  </span><span style="color:#b48ead;">if </span><span>(event-&gt;</span><span style="color:#bf616a;">key</span><span>() == Qt::Key_Escape) {
+</span><span>    status = Explore;
+</span><span>  }
+</span><span>  </span><span style="color:#bf616a;">this</span><span>-&gt;</span><span style="color:#bf616a;">update</span><span>();
+</span><span>}
+</span></code></pre>
+<p>在所有代码准备好以后，让我们启用应用看一下效果：</p>
+<p><img src="https://static-res.zhen.wang/images/post/2023-08-31/200-explore-capturing-captured.gif" alt="200-explore-capturing-captured" /></p>
+<p>细心的读者如果实践到此处，会发现一个小问题：每一次按下<code>ESC</code>键以后，下一次进入<code>Capturing</code>状态，在鼠标拖动开始的一瞬间，会有一个矩形框闪现，原因是<code>currX</code>和<code>currY</code>还是上一次的数据，没有即时清理。解决办法也比较简单，就是在按下的一瞬间，同时更新<code>start</code>和<code>curr</code>的坐标数据为同一位置即可：</p>
+<pre data-lang="diff" style="background-color:#2b303b;color:#c0c5ce;" class="language-diff "><code class="language-diff" data-lang="diff"><span>void mousePressEvent(QMouseEvent *event) override {
+</span><span>  switch (status) {
+</span><span>    case Explore: {
+</span><span>      status = Capturing; // 进入Capturing
+</span><span>      startX = event-&gt;pos().x();
+</span><span>      startY = event-&gt;pos().y();
+</span><span style="color:#a3be8c;">+     currX = startX; // 同时更新start和curr
+</span><span style="color:#a3be8c;">+     currY = startY;
+</span><span>      break;
+</span><span>    }
+</span><span>    default:break;  // 其余状态都不关心
+</span><span>  }
+</span><span>  this-&gt;update();
+</span><span>}
+</span></code></pre>
+<h2 id="wan-cheng-tu-xiang-jie-qu">完成图像截取</h2>
+<p>终于，我们还剩最后一步了，就是截取这个区域的图像。在之前的介绍中，我们一直在一个空白的窗体上进行绘图。在本节，我们将通过QT的API，来获取当前鼠标所在的屏幕图像，并把图像作为这个窗体的背景图。然后，我们照旧在上面进行区域的截取，来达到所谓的屏幕截图的效果。</p>
+<p>首先，我们需要做一些准备工作：</p>
+<p><img src="https://static-res.zhen.wang/images/post/2023-08-31/210-get-screen-qimage-and-init.png" alt="210-get-screen-qimage-and-init" /></p>
+<p>准备工作以下几步：</p>
+<ol>
+<li>在<code>DemoWidget</code>类中定义一个<code>QImage</code>的指针类成员变量；</li>
+<li>修改构造函数，让外部传入这个<code>QImage</code>实例指针并进行存储；</li>
+<li>调用如下QT提供的相关API来获取屏幕图像：</li>
+</ol>
+<pre data-lang="cpp" style="background-color:#2b303b;color:#c0c5ce;" class="language-cpp "><code class="language-cpp" data-lang="cpp"><span style="color:#65737e;">// 获取鼠标所在屏幕
+</span><span>QScreen *screen = QApplication::</span><span style="color:#bf616a;">screenAt</span><span>(</span><span style="color:#bf616a;">QCursor</span><span>().</span><span style="color:#bf616a;">pos</span><span>());
+</span><span style="color:#65737e;">// 获取屏幕的图像数据
+</span><span>QImage screenImg = screen-&gt;</span><span style="color:#bf616a;">grabWindow</span><span>(</span><span style="color:#d08770;">0</span><span>).</span><span style="color:#bf616a;">toImage</span><span>();
+</span></code></pre>
+<ol start="4">
+<li>我们将<code>screenImg</code>的地址作为指针变量作为<code>DemoWidget</code>的构造函数入参传入。</li>
+</ol>
+<p>图像的获取与存储完成以后，我们将会在<code>paintEvent</code>中，优先绘制屏幕图像，然后才根据状态来绘制对应的矩形：</p>
+<p><img src="https://static-res.zhen.wang/images/post/2023-08-31/220-screen-qimage-paint.png" alt="220-screen-qimage-paint" /></p>
+<p>于是，界面运行以后，我们就能看屏幕截图填充在窗口里面的效果：</p>
+<p><img src="https://static-res.zhen.wang/images/post/2023-08-31/230-capture-screen.gif" alt="230-capture-screen" /></p>
+<p>接下来，我们增加一种操作：当处于屏幕截取完成的状态（<code>Captured</code>）的时候，只要按下回车键，就能将截取的屏幕保存到粘贴板中，并回到<code>Explore</code>状态。很自然的，我们需要在<code>keyPressEvent</code>新增关于该操作的代码：</p>
+<pre data-lang="diff" style="background-color:#2b303b;color:#c0c5ce;" class="language-diff "><code class="language-diff" data-lang="diff"><span>void keyPressEvent(QKeyEvent *event) override {
+</span><span style="color:#a3be8c;">+ if (event-&gt;key() == Qt::Key_Return &amp;&amp; status == Captured) {
+</span><span style="color:#a3be8c;">+   // 1. 获取捕获的图像区域
+</span><span style="color:#a3be8c;">+   // 2. 从保存的屏幕图像中获取指定区域的图像数据
+</span><span style="color:#a3be8c;">+   // 3. 将图像数据写入到操作系统粘贴板
+</span><span style="color:#a3be8c;">+   // 4. 回到Explore
+</span><span style="color:#a3be8c;">+   return;
+</span><span style="color:#a3be8c;">+ }
+</span><span>  if (event-&gt;key() == Qt::Key_Escape) {
+</span><span>    status = Explore;
+</span><span>  }
+</span><span>  this-&gt;update();
+</span><span>}
+</span></code></pre>
+<blockquote>
+<p>注意，QT中回车键的枚举值是Key_Return，不是Key_Enter。</p>
+</blockquote>
+<p>对于步骤1，我们在前文已经使用<code>capturedRect</code>类成员变量保存了当区域截取完成以后的区域数据；</p>
+<p>对于步骤2，<code>QImage</code>有一个名为<code>copy</code>的方法：</p>
+<pre data-lang="cpp" style="background-color:#2b303b;color:#c0c5ce;" class="language-cpp "><code class="language-cpp" data-lang="cpp"><span>[[nodiscard]] QImage </span><span style="color:#bf616a;">copy</span><span>(</span><span style="color:#b48ead;">int</span><span> x, </span><span style="color:#b48ead;">int</span><span> y, </span><span style="color:#b48ead;">int</span><span> w, </span><span style="color:#b48ead;">int</span><span> h) </span><span style="color:#b48ead;">const</span><span>;
+</span></code></pre>
+<p>它可以从已有的图像中复制指定区域的图像，得到一个新的图像数据；</p>
+<p>对于步骤3，我们可以使用QT提供的<code>QClipboard</code>类来操作系统粘贴板。于是，你可以这样调用来将图像数据保存到粘贴板中：</p>
+<pre data-lang="cpp" style="background-color:#2b303b;color:#c0c5ce;" class="language-cpp "><code class="language-cpp" data-lang="cpp"><span>QClipboard *clipboard = QGuiApplication::</span><span style="color:#bf616a;">clipboard</span><span>();
+</span><span>clipboard-&gt;</span><span style="color:#bf616a;">setImage</span><span>(</span><span style="color:#65737e;">/* QImage对象 */</span><span>);
+</span></code></pre>
+<p>对于步骤4就比较简单了，切换<code>status</code>的状态为<code>Explore</code>即可。</p>
+<p>按照上面的过程描述，我们编写如下的代码：</p>
+<pre data-lang="cpp" style="background-color:#2b303b;color:#c0c5ce;" class="language-cpp "><code class="language-cpp" data-lang="cpp"><span style="color:#b48ead;">void </span><span style="color:#8fa1b3;">keyPressEvent</span><span>(QKeyEvent *</span><span style="color:#bf616a;">event</span><span>) </span><span style="color:#b48ead;">override </span><span>{
+</span><span>  </span><span style="color:#b48ead;">if </span><span>(event-&gt;</span><span style="color:#bf616a;">key</span><span>() == Qt::Key_Enter &amp;&amp; status == Captured) {
+</span><span>    </span><span style="color:#65737e;">// 1. 获取捕获的图像区域
+</span><span>    </span><span style="color:#b48ead;">auto</span><span> imgRect = </span><span style="color:#bf616a;">this</span><span>-&gt;</span><span style="color:#bf616a;">capturedRect</span><span>;
+</span><span>    </span><span style="color:#65737e;">// 2. 从保存的屏幕图像中获取指定区域的图像数据
+</span><span>    </span><span style="color:#b48ead;">auto</span><span> copiedImg = </span><span style="color:#bf616a;">this</span><span>-&gt;</span><span style="color:#bf616a;">screenImg</span><span>-&gt;</span><span style="color:#bf616a;">copy</span><span>(imgRect);
+</span><span>    </span><span style="color:#65737e;">// 3. 将图像数据写入到操作系统粘贴板
+</span><span>    QClipboard *clipboard = QGuiApplication::</span><span style="color:#bf616a;">clipboard</span><span>();
+</span><span>    clipboard-&gt;</span><span style="color:#bf616a;">setImage</span><span>(copiedImg);
+</span><span>    </span><span style="color:#65737e;">// 4. 回到Explore
+</span><span>    status = Explore;
+</span><span>    </span><span style="color:#b48ead;">return</span><span>;
+</span><span>  }
+</span><span>  </span><span style="color:#65737e;">// 其余代码 ... ...
+</span><span>}
+</span></code></pre>
+<p>当我们兴致勃勃的运行应用并进行截图操作的时候，会发现在粘贴板中的图像，和我们截取的区域不太一致！</p>
+<p><img src="https://static-res.zhen.wang/images/post/2023-08-31/240-wrong-rect.gif" alt="240-wrong-rect" /></p>
+<p>注意，我们截取了右下角有紫蓝色的区域，但是实际获取的图像却不是。这个问题的核心原因是，我们截取的<code>capturedRect</code>是这个窗体界面上的区域，<strong>但并不是图像真正的区域</strong>。<code>capturedRect</code>需要进行比例转换，才能得到实际在图片上的区域。</p>
+<p><img src="https://static-res.zhen.wang/images/post/2023-08-31/250-capturedRect-scale-convert.png" alt="250-capturedRect-scale-convert" /></p>
+<p>也就是说，我们需要将capturedRect转化为实际imgRect：</p>
+<pre data-lang="cpp" style="background-color:#2b303b;color:#c0c5ce;" class="language-cpp "><code class="language-cpp" data-lang="cpp"><span style="color:#b48ead;">void </span><span style="color:#8fa1b3;">keyPressEvent</span><span>(QKeyEvent *</span><span style="color:#bf616a;">event</span><span>) </span><span style="color:#b48ead;">override </span><span>{
+</span><span>  </span><span style="color:#b48ead;">if </span><span>(event-&gt;</span><span style="color:#bf616a;">key</span><span>() == Qt::Key_Return &amp;&amp; status == Captured) {
+</span><span>    </span><span style="color:#65737e;">// 1. 获取捕获的图像区域
+</span><span>    </span><span style="color:#b48ead;">auto</span><span> picRealSize = screenImg-&gt;</span><span style="color:#bf616a;">size</span><span>();
+</span><span>    </span><span style="color:#b48ead;">auto</span><span> winSize = </span><span style="color:#bf616a;">this</span><span>-&gt;</span><span style="color:#bf616a;">size</span><span>();
+</span><span>    </span><span style="color:#65737e;">// 比例计算
+</span><span>    </span><span style="color:#b48ead;">int</span><span> realRectX = capturedRect.</span><span style="color:#bf616a;">x</span><span>() * picRealSize.</span><span style="color:#bf616a;">width</span><span>() / winSize.</span><span style="color:#bf616a;">width</span><span>();
+</span><span>    </span><span style="color:#b48ead;">int</span><span> realRectY = capturedRect.</span><span style="color:#bf616a;">y</span><span>() * picRealSize.</span><span style="color:#bf616a;">height</span><span>() / winSize.</span><span style="color:#bf616a;">height</span><span>();
+</span><span>    </span><span style="color:#b48ead;">int</span><span> realRectW =
+</span><span>        capturedRect.</span><span style="color:#bf616a;">width</span><span>() * picRealSize.</span><span style="color:#bf616a;">width</span><span>() / winSize.</span><span style="color:#bf616a;">width</span><span>();
+</span><span>    </span><span style="color:#b48ead;">int</span><span> realRectH =
+</span><span>        capturedRect.</span><span style="color:#bf616a;">height</span><span>() * picRealSize.</span><span style="color:#bf616a;">height</span><span>() / winSize.</span><span style="color:#bf616a;">height</span><span>();
+</span><span>    </span><span style="color:#65737e;">// 得到实际Rect
+</span><span>    QRect </span><span style="color:#bf616a;">imgRect</span><span>(realRectX, realRectY, realRectW, realRectH);
+</span><span>    </span><span style="color:#65737e;">// 2. 从保存的屏幕图像中获取指定区域的图像数据
+</span><span>    </span><span style="color:#b48ead;">auto</span><span> copiedImg = </span><span style="color:#bf616a;">this</span><span>-&gt;</span><span style="color:#bf616a;">screenImg</span><span>-&gt;</span><span style="color:#bf616a;">copy</span><span>(imgRect);
+</span><span>    </span><span style="color:#65737e;">// 3. 将图像数据写入到操作系统粘贴板
+</span><span>    QClipboard *clipboard = QGuiApplication::</span><span style="color:#bf616a;">clipboard</span><span>();
+</span><span>    clipboard-&gt;</span><span style="color:#bf616a;">setImage</span><span>(copiedImg);
+</span><span>    </span><span style="color:#65737e;">// 4. 回到Explore
+</span><span>    status = Explore;
+</span><span>    </span><span style="color:#b48ead;">return</span><span>;
+</span><span>  }
+</span><span>  </span><span style="color:#b48ead;">if </span><span>(event-&gt;</span><span style="color:#bf616a;">key</span><span>() == Qt::Key_Escape) {
+</span><span>    status = Explore;
+</span><span>  }
+</span><span>  </span><span style="color:#bf616a;">this</span><span>-&gt;</span><span style="color:#bf616a;">update</span><span>();
+</span><span>}
+</span></code></pre>
+<p>按照比例换算以后的代码如上，此时我们再看效果，会发现没有问题了：</p>
+<p><img src="https://static-res.zhen.wang/images/post/2023-08-31/260-after-scale-convert-rect.gif" alt="260-after-scale-convert-rect" /></p>
+<h1 id="zui-hou">最后</h1>
+<p>这篇文章算不上是比较深入的讲解截图工具的实现，只是通过demo来大体上讲解了截图的机制，让读者有一个入门的认识，像是截图区域确定以后我们还可以在上面添加方框、圆形、文字等操作都没有在这篇文章中体现。这篇文章只是一个入门，读者可以在掌握了基本的开发模式以后，实现更有意思的功能。</p>
+<p>另外，笔者自己编写的截图软件capi（仓库地址：<a rel="noopener" target="_blank" href="https://github.com/w4ngzhen/capi">w4ngzhen/capi</a>）已经有了基本的雏形，后续还会持续的往里面增加功能的，这里厚着脸皮希望有小伙伴能给个start。值得提到的是，笔者的截图软件capi目前是基于QT编写的，但是笔者正在做的是将截图的模块和QT的模块进行完全的解耦（其实已经差不多了），使用C++17的标准实现了截图功能核心模块的概念抽象，其目的在于笔者准备将QT换成另一个跨平台GUI框架wxWidgets来实现，为了实现这个目的，截图模块与具体的GUI框架解耦是十分必要的。</p>
+<p>回到本文相关的内容，整篇文章的的demo只有一个cpp文件（QT的环境配置请自行解决啦），我直接放到Github gist：</p>
+<p><a rel="noopener" target="_blank" href="https://gist.github.com/w4ngzhen/1ba20c81d8ba59d37b21a6e7e1363549">simple screen capture demo based Qt (github.com)</a>/</p>
+
+    </div>
+</div>
+<script src="https://zhen.wang/libs/viewerjs@1.11.7/viewer.min.js"></script>
+<link rel="stylesheet" href="https://zhen.wang/libs/viewerjs@1.11.7/viewer.min.css"/>
+<script>
+  if (window.Viewer) {
+    document.querySelectorAll('img').forEach(img => {
+      new Viewer(img, {
+        inline: false,
+        navbar: false,
+        toolbar: {
+          zoomIn: 1,
+          zoomOut: 1,
+          reset: 1,
+          rotateLeft: 1,
+          rotateRight: 1,
+        },
+      });
+    });
+  }
+</script>
+
+
+</body>
+</html>

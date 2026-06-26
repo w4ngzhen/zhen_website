@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="utf-8">
+    <meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover"
+          name="viewport">
+    
+    
+    <!-- umami web analysis -->
+    <script defer src="https://zhen.wang/libs/umami/umami.script.js"
+            data-website-id="d66cfe03-f6b3-4aa0-baf8-728700db1b09"></script>
+    
+    
+    
+    <link rel="icon" type="image/png" sizes="16x16" href="https://zhen.wang/images/blog-site-icon.svg">
+    <link rel="icon" type="image/png" sizes="32x32" href="https://zhen.wang/images/blog-site-icon.svg">
+    <title>zhen&#x27;s everything</title>
+    <link rel="stylesheet" href="https://zhen.wang/style.css">
+    
+<link rel="stylesheet" href="https://zhen.wang/article_content.css">
+<link rel="stylesheet" href="https://zhen.wang/article_markdown.css">
+
+</head>
+<body>
+
+<div id="article">
+    <header class="article-header">
+        
+<div class="base-title">
+    <a href="#" onclick="history.length > 1 ? history.back() : location.href = '/'; return false;">&LeftArrow; Back</a>
+    <h1>
+        基于Tesseract组件的OCR识别
+    </h1>
+</div>
+
+    </header>
+    <p class="article-date">2020-02-04</p>
+    
+    <!-- toc -->
+    <div class="article-toc">
+        <label class="toc-title" for="toc-trigger">目录</label>
+        <input id="toc-trigger" type="checkbox" checked/>
+        <div class="toc-content">
+            <ol class="toc">
+                
+                <li class="toc-item toc-level-1">
+                    <a class="toc-link" href="https://zhen.wang/article/基于Tesseract组件的OCR识别学习/#bei-jing-yi-ji-jie-shao">背景以及介绍</a>
+                    
+                </li>
+                
+                <li class="toc-item toc-level-1">
+                    <a class="toc-link" href="https://zhen.wang/article/基于Tesseract组件的OCR识别学习/#xiang-mu-jie-gou">项目结构</a>
+                    
+                </li>
+                
+                <li class="toc-item toc-level-1">
+                    <a class="toc-link" href="https://zhen.wang/article/基于Tesseract组件的OCR识别学习/#demoshi-yan">Demo实验</a>
+                    
+                    <ol class="toc-child">
+                        
+                        <li class="toc-item toc-level-2">
+                            <a href="https://zhen.wang/article/基于Tesseract组件的OCR识别学习/#huan-jing-zhun-bei">环境准备</a>
+                        </li>
+                        
+                    </ol>
+                    
+                </li>
+                
+            </ol>
+        </div>
+    </div>
+    
+    <!-- real content -->
+    <div class="article-content markdown-content">
+        <h2 id="bei-jing-yi-ji-jie-shao">背景以及介绍</h2>
+<p>欲研究C#端如何进行图像的基本OCR识别，找到一款开源的OCR识别组件。该组件当前已经已经升级到了4.0版本。和传统的版本（3.x）比，4.0时代最突出的变化就是基于LSTM神经网络。Tesseract本身是由C++进行编写，但为了同时适配不同的语言进行调用，开放调用API并产生了诸如Java、C#、Python等主流语言在内的封装版本。本次主要研究C#封装版。</p>
+<span id="continue-reading"></span><h2 id="xiang-mu-jie-gou">项目结构</h2>
+<p>Tesseract本身由C++编写并开源在<a rel="noopener" target="_blank" href="https://github.com/tesseract-ocr/tesseract">Github</a>，在3.X版本中，Tesseract的识别模式为字符识别，该种识别方式识别能力较低，所以在后来的4.X版本中，引入了LSTM（Long short-term memory，长短期记忆神经网络），极大的提升了识别率。为了让不同的语言均能够使用Tesseract进行OCR识别，Tesseract也是开放了API并产生了诸如Java、C#、Python等主流语言在内的封装版本。而本次C#端的封装版也开源在了<a rel="noopener" target="_blank" href="https://github.com/charlesw/tesseract">Github</a>，目前已知的C#封装版已发布在nuget上，封装了对应Tesseract的版本为3.05.02。所以目前的项目结构如下：
+<img src="https://static-res.zhen.wang/images/post/2020-02-04-tesseract/%E7%89%88%E6%9C%AC%E5%B0%81%E8%A3%85.png" alt="版本封装" /></p>
+<h2 id="demoshi-yan">Demo实验</h2>
+<h3 id="huan-jing-zhun-bei">环境准备</h3>
+<h4 id="wen-ben-shi-bie-shu-ju-bao-zhun-bei">文本识别数据包准备</h4>
+<p>因为图像识别本身需要文本识别数据进行匹配，所以我们需要下载对应Tesseract官方的文本数据包：
+https://tesseract-ocr.github.io/tessdoc/Data-Files
+注意，针对不同版本的Tesseract-OCR（3.X和4.X底层的实现方式不同，所以文本识别数据包是不同的），我们需要找到对应的不同的文本训练数据包，官网为了更好的兼容性，4.X版本的文本数据包是兼容了3.X版本的。</p>
+<blockquote>
+</blockquote>
+<p>the third set in tessdata is the only one that supports the legacy recognizer. The 4.00 files from November 2016 have both legacy and older LSTM models. The current set of files in tessdata have the legacy models and newer LSTM models (integer versions of 4.00.00 alpha models in tessdata_best).</p>
+<blockquote>
+</blockquote>
+<p><img src="https://static-res.zhen.wang/images/post/2020-02-04-tesseract/%E6%95%B0%E6%8D%AE%E5%8C%85%E4%B8%8B%E8%BD%BD.png" alt="数据包下载" /></p>
+<p>为了Demo，我下载了中文简体和英文的数据包作为实验对象</p>
+<h4 id="kai-fa-huan-jing-zhun-bei">开发环境准备</h4>
+<p>为了实验并对比上面两个封装版本的识别效果，这里在同一解决方案中创建了两个项目：
+<img src="https://static-res.zhen.wang/images/post/2020-02-04-tesseract/%E9%A1%B9%E7%9B%AE%E5%88%9B%E5%BB%BA.png" alt="项目创建" /></p>
+<p>BaseNewBeta使用的是封装了4.1版本Tesseract的C#封装版Tesseract.4.1.0-beta1，因为该版本还还没有上传只Nuget，所以只能从github上下载，放到本地，然后把对应的C++的底层库（leptonica-1.78.0.dll，tesseract41.dll）放置到了x86和x64文件夹下面且需要输出。</p>
+<p>BaseNuget是已经上传至Nuget的封装了底层库3.05.20版本的C#封装版3.3.0.0，因为使用nuget进行组件安装，所以x64和x86的Tesseract组件会在编译输出时候自动输出到对应的生成目录。</p>
+<h4 id="he-xin-dai-ma">核心代码</h4>
+<pre data-lang="c#" style="background-color:#2b303b;color:#c0c5ce;" class="language-c# "><code class="language-c#" data-lang="c#"><span>            </span><span style="color:#b48ead;">if </span><span>(</span><span style="color:#bf616a;">openFileDialog1</span><span>.</span><span style="color:#bf616a;">ShowDialog</span><span>() == </span><span style="color:#bf616a;">DialogResult</span><span>.</span><span style="color:#bf616a;">OK</span><span>)
+</span><span>            {
+</span><span>                </span><span style="color:#65737e;">//PictureBox控件显示图片
+</span><span>                </span><span style="color:#bf616a;">pictureBox1</span><span>.</span><span style="color:#bf616a;">Load</span><span>(</span><span style="color:#bf616a;">openFileDialog1</span><span>.</span><span style="color:#bf616a;">FileName</span><span>);
+</span><span>                </span><span style="color:#65737e;">//获取用户选择文件的后缀名 
+</span><span>                </span><span style="color:#b48ead;">string </span><span style="color:#bf616a;">extension </span><span>= </span><span style="color:#bf616a;">Path</span><span>.</span><span style="color:#bf616a;">GetExtension</span><span>(</span><span style="color:#bf616a;">openFileDialog1</span><span>.</span><span style="color:#bf616a;">FileName</span><span>);
+</span><span>                </span><span style="color:#65737e;">//声明允许的后缀名 
+</span><span>                </span><span style="color:#b48ead;">string</span><span>[] </span><span style="color:#bf616a;">str </span><span>= new </span><span style="color:#b48ead;">string</span><span>[] { &quot;</span><span style="color:#a3be8c;">.jpg</span><span>&quot;, &quot;</span><span style="color:#a3be8c;">.png</span><span>&quot; };
+</span><span>                </span><span style="color:#b48ead;">if </span><span>(!</span><span style="color:#bf616a;">str</span><span>.</span><span style="color:#bf616a;">Contains</span><span>(</span><span style="color:#bf616a;">extension</span><span>))
+</span><span>                {
+</span><span>                    </span><span style="color:#bf616a;">MessageBox</span><span>.</span><span style="color:#bf616a;">Show</span><span>(&quot;</span><span style="color:#a3be8c;">仅能上传jpg,png格式的图片！</span><span>&quot;);
+</span><span>                }
+</span><span>                </span><span style="color:#b48ead;">else
+</span><span>                {
+</span><span>                    </span><span style="color:#65737e;">//识别图片文字
+</span><span>                    Bitmap </span><span style="color:#bf616a;">img </span><span>= new Bitmap(</span><span style="color:#bf616a;">openFileDialog1</span><span>.</span><span style="color:#bf616a;">FileName</span><span>);
+</span><span>                    </span><span style="color:#65737e;">// 构建识别引擎
+</span><span>                    TesseractEngine </span><span style="color:#bf616a;">orcEngine </span><span>= new TesseractEngine(&quot;</span><span style="color:#a3be8c;">./tessdata</span><span>&quot;, &quot;</span><span style="color:#a3be8c;">eng</span><span>&quot;);
+</span><span>                    </span><span style="color:#65737e;">// 识别并获取文本数据
+</span><span>                    Page </span><span style="color:#bf616a;">page </span><span>= </span><span style="color:#bf616a;">orcEngine</span><span>.</span><span style="color:#bf616a;">Process</span><span>(</span><span style="color:#bf616a;">img</span><span>);
+</span><span>                    </span><span style="color:#bf616a;">richTextBox1</span><span>.</span><span style="color:#bf616a;">Text </span><span>= </span><span style="color:#bf616a;">page</span><span>.</span><span style="color:#bf616a;">GetText</span><span>();
+</span><span>                }
+</span><span>            }
+</span></code></pre>
+<h4 id="zui-zhong-xiao-guo">最终效果</h4>
+<h5 id="ying-wen-shi-bie-xiao-guo">英文识别效果</h5>
+<p>先是3.X版本识别：
+<img src="https://static-res.zhen.wang/images/post/2020-02-04-tesseract/EnNuget.png" alt="EnNuget" />
+可以看到文本中还有很多识别的错误的，特别是把英文字符C识别为了括号（。
+而封装了新版本的识别结果比起之前更好：
+<img src="https://static-res.zhen.wang/images/post/2020-02-04-tesseract/EnNewBeta.png" alt="EnNewBeta" /></p>
+<h5 id="zhong-wen-shi-bie-xiao-guo">中文识别效果</h5>
+<p>先是3.X版本识别：
+<img src="https://static-res.zhen.wang/images/post/2020-02-04-tesseract/CNNuget.png" alt="CNNuget" />
+然后是封装的版本：
+<img src="https://static-res.zhen.wang/images/post/2020-02-04-tesseract/CNNewBeta.png" alt="CNNewBeta" />
+看的出来，官方的数据包对于中文的识别还是有很大问题的，不过庆幸的是，4.X版本的后的Tesseract支持我们使用的自己的数据进行识别训练。这样一来，虽然该组件还比不上市面上大多数的商业OCR识别，但是我们可以使用训练数据，来训练适用于我们特定业务的文字识别（比如XX码的提取之类）</p>
+
+    </div>
+</div>
+<script src="https://zhen.wang/libs/viewerjs@1.11.7/viewer.min.js"></script>
+<link rel="stylesheet" href="https://zhen.wang/libs/viewerjs@1.11.7/viewer.min.css"/>
+<script>
+  if (window.Viewer) {
+    document.querySelectorAll('img').forEach(img => {
+      new Viewer(img, {
+        inline: false,
+        navbar: false,
+        toolbar: {
+          zoomIn: 1,
+          zoomOut: 1,
+          reset: 1,
+          rotateLeft: 1,
+          rotateRight: 1,
+        },
+      });
+    });
+  }
+</script>
+
+
+</body>
+</html>

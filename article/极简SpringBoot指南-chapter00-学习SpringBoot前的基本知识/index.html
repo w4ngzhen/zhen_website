@@ -1,0 +1,386 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="utf-8">
+    <meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover"
+          name="viewport">
+    
+    
+    <!-- umami web analysis -->
+    <script defer src="https://zhen.wang/libs/umami/umami.script.js"
+            data-website-id="d66cfe03-f6b3-4aa0-baf8-728700db1b09"></script>
+    
+    
+    
+    <link rel="icon" type="image/png" sizes="16x16" href="https://zhen.wang/images/blog-site-icon.svg">
+    <link rel="icon" type="image/png" sizes="32x32" href="https://zhen.wang/images/blog-site-icon.svg">
+    <title>zhen&#x27;s everything</title>
+    <link rel="stylesheet" href="https://zhen.wang/style.css">
+    
+<link rel="stylesheet" href="https://zhen.wang/article_content.css">
+<link rel="stylesheet" href="https://zhen.wang/article_markdown.css">
+
+</head>
+<body>
+
+<div id="article">
+    <header class="article-header">
+        
+<div class="base-title">
+    <a href="#" onclick="history.length > 1 ? history.back() : location.href = '/'; return false;">&LeftArrow; Back</a>
+    <h1>
+        极简SpringBoot指南-Chapter00-学习SpringBoot前的基本知识
+    </h1>
+</div>
+
+    </header>
+    <p class="article-date">2021-08-10</p>
+    
+    <!-- toc -->
+    <div class="article-toc">
+        <label class="toc-title" for="toc-trigger">目录</label>
+        <input id="toc-trigger" type="checkbox" checked/>
+        <div class="toc-content">
+            <ol class="toc">
+                
+                <li class="toc-item toc-level-1">
+                    <a class="toc-link" href="https://zhen.wang/article/极简SpringBoot指南-chapter00-学习SpringBoot前的基本知识/#cang-ku-di-zhi">仓库地址</a>
+                    
+                </li>
+                
+                <li class="toc-item toc-level-1">
+                    <a class="toc-link" href="https://zhen.wang/article/极简SpringBoot指南-chapter00-学习SpringBoot前的基本知识/#chapter00-xue-xi-springbootqian-de-ji-ben-zhi-shi">Chapter00 学习SpringBoot前的基本知识</a>
+                    
+                    <ol class="toc-child">
+                        
+                        <li class="toc-item toc-level-2">
+                            <a href="https://zhen.wang/article/极简SpringBoot指南-chapter00-学习SpringBoot前的基本知识/#yi-fan-she">一 反射</a>
+                        </li>
+                        
+                        <li class="toc-item toc-level-2">
+                            <a href="https://zhen.wang/article/极简SpringBoot指南-chapter00-学习SpringBoot前的基本知识/#er-spring-gou-zao-dui-xiang">二 Spring&quot;构造&quot;对象</a>
+                        </li>
+                        
+                        <li class="toc-item toc-level-2">
+                            <a href="https://zhen.wang/article/极简SpringBoot指南-chapter00-学习SpringBoot前的基本知识/#ben-zhang-zong-jie">本章总结</a>
+                        </li>
+                        
+                        <li class="toc-item toc-level-2">
+                            <a href="https://zhen.wang/article/极简SpringBoot指南-chapter00-学习SpringBoot前的基本知识/#cang-ku-di-zhi-1">仓库地址</a>
+                        </li>
+                        
+                    </ol>
+                    
+                </li>
+                
+            </ol>
+        </div>
+    </div>
+    
+    <!-- real content -->
+    <div class="article-content markdown-content">
+        <h2 id="cang-ku-di-zhi">仓库地址</h2>
+<p><a rel="noopener" target="_blank" href="https://github.com/w4ngzhen/springboot-simple-guide">w4ngzhen/springboot-simple-guide: This is a project that guides SpringBoot users to get started quickly through a series of examples (github.com)</a></p>
+<h1 id="chapter00-xue-xi-springbootqian-de-ji-ben-zhi-shi">Chapter00 学习SpringBoot前的基本知识</h1>
+<span id="continue-reading"></span><h2 id="yi-fan-she">一 反射</h2>
+<p>在Java中，我们可以通过反射（Reflection）来获取任何类的类型信息，其中最值得关注的就是Class类。通过Class类，我们拿到任意对象的相关上下文。</p>
+<p>例如，我们有一个User类，代码如下：</p>
+<pre data-lang="java" style="background-color:#2b303b;color:#c0c5ce;" class="language-java "><code class="language-java" data-lang="java"><span style="color:#b48ead;">public class </span><span style="color:#ebcb8b;">User </span><span style="color:#eff1f5;">{
+</span><span style="color:#eff1f5;">
+</span><span style="color:#eff1f5;">    </span><span style="color:#b48ead;">private </span><span style="color:#ebcb8b;">String </span><span style="color:#eff1f5;">name;
+</span><span style="color:#eff1f5;">
+</span><span style="color:#eff1f5;">    </span><span style="color:#b48ead;">private int </span><span style="color:#eff1f5;">age;
+</span><span style="color:#eff1f5;">
+</span><span style="color:#eff1f5;">    </span><span style="color:#b48ead;">public </span><span style="color:#8fa1b3;">User</span><span style="color:#eff1f5;">() {
+</span><span style="color:#eff1f5;">        </span><span style="color:#ebcb8b;">System</span><span style="color:#eff1f5;">.out.</span><span style="color:#bf616a;">println</span><span style="color:#eff1f5;">(</span><span>&quot;</span><span style="color:#a3be8c;">User 无参构造函数</span><span>&quot;</span><span style="color:#eff1f5;">);
+</span><span style="color:#eff1f5;">    }
+</span><span style="color:#eff1f5;">
+</span><span style="color:#eff1f5;">    </span><span style="color:#b48ead;">public </span><span style="color:#8fa1b3;">User</span><span style="color:#eff1f5;">(</span><span style="color:#ebcb8b;">String </span><span style="color:#bf616a;">name</span><span style="color:#eff1f5;">, </span><span style="color:#b48ead;">int </span><span style="color:#bf616a;">age</span><span style="color:#eff1f5;">) {
+</span><span style="color:#eff1f5;">        </span><span style="color:#bf616a;">this</span><span style="color:#eff1f5;">.name </span><span>=</span><span style="color:#eff1f5;"> name;
+</span><span style="color:#eff1f5;">        </span><span style="color:#bf616a;">this</span><span style="color:#eff1f5;">.age </span><span>=</span><span style="color:#eff1f5;"> age;
+</span><span style="color:#eff1f5;">        </span><span style="color:#ebcb8b;">System</span><span style="color:#eff1f5;">.out.</span><span style="color:#bf616a;">printf</span><span style="color:#eff1f5;">(</span><span>&quot;</span><span style="color:#a3be8c;">User 有参构造函数：name = %s, age = %d%n</span><span>&quot;</span><span style="color:#eff1f5;">, name, age);
+</span><span style="color:#eff1f5;">    }
+</span><span style="color:#eff1f5;">	</span><span style="color:#65737e;">// 忽略一堆的getter、setter
+</span><span style="color:#eff1f5;">}
+</span></code></pre>
+<p>如下的代码中，我们可以获取类上的声明的字段和各种方法：</p>
+<pre data-lang="java" style="background-color:#2b303b;color:#c0c5ce;" class="language-java "><code class="language-java" data-lang="java"><span style="color:#ebcb8b;">Class</span><span>&lt;</span><span style="color:#ebcb8b;">User</span><span>&gt; userClass = </span><span style="color:#ebcb8b;">User</span><span>.</span><span style="color:#bf616a;">class</span><span>;
+</span><span style="color:#ebcb8b;">System</span><span>.out.</span><span style="color:#bf616a;">println</span><span>(userClass.</span><span style="color:#bf616a;">getCanonicalName</span><span>());
+</span><span>
+</span><span style="color:#65737e;">// 1. 显示声明的字段
+</span><span style="color:#ebcb8b;">Field</span><span style="color:#b48ead;">[]</span><span> fields = userClass.</span><span style="color:#bf616a;">getDeclaredFields</span><span>();
+</span><span style="color:#ebcb8b;">System</span><span>.out.</span><span style="color:#bf616a;">println</span><span>(&quot;</span><span style="color:#a3be8c;">该类包含了如下的字段：</span><span>&quot;);
+</span><span style="color:#b48ead;">for </span><span>(</span><span style="color:#ebcb8b;">Field</span><span> field : fields) {
+</span><span>    </span><span style="color:#ebcb8b;">System</span><span>.out.</span><span style="color:#bf616a;">println</span><span>(field);
+</span><span>}
+</span><span>
+</span><span style="color:#65737e;">// 2. 显示声明的方法
+</span><span style="color:#ebcb8b;">Method</span><span style="color:#b48ead;">[]</span><span> methods = userClass.</span><span style="color:#bf616a;">getDeclaredMethods</span><span>();
+</span><span style="color:#ebcb8b;">System</span><span>.out.</span><span style="color:#bf616a;">println</span><span>(&quot;</span><span style="color:#a3be8c;">该类包含了如下的方法：</span><span>&quot;);
+</span><span style="color:#b48ead;">for </span><span>(</span><span style="color:#ebcb8b;">Method</span><span> method : methods) {
+</span><span>    </span><span style="color:#ebcb8b;">System</span><span>.out.</span><span style="color:#bf616a;">println</span><span>(method);
+</span><span>}
+</span></code></pre>
+<p>当然，我们同样可以拿到构造函数，并通过反射的方式进行实例创建：</p>
+<pre data-lang="java" style="background-color:#2b303b;color:#c0c5ce;" class="language-java "><code class="language-java" data-lang="java"><span style="color:#65737e;">// 3. 展示类上的构造函数对象
+</span><span style="color:#ebcb8b;">Constructor</span><span>&lt;?&gt;</span><span style="color:#b48ead;">[]</span><span> constructors = userClass.</span><span style="color:#bf616a;">getConstructors</span><span>();
+</span><span style="color:#b48ead;">for </span><span>(</span><span style="color:#ebcb8b;">Constructor</span><span>&lt;?&gt; constructor : constructors) {
+</span><span>    </span><span style="color:#ebcb8b;">System</span><span>.out.</span><span style="color:#bf616a;">println</span><span>(&quot;</span><span style="color:#a3be8c;">找到构造函数：</span><span>&quot; + constructor);
+</span><span>}
+</span><span>
+</span><span style="color:#65737e;">// 4. 通过无参构造函数创建实例
+</span><span style="color:#ebcb8b;">Constructor</span><span>&lt;?&gt; constructor = userClass.</span><span style="color:#bf616a;">getConstructor</span><span>();
+</span><span style="color:#ebcb8b;">Object</span><span> user1 = constructor.</span><span style="color:#bf616a;">newInstance</span><span>();
+</span><span style="color:#ebcb8b;">System</span><span>.out.</span><span style="color:#bf616a;">println</span><span>(user1);
+</span><span>
+</span><span style="color:#65737e;">// 5. 通过有参构造函数创建实例
+</span><span style="color:#65737e;">// 注意有参构造函数获取时，传入了参数的class对象
+</span><span style="color:#65737e;">// 以及在newInstance的时候，需要传入实际的值
+</span><span style="color:#ebcb8b;">Constructor</span><span>&lt;?&gt; constructor1 = userClass.</span><span style="color:#bf616a;">getConstructor</span><span>(</span><span style="color:#ebcb8b;">String</span><span>.</span><span style="color:#bf616a;">class</span><span>, </span><span style="color:#b48ead;">int</span><span>.</span><span style="color:#bf616a;">class</span><span>);
+</span><span style="color:#ebcb8b;">Object</span><span> user2 = constructor1.</span><span style="color:#bf616a;">newInstance</span><span>(&quot;</span><span style="color:#a3be8c;">Mr.Hello</span><span>&quot;, </span><span style="color:#d08770;">18</span><span>);
+</span><span style="color:#ebcb8b;">System</span><span>.out.</span><span style="color:#bf616a;">println</span><span>(user2);
+</span></code></pre>
+<p>在上述代码中，我们使用代码符号的方式获取的对应类的Class对象：</p>
+<pre data-lang="java" style="background-color:#2b303b;color:#c0c5ce;" class="language-java "><code class="language-java" data-lang="java"><span style="color:#ebcb8b;">Class</span><span>&lt;</span><span style="color:#ebcb8b;">User</span><span>&gt; userClass = </span><span style="color:#ebcb8b;">User</span><span>.</span><span style="color:#bf616a;">class</span><span>;
+</span></code></pre>
+<p>这种情况下，我们必须能拿到User的符号。但更多的情况下，我们并没有类符号，反射允许我们通过类型的名称来进行：</p>
+<pre data-lang="java" style="background-color:#2b303b;color:#c0c5ce;" class="language-java "><code class="language-java" data-lang="java"><span style="color:#ebcb8b;">Class</span><span>&lt;?&gt; userClass = </span><span style="color:#ebcb8b;">Class</span><span>.</span><span style="color:#bf616a;">forName</span><span>(&quot;</span><span style="color:#a3be8c;">com.compilemind.guide.chapter00.manual.User</span><span>&quot;);
+</span></code></pre>
+<p>此外，我们还可以拿到类上的注解。首先我们定义一个注解：</p>
+<pre data-lang="java" style="background-color:#2b303b;color:#c0c5ce;" class="language-java "><code class="language-java" data-lang="java"><span>@</span><span style="color:#bf616a;">Target</span><span>(</span><span style="color:#ebcb8b;">ElementType</span><span>.</span><span style="color:#d08770;">TYPE</span><span>) </span><span style="color:#65737e;">// 放在类型上
+</span><span>@</span><span style="color:#bf616a;">Retention</span><span>(</span><span style="color:#ebcb8b;">RetentionPolicy</span><span>.</span><span style="color:#d08770;">RUNTIME</span><span>) </span><span style="color:#65737e;">// 运行时保留
+</span><span style="color:#b48ead;">public @interface </span><span style="color:#ebcb8b;">UserInfo </span><span style="color:#eff1f5;">{
+</span><span style="color:#eff1f5;">
+</span><span style="color:#eff1f5;">    </span><span style="color:#ebcb8b;">String </span><span style="color:#8fa1b3;">name</span><span style="color:#eff1f5;">();
+</span><span style="color:#eff1f5;">
+</span><span style="color:#eff1f5;">    </span><span style="color:#b48ead;">int </span><span style="color:#8fa1b3;">age</span><span style="color:#eff1f5;">();
+</span><span style="color:#eff1f5;">}
+</span></code></pre>
+<p>然后给User上添加这个注解：</p>
+<pre data-lang="java" style="background-color:#2b303b;color:#c0c5ce;" class="language-java "><code class="language-java" data-lang="java"><span>@</span><span style="color:#bf616a;">UserInfo</span><span>(</span><span style="color:#bf616a;">name </span><span>= &quot;</span><span style="color:#a3be8c;">annotationName</span><span>&quot;, </span><span style="color:#bf616a;">age </span><span>= </span><span style="color:#d08770;">99</span><span>) </span><span style="color:#65737e;">// 使用注解
+</span><span style="color:#b48ead;">public class </span><span style="color:#ebcb8b;">User </span><span style="color:#eff1f5;">{
+</span><span style="color:#eff1f5;">	</span><span style="color:#65737e;">// ...
+</span><span style="color:#eff1f5;">    </span><span style="color:#b48ead;">public </span><span style="color:#8fa1b3;">User</span><span style="color:#eff1f5;">(</span><span style="color:#ebcb8b;">String </span><span style="color:#bf616a;">name</span><span style="color:#eff1f5;">, </span><span style="color:#b48ead;">int </span><span style="color:#bf616a;">age</span><span style="color:#eff1f5;">) {
+</span><span style="color:#eff1f5;">        </span><span style="color:#bf616a;">this</span><span style="color:#eff1f5;">.name </span><span>=</span><span style="color:#eff1f5;"> name;
+</span><span style="color:#eff1f5;">        </span><span style="color:#bf616a;">this</span><span style="color:#eff1f5;">.age </span><span>=</span><span style="color:#eff1f5;"> age;
+</span><span style="color:#eff1f5;">        </span><span style="color:#ebcb8b;">System</span><span style="color:#eff1f5;">.out.</span><span style="color:#bf616a;">printf</span><span style="color:#eff1f5;">(</span><span>&quot;</span><span style="color:#a3be8c;">User 有参构造函数：name = %s, age = %d%n</span><span>&quot;</span><span style="color:#eff1f5;">, name, age);
+</span><span style="color:#eff1f5;">    }
+</span><span style="color:#eff1f5;">    </span><span style="color:#65737e;">// ...
+</span><span style="color:#eff1f5;">}
+</span></code></pre>
+<p>利用反射，我们可以获取注解，并通过注解的方式，创建我们的User对象：</p>
+<pre data-lang="java" style="background-color:#2b303b;color:#c0c5ce;" class="language-java "><code class="language-java" data-lang="java"><span style="color:#65737e;">// 1. 获取Class类对象
+</span><span style="color:#ebcb8b;">Class</span><span>&lt;?&gt; userClass = </span><span style="color:#ebcb8b;">Class</span><span>.</span><span style="color:#bf616a;">forName</span><span>(
+</span><span>&quot;</span><span style="color:#a3be8c;">com.compilemind.guide.chapter00.manual.User</span><span>&quot;);
+</span><span>
+</span><span style="color:#65737e;">// 2. 获取类上的 @UserInfo 注解
+</span><span style="color:#ebcb8b;">UserInfo</span><span> userInfo = userClass.</span><span style="color:#bf616a;">getAnnotation</span><span>(</span><span style="color:#ebcb8b;">UserInfo</span><span>.</span><span style="color:#bf616a;">class</span><span>);
+</span><span style="color:#b48ead;">if </span><span>(userInfo == </span><span style="color:#d08770;">null</span><span>) {
+</span><span style="color:#ebcb8b;">System</span><span>.out.</span><span style="color:#bf616a;">println</span><span>(userClass.</span><span style="color:#bf616a;">getCanonicalName</span><span>() + &quot;</span><span style="color:#a3be8c;">不包含注解</span><span>&quot; + </span><span style="color:#ebcb8b;">UserInfo</span><span>.</span><span style="color:#bf616a;">class </span><span>+ &quot;</span><span style="color:#a3be8c;">，终止创建</span><span>&quot;);
+</span><span style="color:#b48ead;">return</span><span>;
+</span><span>}
+</span><span>
+</span><span style="color:#65737e;">// 3. 获取注解信息
+</span><span style="color:#ebcb8b;">String</span><span> name = userInfo.</span><span style="color:#bf616a;">name</span><span>();
+</span><span style="color:#b48ead;">int</span><span> age = userInfo.</span><span style="color:#bf616a;">age</span><span>();
+</span><span>
+</span><span style="color:#65737e;">// 4. 通过有参构造函数，结合注解上的上下文，创建实例
+</span><span style="color:#ebcb8b;">Object</span><span> user = userClass.</span><span style="color:#bf616a;">getConstructor</span><span>(</span><span style="color:#ebcb8b;">String</span><span>.</span><span style="color:#bf616a;">class</span><span>, </span><span style="color:#b48ead;">int</span><span>.</span><span style="color:#bf616a;">class</span><span>).</span><span style="color:#bf616a;">newInstance</span><span>(name, age);
+</span><span style="color:#ebcb8b;">System</span><span>.out.</span><span style="color:#bf616a;">println</span><span>(user);
+</span></code></pre>
+<p>该部分可以在chapter00.manual包下查看源码。</p>
+<h2 id="er-spring-gou-zao-dui-xiang">二 Spring"构造"对象</h2>
+<p>可能读者会疑惑，为什么<code>1.反射</code>和<code>2.Spring"构造"对象</code>会放在一起，实际上Spring的对象构造的底层就是使用反射进行的。接下来，让我们看看Spring中，如何"构造"一个对象。</p>
+<p>编写一个新的示例UserEx：</p>
+<pre data-lang="java" style="background-color:#2b303b;color:#c0c5ce;" class="language-java "><code class="language-java" data-lang="java"><span>@</span><span style="color:#bf616a;">Component </span><span style="color:#65737e;">// 使用注解，标记该类为一个组件
+</span><span style="color:#b48ead;">public class </span><span style="color:#ebcb8b;">UserEx </span><span style="color:#eff1f5;">{
+</span><span style="color:#eff1f5;">    </span><span style="color:#b48ead;">public </span><span style="color:#8fa1b3;">UserEx</span><span style="color:#eff1f5;">() {
+</span><span style="color:#eff1f5;">        </span><span style="color:#ebcb8b;">System</span><span style="color:#eff1f5;">.out.</span><span style="color:#bf616a;">println</span><span style="color:#eff1f5;">(</span><span>&quot;</span><span style="color:#a3be8c;">UserEx 无参构造函数</span><span>&quot;</span><span style="color:#eff1f5;">);
+</span><span style="color:#eff1f5;">    }
+</span><span style="color:#eff1f5;">}
+</span></code></pre>
+<p>在这个UserEx中，我们在类上添加了注解<code>@Component</code>，标记该类为一个<strong>组件</strong>。然后创建一个新的类：<code>IocApp</code>，编写如下的代码：</p>
+<pre data-lang="java" style="background-color:#2b303b;color:#c0c5ce;" class="language-java "><code class="language-java" data-lang="java"><span style="color:#65737e;">/**
+</span><span style="color:#65737e;"> * &quot;@SpringBootApplication&quot; 标记是一个SpringBoot应用
+</span><span style="color:#65737e;"> * 启动后，SpringBoot框架会去扫描当前包以及子包下（默认情况）的所有具有@Component标记的类，
+</span><span style="color:#65737e;"> * 并通过反射的方式创建这个类的实例，存放在Spring的Bean容器中。
+</span><span style="color:#65737e;"> */
+</span><span style="color:#65737e;">@SpringBootApplication //
+</span><span style="color:#65737e;">public class IocApp {
+</span><span style="color:#65737e;">    public static void main(String[] args) {
+</span><span style="color:#65737e;">        // 1. 启动
+</span><span style="color:#65737e;">        ConfigurableApplicationContext context =
+</span><span style="color:#65737e;">                SpringApplication.run(IocApp.class, args);
+</span><span style="color:#65737e;">        // 2. 类符号获取
+</span><span style="color:#65737e;">        System.out.println(&quot;通过类符号获取Bean&quot;);
+</span><span style="color:#65737e;">        UserEx userEx = context.getBean(UserEx.class);
+</span><span style="color:#65737e;">        System.out.println(userEx);
+</span><span style="color:#65737e;">
+</span><span style="color:#65737e;">        // 3. 通过Bean的名称获取
+</span><span style="color:#65737e;">        System.out.println(&quot;通过类符号获取Bean&quot;);
+</span><span style="color:#65737e;">        UserEx userEx2 = (UserEx) context.getBean(&quot;userEx&quot;);
+</span><span style="color:#65737e;">        System.out.println(userEx2);
+</span><span style="color:#65737e;">    }
+</span><span style="color:#65737e;">}
+</span></code></pre>
+<p>在这段代码中，在有main函数的类上，添加<code>@SpringBootApplication</code>，标记是一个<strong>SpringBoot</strong>应用。</p>
+<p>接着，我们在main函数中调用<code>SpringApplication.run(IocApp.class, args);</code>来启动这个SpringBoot应用。启动后，SpringBoot框架会去扫描当前包以及子包下（默认情况）的所有具有<code>@Component</code>标记的类，并通过反射的方式创建这个类的实例，存放在Spring的<strong>Bean</strong>容器中。</p>
+<p>最后，我们通过调用<code>ConfigurableApplicationContext.getBean</code>来获取实例并进行打印。在这里，我们使用了两种方式来获取Bean：</p>
+<pre data-lang="java" style="background-color:#2b303b;color:#c0c5ce;" class="language-java "><code class="language-java" data-lang="java"><span style="color:#65737e;">// 传入类符号.class
+</span><span>&lt;</span><span style="color:#ebcb8b;">T</span><span>&gt; </span><span style="color:#ebcb8b;">T </span><span style="color:#bf616a;">getBean</span><span>(</span><span style="color:#ebcb8b;">Class</span><span>&lt;</span><span style="color:#ebcb8b;">T</span><span>&gt; requiredType) throws </span><span style="color:#ebcb8b;">BeansException</span><span>;
+</span><span style="color:#65737e;">// 传入Bean的名称
+</span><span style="color:#ebcb8b;">Object </span><span style="color:#bf616a;">getBean</span><span>(</span><span style="color:#ebcb8b;">String</span><span> name) throws </span><span style="color:#ebcb8b;">BeansException</span><span>;
+</span></code></pre>
+<p>这里简单提一下，Bean的name是有一定的规则。默认情况下，是类名称的小驼峰形式，这里UserEx对应的名称就是userEx；但是我们通过设置注解的name字段：<code>@Component("myUserEx")</code>，能够自定义在Bean在容器中的名称。</p>
+<p>看到这里，让我们再次回顾第一节反射中的操作：我们在<code>User</code>类上添加注解<code>@UserInfo</code>，然后通过反射，获取注解的信息，并创建User实例。</p>
+<p>那么现在，各位读者能否将第二节上述的内容，和反射中的操作关联起来呢？如果你能够大致理解我现在讲的含义，那么恭喜你，对于Spring进行对象构建的内部原理你已经有了一个简单的认识。</p>
+<h3 id="2-1-iockong-zhi-fan-zhuan">2.1.IOC控制反转</h3>
+<p>细心的读者已经发现了，在上一节中，我们创建了包含启动代码的类：<code>IocApp</code>。没错，此IOC就是这一节要讲的IOC（Inversion of Control），控制反转。</p>
+<blockquote>
+<p>　　传统的创建对象的方法是直接通过 <strong>new 关键字</strong>，而 spring 则是通过 IOC 容器来创建对象，也就是说我们将创建对象的控制权交给了 IOC 容器。我们可以用一句话来概括 IOC：</p>
+<p>　　<strong>IOC 让程序员不在关注怎么去创建对象，而是关注与对象创建之后的操作，把对象的创建、初始化、销毁等工作交给spring容器来做。</strong></p>
+</blockquote>
+<p>具体结合前面的例子来说，对于UserEx类，<strong>在没有IOC思想的介入下</strong>，我们创建这个UserEx类通常会这样做：</p>
+<pre style="background-color:#2b303b;color:#c0c5ce;"><code><span>UserEx userEx = new UserEx();
+</span><span>// ... 使用该实例
+</span></code></pre>
+<p>而在Spring IOC框架下，我们做了如下的工作：</p>
+<ol>
+<li>编写UserEx类，标注<code>@Component</code>；</li>
+<li>初始化容器：<code>SpringApplication.run(...)</code>；</li>
+<li>从容器中获取：<code>UserEx userEx = context.getBean(UserEx.class);</code></li>
+</ol>
+<p>看到这里，你也许会想没有IOC的模式下，我只要一行代码，而现在使用了Spring的IOC，多了这么多的配置和操作。难道不是更加的麻烦了吗？对于这个例子，的确是这样的，但是仔细一想，随着项目的体积逐渐增大，越来越多的类实例需要被创建，难道那个时候我们还要如此繁杂的通过new创建一大堆实例吗？另外，IOC容器帮我们做的事情，还远远不止控制反转这一项，依赖注入（dependence injection）也是一个重要的能力。</p>
+<h3 id="2-2-diyi-lai-zhu-ru">2.2.DI依赖注入</h3>
+<p>说到依赖注入，我们首先需要明确，在代码中什么是依赖。从互联网上有这样一段对于依赖的定义，我觉得很好：</p>
+<blockquote>
+<p>每个软件，都是由很多“组件”构成的。这里的“组件”是指广义的组件 —— 组成部件，它可能是函数，可能是类，可能是包，也可能是微服务。软件的架构，就是组件以及组件之间的关系。而这些组件之间的关系，就是（广义的）依赖关系。</p>
+</blockquote>
+<p>从狭义来讲，我们定义一个类GameEx，这GameEx包含前文的UserEx，我们就可以认为GameEx依赖UserEx：</p>
+<pre data-lang="java" style="background-color:#2b303b;color:#c0c5ce;" class="language-java "><code class="language-java" data-lang="java"><span style="color:#b48ead;">public class </span><span style="color:#ebcb8b;">GameEx </span><span style="color:#eff1f5;">{
+</span><span style="color:#eff1f5;">
+</span><span style="color:#eff1f5;">    </span><span style="color:#b48ead;">private </span><span style="color:#ebcb8b;">UserEx </span><span style="color:#eff1f5;">userEx; </span><span style="color:#65737e;">// GameEx依赖UserEx
+</span><span style="color:#eff1f5;">
+</span><span style="color:#eff1f5;">    </span><span style="color:#b48ead;">public void </span><span style="color:#8fa1b3;">setUserEx</span><span style="color:#eff1f5;">(</span><span style="color:#ebcb8b;">UserEx </span><span style="color:#bf616a;">userEx</span><span style="color:#eff1f5;">) {
+</span><span style="color:#eff1f5;">        </span><span style="color:#bf616a;">this</span><span style="color:#eff1f5;">.userEx </span><span>=</span><span style="color:#eff1f5;"> userEx;
+</span><span style="color:#eff1f5;">        </span><span style="color:#ebcb8b;">System</span><span style="color:#eff1f5;">.out.</span><span style="color:#bf616a;">println</span><span style="color:#eff1f5;">(</span><span>&quot;</span><span style="color:#a3be8c;">调用setUserEx</span><span>&quot;</span><span style="color:#eff1f5;">);
+</span><span style="color:#eff1f5;">    }
+</span><span style="color:#eff1f5;">
+</span><span style="color:#eff1f5;">    </span><span style="color:#65737e;">/**
+</span><span style="color:#65737e;">     * 打印GameEx的UserEx
+</span><span style="color:#65737e;">     */
+</span><span style="color:#65737e;">    public void printUserEx() {
+</span><span style="color:#65737e;">        if (this.userEx == null) {
+</span><span style="color:#65737e;">            System.out.println(&quot;无用户&quot;);
+</span><span style="color:#65737e;">        } else {
+</span><span style="color:#65737e;">            System.out.println(this.userEx);
+</span><span style="color:#65737e;">        }
+</span><span style="color:#65737e;">    }
+</span><span style="color:#65737e;">
+</span><span style="color:#65737e;">}
+</span></code></pre>
+<p>在上述GameEx类中，拥有一个UserEx类型的字段userEx。同时，包含一个名为<code>printUserEx</code>的方法，用以打印UserEx实例。为了<strong>避免</strong>得到输出<code>"无用户"</code>，我们需要在调用该方法前，设置UserEx的实例：</p>
+<pre data-lang="java" style="background-color:#2b303b;color:#c0c5ce;" class="language-java "><code class="language-java" data-lang="java"><span style="color:#65737e;">// 伪代码
+</span><span style="color:#ebcb8b;">UserEx</span><span> userEx = ...; </span><span style="color:#65737e;">// 1.通过某种方式，获得的UserEx的实例
+</span><span style="color:#ebcb8b;">GameEx</span><span> gameEx = ...; </span><span style="color:#65737e;">// 2.通过某种方式，获得的GameEx的实例
+</span><span>gameEx.</span><span style="color:#bf616a;">setUserEx</span><span>(userEx); </span><span style="color:#65737e;">// 3.调用setter方法将UserEx实例设置到GameEx中
+</span><span>gameEx.</span><span style="color:#bf616a;">printUserEx</span><span>(); </span><span style="color:#65737e;">// 4.输出: UserEx@xxxx
+</span></code></pre>
+<p>在上面伪代码的第3步中，我们通过代码的方式手动调用setter函数。这个过程，本质上来讲，<strong>就是我们在控制着依赖</strong>：因为我们明白GameEx的功能依赖于UserEx，所以为了达到预期的目的，我们需要手动进行代码编写，处理这样的依赖。</p>
+<p>让我们再看上述伪代码的中的第1、2步：得到UserEx和GameEx实例。在第2节中，我们已经学会了如何使用Spring的IOC容器创建对象，所以对于GameEx类，我们同样可以增加注解<code>@Component</code>，将GameEx标记为Bean，让Spring的IOC容器管理起来：</p>
+<pre data-lang="java" style="background-color:#2b303b;color:#c0c5ce;" class="language-java "><code class="language-java" data-lang="java"><span>@</span><span style="color:#bf616a;">Component
+</span><span style="color:#b48ead;">public class </span><span style="color:#ebcb8b;">GameEx </span><span style="color:#eff1f5;">{
+</span><span style="color:#eff1f5;">    </span><span style="color:#65737e;">// 其他代码忽略 ...
+</span><span style="color:#eff1f5;">}
+</span></code></pre>
+<p>然后，我们在IocApp中实现上述的伪代码效果：</p>
+<pre data-lang="java" style="background-color:#2b303b;color:#c0c5ce;" class="language-java "><code class="language-java" data-lang="java"><span>@</span><span style="color:#bf616a;">SpringBootApplication </span><span style="color:#65737e;">//
+</span><span style="color:#b48ead;">public class </span><span style="color:#ebcb8b;">IocApp </span><span style="color:#eff1f5;">{
+</span><span style="color:#eff1f5;">    </span><span style="color:#b48ead;">public static void </span><span style="color:#8fa1b3;">main</span><span style="color:#eff1f5;">(</span><span style="color:#ebcb8b;">String</span><span style="color:#b48ead;">[] </span><span style="color:#bf616a;">args</span><span style="color:#eff1f5;">) {
+</span><span style="color:#eff1f5;">        </span><span style="color:#65737e;">// 1. 启动
+</span><span style="color:#eff1f5;">        </span><span style="color:#ebcb8b;">ConfigurableApplicationContext</span><span style="color:#eff1f5;"> context </span><span>=
+</span><span style="color:#eff1f5;">                </span><span style="color:#ebcb8b;">SpringApplication</span><span style="color:#eff1f5;">.</span><span style="color:#bf616a;">run</span><span style="color:#eff1f5;">(</span><span style="color:#ebcb8b;">IocApp</span><span style="color:#eff1f5;">.</span><span style="color:#bf616a;">class</span><span style="color:#eff1f5;">, args);
+</span><span style="color:#eff1f5;">        </span><span style="color:#bf616a;">manualDependencySet</span><span style="color:#eff1f5;">(context);
+</span><span style="color:#eff1f5;">    }
+</span><span style="color:#eff1f5;">
+</span><span style="color:#eff1f5;">    </span><span style="color:#65737e;">/**
+</span><span style="color:#65737e;">     * 第2.2节伪代码实现：手动进行依赖设置
+</span><span style="color:#65737e;">     */
+</span><span style="color:#65737e;">    private static void manualDependencySet(ConfigurableApplicationContext context) {
+</span><span style="color:#65737e;">        UserEx userEx = context.getBean(UserEx.class); // 1.
+</span><span style="color:#65737e;">        GameEx gameEx = context.getBean(GameEx.class); // 2.
+</span><span style="color:#65737e;">        gameEx.setUserEx(userEx); // 3.
+</span><span style="color:#65737e;">        gameEx.printUserEx(); // 4.
+</span><span style="color:#65737e;">    }
+</span><span style="color:#65737e;">}
+</span></code></pre>
+<p>进行执行后，我们可以从控制台中观察到相关输出：</p>
+<pre style="background-color:#2b303b;color:#c0c5ce;"><code><span>UserEx 无参构造函数
+</span><span>// 其他log信息
+</span><span>调用setUserEx
+</span><span>com.compilemind.guide.chapter00.spring.UserEx@5300f14a
+</span></code></pre>
+<p>在上面的例子中，我们手动进行了依赖的管理，那么Spring的IOC容器是否可以帮助我们去管理依赖吗？答案是肯定的。我们只需要在需要注入依赖字段的setter方法上（后面会介绍其他的方式），加上<code>@Autowired</code>注解即可实现这样的功能：</p>
+<pre data-lang="java" style="background-color:#2b303b;color:#c0c5ce;" class="language-java "><code class="language-java" data-lang="java"><span>@</span><span style="color:#bf616a;">Component
+</span><span style="color:#b48ead;">public class </span><span style="color:#ebcb8b;">GameEx </span><span style="color:#eff1f5;">{
+</span><span style="color:#eff1f5;">
+</span><span style="color:#eff1f5;">    </span><span style="color:#b48ead;">private </span><span style="color:#ebcb8b;">UserEx </span><span style="color:#eff1f5;">userEx;
+</span><span style="color:#eff1f5;">
+</span><span style="color:#eff1f5;">    @</span><span style="color:#bf616a;">Autowired </span><span style="color:#65737e;">// 使用注解 @Autowired，表明希望IOC容器为我们注入这个UserEx的实例
+</span><span style="color:#eff1f5;">    </span><span style="color:#b48ead;">public void </span><span style="color:#8fa1b3;">setUserEx</span><span style="color:#eff1f5;">(</span><span style="color:#ebcb8b;">UserEx </span><span style="color:#bf616a;">userEx</span><span style="color:#eff1f5;">) {
+</span><span style="color:#eff1f5;">        </span><span style="color:#bf616a;">this</span><span style="color:#eff1f5;">.userEx </span><span>=</span><span style="color:#eff1f5;"> userEx;
+</span><span style="color:#eff1f5;">        </span><span style="color:#ebcb8b;">System</span><span style="color:#eff1f5;">.out.</span><span style="color:#bf616a;">println</span><span style="color:#eff1f5;">(</span><span>&quot;</span><span style="color:#a3be8c;">调用setUserEx</span><span>&quot;</span><span style="color:#eff1f5;">);
+</span><span style="color:#eff1f5;">    }
+</span><span style="color:#eff1f5;">    </span><span style="color:#65737e;">// 忽略其他代码
+</span><span style="color:#eff1f5;">}
+</span></code></pre>
+<p>此时，我们不再需要分别从IOC容器中获取UserEx和GameEx来手动设置依赖，因为SpringIOC容器已经帮助我们完成了：</p>
+<pre data-lang="java" style="background-color:#2b303b;color:#c0c5ce;" class="language-java "><code class="language-java" data-lang="java"><span>@</span><span style="color:#bf616a;">SpringBootApplication </span><span style="color:#65737e;">//
+</span><span style="color:#b48ead;">public class </span><span style="color:#ebcb8b;">IocApp </span><span style="color:#eff1f5;">{
+</span><span style="color:#eff1f5;">    </span><span style="color:#b48ead;">public static void </span><span style="color:#8fa1b3;">main</span><span style="color:#eff1f5;">(</span><span style="color:#ebcb8b;">String</span><span style="color:#b48ead;">[] </span><span style="color:#bf616a;">args</span><span style="color:#eff1f5;">) {
+</span><span style="color:#eff1f5;">        </span><span style="color:#65737e;">// 1. 启动
+</span><span style="color:#eff1f5;">        </span><span style="color:#ebcb8b;">ConfigurableApplicationContext</span><span style="color:#eff1f5;"> context </span><span>=
+</span><span style="color:#eff1f5;">                </span><span style="color:#ebcb8b;">SpringApplication</span><span style="color:#eff1f5;">.</span><span style="color:#bf616a;">run</span><span style="color:#eff1f5;">(</span><span style="color:#ebcb8b;">IocApp</span><span style="color:#eff1f5;">.</span><span style="color:#bf616a;">class</span><span style="color:#eff1f5;">, args);
+</span><span style="color:#eff1f5;">        </span><span style="color:#bf616a;">dependencyInject</span><span style="color:#eff1f5;">(context);
+</span><span style="color:#eff1f5;">    }
+</span><span style="color:#eff1f5;">
+</span><span style="color:#eff1f5;">    </span><span style="color:#65737e;">/**
+</span><span style="color:#65737e;">     * 不再需要手工设置了
+</span><span style="color:#65737e;">     */
+</span><span style="color:#65737e;">    private static void dependencyInject(ConfigurableApplicationContext context) {
+</span><span style="color:#65737e;">        GameEx gameEx = context.getBean(GameEx.class);
+</span><span style="color:#65737e;">        gameEx.printUserEx();
+</span><span style="color:#65737e;">    }
+</span><span style="color:#65737e;">}
+</span></code></pre>
+<p>最后的输出与上面手动设置依赖是相同。</p>
+<h2 id="ben-zhang-zong-jie">本章总结</h2>
+<p>在本章中，我们了解了Java中关于反射的一些基础知识，了解了如何通过反射而不是new的形式创建对象。在此基础上，我们介绍了Spring IOC容器，让大家明白了Spring IOC底层的基本原理。最后，我们介绍了IOC控制反转以及DI依赖注入的概念，并用Spring框架演示了这些概念。在下一章，我们将介绍使用SpringIOC容器来创建Bean的几种方式。</p>
+<h2 id="cang-ku-di-zhi-1">仓库地址</h2>
+<p><a rel="noopener" target="_blank" href="https://github.com/w4ngzhen/springboot-simple-guide">w4ngzhen/springboot-simple-guide: This is a project that guides SpringBoot users to get started quickly through a series of examples (github.com)</a></p>
+
+    </div>
+</div>
+<script src="https://zhen.wang/libs/viewerjs@1.11.7/viewer.min.js"></script>
+<link rel="stylesheet" href="https://zhen.wang/libs/viewerjs@1.11.7/viewer.min.css"/>
+<script>
+  if (window.Viewer) {
+    document.querySelectorAll('img').forEach(img => {
+      new Viewer(img, {
+        inline: false,
+        navbar: false,
+        toolbar: {
+          zoomIn: 1,
+          zoomOut: 1,
+          reset: 1,
+          rotateLeft: 1,
+          rotateRight: 1,
+        },
+      });
+    });
+  }
+</script>
+
+
+</body>
+</html>

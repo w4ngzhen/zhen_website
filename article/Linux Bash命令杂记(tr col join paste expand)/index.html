@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="utf-8">
+    <meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover"
+          name="viewport">
+    
+    
+    <!-- umami web analysis -->
+    <script defer src="https://zhen.wang/libs/umami/umami.script.js"
+            data-website-id="d66cfe03-f6b3-4aa0-baf8-728700db1b09"></script>
+    
+    
+    
+    <link rel="icon" type="image/png" sizes="16x16" href="https://zhen.wang/images/blog-site-icon.svg">
+    <link rel="icon" type="image/png" sizes="32x32" href="https://zhen.wang/images/blog-site-icon.svg">
+    <title>zhen&#x27;s everything</title>
+    <link rel="stylesheet" href="https://zhen.wang/style.css">
+    
+<link rel="stylesheet" href="https://zhen.wang/article_content.css">
+<link rel="stylesheet" href="https://zhen.wang/article_markdown.css">
+
+</head>
+<body>
+
+<div id="article">
+    <header class="article-header">
+        
+<div class="base-title">
+    <a href="#" onclick="history.length > 1 ? history.back() : location.href = '/'; return false;">&LeftArrow; Back</a>
+    <h1>
+        Linux Bash命令杂记(tr col join paste expand)
+    </h1>
+</div>
+
+    </header>
+    <p class="article-date">2018-03-13</p>
+    
+    <!-- real content -->
+    <div class="article-content markdown-content">
+        <span id="continue-reading"></span>
+<p><strong>tr命令</strong></p>
+<p>tr命令可以将输入的数据中的某些字符做替换或者是作删除</p>
+<pre data-lang="shell" style="background-color:#2b303b;color:#c0c5ce;" class="language-shell "><code class="language-shell" data-lang="shell"><span>tr [-ds] STR
+</span><span>d: 删除输入数据的中的STR
+</span><span>s: 替换重复的字符
+</span><span># 例
+</span><span>last | tr &#39;[a-z]&#39; &#39;A-Z&#39;
+</span><span>将last输出的数据中的所有小写字符替换为大写字符
+</span><span>SPPU     UUZ1                          TVF MBS 13 18:45   TUJMM MPHHFE JO   
+</span><span>SFCPPU   TZTUFN CPPU  3.10.0-693.17.1. TVF MBS 13 18:45 - 18:47  (00:01)    
+</span><span>SPPU     UUZ1                          TVF MBS 13 10:55 - 13:15  (02:20)    
+</span><span>SFCPPU   TZTUFN CPPU  3.10.0-693.17.1. TVF MBS 13 10:54 - 18:47  (07:52)    
+</span><span>SPPU     UUZ1                          MPO MBS 12 18:33 - 19:35  (01:02)  
+</span><span>...
+</span><span>
+</span><span>cat /etc/passwd | tr -d &#39;:&#39;
+</span><span>将cat /etc/passwd输出的数据中的&#39;:&#39;全部删除
+</span><span># output
+</span><span>rootx00root/root/bin/bash
+</span><span>binx11bin/bin/sbin/nologin
+</span><span>daemonx22daemon/sbin/sbin/nologin
+</span><span>admx34adm/var/adm/sbin/nologin
+</span><span>lpx47lp/var/spool/lpd/sbin/nologin
+</span><span>...
+</span></code></pre>
+<p><strong>col命令</strong></p>
+<pre data-lang="shell" style="background-color:#2b303b;color:#c0c5ce;" class="language-shell "><code class="language-shell" data-lang="shell"><span>col [-xb]
+</span><span>-x: 将tab键替换为等长的空个
+</span><span>-b: 在文字内由反斜杠时，仅保留反斜杠后接的那个字符
+</span><span>
+</span><span>cat -A ~/.bashrc
+</span><span># 使用cat -A可以讲输出中所有的特殊按键
+</span><span># output
+</span><span>...
+</span><span># Source global definitions$
+</span><span>if [ -f /etc/bashrc ]; then$
+</span><span>^I. /etc/bashrc$
+</span><span>fi$
+</span><span># 注意这里有个^I就是tab字符。
+</span><span>
+</span><span>cat -A ~/.bashrc | col -x
+</span><span># output
+</span><span># Source global definitions$
+</span><span>if [ -f /etc/bashrc ]; then$
+</span><span>    . /etc/bashrc$
+</span><span># tab字符不再出现
+</span></code></pre>
+<p><strong>join命令</strong></p>
+<p>用于对两个文件按照某一个字符或者字段进行按行连接</p>
+<pre data-lang="shell" style="background-color:#2b303b;color:#c0c5ce;" class="language-shell "><code class="language-shell" data-lang="shell"><span>join [-ti12] file1 file2
+</span><span>-t: 选择分割字符，并且对比“第一个字段”的数据，如果两个文件相同，则将两条数据连成一行，并将第一个字段放在最前
+</span><span>-i: 忽略大小写
+</span><span>-1: 表示第一个文件
+</span><span>-2: 表示第二个文件
+</span><span>
+</span><span># 例1
+</span><span>head -n 3 /etc/passwd /etc/shadow
+</span><span># 先查看这两个文件前三行数据
+</span><span>==&gt; /etc/passwd &lt;==
+</span><span>root:x:0:0:root:/root:/bin/bash
+</span><span>bin:x:1:1:bin:/bin:/sbin/nologin
+</span><span>daemon:x:2:2:daemon:/sbin:/sbin/nologin
+</span><span>
+</span><span>==&gt; /etc/shadow &lt;==
+</span><span>root:&lt;密码太长，我忽略了方便查看&gt;:17593:0:99999:7:::
+</span><span>bin:*:17110:0:99999:7:::
+</span><span>daemon:*:17110:0:99999:7:::
+</span><span>
+</span><span>join -t &#39;:&#39; /etc/passwd /etc/shadow | head -n 3
+</span><span># output
+</span><span>root:x:0:0:root:/root:/bin/bash:&lt;密码太长，我忽略了方便查看&gt;:17593:0:99999:7:::
+</span><span>bin:x:1:1:bin:/bin:/sbin/nologin:*:17110:0:99999:7:::
+</span><span>daemon:x:2:2:daemon:/sbin:/sbin/nologin:*:17110:0:99999:7:::
+</span><span>#  我们可以看到，按照&#39;:&#39;分割，并且默认一第一个字段进行连接
+</span><span>
+</span><span># 例2
+</span><span>我们知道/etc/passwd中第四个字段是GID，而/etc/group中第三个字段是GID，我们就可以像如下进行整合：
+</span><span>join -t &#39;:&#39; -1 4 /etc/passwd -2 3 /etc/group | head -n 3
+</span><span># output
+</span><span>0:root:x:0:root:/root:/bin/bash:root:x:
+</span><span>1:bin:x:1:bin:/bin:/sbin/nologin:bin:x:
+</span><span>2:daemon:x:2:daemon:/sbin:/sbin/nologin:daemon:x:
+</span><span># 我们可以看到，将我们需要的字段提到了最前
+</span></code></pre>
+<p><strong>paste命令</strong></p>
+<pre data-lang="shell" style="background-color:#2b303b;color:#c0c5ce;" class="language-shell "><code class="language-shell" data-lang="shell"><span>直接讲两个文件中的数据按行连接
+</span><span>paste [-d] file1 file2
+</span><span>-d: 设定每行数据连接的字符，默认为tab
+</span><span>paste /etc/passwd /etc/group | head -n 3
+</span><span># output
+</span><span>root:x:0:0:root:/root:/bin/bash	root:x:0:
+</span><span>bin:x:1:1:bin:/bin:/sbin/nologin	bin:x:1:
+</span><span>daemon:x:2:2:daemon:/sbin:/sbin/nologin	daemon:x:2:
+</span></code></pre>
+<p><strong>expand命令</strong></p>
+<pre data-lang="shell" style="background-color:#2b303b;color:#c0c5ce;" class="language-shell "><code class="language-shell" data-lang="shell"><span>expand [-t] file
+</span><span>-t: 后面接数字，代表了将一个tab替换为多少个空格键
+</span><span># 例
+</span><span>cat -A ~/.bashrc
+</span><span># 使用cat -A可以讲输出中所有的特殊按键
+</span><span># output
+</span><span>...
+</span><span># Source global definitions$
+</span><span>if [ -f /etc/bashrc ]; then$
+</span><span>^I. /etc/bashrc$
+</span><span>fi$
+</span><span>注意看有个^I，是tab符号
+</span><span>cat -A ~/.bashrc | expand -t 10 -(标准输入) | cat -A
+</span><span># output
+</span><span>...
+</span><span># Source global definitions$
+</span><span>if [ -f /etc/bashrc ]; then$
+</span><span>          . /etc/bashrc$
+</span><span>fi$
+</span><span>我们可以看到原先的tab变为了10个空格
+</span></code></pre>
+
+    </div>
+</div>
+<script src="https://zhen.wang/libs/viewerjs@1.11.7/viewer.min.js"></script>
+<link rel="stylesheet" href="https://zhen.wang/libs/viewerjs@1.11.7/viewer.min.css"/>
+<script>
+  if (window.Viewer) {
+    document.querySelectorAll('img').forEach(img => {
+      new Viewer(img, {
+        inline: false,
+        navbar: false,
+        toolbar: {
+          zoomIn: 1,
+          zoomOut: 1,
+          reset: 1,
+          rotateLeft: 1,
+          rotateRight: 1,
+        },
+      });
+    });
+  }
+</script>
+
+
+</body>
+</html>

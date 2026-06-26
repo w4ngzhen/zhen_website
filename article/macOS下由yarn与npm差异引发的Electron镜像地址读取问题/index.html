@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="utf-8">
+    <meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover"
+          name="viewport">
+    
+    
+    <!-- umami web analysis -->
+    <script defer src="https://zhen.wang/libs/umami/umami.script.js"
+            data-website-id="d66cfe03-f6b3-4aa0-baf8-728700db1b09"></script>
+    
+    
+    
+    <link rel="icon" type="image/png" sizes="16x16" href="https://zhen.wang/images/blog-site-icon.svg">
+    <link rel="icon" type="image/png" sizes="32x32" href="https://zhen.wang/images/blog-site-icon.svg">
+    <title>zhen&#x27;s everything</title>
+    <link rel="stylesheet" href="https://zhen.wang/style.css">
+    
+<link rel="stylesheet" href="https://zhen.wang/article_content.css">
+<link rel="stylesheet" href="https://zhen.wang/article_markdown.css">
+
+</head>
+<body>
+
+<div id="article">
+    <header class="article-header">
+        
+<div class="base-title">
+    <a href="#" onclick="history.length > 1 ? history.back() : location.href = '/'; return false;">&LeftArrow; Back</a>
+    <h1>
+        macOS下由yarn与npm差异引发的Electron镜像地址读取问题
+    </h1>
+</div>
+
+    </header>
+    <p class="article-date">2023-05-22</p>
+    
+    <!-- toc -->
+    <div class="article-toc">
+        <label class="toc-title" for="toc-trigger">目录</label>
+        <input id="toc-trigger" type="checkbox" checked/>
+        <div class="toc-content">
+            <ol class="toc">
+                
+                <li class="toc-item toc-level-1">
+                    <a class="toc-link" href="https://zhen.wang/article/macOS下由yarn与npm差异引发的Electron镜像地址读取问题/#chu-shi-bei-jing">初始背景</a>
+                    
+                </li>
+                
+                <li class="toc-item toc-level-1">
+                    <a class="toc-link" href="https://zhen.wang/article/macOS下由yarn与npm差异引发的Electron镜像地址读取问题/#wen-ti-chu-xian">问题出现</a>
+                    
+                </li>
+                
+                <li class="toc-item toc-level-1">
+                    <a class="toc-link" href="https://zhen.wang/article/macOS下由yarn与npm差异引发的Electron镜像地址读取问题/#wen-ti-pai-cha">问题排查</a>
+                    
+                </li>
+                
+                <li class="toc-item toc-level-1">
+                    <a class="toc-link" href="https://zhen.wang/article/macOS下由yarn与npm差异引发的Electron镜像地址读取问题/#macosjie-jue-fang-shi">macOS解决方式</a>
+                    
+                </li>
+                
+                <li class="toc-item toc-level-1">
+                    <a class="toc-link" href="https://zhen.wang/article/macOS下由yarn与npm差异引发的Electron镜像地址读取问题/#guan-yu-windowsde-te-bie-shuo-ming">关于Windows的特别说明</a>
+                    
+                </li>
+                
+            </ol>
+        </div>
+    </div>
+    
+    <!-- real content -->
+    <div class="article-content markdown-content">
+        <p>记录macOS下由yarn与npm差异引发的Electron镜像地址读取问题</p>
+<span id="continue-reading"></span>
+<p>写在前面：该问题仅仅出现在Linux和macOS上，Windows上不存在该问题！</p>
+<h1 id="chu-shi-bei-jing">初始背景</h1>
+<p>最近笔者重新拾起了Electron，把最新版Electron的官方文档阅读了一遍。众所周知，Electron作为依赖在安装的时候，其二进制文件下载在国内一直以来都是问题（因为默认会从github上下载），好在现在Electron的官方文档已经写的非常详细了：<a rel="noopener" target="_blank" href="https://www.electronjs.org/zh/docs/latest/tutorial/installation#%E9%95%9C%E5%83%8F">安装指导 | Electron (electronjs.org)</a>，只需要配置一个镜像地址到<code>.npmrc</code>中：</p>
+<pre style="background-color:#2b303b;color:#c0c5ce;"><code><span>ELECTRON_MIRROR=&quot;https://npmmirror.com/mirrors/electron/&quot;
+</span></code></pre>
+<blockquote>
+<p>记住这个大写的Key</p>
+</blockquote>
+<p>笔者由于是新的机器，还没有配置改值，所以找到<code>.npmrc</code>文件的配置了上述的镜像后，便开开心心的准备进行项目搭建了。</p>
+<h1 id="wen-ti-chu-xian">问题出现</h1>
+<p>然而，当笔者准备使用<strong>yarn</strong>执行如下命令的时候，却出了问题：</p>
+<pre style="background-color:#2b303b;color:#c0c5ce;"><code><span>yarn add -D electron
+</span></code></pre>
+<p>运行启动以后，在Electron安装的环境一直卡住了很久很久。</p>
+<p><img src="https://static-res.zhen.wang/images/post/2023-05-22/010-electron-install-pending.gif" alt="010-electron-install-pending" /></p>
+<p>咦，难道镜像配置写错了吗？仔细对比以后，没有问题。难道因为我的网络访问很慢吗？等到访问超时以后，发现一个IP地址超时了，心想国内镜像再怎么也不应该超时，盲猜镜像地址没有生效。于是乎，准备尝试对下载Electron二进制文件的过程进行debug。</p>
+<h1 id="wen-ti-pai-cha">问题排查</h1>
+<p>首先定位到<code>node_module/electron</code>包，能够看到有一段安装后脚本执行命令（<code>postinstall</code>）：</p>
+<p><img src="https://static-res.zhen.wang/images/post/2023-05-22/020-node_module-electron-scripts.png" alt="020-node_module-electron-scripts" /></p>
+<blockquote>
+<p>关于postinstall的详细说明：<a rel="noopener" target="_blank" href="https://docs.npmjs.com/cli/v6/using-npm/scripts#pre--post-scripts">scripts | npm Docs (npmjs.com)</a></p>
+</blockquote>
+<p>也就是说，<code>node_module/electron</code>本身npm包install完成以后，还会执行其包内的install.js。</p>
+<p>定位进入了<code>node_module/electron</code>包下的<code>install.js</code>，该脚本内部主要逻辑是先检查Electron的二进制缓存，如果不存在缓存，则使用来自<code>@electron/get</code>包中提供的<code>downloadArtifact</code>方法从远端下载Electron二进制制品文件。</p>
+<p><img src="https://static-res.zhen.wang/images/post/2023-05-22/030-installjs-flow.png" alt="030-installjs-flow" /></p>
+<p>我们暂时先不看缓存读写的逻辑，着重了解远端下载的逻辑，所以我们进入<code>@electron/get</code>包中的<code>downloadArtifact</code>：</p>
+<p><img src="https://static-res.zhen.wang/images/post/2023-05-22/040-@electron-get-npm.png" alt="040-@electron-get-npm" /></p>
+<p>查看<code>@electron/get</code>包下的index.js内容：</p>
+<p><img src="https://static-res.zhen.wang/images/post/2023-05-22/050-@electron-get-core-download-script.png" alt="050-@electron-get-core-download-script" /></p>
+<p>前面我们提到，怀疑镜像地址没有生效导致下载超时，所以我们重点关注一下这里通过<code>getArtifactRemoteURL</code>方法得到的<code>url</code>值，</p>
+<p>由于每一次这个包都会重新安装，我们不太好调试这个值，所以，我们做一个简单的trick：</p>
+<ol>
+<li>找到这个包的缓存（macOS上的路径为：<code>～/Library/Caches/Yarn/v6/npm-@electron-get-xxxx</code>）：</li>
+</ol>
+<p><img src="https://static-res.zhen.wang/images/post/2023-05-22/060-@electron-get-cache-location.png" alt="060-@electron-get-cache-location" /></p>
+<ol start="2">
+<li>找到上述indexjs代码，并添加一段日志打印：</li>
+</ol>
+<p><img src="https://static-res.zhen.wang/images/post/2023-05-22/070-modify-cached-@electron-get-indexjs.png" alt="070-modify-cached-@electron-get-indexjs" /></p>
+<ol start="3">
+<li>准备完毕以后，我们重新在demo项目下执行<code>yarn add -D electron</code>。执行以后，等到超时以后，发现控制台日志打印如下：</li>
+</ol>
+<p><img src="https://static-res.zhen.wang/images/post/2023-05-22/080-remote-url-is-github.png" alt="080-remote-url-is-github" /></p>
+<p>Why！？为什么这个下载的Electron二进制文件地址依然是github的？于是，我们有必要进一步查看这个URL是如何得到。</p>
+<p>继续查看代码，这个<code>url</code>来源于<code>artifact-utils</code>中的<code>getArtifactRemoteURL</code>方法，而这个方法里面关于最终返回的<code>url</code>最重要的部分是下图所示的<code>base</code>的值：</p>
+<p><img src="https://static-res.zhen.wang/images/post/2023-05-22/090-@electron-get-artifact-utils-getArtifactRemoteURL.png" alt="090-@electron-get-artifact-utils-getArtifactRemoteURL" /></p>
+<p>而这个<code>base</code>值来源于<code>mirrorVar</code>这个方法：</p>
+<p><img src="https://static-res.zhen.wang/images/post/2023-05-22/100-@electron-get-artifact-utils-mirrorVar.png" alt="100-@electron-get-artifact-utils-mirrorVar" /></p>
+<p>根据上面代码的逻辑，name值为<code>"mirror"</code>，options未使用，defaultValue为：</p>
+<p><code>"https://github.com/electron/electron/releases/download/"</code></p>
+<p>也就是说，在后面的逻辑中，如果没有从<code>process.env</code>中找到对应的值，那么就会使用默认的github官方制品地址的值。按照代码逻辑，运行到这个方法的时候，会从<code>process.env</code>中尝试获取：</p>
+<ol>
+<li>"NPM_CONFIG_ELECTRON_MIRROR"</li>
+<li>"npm_config_electron_mirror"</li>
+<li>"npm_package_config_electron_mirror"</li>
+<li>"ELECTRON_MIRROR"</li>
+</ol>
+<blockquote>
+<p>环境变量—— <a rel="noopener" target="_blank" href="https://npm.nodejs.cn/cli/v9/using-npm/config#%E7%8E%AF%E5%A2%83%E5%8F%98%E9%87%8F">配置 | npm 中文网 (nodejs.cn)</a></p>
+<p>任何以 <code>npm_config_</code> 开头的环境变量都将被解释为配置参数。 例如，将 <code>npm_config_foo=bar</code> 放入您的环境中会将 <code>foo</code> 配置参数设置为 <code>bar</code>。 任何未赋值的环境配置都将被赋值为 <code>true</code>。 配置值不区分大小写，因此 <code>NPM_CONFIG_FOO=bar</code> 的工作方式相同。 但是，请注意，在 <a rel="noopener" target="_blank" href="https://npm.nodejs.cn/cli/v9/using-npm/config#"><code>scripts</code></a> 内部，npm 将设置自己的环境变量，并且 Node 会更喜欢那些小写版本，而不是您可能设置的任何大写版本。 详情见<a rel="noopener" target="_blank" href="https://npm.nodejs.cn/cli/v9/using-npm/config#">此问题</a>。</p>
+<p>请注意，您需要使用下划线而不是破折号，因此 <code>--allow-same-version</code> 将变为 <code>npm_config_allow_same_version=true</code>。</p>
+<p>此外，如果是配置在npmrc里面的配置，也会在npm/yarn启动的时候被作为环境变量放到process.env中被访问。</p>
+</blockquote>
+<p>那我们在<code>.npmrc</code>中配置的<code>ELECTRON_MIRROR</code>，在<code>process.env</code>中变成了什么呢？通过添加日志打印，我们会看到：</p>
+<p><img src="https://static-res.zhen.wang/images/post/2023-05-22/110-ProcessEnv-consolelog.png" alt="110-ProcessEnv-consolelog" /></p>
+<p><img src="https://static-res.zhen.wang/images/post/2023-05-22/120-ProcessEnv-npm_config_ELECTRON_MIRROR.png" alt="120-ProcessEnv-npm_config_ELECTRON_MIRROR" /></p>
+<p>可以看到，在<code>process.env</code>中，这个键为<code>"npm_config_ELECTRON_MIRROR"</code>（<code>npm_config</code>小写，<code>ELECTORN_MIRROR</code>大写）。我们知道，nodejs中object对象的属性值是大小写敏感的！所以，当上面的<code>mirrorVar</code>代码运行，尝试获取<code>process.env</code>中的值的时候，根本找不到了，因为没有<code>"NPM_CONFIG_ELECTRON_MIRROR"</code>、<code>"npm_config_electron_mirror"</code>、<code>"npm_package_config_electron_mirror"</code>、<code>"ELECTRON_MIRROR"</code>这些属性。</p>
+<p>然而，如果我们使用<strong>npm</strong>进行安装的时候：</p>
+<pre style="background-color:#2b303b;color:#c0c5ce;"><code><span>npm install -D electron
+</span></code></pre>
+<p>又能够很快安装。Why？！难道npm和yarn下的运行环境有差异吗？为了验证，我们编写一个简单的index.js代码：</p>
+<pre data-lang="js" style="background-color:#2b303b;color:#c0c5ce;" class="language-js "><code class="language-js" data-lang="js"><span style="color:#ebcb8b;">console</span><span>.</span><span style="color:#96b5b4;">log</span><span>(&quot;</span><span style="color:#a3be8c;">process.env[&#39;npm_config_electron_mirror&#39;]</span><span>&quot;, process.env[&#39;</span><span style="color:#a3be8c;">npm_config_electron_mirror</span><span>&#39;]);
+</span><span style="color:#ebcb8b;">console</span><span>.</span><span style="color:#96b5b4;">log</span><span>(&quot;</span><span style="color:#a3be8c;">process.env[&#39;NPM_CONFIG_ELECTRON_MIRROR&#39;]</span><span>&quot;, process.env[&#39;</span><span style="color:#a3be8c;">NPM_CONFIG_ELECTRON_MIRROR</span><span>&#39;]);
+</span><span style="color:#ebcb8b;">console</span><span>.</span><span style="color:#96b5b4;">log</span><span>(&quot;</span><span style="color:#a3be8c;">process.env[&#39;npm_config_ELECTRON_MIRROR&#39;]</span><span>&quot;, process.env[&#39;</span><span style="color:#a3be8c;">npm_config_ELECTRON_MIRROR</span><span>&#39;]);
+</span></code></pre>
+<p>然后，在package.json中添加脚本：</p>
+<pre data-lang="diff" style="background-color:#2b303b;color:#c0c5ce;" class="language-diff "><code class="language-diff" data-lang="diff"><span>{
+</span><span>  &quot;name&quot;: &quot;simple-electron-main-app&quot;,
+</span><span>  &quot;version&quot;: &quot;1.0.0&quot;,
+</span><span>  &quot;scripts&quot;: {
+</span><span style="color:#a3be8c;">+   &quot;start&quot;: &quot;node index.js&quot;
+</span><span>  },
+</span><span>  &quot;devDependencies&quot;: {}
+</span><span>}
+</span></code></pre>
+<p>最后，我们分别使用yarn（<code>yarn start</code>）和npm（<code>npm run start</code>）来运行脚本：</p>
+<p><img src="https://static-res.zhen.wang/images/post/2023-05-22/130-yarn-and-npm-diff.png" alt="130-yarn-and-npm-diff" /></p>
+<p>在yarn运行上下文中，<code>.npmrc</code>中的<code>"ELECTRON_MIRROR"</code>直接拼接到了<code>"npm_config_"</code>后边，作为<code>process.env</code>的一个属性，所以你只能访问<code>process.env["npm_config_ELECTRON_MIRROR"]</code>得到值；</p>
+<p>在npm运行山下文中，<code>.npmrc</code>中的<code>"ELECTRON_MIRROR"</code>首先被转为了小写，然后拼接到了<code>"npm_config_"</code>后边，作为了<code>process.env</code>的属性，所以你需要访问<code>process.env["npm_config_electron_mirror"]</code>来得到值。</p>
+<h1 id="macosjie-jue-fang-shi">macOS解决方式</h1>
+<p>终于，我们能解释为什么当我们在<code>.npmrc</code>配置大写的<code>ELECTRON_MIRROR</code>的时候，使用<code>yarn add -D electron</code>安装electron的时候，二进制镜像地址没有生效了。那么，解决的办法也非常简单，两种：</p>
+<ol>
+<li><code>.npmrc</code>配置改为小写key：<code>electron_mirror="https://npmmirror.com/mirrors/electron/"</code>；</li>
+<li>使用<code>npm</code>上下文环境进行安装。</li>
+</ol>
+<p>个人更加建议按照第一种方式配置，不然大小写敏感的坑太容易发生了。</p>
+<h1 id="guan-yu-windowsde-te-bie-shuo-ming">关于Windows的特别说明</h1>
+<p><a rel="noopener" target="_blank" href="https://nodejs.cn/api/process/process_env.html">process.env | Node.js API 文档 (nodejs.cn)</a></p>
+<p>在 Windows 操作系统上，环境变量不区分大小写。</p>
+<pre data-lang="js" style="background-color:#2b303b;color:#c0c5ce;" class="language-js "><code class="language-js" data-lang="js"><span style="color:#b48ead;">const </span><span>{ </span><span style="color:#bf616a;">env </span><span>} = </span><span style="color:#96b5b4;">require</span><span>(&#39;</span><span style="color:#a3be8c;">node:process</span><span>&#39;);
+</span><span>
+</span><span style="color:#bf616a;">env</span><span>.</span><span style="color:#bf616a;">TEST </span><span>= </span><span style="color:#d08770;">1</span><span>;
+</span><span style="color:#ebcb8b;">console</span><span>.</span><span style="color:#96b5b4;">log</span><span>(</span><span style="color:#bf616a;">env</span><span>.</span><span style="color:#bf616a;">test</span><span>);
+</span><span style="color:#65737e;">// =&gt; 1
+</span></code></pre>
+<p>也就是说，在Windows机器上，即使<code>process.env</code>中的key为<code>"npm_config_ELECTRON_MIRROR"</code>，你也可以通过<code>"npm_config_electron_mirror"</code>或者是<code>"NPM_CONFIG_ELECTRON_MIRROR"</code>来访问这个值：</p>
+<p><img src="https://static-res.zhen.wang/images/post/2023-05-22/140-windows-npmrc.png" alt="140-windows-npmrc" /></p>
+<p><img src="https://static-res.zhen.wang/images/post/2023-05-22/150-process-env-Windows-output.png" alt="150-process-env-Windows-output" /></p>
+
+    </div>
+</div>
+<script src="https://zhen.wang/libs/viewerjs@1.11.7/viewer.min.js"></script>
+<link rel="stylesheet" href="https://zhen.wang/libs/viewerjs@1.11.7/viewer.min.css"/>
+<script>
+  if (window.Viewer) {
+    document.querySelectorAll('img').forEach(img => {
+      new Viewer(img, {
+        inline: false,
+        navbar: false,
+        toolbar: {
+          zoomIn: 1,
+          zoomOut: 1,
+          reset: 1,
+          rotateLeft: 1,
+          rotateRight: 1,
+        },
+      });
+    });
+  }
+</script>
+
+
+</body>
+</html>

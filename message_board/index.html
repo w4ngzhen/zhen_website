@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="utf-8">
+    <meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover"
+          name="viewport">
+    
+    
+    <!-- umami web analysis -->
+    <script defer src="https://zhen.wang/libs/umami/umami.script.js"
+            data-website-id="d66cfe03-f6b3-4aa0-baf8-728700db1b09"></script>
+    
+    
+    
+    <link rel="icon" type="image/png" sizes="16x16" href="https://zhen.wang/images/blog-site-icon.svg">
+    <link rel="icon" type="image/png" sizes="32x32" href="https://zhen.wang/images/blog-site-icon.svg">
+    <title>zhen&#x27;s everything</title>
+    <link rel="stylesheet" href="https://zhen.wang/style.css">
+    
+<link rel="stylesheet" href="https://zhen.wang/article_content.css">
+<link rel="stylesheet" href="https://zhen.wang/article_markdown.css">
+
+</head>
+<body>
+
+<div id="article">
+    <header class="article-header">
+        
+<div class="base-title">
+    <a href="#" onclick="history.length > 1 ? history.back() : location.href = '/'; return false;">&LeftArrow; Back</a>
+    <h1>
+        留言板
+    </h1>
+</div>
+
+    </header>
+    <div class="article-content markdown-content">
+        <blockquote>
+<p>如果我有足够的时间，我会写一封简短的信</p>
+</blockquote>
+<p>欢迎来到zhen的留言板，本留言评论系统，基于<a rel="noopener" target="_blank" href="https://github.com/w4ngzhen/come">come</a>搭建，请在这里畅所欲言。</p>
+
+    </div>
+</div>
+<div>
+    <div id="come_comment_box" style="border-top: 1px solid #e5e5e5;padding: 16px;"></div>
+</div>
+<script src="https://zhen.wang/libs/viewerjs@1.11.7/viewer.min.js"></script>
+<link rel="stylesheet" href="https://zhen.wang/libs/viewerjs@1.11.7/viewer.min.css"/>
+<script>
+  if (window.Viewer) {
+    document.querySelectorAll('img').forEach(img => {
+      new Viewer(img, {
+        inline: false,
+        navbar: false,
+        toolbar: {
+          zoomIn: 1,
+          zoomOut: 1,
+          reset: 1,
+          rotateLeft: 1,
+          rotateRight: 1,
+        },
+      });
+    });
+  }
+</script>
+<script src="https://zhen.wang/libs/come_comment_box/come_comment_box.js"></script>
+<link rel="stylesheet" href="https://zhen.wang/libs/come_comment_box/come_comment_box.css"/>
+<script>
+  (function run() {
+    if (!window.ComeCommentBox) {
+      console.error('cannot find ComeCommentBox in window');
+      return;
+    }
+    ComeCommentBox.init('#come_comment_box', {
+      siteKey: "zhen_website",
+      pageKey: "zhen_website@message_board",
+      serviceBaseUrl: "https://come-server.zhen.pro/client-api",
+    });
+  })();
+</script>
+
+</body>
+</html>

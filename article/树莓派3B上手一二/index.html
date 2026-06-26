@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="utf-8">
+    <meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover"
+          name="viewport">
+    
+    
+    <!-- umami web analysis -->
+    <script defer src="https://zhen.wang/libs/umami/umami.script.js"
+            data-website-id="d66cfe03-f6b3-4aa0-baf8-728700db1b09"></script>
+    
+    
+    
+    <link rel="icon" type="image/png" sizes="16x16" href="https://zhen.wang/images/blog-site-icon.svg">
+    <link rel="icon" type="image/png" sizes="32x32" href="https://zhen.wang/images/blog-site-icon.svg">
+    <title>zhen&#x27;s everything</title>
+    <link rel="stylesheet" href="https://zhen.wang/style.css">
+    
+<link rel="stylesheet" href="https://zhen.wang/article_content.css">
+<link rel="stylesheet" href="https://zhen.wang/article_markdown.css">
+
+</head>
+<body>
+
+<div id="article">
+    <header class="article-header">
+        
+<div class="base-title">
+    <a href="#" onclick="history.length > 1 ? history.back() : location.href = '/'; return false;">&LeftArrow; Back</a>
+    <h1>
+        树莓派3B上手一二
+    </h1>
+</div>
+
+    </header>
+    <p class="article-date">2018-04-12</p>
+    
+    <!-- real content -->
+    <div class="article-content markdown-content">
+        <p>早些时间心血来潮买过一个树莓派，但是当时只是玩一玩，买来按照网上的教程摆弄了一下就闲置了。最近毕业设计，做时序数据分析的相关的工作，刚好想起能够用到树莓派+Node-RED来生成模拟的时序数据。于是开始搭建相关的环境。特此记录一下。</p>
+<span id="continue-reading"></span>
+<p><strong>系统镜像下载</strong></p>
+<p>树莓派如今已是一个状态的生态圈。其本身有Linux定制的发行版树莓派系统。首先<a rel="noopener" target="_blank" href="https://www.raspberrypi.org/downloads/raspbian/">官网</a>去下载系统系统镜像：
+<img src="https://static-res.zhen.wang/images/post/2018-04-12-raspberry-system/officialwebsite.png" alt="officialwebsite" />
+上面有两个版本左边是带有图形界面的，右边是没有图形界面的。个人推荐不带图形界面的，既然是玩树莓派的，我想大多数还是有一定Linux基础的，真没有必要装图形界面。</p>
+<p>下载好以后我们能够看到压缩包中存在一个.img后缀的文件，这个就是系统镜像。</p>
+<p><strong>系统烧录</strong></p>
+<p>由于本人使用的macOS，所以接下来实际操作的都是在macOS环境下进行的，在windows下进行系统烧录，可以参考<a rel="noopener" target="_blank" href="https://blog.csdn.net/u012313335/article/details/53405734">这篇文章</a>。</p>
+<p>1）格式化SD卡</p>
+<p>这里我使用SD官方的SD格式化工具SD Card Formatter，<a rel="noopener" target="_blank" href="https://www.sdcard.org/chs/downloads/formatter_4/index.html">下载地址</a></p>
+<p>下载好以后，安装并打开该工具，然后插入SD卡，SD Card Formatter会自动识别插入的Sd卡，我们直接点击format进行格式化。
+<img src="https://static-res.zhen.wang/images/post/2018-04-12-raspberry-system/sdformat.png" alt="sdformat" />
+<img src="https://static-res.zhen.wang/images/post/2018-04-12-raspberry-system/formatsuccess.png" alt="formatsuccess" /></p>
+<p>2）烧录系统镜像</p>
+<p>在mac下烧录系统是很容易的，因为Linux/UNIX本身有相关的命令操作。</p>
+<p>首先在命令行我们使用命令df -h来显示目前的挂载情况
+这里稍微补充一下Linux/UNIX下的磁盘的命名规则：
+本人的mac只有一块磁盘就像下面的disk1，而后面的s1、s4则代表这块磁盘上的分区</p>
+<pre data-lang="shell" style="background-color:#2b303b;color:#c0c5ce;" class="language-shell "><code class="language-shell" data-lang="shell"><span>$ df -h  # 我只粘贴了有代表性的输出
+</span><span>Filesystem                        Size   Used  Avail Capacity iused               ifree %iused  Mounted on
+</span><span>/dev/disk1s1                     234Gi   99Gi  132Gi    43% 1230474 9223372036853545333    0%   /
+</span><span>/dev/disk1s4                     234Gi  2.0Gi  132Gi     2%       2 9223372036854775805    0%   /private/var/vm
+</span><span># 重点是下面这一个条
+</span><span>/dev/disk3s1                      15Gi  2.4Mi   15Gi     1%       0                   0  100%   /Volumes/BOOT
+</span></code></pre>
+<p>上面的disk3则是我们的SD的磁盘，并且，只有一个分区s1，我们还可以看到容量为15Gi就是我们预期的格式化好了之后的容量。当然，既然这里能够显示则说明，这些磁盘我们已经挂载好了。接下来首先需要取消挂载：</p>
+<pre data-lang="shell" style="background-color:#2b303b;color:#c0c5ce;" class="language-shell "><code class="language-shell" data-lang="shell"><span># 千万注意一定要取消挂载正确的磁盘！不要把你的mac磁盘给取消挂载了：）
+</span><span># 另外，请记住disk3s1这个名称，后面要用
+</span><span>$ diskutil unmount /dev/disk3s1
+</span><span>Volume BOOT on disk3s1 unmounted
+</span><span># 这个时候再df发现我们的SD已经不再显示里面了，说明卸载成功
+</span></code></pre>
+<p>接下来进行正式的烧录，使用dd命令将系统镜像写入，需要特别特别注意disk后的数字，不能搞错！/dev/disk3s1是分区，/dev/disk3是块设备，/dev/rdisk3是原始字符设备
+我们接下来就是要吧镜像烧录到原始字符设备</p>
+<pre data-lang="shell" style="background-color:#2b303b;color:#c0c5ce;" class="language-shell "><code class="language-shell" data-lang="shell"><span># 下面dd用于将系统镜像写入
+</span><span># bs代表了文件系统的页大小这里设置为4m
+</span><span># if=后面接上镜像文件的对应路径
+</span><span># of=后面接上原始字符设备的路径，因为上面是我们卸载之前是disk3s1，所以这里就是rdisk3
+</span><span>
+</span><span>$ sudo dd bs=4m if=(镜像存放路径)/XXX.img of=/dev/rdisk3
+</span><span>
+</span><span># 不放心可以在命令行末尾双击tab会出现类似下面的输出
+</span><span># rdisk3    rdisk3s1
+</span></code></pre>
+<p>回车开始烧录，这个过程按机器的差异时间会有所不同。烧录完成以后会出现下面的输出：</p>
+<pre data-lang="shell" style="background-color:#2b303b;color:#c0c5ce;" class="language-shell "><code class="language-shell" data-lang="shell"><span>443+0 records in
+</span><span>443+0 records out
+</span><span>1858076672 bytes transferred in 237.453302 secs (7825019 bytes/sec)
+</span></code></pre>
+<p>至此，树莓派系统的烧录工作就完成了。<strong>补充</strong>：为了方便以后的SSH连接树莓派，完成树莓派的系统烧录之后，先别着急推出SD，打开SD卡（通常在桌面），我们在系统目录下创建一个名为SSH（大写，没有文件后缀）的文件，以供树莓派开启SSH。</p>
+<p>命令行下如何进入SD卡？所有挂载的外部设备都会在/Volumes下查创建对应的文件夹：</p>
+<pre data-lang="shell" style="background-color:#2b303b;color:#c0c5ce;" class="language-shell "><code class="language-shell" data-lang="shell"><span>$ cd /Volumes
+</span><span>$ ls -l
+</span><span>lrwxr-xr-x  1 root  wheel     1  4  8 10:59 Macintosh HD -&gt; /
+</span><span>drwxr-xr-x+ 3 root  wheel    96 11 11 15:22 Preboot
+</span><span>drwxrwxrwx@ 1 zhen  staff  2560  4 12 10:30 boot # 这个boot名称的设备就是SD卡
+</span></code></pre>
+<p>至此，系统初始化工作完全搞定。</p>
+<p><strong>登陆系统</strong></p>
+<p>以下的操作我们都是在没有显示器的情况下进入树莓派系统，如果你本身有外接显示器，自然不需要这么麻烦，连接然后开机就行了：）</p>
+<p>树莓派3B本身带有wifi模块，但是，如果要开启首先你需要进入系统进行配置：），所以最开始你需要有线连接树莓派</p>
+<p>理论上，mac在有以太网转雷电或者是转USB情况下，我们可以通过网线直连树莓派和mac，但是本身尝试了多次发现就是发现不了同一网段的树莓派（树莓派都给mac分配了IP地址了），猜测macOS High Serria安全性增强了？这个坑以后在研究一下，填了。</p>
+<p>另外一种是路由器组网方式
+<img src="https://static-res.zhen.wang/images/post/2018-04-12-raspberry-system/topology.png" alt="topology" />
+按照这样的连接，你的mac和树莓派都在同一网段中，同时你还可以登陆路由器的管理界面去查看树莓派分配到的IP地址，然后通过ssh连接树莓派。</p>
+<p>组网完成以后，登陆网关，找到设备管理（不同品牌的路由器界面不同，道理上类似）
+<img src="https://static-res.zhen.wang/images/post/2018-04-12-raspberry-system/alldevice.png" alt="alldevice" />
+<img src="https://static-res.zhen.wang/images/post/2018-04-12-raspberry-system/netgate.png" alt="netgate" />
+可以看到我们的树莓派已经分配到了IP，然后我们直接通过命令行登陆：</p>
+<pre data-lang="shell" style="background-color:#2b303b;color:#c0c5ce;" class="language-shell "><code class="language-shell" data-lang="shell"><span>$ ssh pi@192.168.1.100
+</span><span># 注意默认的用户名和密码分别为pi和raspberry
+</span><span>
+</span><span># 将树莓派加入到已识别的主机中
+</span><span>The authenticity of host &#39;192.168.1.100 (192.168.1.100)&#39; can&#39;t be established.
+</span><span>ECDSA key fingerprint is SHA256:p1UPTb5aXIOUiiqdpdaP/e2MV+vbkZJVey0wCYOUEJE.
+</span><span>Are you sure you want to continue connecting (yes/no)? yes
+</span><span>
+</span><span># 输入密码，看到一堆信息之后，我们成功进入系统
+</span><span>pi@raspberrypi:~ $
+</span></code></pre>
+<p>注意：由于我们使用的lite版的树莓派系统，vi使用过程中会出现上下左右方向键成为ABCD等字符，同时mac上的delete（windows上是backspace）都会失效，我们要进行如下的操作：</p>
+<pre data-lang="shell" style="background-color:#2b303b;color:#c0c5ce;" class="language-shell "><code class="language-shell" data-lang="shell"><span># 1、编辑/etc/vim/vimrc.tiny
+</span><span>$ sudo vi /etc/vim/vimrc.tiny
+</span><span># 将 set compatible 改为 set nocompatible 这里解决方向键ABCD问题
+</span><span># 2、依旧在该文件中添加 set backspace=2 解决删除问题
+</span><span># :wq保存
+</span></code></pre>
+<p><strong>打开wifi模块</strong></p>
+<p>首先我们扫描当前环境中能够找到的wifi</p>
+<pre data-lang="shell" style="background-color:#2b303b;color:#c0c5ce;" class="language-shell "><code class="language-shell" data-lang="shell"><span>$ sudo iwlist wlan0 scan # 此步骤非必须，如果你本来就知道wifi名称就可以不用扫描
+</span><span># 如果当前环境中有很多会出现类似下面的格式的信息：
+</span><span>Cell 10 - Address: 94:D9:B3:15:7F:28
+</span><span>                    Channel:6
+</span><span>                    Frequency:2.437 GHz (Channel 6)
+</span><span>                    Quality=70/70  Signal level=-16 dBm
+</span><span>                    Encryption key:on
+</span><span>                    ESSID:&quot;210&quot;
+</span><span>                    Bit Rates:1 Mb/s; 2 Mb/s; 5.5 Mb/s; 11 Mb/s; 6 Mb/s
+</span><span>                              9 Mb/s; 12 Mb/s; 18 Mb/s
+</span><span>                    Bit Rates:24 Mb/s; 36 Mb/s; 48 Mb/s; 54 Mb/s
+</span><span>                    Mode:Master
+</span><span>...
+</span><span># 我删除很多不重要的输出信息，这里重点看ESSID，这个就是wifi名称。
+</span><span># 接下来我们需要在下面的文件中开启它：
+</span><span>
+</span><span>$ sudo vi /etc/wpa_supplicant/wpa_supplicant.conf
+</span><span># 添加如下的信息
+</span><span>network={
+</span><span>        ssid=&quot;你的Wi-Fi名称&quot;
+</span><span>        psk=&quot;Wi-Fi密码&quot;
+</span><span>}
+</span><span># 如果有多个wifi，你可以创建多个network
+</span></code></pre>
+<p>最后一步，首先请重启（$ sudo reboot）树莓派，然后拔掉网线，通过mac登陆网关，你会发现树莓派已经通过wifi连接到了。下面两款设备都是wifi连接的。
+<img src="https://static-res.zhen.wang/images/post/2018-04-12-raspberry-system/twowifi.png" alt="twowifi" />
+此外，由于lite版本，树莓派不具备vim，所以需要我们手动下载：</p>
+<pre data-lang="shell" style="background-color:#2b303b;color:#c0c5ce;" class="language-shell "><code class="language-shell" data-lang="shell"><span># 首先移除掉旧的vi
+</span><span>$ sudo apt-get remove -y vim-common
+</span><span># 然后安装vim
+</span><span>$ sudo apt-get install -y vim
+</span></code></pre>
+<p>接下来在用户目录下打开（没有就创建）.vimrc，并添加如下的vim配置</p>
+<pre data-lang="shell" style="background-color:#2b303b;color:#c0c5ce;" class="language-shell "><code class="language-shell" data-lang="shell"><span>$ vim ~/.vimrc
+</span><span># 添加：
+</span><span>set nocompatible &quot;不兼容vi
+</span><span>set nu &quot;显示行号
+</span><span>set nowrap &quot;不自动折行
+</span><span>set scrolloff=3 &quot;距离顶部底部3行
+</span><span>hi MatchParen ctermbg=DarkRed guibg=lightblue
+</span><span>set encoding=utf-8 &quot;编码方式
+</span><span>set fenc=utf-8 &quot;存储时候的编码方式
+</span><span>set hlsearch &quot;搜索高亮
+</span><span>syntax on &quot;语法高亮
+</span><span>set ts=4 &quot;一个tab长度为4
+</span><span>set expandtab &quot;tab替换为空格（配合上面即一个tab四个空格）
+</span><span>set autoindent &quot;自动缩进
+</span></code></pre>
+<p>至此，树莓派的初始环境已经OK！</p>
+
+    </div>
+</div>
+<script src="https://zhen.wang/libs/viewerjs@1.11.7/viewer.min.js"></script>
+<link rel="stylesheet" href="https://zhen.wang/libs/viewerjs@1.11.7/viewer.min.css"/>
+<script>
+  if (window.Viewer) {
+    document.querySelectorAll('img').forEach(img => {
+      new Viewer(img, {
+        inline: false,
+        navbar: false,
+        toolbar: {
+          zoomIn: 1,
+          zoomOut: 1,
+          reset: 1,
+          rotateLeft: 1,
+          rotateRight: 1,
+        },
+      });
+    });
+  }
+</script>
+
+
+</body>
+</html>

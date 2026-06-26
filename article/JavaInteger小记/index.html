@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="utf-8">
+    <meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover"
+          name="viewport">
+    
+    
+    <!-- umami web analysis -->
+    <script defer src="https://zhen.wang/libs/umami/umami.script.js"
+            data-website-id="d66cfe03-f6b3-4aa0-baf8-728700db1b09"></script>
+    
+    
+    
+    <link rel="icon" type="image/png" sizes="16x16" href="https://zhen.wang/images/blog-site-icon.svg">
+    <link rel="icon" type="image/png" sizes="32x32" href="https://zhen.wang/images/blog-site-icon.svg">
+    <title>zhen&#x27;s everything</title>
+    <link rel="stylesheet" href="https://zhen.wang/style.css">
+    
+<link rel="stylesheet" href="https://zhen.wang/article_content.css">
+<link rel="stylesheet" href="https://zhen.wang/article_markdown.css">
+
+</head>
+<body>
+
+<div id="article">
+    <header class="article-header">
+        
+<div class="base-title">
+    <a href="#" onclick="history.length > 1 ? history.back() : location.href = '/'; return false;">&LeftArrow; Back</a>
+    <h1>
+        Java中的Integer
+    </h1>
+</div>
+
+    </header>
+    <p class="article-date">2017-08-22</p>
+    
+    <!-- real content -->
+    <div class="article-content markdown-content">
+        <span id="continue-reading"></span>
+<p>众所周知，在Java中，存在着值比较与应用比较两种情况。例如，如下的比较，可以根据值比较与引用比较来跟容易的判断出结果来：</p>
+<pre data-lang="java" style="background-color:#2b303b;color:#c0c5ce;" class="language-java "><code class="language-java" data-lang="java"><span style="color:#b48ead;">int</span><span> a = </span><span style="color:#d08770;">123</span><span>;
+</span><span style="color:#b48ead;">int</span><span> b = </span><span style="color:#d08770;">123</span><span>;
+</span><span style="color:#ebcb8b;">String</span><span> s1 = </span><span style="color:#b48ead;">new </span><span style="color:#ebcb8b;">String</span><span>(&quot;</span><span style="color:#a3be8c;">123</span><span>&quot;);
+</span><span style="color:#ebcb8b;">String</span><span> s2 = </span><span style="color:#b48ead;">new </span><span style="color:#ebcb8b;">String</span><span>(&quot;</span><span style="color:#a3be8c;">123</span><span>&quot;);
+</span><span style="color:#ebcb8b;">System</span><span>.out.</span><span style="color:#bf616a;">println</span><span>(a == b); </span><span style="color:#65737e;">//true
+</span><span style="color:#ebcb8b;">System</span><span>.out.</span><span style="color:#bf616a;">println</span><span>(s1 == s2); </span><span style="color:#65737e;">//false
+</span></code></pre>
+<p>这里，a与b由于是基本类型，所以Java在比较的时候直接就是按值来比较，而下面的s1与s2则是由于分别指向内容为“123”的字符串对象引用（关于string的细节，见本人的另一篇文章），而这两个字符串的地址并不一样，所以结果是false。</p>
+<p>那么，今天要讨论的是，对于Java自动拆装箱的问题的深入探讨。如下所示，请问结果是什么呢？</p>
+<pre data-lang="java" style="background-color:#2b303b;color:#c0c5ce;" class="language-java "><code class="language-java" data-lang="java"><span style="color:#ebcb8b;">Integer</span><span> a = </span><span style="color:#d08770;">666</span><span>;
+</span><span style="color:#ebcb8b;">Integer</span><span> b = </span><span style="color:#d08770;">666</span><span>;
+</span><span style="color:#ebcb8b;">System</span><span>.out.</span><span style="color:#bf616a;">println</span><span>(a == b);
+</span></code></pre>
+<p>结果是false，您可能会说，这有什么好问的，Integer对象的比较，引用的比较，而这两个只是值相同，而对象不同的Integer对象罢了，所以当然为false。好，那么我再问你，下面的结果是什么？</p>
+<pre data-lang="java" style="background-color:#2b303b;color:#c0c5ce;" class="language-java "><code class="language-java" data-lang="java"><span style="color:#ebcb8b;">Integer</span><span> a = </span><span style="color:#d08770;">100</span><span>;
+</span><span style="color:#ebcb8b;">Integer</span><span> b = </span><span style="color:#d08770;">100</span><span>;
+</span><span style="color:#ebcb8b;">System</span><span>.out.</span><span style="color:#bf616a;">println</span><span>(a == b);
+</span></code></pre>
+<p>您可能说，哇，当我傻吗，当然还是false了。可是，结果是true。</p>
+<p>为什么同样的情况下，当值变小了，结果就变为true了呢。</p>
+<p>其实，Java中，对于可装箱的对象类型，都存在一个1字节的范围：-128到127。在这个范围类的数字，Java认为是常用的数字，所以自动进行了值比较，而不是进行引用的比较。所以，无论是Long还是Integer，只有你的值在-128到127，这两个对象的比较直接按照其所存储的值来进行。就像如下的情况：</p>
+<pre data-lang="java" style="background-color:#2b303b;color:#c0c5ce;" class="language-java "><code class="language-java" data-lang="java"><span style="color:#ebcb8b;">Integer</span><span> a = </span><span style="color:#d08770;">128</span><span>;
+</span><span style="color:#ebcb8b;">Integer</span><span> b = </span><span style="color:#d08770;">128</span><span>;
+</span><span style="color:#ebcb8b;">Integer</span><span> c = </span><span style="color:#d08770;">127</span><span>;
+</span><span style="color:#ebcb8b;">Integer</span><span> d = </span><span style="color:#d08770;">127</span><span>;
+</span><span style="color:#ebcb8b;">Long</span><span> e = -</span><span style="color:#d08770;">129</span><span style="color:#b48ead;">L</span><span>;
+</span><span style="color:#ebcb8b;">Long</span><span> f = -</span><span style="color:#d08770;">129</span><span style="color:#b48ead;">L</span><span>;
+</span><span style="color:#ebcb8b;">Long</span><span> g = -</span><span style="color:#d08770;">128</span><span style="color:#b48ead;">L</span><span>;
+</span><span style="color:#ebcb8b;">Long</span><span> h = -</span><span style="color:#d08770;">128</span><span style="color:#b48ead;">L</span><span>;
+</span><span style="color:#ebcb8b;">System</span><span>.out.</span><span style="color:#bf616a;">println</span><span>(a == b); </span><span style="color:#65737e;">//false
+</span><span style="color:#ebcb8b;">System</span><span>.out.</span><span style="color:#bf616a;">println</span><span>(c == d); </span><span style="color:#65737e;">//true
+</span><span style="color:#ebcb8b;">System</span><span>.out.</span><span style="color:#bf616a;">println</span><span>(e == f); </span><span style="color:#65737e;">//false
+</span><span style="color:#ebcb8b;">System</span><span>.out.</span><span style="color:#bf616a;">println</span><span>(g == h); </span><span style="color:#65737e;">//true
+</span></code></pre>
+
+    </div>
+</div>
+<script src="https://zhen.wang/libs/viewerjs@1.11.7/viewer.min.js"></script>
+<link rel="stylesheet" href="https://zhen.wang/libs/viewerjs@1.11.7/viewer.min.css"/>
+<script>
+  if (window.Viewer) {
+    document.querySelectorAll('img').forEach(img => {
+      new Viewer(img, {
+        inline: false,
+        navbar: false,
+        toolbar: {
+          zoomIn: 1,
+          zoomOut: 1,
+          reset: 1,
+          rotateLeft: 1,
+          rotateRight: 1,
+        },
+      });
+    });
+  }
+</script>
+
+
+</body>
+</html>

@@ -1,0 +1,706 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="utf-8">
+    <meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover"
+          name="viewport">
+    
+    
+    <!-- umami web analysis -->
+    <script defer src="https://zhen.wang/libs/umami/umami.script.js"
+            data-website-id="d66cfe03-f6b3-4aa0-baf8-728700db1b09"></script>
+    
+    
+    
+    <link rel="icon" type="image/png" sizes="16x16" href="https://zhen.wang/images/blog-site-icon.svg">
+    <link rel="icon" type="image/png" sizes="32x32" href="https://zhen.wang/images/blog-site-icon.svg">
+    <title>zhen&#x27;s everything</title>
+    <link rel="stylesheet" href="https://zhen.wang/style.css">
+    
+<link rel="stylesheet" href="https://zhen.wang/article_content.css">
+<link rel="stylesheet" href="https://zhen.wang/article_markdown.css">
+
+</head>
+<body>
+
+<div id="article">
+    <header class="article-header">
+        
+<div class="base-title">
+    <a href="#" onclick="history.length > 1 ? history.back() : location.href = '/'; return false;">&LeftArrow; Back</a>
+    <h1>
+        TypeScript与Babel、webpack的关系以及IDE对TS的类型检查
+    </h1>
+</div>
+
+    </header>
+    <p class="article-date">2022-08-14</p>
+    
+    <!-- toc -->
+    <div class="article-toc">
+        <label class="toc-title" for="toc-trigger">目录</label>
+        <input id="toc-trigger" type="checkbox" checked/>
+        <div class="toc-content">
+            <ol class="toc">
+                
+                <li class="toc-item toc-level-1">
+                    <a class="toc-link" href="https://zhen.wang/article/TypeScript与Babel、webpack的关系以及IDE对TS的类型检查/#typescriptji-ben-ren-shi">TypeScript基本认识</a>
+                    
+                </li>
+                
+                <li class="toc-item toc-level-1">
+                    <a class="toc-link" href="https://zhen.wang/article/TypeScript与Babel、webpack的关系以及IDE对TS的类型检查/#bian-yi-tsde-fang-shi">编译TS的方式</a>
+                    
+                    <ol class="toc-child">
+                        
+                        <li class="toc-item toc-level-2">
+                            <a href="https://zhen.wang/article/TypeScript与Babel、webpack的关系以及IDE对TS的类型检查/#guan-fang-tscbian-yi-qi">官方tsc编译器</a>
+                        </li>
+                        
+                        <li class="toc-item toc-level-2">
+                            <a href="https://zhen.wang/article/TypeScript与Babel、webpack的关系以及IDE对TS的类型检查/#babel-tscha-jian">babel+ts插件</a>
+                        </li>
+                        
+                    </ol>
+                    
+                </li>
+                
+                <li class="toc-item toc-level-1">
+                    <a class="toc-link" href="https://zhen.wang/article/TypeScript与Babel、webpack的关系以及IDE对TS的类型检查/#webpackxiang-mu-ji-tsshi-yong">webpack项目级TS使用</a>
+                    
+                    <ol class="toc-child">
+                        
+                        <li class="toc-item toc-level-2">
+                            <a href="https://zhen.wang/article/TypeScript与Babel、webpack的关系以及IDE对TS的类型检查/#ts-loader">ts-loader</a>
+                        </li>
+                        
+                        <li class="toc-item toc-level-2">
+                            <a href="https://zhen.wang/article/TypeScript与Babel、webpack的关系以及IDE对TS的类型检查/#babel-loader">babel-loader</a>
+                        </li>
+                        
+                    </ol>
+                    
+                </li>
+                
+                <li class="toc-item toc-level-1">
+                    <a class="toc-link" href="https://zhen.wang/article/TypeScript与Babel、webpack的关系以及IDE对TS的类型检查/#tscyu-babelbian-yi-de-chai-yi">tsc与babel编译的差异</a>
+                    
+                    <ol class="toc-child">
+                        
+                        <li class="toc-item toc-level-2">
+                            <a href="https://zhen.wang/article/TypeScript与Babel、webpack的关系以及IDE对TS的类型检查/#ts-loader-1">ts-loader</a>
+                        </li>
+                        
+                        <li class="toc-item toc-level-2">
+                            <a href="https://zhen.wang/article/TypeScript与Babel、webpack的关系以及IDE对TS的类型检查/#babel-loader-1">babel-loader</a>
+                        </li>
+                        
+                    </ol>
+                    
+                </li>
+                
+                <li class="toc-item toc-level-1">
+                    <a class="toc-link" href="https://zhen.wang/article/TypeScript与Babel、webpack的关系以及IDE对TS的类型检查/#zhu-liu-idedui-typescriptde-lei-xing-jian-cha">主流IDE对TypeScript的类型检查</a>
+                    
+                </li>
+                
+            </ol>
+        </div>
+    </div>
+    
+    <!-- real content -->
+    <div class="article-content markdown-content">
+        <p>只要接触过ts的前端同学都能回答出ts是js超集，它具备静态类型分析，能够根据类型在静态代码的解析过程中对ts代码进行类型检查，从而在保证类型的一致性。那，现在让你对你的webpack项目（其实任意类型的项目都同理）加入ts，你知道怎么做吗？带着这个问题，我们由浅入深，逐步介绍<strong>TypeScript</strong>、<strong>Babel</strong>以及<strong>我们日常使用IDE进行ts文件类型检查</strong>的关系，让你今后面对基于ts的工程能够做到游刃有余。</p>
+<span id="continue-reading"></span><h1 id="typescriptji-ben-ren-shi">TypeScript基本认识</h1>
+<p><strong>原则1：主流的浏览器的主流版本只认识js代码</strong></p>
+<p><strong>原则2：ts的代码一定会经过编译为js代码，才能运行在主流浏览器上</strong></p>
+<p>要编译ts代码，至少具备以下几个要素：</p>
+<ol>
+<li>ts源代码</li>
+<li>ts编译器</li>
+<li>ts编译器所需要的配置（默认配置也是配置）</li>
+</ol>
+<h1 id="bian-yi-tsde-fang-shi">编译TS的方式</h1>
+<p>目前主流的ts编译方案有2种，分别是官方tsc编译、babel+ts插件编译。</p>
+<h2 id="guan-fang-tscbian-yi-qi">官方tsc编译器</h2>
+<p>对于ts官方模式来说，ts编译器就是tsc（安装typescript就可以获得），而编译器所需的配置就是tsconfig.json配置文件形式或其他形式。ts源代码经过tsc的编译（Compile），就可以生成js代码，在tsc编译的过程中，需要<strong>编译配置</strong>来确定一些编译过程中要处理的内容。</p>
+<p><img src="https://static-res.zhen.wang/images/post/2022-08-14/010-ts-compile-flow.png" alt="010-ts-compile-flow" /></p>
+<p>我们首先准备一个ts-demo，该demo中有如下的结构：</p>
+<pre style="background-color:#2b303b;color:#c0c5ce;"><code><span>ts-demo
+</span><span> |- packages.json
+</span><span> |- tsconfig.json
+</span><span> |- src
+</span><span>    |- index.ts
+</span></code></pre>
+<p>安装typescript</p>
+<pre style="background-color:#2b303b;color:#c0c5ce;"><code><span>yarn add -D typescript
+</span></code></pre>
+<p>package.json</p>
+<pre data-lang="json" style="background-color:#2b303b;color:#c0c5ce;" class="language-json "><code class="language-json" data-lang="json"><span>{
+</span><span>  &quot;</span><span style="color:#a3be8c;">name</span><span>&quot;: &quot;</span><span style="color:#a3be8c;">ts-demo</span><span>&quot;,
+</span><span>  &quot;</span><span style="color:#a3be8c;">version</span><span>&quot;: &quot;</span><span style="color:#a3be8c;">1.0.0</span><span>&quot;,
+</span><span>  &quot;</span><span style="color:#a3be8c;">description</span><span>&quot;: &quot;&quot;,
+</span><span>  &quot;</span><span style="color:#a3be8c;">main</span><span>&quot;: &quot;</span><span style="color:#a3be8c;">index.js</span><span>&quot;,
+</span><span>  &quot;</span><span style="color:#a3be8c;">scripts</span><span>&quot;: {
+</span><span>    &quot;</span><span style="color:#a3be8c;">build-ts</span><span>&quot;: &quot;</span><span style="color:#a3be8c;">tsc</span><span>&quot;
+</span><span>  },
+</span><span>  &quot;</span><span style="color:#a3be8c;">author</span><span>&quot;: &quot;&quot;,
+</span><span>  &quot;</span><span style="color:#a3be8c;">license</span><span>&quot;: &quot;</span><span style="color:#a3be8c;">MIT</span><span>&quot;,
+</span><span>  &quot;</span><span style="color:#a3be8c;">devDependencies</span><span>&quot;: {
+</span><span>    &quot;</span><span style="color:#a3be8c;">typescript</span><span>&quot;: &quot;</span><span style="color:#a3be8c;">^4.7.4</span><span>&quot;
+</span><span>  }
+</span><span>}
+</span></code></pre>
+<p>tsconfig.js（对于这个简单的tsconfig，我不再赘述其配置的含义。）</p>
+<pre data-lang="json" style="background-color:#2b303b;color:#c0c5ce;" class="language-json "><code class="language-json" data-lang="json"><span>{
+</span><span>  &quot;</span><span style="color:#a3be8c;">compilerOptions</span><span>&quot;: {
+</span><span>    &quot;</span><span style="color:#a3be8c;">module</span><span>&quot;: &quot;</span><span style="color:#a3be8c;">commonjs</span><span>&quot;,
+</span><span>    &quot;</span><span style="color:#a3be8c;">rootDir</span><span>&quot;: &quot;</span><span style="color:#a3be8c;">./src</span><span>&quot;,
+</span><span>    &quot;</span><span style="color:#a3be8c;">outDir</span><span>&quot;: &quot;</span><span style="color:#a3be8c;">./dist</span><span>&quot;
+</span><span>  }
+</span><span>}
+</span></code></pre>
+<p>index.ts</p>
+<pre data-lang="typescript" style="background-color:#2b303b;color:#c0c5ce;" class="language-typescript "><code class="language-typescript" data-lang="typescript"><span style="color:#b48ead;">interface </span><span>User {
+</span><span>    </span><span style="color:#bf616a;">name</span><span>: string;
+</span><span>    </span><span style="color:#bf616a;">age</span><span>: number;
+</span><span>}
+</span><span style="color:#b48ead;">const </span><span style="color:#8fa1b3;">userToString </span><span>= (</span><span style="color:#bf616a;">user</span><span>: User) </span><span style="color:#b48ead;">=&gt; </span><span>`</span><span style="color:#a3be8c;">${</span><span style="color:#bf616a;">user</span><span style="color:#a3be8c;">.name}@${</span><span style="color:#bf616a;">user</span><span style="color:#a3be8c;">.</span><span style="color:#bf616a;">age</span><span style="color:#a3be8c;">}</span><span>`;
+</span><span style="color:#b48ead;">export </span><span>{</span><span style="color:#bf616a;">userToString</span><span>, </span><span style="color:#bf616a;">User</span><span>};
+</span></code></pre>
+<p>此时，我们只需要运行<code>yarn build-ts</code>就可以将我们的index.ts编译为index.js：</p>
+<p>commonjs模块化方式产物：</p>
+<pre data-lang="js" style="background-color:#2b303b;color:#c0c5ce;" class="language-js "><code class="language-js" data-lang="js"><span>&quot;</span><span style="color:#a3be8c;">use strict</span><span>&quot;;
+</span><span>exports.</span><span style="color:#bf616a;">__esModule </span><span>= </span><span style="color:#d08770;">true</span><span>;
+</span><span>exports.</span><span style="color:#bf616a;">userToString </span><span>= void </span><span style="color:#d08770;">0</span><span>;
+</span><span style="color:#b48ead;">var </span><span style="color:#8fa1b3;">userToString </span><span>= </span><span style="color:#b48ead;">function </span><span>(</span><span style="color:#bf616a;">user</span><span>) { </span><span style="color:#b48ead;">return </span><span>&quot;&quot;.</span><span style="color:#96b5b4;">concat</span><span>(</span><span style="color:#bf616a;">user</span><span>.name, &quot;</span><span style="color:#a3be8c;">@</span><span>&quot;).</span><span style="color:#96b5b4;">concat</span><span>(</span><span style="color:#bf616a;">user</span><span>.</span><span style="color:#bf616a;">age</span><span>); };
+</span><span>exports.</span><span style="color:#bf616a;">userToString </span><span>= </span><span style="color:#bf616a;">userToString</span><span>;
+</span></code></pre>
+<p>可以看到，原本index.ts编译为index.js的产物，使用了commonjs模块化方案（tsconfig里面配置模块化方案是"commonjs"，编译后的代码可以看到"exports"的身影）；倘若我们将模块化方案改为ESM（ES模块化）的es：<code>"module": "es6"</code>，编译后的产物依然是index.js，只不过内容采用了es6中的模块方案。</p>
+<p>es6模块化方式产物：</p>
+<pre data-lang="js" style="background-color:#2b303b;color:#c0c5ce;" class="language-js "><code class="language-js" data-lang="js"><span style="color:#b48ead;">var </span><span style="color:#8fa1b3;">userToString </span><span>= </span><span style="color:#b48ead;">function </span><span>(</span><span style="color:#bf616a;">user</span><span>) {
+</span><span>  </span><span style="color:#b48ead;">return </span><span>&quot;&quot;.</span><span style="color:#96b5b4;">concat</span><span>(</span><span style="color:#bf616a;">user</span><span>.name, &quot;</span><span style="color:#a3be8c;">@</span><span>&quot;).</span><span style="color:#96b5b4;">concat</span><span>(</span><span style="color:#bf616a;">user</span><span>.</span><span style="color:#bf616a;">age</span><span>);
+</span><span>};
+</span><span style="color:#b48ead;">export </span><span>{</span><span style="color:#bf616a;">userToString</span><span>};
+</span></code></pre>
+<p>说了这么多，只是想要告诉各位同学，<strong>ts无论有多么庞大的语法体系，多么强大的类型检查，最终的产物都是js</strong>。</p>
+<p>此外，ts中的模块化，不能和js中的模块化混为一谈。js中的模块化方案很多（es6、commonjs、umd等等），所以ts本身在编译过程中，需要指定一种js的模块化表达，才能编译为对应的代码。也就是说，在ts中的<code>import/export</code>，不能认为和es6的<code>import/export</code>是一样的，他们是完全不同的两个体系！只是语法上类似而已。</p>
+<h2 id="babel-tscha-jian">babel+ts插件</h2>
+<p>如前文所述</p>
+<blockquote>
+<p>ts源代码经过tsc的编译（Compile），就可以生成js代码，在tsc编译的过程中，需要编译配置来确定一些编译过程中要处理的内容。</p>
+</blockquote>
+<p>那么是不是说，编译器这块是不是有其他的代替呢？ts源码经过某种其他的编译器编译后，生成目标js代码。答案是肯定的：babel。</p>
+<p>我们准备一个ts-babel-demo：</p>
+<pre style="background-color:#2b303b;color:#c0c5ce;"><code><span>ts-babel-demo
+</span><span> |- packages.json
+</span><span> |- .babelrc
+</span><span> |- src
+</span><span>    |- index.ts
+</span></code></pre>
+<p>依赖添加：</p>
+<pre data-lang="shell" style="background-color:#2b303b;color:#c0c5ce;" class="language-shell "><code class="language-shell" data-lang="shell"><span> yarn add -D @babel/core @babel/cli
+</span><span> yarn add -D @babel/preset-env @babel/preset-typescript
+</span><span> yarn add -D @babel/plugin-proposal-class-properties @babel/plugin-proposal-object-rest-spread
+</span></code></pre>
+<p>package.json：</p>
+<pre data-lang="json" style="background-color:#2b303b;color:#c0c5ce;" class="language-json "><code class="language-json" data-lang="json"><span>{
+</span><span>  &quot;</span><span style="color:#a3be8c;">name</span><span>&quot;: &quot;</span><span style="color:#a3be8c;">ts-babel-demo</span><span>&quot;,
+</span><span>  &quot;</span><span style="color:#a3be8c;">version</span><span>&quot;: &quot;</span><span style="color:#a3be8c;">1.0.0</span><span>&quot;,
+</span><span>  &quot;</span><span style="color:#a3be8c;">main</span><span>&quot;: &quot;</span><span style="color:#a3be8c;">index.js</span><span>&quot;,
+</span><span>  &quot;</span><span style="color:#a3be8c;">license</span><span>&quot;: &quot;</span><span style="color:#a3be8c;">MIT</span><span>&quot;,
+</span><span>  &quot;</span><span style="color:#a3be8c;">private</span><span>&quot;: </span><span style="color:#d08770;">true</span><span>,
+</span><span>  &quot;</span><span style="color:#a3be8c;">scripts</span><span>&quot;: {
+</span><span>    &quot;</span><span style="color:#a3be8c;">build</span><span>&quot;: &quot;</span><span style="color:#a3be8c;">babel src -d dist -x &#39;.ts, .tsx&#39;</span><span>&quot;
+</span><span>  },
+</span><span>  &quot;</span><span style="color:#a3be8c;">devDependencies</span><span>&quot;: {
+</span><span>    &quot;</span><span style="color:#a3be8c;">@babel/cli</span><span>&quot;: &quot;</span><span style="color:#a3be8c;">^7.18.10</span><span>&quot;,
+</span><span>    &quot;</span><span style="color:#a3be8c;">@babel/core</span><span>&quot;: &quot;</span><span style="color:#a3be8c;">^7.18.10</span><span>&quot;,
+</span><span>    &quot;</span><span style="color:#a3be8c;">@babel/plugin-proposal-class-properties</span><span>&quot;: &quot;</span><span style="color:#a3be8c;">^7.18.6</span><span>&quot;,
+</span><span>    &quot;</span><span style="color:#a3be8c;">@babel/plugin-proposal-object-rest-spread</span><span>&quot;: &quot;</span><span style="color:#a3be8c;">^7.18.9</span><span>&quot;,
+</span><span>    &quot;</span><span style="color:#a3be8c;">@babel/preset-env</span><span>&quot;: &quot;</span><span style="color:#a3be8c;">^7.18.10</span><span>&quot;,
+</span><span>    &quot;</span><span style="color:#a3be8c;">@babel/preset-typescript</span><span>&quot;: &quot;</span><span style="color:#a3be8c;">^7.18.6</span><span>&quot;
+</span><span>  }
+</span><span>}
+</span></code></pre>
+<p>.babelrc</p>
+<pre data-lang="json" style="background-color:#2b303b;color:#c0c5ce;" class="language-json "><code class="language-json" data-lang="json"><span>{
+</span><span>  &quot;</span><span style="color:#a3be8c;">presets</span><span>&quot;: [
+</span><span>    &quot;</span><span style="color:#a3be8c;">@babel/preset-env</span><span>&quot;,
+</span><span>    &quot;</span><span style="color:#a3be8c;">@babel/preset-typescript</span><span>&quot;
+</span><span>  ],
+</span><span>  &quot;</span><span style="color:#a3be8c;">plugins</span><span>&quot;: [
+</span><span>    &quot;</span><span style="color:#a3be8c;">@babel/plugin-proposal-object-rest-spread</span><span>&quot;,
+</span><span>    &quot;</span><span style="color:#a3be8c;">@babel/plugin-proposal-class-properties</span><span>&quot;
+</span><span>  ]
+</span><span>}
+</span></code></pre>
+<p>index.ts和ts-demo保持一致。</p>
+<p>完成基础的项目搭建以后，我们执行<code>yarn build</code>：</p>
+<pre style="background-color:#2b303b;color:#c0c5ce;"><code><span>~/Projects/web-projects/ts-babel-demo &gt; yarn build
+</span><span>yarn run v1.22.17
+</span><span>$ babel src -d dist -x &#39;.ts, .tsx&#39;
+</span><span>Successfully compiled 1 file with Babel (599ms).
+</span><span>Done in 4.05s.
+</span></code></pre>
+<p>可以看到项目dist目录下出现了编译好的js代码：</p>
+<pre data-lang="js" style="background-color:#2b303b;color:#c0c5ce;" class="language-js "><code class="language-js" data-lang="js"><span>&quot;</span><span style="color:#a3be8c;">use strict</span><span>&quot;;
+</span><span>
+</span><span style="color:#ebcb8b;">Object</span><span>.</span><span style="color:#8fa1b3;">defineProperty</span><span>(exports, &quot;</span><span style="color:#a3be8c;">__esModule</span><span>&quot;, {
+</span><span>  value: </span><span style="color:#d08770;">true
+</span><span>});
+</span><span>exports.</span><span style="color:#bf616a;">userToString </span><span>= void </span><span style="color:#d08770;">0</span><span>;
+</span><span>
+</span><span style="color:#b48ead;">var </span><span style="color:#8fa1b3;">userToString </span><span>= </span><span style="color:#b48ead;">function </span><span style="color:#8fa1b3;">userToString</span><span>(</span><span style="color:#bf616a;">user</span><span>) {
+</span><span>  </span><span style="color:#b48ead;">return </span><span>&quot;&quot;.</span><span style="color:#96b5b4;">concat</span><span>(</span><span style="color:#bf616a;">user</span><span>.name, &quot;</span><span style="color:#a3be8c;">@</span><span>&quot;).</span><span style="color:#96b5b4;">concat</span><span>(</span><span style="color:#bf616a;">user</span><span>.</span><span style="color:#bf616a;">age</span><span>);
+</span><span>};
+</span><span>
+</span><span>exports.</span><span style="color:#bf616a;">userToString </span><span>= </span><span style="color:#bf616a;">userToString</span><span>;
+</span></code></pre>
+<p>可以看到和使用tsc编译为commonjs效果是一样。</p>
+<p>回顾这个项目，其实按照我们之前的思路来梳理：</p>
+<ol>
+<li>ts源文件（src/index.ts）</li>
+<li>ts的编译器（babel）</li>
+<li>编译配置（.babelrc）</li>
+</ol>
+<p><img src="https://static-res.zhen.wang/images/post/2022-08-14/020-babel-compile-flow.png" alt="020-babel-compile-flow" /></p>
+<p><strong>了解babel机制</strong></p>
+<p>如果对于babel不太熟悉，可能对上述的一堆依赖感到恐惧：</p>
+<pre style="background-color:#2b303b;color:#c0c5ce;"><code><span> yarn add -D @babel/core @babel/cli
+</span><span> yarn add -D @babel/preset-env @babel/preset-typescript
+</span><span> yarn add -D @babel/plugin-proposal-class-properties @babel/plugin-proposal-object-rest-spread
+</span></code></pre>
+<p>这里如果读者有时间，我推荐这篇深入了解babel的文章：<a rel="noopener" target="_blank" href="https://zhuanlan.zhihu.com/p/43249121">一口（很长的）气了解 babel - 知乎 (zhihu.com)</a>。当然，如果这口气憋不住（哈哈），我做一个简单摘抄：</p>
+<blockquote>
+<p>babel 总共分为三个阶段：解析，转换，生成。</p>
+<p>babel 本身不具有任何转化功能，它把转化的功能都分解到一个个 plugin 里面。因此当我们不配置任何插件时，经过 babel 的代码和输入是相同的。</p>
+<p>插件总共分为两种：</p>
+<ul>
+<li>当我们添加 <strong>语法插件</strong> 之后，在解析这一步就使得 babel 能够解析更多的语法。(顺带一提，babel 内部使用的解析类库叫做 babylon，并非 babel 自行开发)</li>
+</ul>
+<p>举个简单的例子，当我们定义或者调用方法时，最后一个参数之后是不允许增加逗号的，如 <code>callFoo(param1, param2,)</code> 就是非法的。如果源码是这种写法，经过 babel 之后就会提示语法错误。</p>
+<p>但最近的 JS 提案中已经允许了这种新的写法(让代码 diff 更加清晰)。为了避免 babel 报错，就需要增加语法插件 <code>babel-plugin-syntax-trailing-function-commas</code></p>
+<ul>
+<li>当我们添加 <strong>转译插件</strong> 之后，在转换这一步把源码转换并输出。这也是我们使用 babel 最本质的需求。</li>
+</ul>
+<p>比起语法插件，转译插件其实更好理解，比如箭头函数 <code>(a) =&gt; a</code> 就会转化为 <code>function (a) {return a}</code>。完成这个工作的插件叫做 <code>babel-plugin-transform-es2015-arrow-functions</code>。</p>
+<p>同一类语法可能同时存在语法插件版本和转译插件版本。<strong>如果我们使用了转译插件，就不用再使用语法插件了。</strong></p>
+</blockquote>
+<p>简单来讲，使用babel就像如下流程：</p>
+<pre style="background-color:#2b303b;color:#c0c5ce;"><code><span>源代码 =babel=&gt; 目标代码
+</span></code></pre>
+<p>如果没有使用任何插件，源代码和目标代码就没有任何差异。当我们引入各种插件的时候，就像如下流程一样：</p>
+<pre style="background-color:#2b303b;color:#c0c5ce;"><code><span>源代码
+</span><span>|
+</span><span>进入babel
+</span><span>|
+</span><span>babel插件1处理代码：移除某些符号
+</span><span>|
+</span><span>babel插件2处理代码：将形如() =&gt; {}的箭头函数，转换成function xxx() {}
+</span><span>|
+</span><span>目标代码
+</span></code></pre>
+<p>因为babel的插件处理的力度很细，我们代码的语法、语义内容规范有很多，如果我们要处理这些语法，可能需要配置一大堆的插件，所以babel提出，将一堆插件组合成一个preset（预置插件包），这样，我们只需要引入一个插件组合包，就能处理代码的各种语法、语义。</p>
+<p>所以，回到我们上述的那些@babel开头的npm包，再回首可能不会那么迷茫：</p>
+<pre style="background-color:#2b303b;color:#c0c5ce;"><code><span>@babel/core
+</span><span>@babel/preset-env
+</span><span>@babel/preset-typescript
+</span><span>@babel/preset-react
+</span><span>@babel/plugin-proposal-class-properties
+</span><span>@babel/plugin-proposal-object-rest-spread
+</span></code></pre>
+<ul>
+<li>
+<p><code>@babel/core</code>毋庸置疑，babel的核心模块，实现了上述的流程运转以及代码语法、语义分析的功能；</p>
+</li>
+<li>
+<p><code>@babel/cli</code>则是我们可以在命令行使用babel命令；</p>
+</li>
+<li>
+<p>plugin开头的就是插件，这里我们引入了两个：<code>@babel/plugin-proposal-class-properties</code>（<a rel="noopener" target="_blank" href="https://babel.docschina.org/docs/en/babel-plugin-proposal-class-properties/">允许类具有属性</a>）和<code>@babel/plugin-proposal-object-rest-spread</code>（<a rel="noopener" target="_blank" href="https://babel.docschina.org/docs/en/7.0.0/babel-plugin-proposal-object-rest-spread/">对象展开</a>）；</p>
+</li>
+<li>
+<p>preset开头的就是预置组件包合集，其中<code>@babel/preset-env</code>表示使用了可以根据实际的浏览器运行环境，会选择相关的转义插件包，通过配置得知目标环境的特点只做必要的转换。如果不写任何配置项，env 等价于 latest，也等价于 es2015 + es2016 + es2017 三个相加(不包含 stage-x 中的插件)；<code>@babel/preset-typescript</code>会处理所有ts的代码的语法和语义规则，并转换为js代码。</p>
+</li>
+</ul>
+<p>关于babel编译ts，并不是所有的语法都支持，这里有一篇文章专门介绍了其中注意点：《TypeScript 和 Babel：美丽的结合》。</p>
+<h1 id="webpackxiang-mu-ji-tsshi-yong">webpack项目级TS使用</h1>
+<p>前面的内容，我们已经介绍了将ts编译为js的两种方式（tsc、babel），但仅仅是简单将一个index.ts编译为index.js。实际上，对于项目级别的ts项目，还有很多需要了解的。接下来基于一个webpack项目来逐步介绍如何基于前文的两种方式来使用ts。</p>
+<p>对于webpack来说，至少需要读者了解到webpack的基本机制：<a rel="noopener" target="_blank" href="https://webpack.docschina.org/concepts/">概念 | webpack 中文文档 (docschina.org)</a>。</p>
+<p>简单来讲，webpack运行从指定的entry文件开始，从顶层开始分析依赖的内容，依赖的内容可以是任何的内容（只要是import的或require了的），而loader可以专门来处理各种类型的文件。</p>
+<blockquote>
+<p>webpack 只能理解 JavaScript 和 JSON 文件，这是 webpack 开箱可用的自带能力。<strong>loader</strong> 让 webpack 能够去处理其他类型的文件，并将它们转换为有效 <a rel="noopener" target="_blank" href="https://webpack.docschina.org/concepts/modules">模块</a>，以供应用程序使用，以及被添加到依赖图中</p>
+</blockquote>
+<p><img src="https://static-res.zhen.wang/images/post/2022-08-14/030-webpack-base-flow.png" alt="030-webpack-base-flow" /></p>
+<p>所以，当一个webpack项目是基于TS进行的时候，我们一定会有一个loader来处理ts（甚至是tsx）。当然，我们还是通过demo搭建来演示讲解。</p>
+<h2 id="ts-loader">ts-loader</h2>
+<pre data-lang="shell" style="background-color:#2b303b;color:#c0c5ce;" class="language-shell "><code class="language-shell" data-lang="shell"><span>mkdir webpack-ts-loader-demo &amp;&amp; cd webpack-ts-loader-demo
+</span><span>yarn init
+</span><span>yarn add -D webpack webpack-cli
+</span><span>yarn add -D ts-loader
+</span></code></pre>
+<p><strong>package.json</strong></p>
+<pre data-lang="json" style="background-color:#2b303b;color:#c0c5ce;" class="language-json "><code class="language-json" data-lang="json"><span>{
+</span><span>  &quot;</span><span style="color:#a3be8c;">name</span><span>&quot;: &quot;</span><span style="color:#a3be8c;">webpack-ts-loader-demo</span><span>&quot;,
+</span><span>  &quot;</span><span style="color:#a3be8c;">version</span><span>&quot;: &quot;</span><span style="color:#a3be8c;">1.0.0</span><span>&quot;,
+</span><span>  &quot;</span><span style="color:#a3be8c;">main</span><span>&quot;: &quot;</span><span style="color:#a3be8c;">index.js</span><span>&quot;,
+</span><span>  &quot;</span><span style="color:#a3be8c;">license</span><span>&quot;: &quot;</span><span style="color:#a3be8c;">MIT</span><span>&quot;,
+</span><span>  &quot;</span><span style="color:#a3be8c;">scripts</span><span>&quot;: {
+</span><span>    &quot;</span><span style="color:#a3be8c;">build</span><span>&quot;: &quot;</span><span style="color:#a3be8c;">webpack --config webpack.config.js</span><span>&quot;
+</span><span>  },
+</span><span>  &quot;</span><span style="color:#a3be8c;">devDependencies</span><span>&quot;: {
+</span><span>    &quot;</span><span style="color:#a3be8c;">ts-loader</span><span>&quot;: &quot;</span><span style="color:#a3be8c;">^9.3.1</span><span>&quot;,
+</span><span>    &quot;</span><span style="color:#a3be8c;">webpack</span><span>&quot;: &quot;</span><span style="color:#a3be8c;">^5.74.0</span><span>&quot;,
+</span><span>    &quot;</span><span style="color:#a3be8c;">webpack-cli</span><span>&quot;: &quot;</span><span style="color:#a3be8c;">^4.10.0</span><span>&quot;
+</span><span>  }
+</span><span>}
+</span></code></pre>
+<p><strong>webpack.config.js</strong></p>
+<pre data-lang="js" style="background-color:#2b303b;color:#c0c5ce;" class="language-js "><code class="language-js" data-lang="js"><span style="color:#b48ead;">const </span><span>{</span><span style="color:#bf616a;">resolve</span><span>} = </span><span style="color:#96b5b4;">require</span><span>(&#39;</span><span style="color:#a3be8c;">path</span><span>&#39;);
+</span><span>module.exports = {
+</span><span>  entry: &#39;</span><span style="color:#a3be8c;">./src/index.ts</span><span>&#39;,
+</span><span>  output: {
+</span><span>    path: </span><span style="color:#8fa1b3;">resolve</span><span>(__dirname, &#39;</span><span style="color:#a3be8c;">./dist</span><span>&#39;),
+</span><span>    filename: &quot;</span><span style="color:#a3be8c;">index.js</span><span>&quot;
+</span><span>  },
+</span><span>  module: {
+</span><span>    rules: [
+</span><span>      {
+</span><span>        test: /</span><span style="color:#96b5b4;">\.ts</span><span>/,
+</span><span>        loader: &quot;</span><span style="color:#a3be8c;">ts-loader</span><span>&quot;
+</span><span>      }
+</span><span>    ]
+</span><span>  }
+</span><span>};
+</span></code></pre>
+<p><strong>src/index.ts</strong></p>
+<pre data-lang="ts" style="background-color:#2b303b;color:#c0c5ce;" class="language-ts "><code class="language-ts" data-lang="ts"><span style="color:#b48ead;">interface </span><span>User {
+</span><span>    </span><span style="color:#bf616a;">name</span><span>: string;
+</span><span>    </span><span style="color:#bf616a;">age</span><span>: number;
+</span><span>}
+</span><span style="color:#b48ead;">const </span><span style="color:#8fa1b3;">userToString </span><span>= (</span><span style="color:#bf616a;">user</span><span>: User) </span><span style="color:#b48ead;">=&gt; </span><span>`</span><span style="color:#a3be8c;">${</span><span style="color:#bf616a;">user</span><span style="color:#a3be8c;">.name}@${</span><span style="color:#bf616a;">user</span><span style="color:#a3be8c;">.</span><span style="color:#bf616a;">age</span><span style="color:#a3be8c;">}</span><span>`;
+</span><span style="color:#b48ead;">export </span><span>{</span><span style="color:#bf616a;">userToString</span><span>, </span><span style="color:#bf616a;">User</span><span>};
+</span></code></pre>
+<p>表面上，只需要上述三个文件，就可以编译ts文件，但是尝试运行<code>yarn build</code>会报错：</p>
+<pre style="background-color:#2b303b;color:#c0c5ce;"><code><span>Module build failed (from ./node_modules/ts-loader/index.js):
+</span><span>Error: Could not load TypeScript. Try installing with `yarn add typescript` or `npm install typescript`. If TypeScript is installed globally, try using `yarn link typescript` or `npm link typescript`.
+</span></code></pre>
+<p>通过报错很容易理解，我们没有安装typescript。为什么？<strong>因为ts-loader本身处理ts文件的时候，本质上还是调用的tsc，而tsc是typescript模块提供的</strong>。因此，我们只需要<code>yarn add -D typescript</code>即可（其实只需要开发依赖即可），但是紧接着又会有另外一个报错：</p>
+<pre style="background-color:#2b303b;color:#c0c5ce;"><code><span>ERROR in ./src/index.t
+</span><span>Module build failed (from ./node_modules/ts-loader/index.js):
+</span><span>Error: error while parsing tsconfig.json
+</span></code></pre>
+<p>报错提醒我们，解析tsconfig的出错，不难理解，我们还没有配置tsconfig.json，因为tsc需要！所以，在我们项目中，加上tsconfig.json即可：</p>
+<p><strong>tsconfig.json</strong></p>
+<pre data-lang="json" style="background-color:#2b303b;color:#c0c5ce;" class="language-json "><code class="language-json" data-lang="json"><span>{
+</span><span>  &quot;</span><span style="color:#a3be8c;">compilerOptions</span><span>&quot;: {
+</span><span>    &quot;</span><span style="color:#a3be8c;">module</span><span>&quot;: &quot;</span><span style="color:#a3be8c;">commonjs</span><span>&quot;,
+</span><span>    &quot;</span><span style="color:#a3be8c;">rootDir</span><span>&quot;: &quot;</span><span style="color:#a3be8c;">./src</span><span>&quot;,
+</span><span>    &quot;</span><span style="color:#a3be8c;">outDir</span><span>&quot;: &quot;</span><span style="color:#a3be8c;">./dist</span><span>&quot;
+</span><span>  }
+</span><span>}
+</span></code></pre>
+<p>配置完成以后，我们再次编译，发现可以编译成功，并且在dist目录下会有对应的js代码。</p>
+<p>然而，事情到这里就结束了吗？一个中大型的项目，必然有模块的引入，假如现在我们添加了个utils.ts</p>
+<pre data-lang="ts" style="background-color:#2b303b;color:#c0c5ce;" class="language-ts "><code class="language-ts" data-lang="ts"><span style="color:#b48ead;">export const </span><span style="color:#8fa1b3;">hello </span><span>= () </span><span style="color:#b48ead;">=&gt; </span><span>{
+</span><span>  </span><span style="color:#b48ead;">return </span><span>&#39;</span><span style="color:#a3be8c;">hello</span><span>&#39;;
+</span><span>}
+</span></code></pre>
+<p>修改index.ts的代码，引入该hello方法，并使用：</p>
+<pre data-lang="typescript" style="background-color:#2b303b;color:#c0c5ce;" class="language-typescript "><code class="language-typescript" data-lang="typescript"><span style="color:#b48ead;">import </span><span>{</span><span style="color:#bf616a;">hello</span><span>} </span><span style="color:#b48ead;">from </span><span>&quot;</span><span style="color:#a3be8c;">./utils</span><span>&quot;; </span><span style="color:#65737e;">// 引入utils
+</span><span style="color:#b48ead;">interface </span><span>User {
+</span><span>    </span><span style="color:#bf616a;">name</span><span>: string;
+</span><span>    </span><span style="color:#bf616a;">age</span><span>: number;
+</span><span>}
+</span><span style="color:#b48ead;">const </span><span style="color:#8fa1b3;">userToString </span><span>= (</span><span style="color:#bf616a;">user</span><span>: User) </span><span style="color:#b48ead;">=&gt; </span><span>`</span><span style="color:#a3be8c;">${</span><span style="color:#bf616a;">user</span><span style="color:#a3be8c;">.name}@${</span><span style="color:#bf616a;">user</span><span style="color:#a3be8c;">.</span><span style="color:#bf616a;">age</span><span style="color:#a3be8c;">}${</span><span style="color:#8fa1b3;">hello</span><span style="color:#a3be8c;">()}</span><span>`;
+</span><span style="color:#b48ead;">export </span><span>{</span><span style="color:#bf616a;">userToString</span><span>, </span><span style="color:#bf616a;">User</span><span>};
+</span></code></pre>
+<p>再次运行<code>yarn build</code>，读者会发现还是会报错，但这一次的错误略有点出乎意料：</p>
+<pre style="background-color:#2b303b;color:#c0c5ce;"><code><span>Module not found: Error: Can&#39;t resolve &#39;./utils&#39; in &#39;/Users/w4ngzhen/Projects/web-projects/webpack-ts-loader-demo/src&#39;
+</span><span>resolve &#39;./utils&#39; in &#39;/Users/w4ngzhen/Projects/web-projects/webpack-ts-loader-demo/src&#39;
+</span></code></pre>
+<p>核心报错在于，webpack似乎无法找到utils这个模块。为什么呢？因为webpack默认是处理js代码的，如果你的代码中编写了<code>import xxx from 'xxx'</code>，在没有明确指明这个模块的后缀的时候，webpack只会认为这个模块是以下几种：</p>
+<ol>
+<li>无后缀文件</li>
+<li>js文件</li>
+<li>json文件</li>
+<li>wasm文件</li>
+</ol>
+<p>所以，你会看到具体一点的报错：</p>
+<pre style="background-color:#2b303b;color:#c0c5ce;"><code><span>resolve &#39;./utils&#39; in &#39;/Users/w4ngzhen/Projects/web-projects/webpack-ts-loader-demo/src&#39;
+</span><span>  using description file: /Users/w4ngzhen/Projects/web-projects/webpack-ts-loader-demo/package.json (relative path: ./src)
+</span><span>    Field &#39;browser&#39; doesn&#39;t contain a valid alias configuration
+</span><span>    using description file: /Users/w4ngzhen/Projects/web-projects/webpack-ts-loader-demo/package.json (relative path: ./src/utils)
+</span><span>      no extension
+</span><span>        Field &#39;browser&#39; doesn&#39;t contain a valid alias configuration
+</span><span>        /Users/w4ngzhen/Projects/web-projects/webpack-ts-loader-demo/src/utils doesn&#39;t exist
+</span><span>      .js
+</span><span>        Field &#39;browser&#39; doesn&#39;t contain a valid alias configuration
+</span><span>        /Users/w4ngzhen/Projects/web-projects/webpack-ts-loader-demo/src/utils.js doesn&#39;t exist
+</span><span>      .json
+</span><span>        Field &#39;browser&#39; doesn&#39;t contain a valid alias configuration
+</span><span>        /Users/w4ngzhen/Projects/web-projects/webpack-ts-loader-demo/src/utils.json doesn&#39;t exist
+</span><span>      .wasm
+</span><span>        Field &#39;browser&#39; doesn&#39;t contain a valid alias configuration
+</span><span>        /Users/w4ngzhen/Projects/web-projects/webpack-ts-loader-demo/src/utils.wasm doesn&#39;t exist
+</span><span>      as directory
+</span></code></pre>
+<p>要想让webpack知道我们引入的utils是ts代码，方式为在webpack配置中，指明webpack默认处理的文件后缀：</p>
+<pre data-lang="js" style="background-color:#2b303b;color:#c0c5ce;" class="language-js "><code class="language-js" data-lang="js"><span style="color:#b48ead;">const </span><span>{</span><span style="color:#bf616a;">resolve</span><span>} = </span><span style="color:#96b5b4;">require</span><span>(&#39;</span><span style="color:#a3be8c;">path</span><span>&#39;);
+</span><span>module.exports = {
+</span><span>  </span><span style="color:#65737e;">// ... ...
+</span><span>  resolve: {
+</span><span>    </span><span style="color:#65737e;">// webpack 默认只处理js、jsx等js代码
+</span><span>    </span><span style="color:#65737e;">// 为了防止在import其他ts代码的时候，出现
+</span><span>    </span><span style="color:#65737e;">// &quot; Can&#39;t resolve &#39;xxx&#39; &quot;的错误，需要特别配置
+</span><span>    extensions: [&#39;</span><span style="color:#a3be8c;">.js</span><span>&#39;, &#39;</span><span style="color:#a3be8c;">.jsx</span><span>&#39;, &#39;</span><span style="color:#a3be8c;">.ts</span><span>&#39;, &#39;</span><span style="color:#a3be8c;">.tsx</span><span>&#39;]
+</span><span>  },
+</span><span>  </span><span style="color:#65737e;">// ... ...
+</span><span>};
+</span><span>
+</span></code></pre>
+<p>完成配置以后，我们就能够正确编译具备模块导入的ts代码了。</p>
+<p>综合来看，在基于ts-loader的webpack项目的解析流程处理如下。</p>
+<p><img src="https://static-res.zhen.wang/images/post/2022-08-14/040-webpack-ts-loader-flow.png" alt="040-webpack-ts-loader-flow" /></p>
+<p>回顾一下webpack，它默认处理模块化js代码，比如index.js引用了utils.js（模块引用方式可以是commonjs，也可以是esModule形式），那么webpack从入口的index.js出发，来处理依赖，并打包为一个js（暂不考虑js拆分）。</p>
+<p>对于wepack+ts-loader的ts项目体系主要是通过ts-loader内部调用typescript提供的tsc，将ts代码编译为js代码（编译后的js代码依然是js模块化的形式），所以这个过程是需要tsconfig参与；等到tsc将整个所有的ts代码均编译为js代码以后，再整体交给webpack进行依赖分析并打包（也就进入webpack的默认处理流程）。</p>
+<p>细心的读者会发现这个过程有一个问题：由于先经过tsc编译后的js，又再被webpack默认的js处理机制进行分析并编译打包，这个过程一方面经过了两次编译（ts-&gt;标准模块化js-&gt;webpack模块体系js），那么如果ts项目特别大，模块特别多的时候，这个两次编译的过程会特别漫长！</p>
+<h2 id="babel-loader">babel-loader</h2>
+<p>前面我们简单介绍了如何使用babel对一份ts进行编译，那么在webpack中，如何使用babel呢？有的同学可能会想到这样操作步骤：我先用babel对ts进行编译为js，然后再利用webpack对js进行打包，这样的做法是可以的，但细想不就和上面的ts-loader一样的情况了吗？</p>
+<p>只要开发过基于webpack的现代化前端项目的同学，或多或少都看到过babel-loader的身影，他是个什么东西呢？先说结论吧，babel-loader是webpack和babel（由@babel/core和一堆预置集preset、插件plugins组合）的桥梁。</p>
+<p><img src="https://static-res.zhen.wang/images/post/2022-08-14/050-webpack-babel-loader-flow.png" alt="050-webpack-babel-loader-flow" /></p>
+<p>根据这个图，同学可能觉得这不是和ts-loader的架构很像吗？webpack启动，遇到入口ts，匹配到babel-loader，babel-loader交给babel处理，处理完毕，回到webpack打包。但是使用babel进行ts处理，比起ts-loader更加高效。而关于这块的说明，我更加推荐读者阅读这篇文章<a rel="noopener" target="_blank" href="https://zhuanlan.zhihu.com/p/59614089"> TypeScript 和 Babel：美丽的结合 - 知乎 (zhihu.com)</a>，简单来讲：</p>
+<blockquote>
+<p>警告！有一个震惊的消息，你可能想坐下来好好听下。</p>
+<p>Babel 如何处理 TypeScript 代码？<strong>它删除它</strong>。</p>
+<p>是的，它删除了所有 TypeScript，将其转换为“常规的” JavaScript，并继续以它自己的方式愉快处理。</p>
+<p>这听起来很荒谬，但这种方法有两个很大的优势。</p>
+<p>第一个优势：️⚡️<strong>闪电般快速</strong>⚡️。</p>
+<p>大多数 Typescript 开发人员在开发/监视模式下经历过编译时间长的问题。你正在编写代码，保存一个文件，然后...它来了...再然后...<strong>最后</strong>，你看到了你的变更。哎呀，错了一个字，修复，保存，然后...啊。它<strong>只是</strong>慢得令人烦恼并打消你的势头。</p>
+<p>很难去指责 TypeScript 编译器，它在做很多工作。它在扫描那些包括 <code>node_modules</code> 在内的类型定义文件（<code>*.d.ts</code>），并确保你的代码正确使用。这就是为什么许多人将 Typescript 类型检查分到一个单独的进程。然而，Babel + TypeScript 组合仍然提供更快的编译，这要归功于 Babel 的高级缓存和单文件发射架构。</p>
+</blockquote>
+<p>让我们来搭建一个项目来复习这一过程吧：</p>
+<pre style="background-color:#2b303b;color:#c0c5ce;"><code><span>mkdir webpack-babel-loader-demo &amp;&amp; cd webpack-babel-loader-demo
+</span><span>yarn init
+</span><span>yarn add -D webpack webpack-cli
+</span><span>yarn add -D babel-loader
+</span><span>yarn add -D @babel/core
+</span><span>yarn add -D @babel/preset-env @babel/preset-typescript
+</span><span>yarn add -D @babel/plugin-proposal-class-properties @babel/plugin-proposal-object-rest-spread
+</span></code></pre>
+<p><strong>package.json</strong></p>
+<pre data-lang="json" style="background-color:#2b303b;color:#c0c5ce;" class="language-json "><code class="language-json" data-lang="json"><span>{
+</span><span>  &quot;</span><span style="color:#a3be8c;">name</span><span>&quot;: &quot;</span><span style="color:#a3be8c;">webpack-babel-loader-demo</span><span>&quot;,
+</span><span>  &quot;</span><span style="color:#a3be8c;">version</span><span>&quot;: &quot;</span><span style="color:#a3be8c;">1.0.0</span><span>&quot;,
+</span><span>  &quot;</span><span style="color:#a3be8c;">main</span><span>&quot;: &quot;</span><span style="color:#a3be8c;">index.js</span><span>&quot;,
+</span><span>  &quot;</span><span style="color:#a3be8c;">license</span><span>&quot;: &quot;</span><span style="color:#a3be8c;">MIT</span><span>&quot;,
+</span><span>  &quot;</span><span style="color:#a3be8c;">scripts</span><span>&quot;: {
+</span><span>    &quot;</span><span style="color:#a3be8c;">build</span><span>&quot;: &quot;</span><span style="color:#a3be8c;">webpack --config webpack.config.js</span><span>&quot; 
+</span><span>  },
+</span><span>  &quot;</span><span style="color:#a3be8c;">devDependencies</span><span>&quot;: {
+</span><span>    &quot;</span><span style="color:#a3be8c;">@babel/core</span><span>&quot;: &quot;</span><span style="color:#a3be8c;">^7.18.13</span><span>&quot;,
+</span><span>    &quot;</span><span style="color:#a3be8c;">@babel/plugin-proposal-class-properties</span><span>&quot;: &quot;</span><span style="color:#a3be8c;">^7.18.6</span><span>&quot;,
+</span><span>    &quot;</span><span style="color:#a3be8c;">@babel/plugin-proposal-object-rest-spread</span><span>&quot;: &quot;</span><span style="color:#a3be8c;">^7.18.9</span><span>&quot;,
+</span><span>    &quot;</span><span style="color:#a3be8c;">@babel/preset-env</span><span>&quot;: &quot;</span><span style="color:#a3be8c;">^7.18.10</span><span>&quot;,
+</span><span>    &quot;</span><span style="color:#a3be8c;">@babel/preset-typescript</span><span>&quot;: &quot;</span><span style="color:#a3be8c;">^7.18.6</span><span>&quot;,
+</span><span>    &quot;</span><span style="color:#a3be8c;">babel-loader</span><span>&quot;: &quot;</span><span style="color:#a3be8c;">^8.2.5</span><span>&quot;,
+</span><span>    &quot;</span><span style="color:#a3be8c;">webpack</span><span>&quot;: &quot;</span><span style="color:#a3be8c;">^5.74.0</span><span>&quot;,
+</span><span>    &quot;</span><span style="color:#a3be8c;">webpack-cli</span><span>&quot;: &quot;</span><span style="color:#a3be8c;">^4.10.0</span><span>&quot;
+</span><span>  }
+</span><span>}
+</span></code></pre>
+<p><strong>webpack.config.js</strong></p>
+<pre data-lang="js" style="background-color:#2b303b;color:#c0c5ce;" class="language-js "><code class="language-js" data-lang="js"><span style="color:#b48ead;">const </span><span>{</span><span style="color:#bf616a;">resolve</span><span>} = </span><span style="color:#96b5b4;">require</span><span>(&#39;</span><span style="color:#a3be8c;">path</span><span>&#39;);
+</span><span>module.exports = {
+</span><span>  entry: &#39;</span><span style="color:#a3be8c;">./src/index.ts</span><span>&#39;,
+</span><span>  output: {
+</span><span>    path: </span><span style="color:#8fa1b3;">resolve</span><span>(__dirname, &#39;</span><span style="color:#a3be8c;">./dist</span><span>&#39;),
+</span><span>    filename: &quot;</span><span style="color:#a3be8c;">index.js</span><span>&quot;
+</span><span>  },
+</span><span>  resolve: {
+</span><span>    </span><span style="color:#65737e;">// webpack 默认只处理js、jsx等js代码
+</span><span>    </span><span style="color:#65737e;">// 为了防止在import其他ts代码的时候，出现
+</span><span>    </span><span style="color:#65737e;">// &quot; Can&#39;t resolve &#39;xxx&#39; &quot;的错误，需要特别配置
+</span><span>    extensions: [&#39;</span><span style="color:#a3be8c;">.js</span><span>&#39;, &#39;</span><span style="color:#a3be8c;">.jsx</span><span>&#39;, &#39;</span><span style="color:#a3be8c;">.ts</span><span>&#39;, &#39;</span><span style="color:#a3be8c;">.tsx</span><span>&#39;]
+</span><span>  },
+</span><span>  module: {
+</span><span>    rules: [
+</span><span>      {
+</span><span>        test: /</span><span style="color:#96b5b4;">\.ts</span><span>/,
+</span><span>        loader: &quot;</span><span style="color:#a3be8c;">babel-loader</span><span>&quot;
+</span><span>      }
+</span><span>    ]
+</span><span>  }
+</span><span>};
+</span><span>
+</span></code></pre>
+<p><strong>src/index.ts</strong></p>
+<pre data-lang="ts" style="background-color:#2b303b;color:#c0c5ce;" class="language-ts "><code class="language-ts" data-lang="ts"><span style="color:#b48ead;">import </span><span>{</span><span style="color:#bf616a;">hello</span><span>} </span><span style="color:#b48ead;">from </span><span>&quot;</span><span style="color:#a3be8c;">./utils</span><span>&quot;;
+</span><span style="color:#b48ead;">interface </span><span>User {
+</span><span>    </span><span style="color:#bf616a;">name</span><span>: string;
+</span><span>    </span><span style="color:#bf616a;">age</span><span>: number;
+</span><span>}
+</span><span style="color:#b48ead;">const </span><span style="color:#8fa1b3;">userToString </span><span>= (</span><span style="color:#bf616a;">user</span><span>: User) </span><span style="color:#b48ead;">=&gt; </span><span>`</span><span style="color:#a3be8c;">${</span><span style="color:#bf616a;">user</span><span style="color:#a3be8c;">.name}@${</span><span style="color:#bf616a;">user</span><span style="color:#a3be8c;">.</span><span style="color:#bf616a;">age</span><span style="color:#a3be8c;">}${</span><span style="color:#8fa1b3;">hello</span><span style="color:#a3be8c;">()}</span><span>`;
+</span><span style="color:#b48ead;">export </span><span>{</span><span style="color:#bf616a;">userToString</span><span>, </span><span style="color:#bf616a;">User</span><span>};
+</span></code></pre>
+<p><strong>src/utils.ts</strong></p>
+<pre data-lang="ts" style="background-color:#2b303b;color:#c0c5ce;" class="language-ts "><code class="language-ts" data-lang="ts"><span style="color:#b48ead;">export const </span><span style="color:#8fa1b3;">hello </span><span>= () </span><span style="color:#b48ead;">=&gt; </span><span>{
+</span><span>  </span><span style="color:#b48ead;">return </span><span>&#39;</span><span style="color:#a3be8c;">hello</span><span>&#39;;
+</span><span>}
+</span></code></pre>
+<p>完成上述package.json、webpack.config.js、src源代码三个部分，我们可以开始运行<code>yarn build</code>，但实际上会报错：</p>
+<pre style="background-color:#2b303b;color:#c0c5ce;"><code><span>ERROR in ./src/index.ts
+</span><span>Module build failed (from ./node_modules/babel-loader/lib/index.js):
+</span><span>SyntaxError: /Users/w4ngzhen/Projects/web-projects/webpack-babel-loader-demo/src/index.ts: Unexpected reserved word &#39;interface&#39;. (1:0)
+</span><span>
+</span><span>&gt; 1 | interface User {
+</span><span>    | ^
+</span><span>  2 |     name: string;
+</span><span>  3 |     age: number;
+</span><span>  4 | }
+</span><span>    at instantiate (/Users/w4ngzhen/Projects/web-projects/webpack-babel-loader-demo/node_modules/@babel/parser/lib/index.js:72:32)
+</span></code></pre>
+<p>出现了语法的错误，报错的主要原因在于没有把整个babel处理ts的链路打通。目前的链路是：webpack找到入口ts文件，匹配上babel-loader，babel-loader交给@babel/core，@babel/core处理ts。由于我们没有给@babel/core配置plugin、preset，所以导致了babel还是以默认的js角度来处理ts代码，所以有语法报错。此时，我们需要添加.babelrc文件来指明让babel加载处理ts代码的插件：</p>
+<p><strong>.babelrc</strong></p>
+<pre data-lang="json" style="background-color:#2b303b;color:#c0c5ce;" class="language-json "><code class="language-json" data-lang="json"><span>{
+</span><span>  &quot;</span><span style="color:#a3be8c;">presets</span><span>&quot;: [
+</span><span>    &quot;</span><span style="color:#a3be8c;">@babel/preset-env</span><span>&quot;,
+</span><span>    &quot;</span><span style="color:#a3be8c;">@babel/preset-typescript</span><span>&quot;
+</span><span>  ],
+</span><span>  &quot;</span><span style="color:#a3be8c;">plugins</span><span>&quot;: [
+</span><span>    &quot;</span><span style="color:#a3be8c;">@babel/plugin-proposal-object-rest-spread</span><span>&quot;,
+</span><span>    &quot;</span><span style="color:#a3be8c;">@babel/plugin-proposal-class-properties</span><span>&quot;
+</span><span>  ]
+</span><span>}
+</span></code></pre>
+<p>完成配置以后，我们再次运行<code>yarn build</code>，编译通过，但是在dist下的index.js却是空白的！</p>
+<h3 id="wen-ti-babel-loaderbian-yi-hou-shu-chu-jsnei-rong-kong-bai">问题：babel-loader编译后，输出js内容空白</h3>
+<p>如果按照上述的配置以后，我们能够成功编译但是却发现，输出的js代码是空白的！原因在于：我们编写的js代码，是按照类库的模式进行编写（在indexjs中只有导出一些函数却没有实际的使用），且webpack打包的时候，没有指定js代码的编译为什么样子的库。</p>
+<p>假如我们在index中编写一段具有副作用的代码：</p>
+<pre data-lang="typescript" style="background-color:#2b303b;color:#c0c5ce;" class="language-typescript "><code class="language-typescript" data-lang="typescript"><span style="color:#b48ead;">import </span><span>{</span><span style="color:#bf616a;">hello</span><span>} </span><span style="color:#b48ead;">from </span><span>&quot;</span><span style="color:#a3be8c;">./utils</span><span>&quot;;
+</span><span style="color:#b48ead;">interface </span><span>User {
+</span><span>    </span><span style="color:#bf616a;">name</span><span>: string;
+</span><span>    </span><span style="color:#bf616a;">age</span><span>: number;
+</span><span>}
+</span><span style="color:#b48ead;">const </span><span style="color:#8fa1b3;">userToString </span><span>= (</span><span style="color:#bf616a;">user</span><span>: User) </span><span style="color:#b48ead;">=&gt; </span><span>`</span><span style="color:#a3be8c;">${</span><span style="color:#bf616a;">user</span><span style="color:#a3be8c;">.name}@${</span><span style="color:#bf616a;">user</span><span style="color:#a3be8c;">.</span><span style="color:#bf616a;">age</span><span style="color:#a3be8c;">}${</span><span style="color:#8fa1b3;">hello</span><span style="color:#a3be8c;">()}</span><span>`;
+</span><span>
+</span><span style="color:#65737e;">// 具备副作用：在id=app的元素上添加监听
+</span><span>document
+</span><span>    .</span><span style="color:#96b5b4;">querySelector</span><span>(&#39;</span><span style="color:#a3be8c;">#app</span><span>&#39;)
+</span><span>    .</span><span style="color:#96b5b4;">addEventListener</span><span>(&#39;</span><span style="color:#a3be8c;">click</span><span>&#39;, () </span><span style="color:#b48ead;">=&gt; </span><span>{})
+</span><span>
+</span><span style="color:#b48ead;">export </span><span>{</span><span style="color:#bf616a;">userToString</span><span>, </span><span style="color:#bf616a;">User</span><span>};
+</span></code></pre>
+<p>此时我们使用生产模式（mode: 'production'）来编译，会发现dist/index.js的内容如下：</p>
+<pre data-lang="js" style="background-color:#2b303b;color:#c0c5ce;" class="language-js "><code class="language-js" data-lang="js"><span>(() </span><span style="color:#b48ead;">=&gt; </span><span>{
+</span><span>  &quot;</span><span style="color:#a3be8c;">use strict</span><span>&quot;;
+</span><span>  document.</span><span style="color:#96b5b4;">querySelector</span><span>(&quot;</span><span style="color:#a3be8c;">#app</span><span>&quot;).</span><span style="color:#96b5b4;">addEventListener</span><span>(&quot;</span><span style="color:#a3be8c;">click</span><span>&quot;, (</span><span style="color:#b48ead;">function </span><span>() {
+</span><span>  }));
+</span><span>})();
+</span></code></pre>
+<p>会发现只有副作用代码，但是userToString相关的代码完全被剔除了！这时候，可能有读者会说，我导出的代码有可能别人会使用，你凭什么要帮我剔除？其实，因为webpack默认是生成项目使用的js，也就是做打包操作，他的目的是生成当前项目需要的js。在我们这个示例中，在没有写副作用之前，webpack认为打包是没有意义的，因为只有导出方法，却没有使用。那么，如果让webpack知道，我们需要做一个类库呢？在webpack中配置library字段即可：</p>
+<pre data-lang="js" style="background-color:#2b303b;color:#c0c5ce;" class="language-js "><code class="language-js" data-lang="js"><span style="color:#b48ead;">const </span><span>{</span><span style="color:#bf616a;">resolve</span><span>} = </span><span style="color:#96b5b4;">require</span><span>(&#39;</span><span style="color:#a3be8c;">path</span><span>&#39;);
+</span><span>module.exports = {
+</span><span>  entry: &#39;</span><span style="color:#a3be8c;">./src/index.ts</span><span>&#39;,
+</span><span>  mode: &#39;</span><span style="color:#a3be8c;">production</span><span>&#39;,
+</span><span>  output: {
+</span><span>    </span><span style="color:#65737e;">// ... ...
+</span><span>    library: { 
+</span><span>      </span><span style="color:#65737e;">// 配置library字段的相关配置，这里我们配置为commonjs2
+</span><span>      </span><span style="color:#65737e;">// 至于这块配置的意义，读者需要自行学习～
+</span><span>      type: &#39;</span><span style="color:#a3be8c;">commonjs2</span><span>&#39;,
+</span><span>    },
+</span><span>  },
+</span><span>  </span><span style="color:#65737e;">// ... ...
+</span><span>};
+</span><span>
+</span></code></pre>
+<h1 id="tscyu-babelbian-yi-de-chai-yi">tsc与babel编译的差异</h1>
+<p>现在我们先编写一个简单<strong>错误代码</strong>：</p>
+<pre data-lang="typescript" style="background-color:#2b303b;color:#c0c5ce;" class="language-typescript "><code class="language-typescript" data-lang="typescript"><span style="color:#b48ead;">interface </span><span>User {
+</span><span>    </span><span style="color:#bf616a;">name</span><span>: string;
+</span><span>    </span><span style="color:#bf616a;">age</span><span>: number;
+</span><span>}
+</span><span style="color:#65737e;">// user.myName并没有在User接口中提供
+</span><span style="color:#b48ead;">const </span><span style="color:#8fa1b3;">userToString </span><span>= (</span><span style="color:#bf616a;">user</span><span>: User) </span><span style="color:#b48ead;">=&gt; </span><span>`</span><span style="color:#a3be8c;">${</span><span style="color:#bf616a;">user</span><span style="color:#a3be8c;">.</span><span style="color:#bf616a;">myName</span><span style="color:#a3be8c;">}@${</span><span style="color:#bf616a;">user</span><span style="color:#a3be8c;">.</span><span style="color:#bf616a;">age</span><span style="color:#a3be8c;">}</span><span>`;
+</span><span style="color:#b48ead;">export </span><span>{</span><span style="color:#bf616a;">userToString</span><span>, </span><span style="color:#bf616a;">User</span><span>};
+</span></code></pre>
+<p>在这个示例中，我们试图访问在User类型中不存在的myName字段。</p>
+<h2 id="ts-loader-1">ts-loader</h2>
+<p>前面我们提到了ts-loader内部调用的是tsc作为编译器，我们尝试运行基于ts-loader的webpack配置进行打包该模块，会发现报错：</p>
+<pre style="background-color:#2b303b;color:#c0c5ce;"><code><span>... ...
+</span><span>      TS2551: Property &#39;myName&#39; does not exist on type &#39;User&#39;. Did you mean &#39;name&#39;?
+</span><span>ts-loader-default_e3b0c44298fc1c14
+</span><span>
+</span><span>webpack 5.74.0 compiled with 1 error in 2665 ms
+</span><span>error Command failed with exit code 1.
+</span><span>info Visit https://yarnpkg.com/en/docs/cli/run for documentation about this command.
+</span></code></pre>
+<p>可以看得出来，tsc帮助我们提示了类型错误的地方，user这个类型并没有对应的myName字段。</p>
+<h2 id="babel-loader-1">babel-loader</h2>
+<p>我们切换一下到babel-loader对该ts文件进行编译，居然发现编译可以直接成功！并且，我们检查编译好的js代码，会发现这部分：</p>
+<pre data-lang="js" style="background-color:#2b303b;color:#c0c5ce;" class="language-js "><code class="language-js" data-lang="js"><span style="color:#65737e;">// dist/index.js
+</span><span>(() </span><span style="color:#b48ead;">=&gt; </span><span>{
+</span><span>  &quot;</span><span style="color:#a3be8c;">use strict</span><span>&quot;;
+</span><span>  </span><span style="color:#65737e;">// ... ...
+</span><span>  </span><span style="color:#b48ead;">var </span><span style="color:#8fa1b3;">r </span><span>= </span><span style="color:#b48ead;">function </span><span>(</span><span style="color:#bf616a;">e</span><span>) {
+</span><span>    </span><span style="color:#65737e;">// 注意这个地方：依然在使用myName
+</span><span>    </span><span style="color:#b48ead;">return </span><span>&quot;&quot;.</span><span style="color:#96b5b4;">concat</span><span>(</span><span style="color:#bf616a;">e</span><span>.</span><span style="color:#bf616a;">myName</span><span>, &quot;</span><span style="color:#a3be8c;">@</span><span>&quot;).</span><span style="color:#96b5b4;">concat</span><span>(</span><span style="color:#bf616a;">e</span><span>.</span><span style="color:#bf616a;">age</span><span>);
+</span><span>  };
+</span><span>  module.exports = </span><span style="color:#bf616a;">o</span><span>;
+</span><span>})();
+</span><span>
+</span></code></pre>
+<p>编译好的js代码就在直接使用myName字段。为什么类型检查失效了？还记得我们前面提到的babel怎么处理ts的？</p>
+<blockquote>
+<p>Babel 如何处理 TypeScript 代码？<strong>它删除它</strong>。</p>
+<p>是的，它删除了所有 TypeScript，将其转换为“常规的” JavaScript，并继续以它自己的方式愉快处理。</p>
+</blockquote>
+<p>是的，babel并没有进行类型检查，而是将各种类型移除掉以达到快速完成编译的目的。那么问题来了，我们如何让babel进行类型判断呢？**实际上，我们没有办法让babel进行类型判断，必须要借助另外的工具进行。**那为什么我们的IDE却能够现实ts代码的错误呢？因为IDE帮助我们进行了类型判断。</p>
+<h1 id="zhu-liu-idedui-typescriptde-lei-xing-jian-cha">主流IDE对TypeScript的类型检查</h1>
+<p>不知道有没有细心的读者在使用IDEA的时候，发现一个ts项目的IDEA右下角展示了typescript：</p>
+<p><img src="https://static-res.zhen.wang/images/post/2022-08-14/060-idea-ts-service.png" alt="060-idea-ts-service" /></p>
+<p>VSCode也能看到类似：</p>
+<p><img src="https://static-res.zhen.wang/images/post/2022-08-14/070-vscode-ts-service.png" alt="070-vscode-ts-service" /></p>
+<p>在同一台电脑上，甚至发现IDEA和VSCode的typescript版本都还不一样（4.7.4和4.7.3）。这是怎么一回事呢？实际上，IDE检测到你所在的项目是一个ts项目的时候（或包含ts文件），就会自动的启动一个ts的检测服务，专门用于所在项目的ts类型检测。这个ts类型检测服务，是通过每个IDE默认情况下自带的typescript中的tsc进行类型检测。</p>
+<p>但是，我们可以全局安装（npm -g）或者是为每个项目单独安装typescript，然后就可以让IDE选择启动独立安装的typescript。比如，我们在本项目中，安装一个特定版本的ts（版本4.7.2）：</p>
+<pre style="background-color:#2b303b;color:#c0c5ce;"><code><span>yarn add -D typescript@4.7.2
+</span></code></pre>
+<p>在IDEA中，设置 - Languages &amp; Frameworks - TypeScript中，就可以选择IDEA启动的4.7.2版本的TypeScript为我们项目提供类型检查（注意看选项中有一个Bundled的TS，版本是4.7.4，就是默认的）：</p>
+<p><img src="https://static-res.zhen.wang/images/post/2022-08-14/080-idea-select-ts.png" alt="080-idea-select-ts" /></p>
+<p>IDE之所以能够在对应的代码位置展示代码的类型错误，流程如下：</p>
+<p><img src="https://static-res.zhen.wang/images/post/2022-08-14/090-ide-ts-service-flow.png" alt="090-ide-ts-service-flow" /></p>
+<p>但是，ts类型检查也要有一定的依据。譬如，有些类型定义的文件从哪里查找，是否允许较新的语法等，这些配置依然是由tsconfig.json来提供的，但若未提供，则IDE会使用一份默认的配置。如果要进行类型检测的自定义配置，则需要提供tsconfig.json。</p>
+<p>还记得我们前面的ts-loader吗？在代码编译期，ts-loader调用tsc，tsc读取项目目录下的tsconfig.json配置。而咱们编写代码的时候，又让IDE的ts读取该tsconfig.json配置文件进行类型检查。</p>
+<p>对于ts-loader项目体系来说，ts代码编译和ts的类型检测如下：</p>
+<p><img src="https://static-res.zhen.wang/images/post/2022-08-14/100-ts-loader-and-ide.png" alt="100-ts-loader-and-ide" /></p>
+<p>然而，对于babel-loader项目体系就不像ts-loader那样了：</p>
+<p><img src="https://static-res.zhen.wang/images/post/2022-08-14/110-babel-loader-and-ide.png" alt="110-babel-loader-and-ide" /></p>
+<p>在babel-loader体系中，代码的编译只取决于babel部分的处理，根类型没有根本的关系，而类型检查使用到的tsconfig和tsc则只作用在类型检查的部分，根ts代码编译没有任何关系。</p>
+
+    </div>
+</div>
+<script src="https://zhen.wang/libs/viewerjs@1.11.7/viewer.min.js"></script>
+<link rel="stylesheet" href="https://zhen.wang/libs/viewerjs@1.11.7/viewer.min.css"/>
+<script>
+  if (window.Viewer) {
+    document.querySelectorAll('img').forEach(img => {
+      new Viewer(img, {
+        inline: false,
+        navbar: false,
+        toolbar: {
+          zoomIn: 1,
+          zoomOut: 1,
+          reset: 1,
+          rotateLeft: 1,
+          rotateRight: 1,
+        },
+      });
+    });
+  }
+</script>
+
+
+</body>
+</html>

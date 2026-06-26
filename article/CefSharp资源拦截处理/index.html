@@ -1,0 +1,397 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="utf-8">
+    <meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover"
+          name="viewport">
+    
+    
+    <!-- umami web analysis -->
+    <script defer src="https://zhen.wang/libs/umami/umami.script.js"
+            data-website-id="d66cfe03-f6b3-4aa0-baf8-728700db1b09"></script>
+    
+    
+    
+    <link rel="icon" type="image/png" sizes="16x16" href="https://zhen.wang/images/blog-site-icon.svg">
+    <link rel="icon" type="image/png" sizes="32x32" href="https://zhen.wang/images/blog-site-icon.svg">
+    <title>zhen&#x27;s everything</title>
+    <link rel="stylesheet" href="https://zhen.wang/style.css">
+    
+<link rel="stylesheet" href="https://zhen.wang/article_content.css">
+<link rel="stylesheet" href="https://zhen.wang/article_markdown.css">
+
+</head>
+<body>
+
+<div id="article">
+    <header class="article-header">
+        
+<div class="base-title">
+    <a href="#" onclick="history.length > 1 ? history.back() : location.href = '/'; return false;">&LeftArrow; Back</a>
+    <h1>
+        CefSharp请求资源拦截及自定义处理
+    </h1>
+</div>
+
+    </header>
+    <p class="article-date">2020-08-23</p>
+    
+    <!-- toc -->
+    <div class="article-toc">
+        <label class="toc-title" for="toc-trigger">目录</label>
+        <input id="toc-trigger" type="checkbox" checked/>
+        <div class="toc-content">
+            <ol class="toc">
+                
+                <li class="toc-item toc-level-1">
+                    <a class="toc-link" href="https://zhen.wang/article/CefSharp资源拦截处理/#cefsharpqing-qiu-zi-yuan-lan-jie-ji-zi-ding-yi-chu-li">CefSharp请求资源拦截及自定义处理</a>
+                    
+                    <ol class="toc-child">
+                        
+                        <li class="toc-item toc-level-2">
+                            <a href="https://zhen.wang/article/CefSharp资源拦截处理/#qian-yan">前言</a>
+                        </li>
+                        
+                        <li class="toc-item toc-level-2">
+                            <a href="https://zhen.wang/article/CefSharp资源拦截处理/#zhun-bei">准备</a>
+                        </li>
+                        
+                        <li class="toc-item toc-level-2">
+                            <a href="https://zhen.wang/article/CefSharp资源拦截处理/#cefsharpzi-yuan-lan-jie-ji-zi-ding-yi-chu-li">CefSharp资源拦截及自定义处理</a>
+                        </li>
+                        
+                        <li class="toc-item toc-level-2">
+                            <a href="https://zhen.wang/article/CefSharp资源拦截处理/#zui-zhong-xiao-guo">最终效果</a>
+                        </li>
+                        
+                        <li class="toc-item toc-level-2">
+                            <a href="https://zhen.wang/article/CefSharp资源拦截处理/#yuan-ma">源码</a>
+                        </li>
+                        
+                    </ol>
+                    
+                </li>
+                
+            </ol>
+        </div>
+    </div>
+    
+    <!-- real content -->
+    <div class="article-content markdown-content">
+        <h1 id="cefsharpqing-qiu-zi-yuan-lan-jie-ji-zi-ding-yi-chu-li">CefSharp请求资源拦截及自定义处理</h1>
+<h2 id="qian-yan">前言</h2>
+<p>在CefSharp中，我们不仅可以使用Chromium浏览器内核，还可以通过Cef暴露出来的各种Handler来实现我们自己的资源请求处理。</p>
+<p>什么是资源请求呢？简单来说，就是前端页面在加载的过程中，请求的各种文本（js、css以及html）。在以Chromium内核的浏览器上，我们可以使用浏览器为我们提供的开发者工具来检查每一次页面加载发生的请求。</p>
+<span id="continue-reading"></span><h2 id="zhun-bei">准备</h2>
+<p>鉴于本文的重心是了解CefSharp的资源拦截处理，所以我们不讨论前端的开发以及客户端嵌入CefSharp组件的细节。我们首先完成一个基本的嵌入CefSharp的WinForm程序：该程序界面如下，拥有一个地址输入栏和一个显示网页的Panel：</p>
+<p><img src="https://static-res.zhen.wang/images/post/2020-08-23-cefsharp-resource-intercept/webbrowser.png" alt="" /></p>
+<p>并且编写一个<strong>极其简单</strong>的页面，该页面会请求1个js资源和1个css资源：</p>
+<pre style="background-color:#2b303b;color:#c0c5ce;"><code><span>demo:
+</span><span>    - index.html
+</span><span>    - test1.js
+</span><span>    - test1.css
+</span></code></pre>
+<p>这几个文件的代码都十分简单：</p>
+<pre data-lang="css" style="background-color:#2b303b;color:#c0c5ce;" class="language-css "><code class="language-css" data-lang="css"><span style="color:#bf616a;">body
+</span><span>{
+</span><span>    background-color: aqua
+</span><span>}
+</span></code></pre>
+<pre data-lang="js" style="background-color:#2b303b;color:#c0c5ce;" class="language-js "><code class="language-js" data-lang="js"><span style="color:#b48ead;">function </span><span style="color:#8fa1b3;">myFunc</span><span>() {
+</span><span>    </span><span style="color:#b48ead;">return </span><span>&#39;</span><span style="color:#a3be8c;">test1 js file</span><span>&#39;;
+</span><span>}
+</span></code></pre>
+<pre data-lang="html" style="background-color:#2b303b;color:#c0c5ce;" class="language-html "><code class="language-html" data-lang="html"><span>&lt;!</span><span style="color:#b48ead;">DOCTYPE </span><span style="color:#d08770;">html</span><span>&gt;
+</span><span>&lt;</span><span style="color:#bf616a;">html </span><span style="color:#d08770;">lang</span><span>=&quot;</span><span style="color:#a3be8c;">en</span><span>&quot; </span><span style="color:#d08770;">xmlns</span><span>=&quot;</span><span style="color:#a3be8c;">http://www.w3.org/1999/xhtml</span><span>&quot;&gt;
+</span><span>&lt;</span><span style="color:#bf616a;">head</span><span>&gt;
+</span><span>    &lt;</span><span style="color:#bf616a;">meta </span><span style="color:#d08770;">charset</span><span>=&quot;</span><span style="color:#a3be8c;">utf-8</span><span>&quot; /&gt;
+</span><span>    &lt;</span><span style="color:#bf616a;">title</span><span>&gt;Home&lt;/</span><span style="color:#bf616a;">title</span><span>&gt;
+</span><span>    </span><span style="color:#65737e;">&lt;!-- 如下记载js、css资源 --&gt;
+</span><span>    &lt;</span><span style="color:#bf616a;">script </span><span style="color:#d08770;">type</span><span>=&quot;</span><span style="color:#a3be8c;">text/javascript</span><span>&quot; </span><span style="color:#d08770;">src</span><span>=&quot;</span><span style="color:#a3be8c;">test1.js</span><span>&quot;&gt;&lt;/</span><span style="color:#bf616a;">script</span><span>&gt;
+</span><span>    &lt;</span><span style="color:#bf616a;">link </span><span style="color:#d08770;">type</span><span>=&quot;</span><span style="color:#a3be8c;">text/css</span><span>&quot; </span><span style="color:#d08770;">rel</span><span>=&quot;</span><span style="color:#a3be8c;">stylesheet</span><span>&quot; </span><span style="color:#d08770;">href</span><span>=&quot;</span><span style="color:#a3be8c;">test1.css</span><span>&quot;/&gt;
+</span><span>&lt;/</span><span style="color:#bf616a;">head</span><span>&gt;
+</span><span>&lt;</span><span style="color:#bf616a;">body</span><span>&gt;
+</span><span>&lt;</span><span style="color:#bf616a;">h1</span><span>&gt;Resource Intercept Example&lt;/</span><span style="color:#bf616a;">h1</span><span>&gt;
+</span><span>&lt;</span><span style="color:#bf616a;">h2 </span><span style="color:#8fa1b3;">id</span><span>=&quot;</span><span style="color:#a3be8c;">result</span><span>&quot;&gt;&lt;/</span><span style="color:#bf616a;">h2</span><span>&gt;
+</span><span>&lt;</span><span style="color:#bf616a;">script</span><span>&gt;
+</span><span>    </span><span style="color:#65737e;">// 调用test1.js中的myFunc
+</span><span>    document.</span><span style="color:#bf616a;">getElementById</span><span>(&#39;</span><span style="color:#a3be8c;">result</span><span>&#39;).innerHTML = </span><span style="color:#bf616a;">myFunc</span><span>();
+</span><span>&lt;/</span><span style="color:#bf616a;">script</span><span>&gt;
+</span><span>&lt;/</span><span style="color:#bf616a;">body</span><span>&gt;
+</span><span>&lt;/</span><span style="color:#bf616a;">html</span><span>&gt;
+</span></code></pre>
+<p>代码很简单，效果也很容易知道，页面加载后，页面背景色为aqua，页面上会显示文本“test1 js file”。同时，当我们使用开发工具，刷新页面，能够看到对应的资源加载：</p>
+<p><img src="https://static-res.zhen.wang/images/post/2020-08-23-cefsharp-resource-intercept/src-web-page.png" alt="" /></p>
+<h2 id="cefsharpzi-yuan-lan-jie-ji-zi-ding-yi-chu-li">CefSharp资源拦截及自定义处理</h2>
+<p>完成上述准备后，我们进入正文：资源拦截及自定义处理。首先我们需要对目标的理解达成一致，资源拦截是指我们能够检测到上图中的html、js还有css的资源请求事件，在接下来的Example中，因为我们是使用的客户端程序，所以会在请求的过程中弹出提示；自定义处理是指，在完成拦截提示后，我们还能够替换这些资源，这里我们设定完成拦截后，可以把js和css换为我们想要另外的文件：test2.js和test2.css：</p>
+<pre data-lang="js" style="background-color:#2b303b;color:#c0c5ce;" class="language-js "><code class="language-js" data-lang="js"><span style="color:#b48ead;">function </span><span style="color:#8fa1b3;">myFunc</span><span>() {
+</span><span>    </span><span style="color:#b48ead;">return </span><span>&#39;</span><span style="color:#a3be8c;">test2 js file</span><span>&#39;;
+</span><span>}
+</span></code></pre>
+<pre data-lang="css" style="background-color:#2b303b;color:#c0c5ce;" class="language-css "><code class="language-css" data-lang="css"><span style="color:#bf616a;">body
+</span><span>{
+</span><span>    background-color: beige
+</span><span>}
+</span></code></pre>
+<p>即我们希望拦截并替换后，页面上的文字不再是之前的，而是“test2 js file”，页面的背景色是beige。</p>
+<h3 id="irequesthandler">IRequestHandler</h3>
+<p>在CefSharp中，要想对请求进行拦截处理，最为核心的Handler就是IRequestHandler这个接口，查看官方的源码，会发现里面有数个方法的定义，通过阅读官方的summary，我们可以聚焦到如下的两个定义（注释本人进行了删减）：</p>
+<pre data-lang="C#" style="background-color:#2b303b;color:#c0c5ce;" class="language-C# "><code class="language-C#" data-lang="C#"><span style="color:#65737e;">/// &lt;</span><span style="color:#bf616a;">summary</span><span style="color:#65737e;">&gt;
+</span><span style="color:#65737e;">/// Called before browser navigation.
+</span><span style="color:#65737e;">/// 译：在浏览器导航前调用
+</span><span style="color:#65737e;">/// If the navigation is allowed &lt;</span><span style="color:#bf616a;">see </span><span style="color:#d08770;">cref</span><span style="color:#65737e;">=</span><span style="color:#a3be8c;">&quot;E:CefSharp.IWebBrowser.FrameLoadStart&quot; </span><span style="color:#65737e;">/&gt; and &lt;</span><span style="color:#bf616a;">see </span><span style="color:#d08770;">cref</span><span style="color:#65737e;">=</span><span style="color:#a3be8c;">&quot;E:CefSharp.IWebBrowser.FrameLoadEnd&quot; </span><span style="color:#65737e;">/&gt;
+</span><span style="color:#65737e;">/// will be called. If the navigation is canceled &lt;</span><span style="color:#bf616a;">see </span><span style="color:#d08770;">cref</span><span style="color:#65737e;">=</span><span style="color:#a3be8c;">&quot;E:CefSharp.IWebBrowser.LoadError&quot; </span><span style="color:#65737e;">/&gt; will be called with an ErrorCode
+</span><span style="color:#65737e;">/// value of &lt;</span><span style="color:#bf616a;">see </span><span style="color:#d08770;">cref</span><span style="color:#65737e;">=</span><span style="color:#a3be8c;">&quot;F:CefSharp.CefErrorCode.Aborted&quot; </span><span style="color:#65737e;">/&gt;.
+</span><span style="color:#65737e;">/// &lt;/</span><span style="color:#bf616a;">summary</span><span style="color:#65737e;">&gt;
+</span><span style="color:#b48ead;">bool </span><span style="color:#8fa1b3;">OnBeforeBrowse</span><span>(
+</span><span>  IWebBrowser </span><span style="color:#bf616a;">chromiumWebBrowser</span><span>,
+</span><span>  IBrowser </span><span style="color:#bf616a;">browser</span><span>,
+</span><span>  IFrame </span><span style="color:#bf616a;">frame</span><span>,
+</span><span>  IRequest </span><span style="color:#bf616a;">request</span><span>,
+</span><span>  </span><span style="color:#b48ead;">bool </span><span style="color:#bf616a;">userGesture</span><span>,
+</span><span>  </span><span style="color:#b48ead;">bool </span><span style="color:#bf616a;">isRedirect</span><span>);
+</span><span>
+</span><span style="color:#65737e;">/// &lt;</span><span style="color:#bf616a;">summary</span><span style="color:#65737e;">&gt;
+</span><span style="color:#65737e;">/// Called on the CEF IO thread before a resource request is initiated.
+</span><span style="color:#65737e;">/// 在一个资源请求初始化前在CEF IO线程上调用
+</span><span style="color:#65737e;">/// &lt;/</span><span style="color:#bf616a;">summary</span><span style="color:#65737e;">&gt;
+</span><span>IResourceRequestHandler </span><span style="color:#8fa1b3;">GetResourceRequestHandler</span><span>(
+</span><span>  IWebBrowser </span><span style="color:#bf616a;">chromiumWebBrowser</span><span>,
+</span><span>  IBrowser </span><span style="color:#bf616a;">browser</span><span>,
+</span><span>  IFrame </span><span style="color:#bf616a;">frame</span><span>,
+</span><span>  IRequest </span><span style="color:#bf616a;">request</span><span>,
+</span><span>  </span><span style="color:#b48ead;">bool </span><span style="color:#bf616a;">isNavigation</span><span>,
+</span><span>  </span><span style="color:#b48ead;">bool </span><span style="color:#bf616a;">isDownload</span><span>,
+</span><span>  </span><span style="color:#b48ead;">string </span><span style="color:#bf616a;">requestInitiator</span><span>,
+</span><span>  </span><span style="color:#b48ead;">ref bool </span><span style="color:#bf616a;">disableDefaultHandling</span><span>);
+</span></code></pre>
+<p>于是，我们继承一个默认的名为RequestHandler的类（请区分DefaultRequestHandler），只重写上述的两个方法。</p>
+<pre data-lang="c#" style="background-color:#2b303b;color:#c0c5ce;" class="language-c# "><code class="language-c#" data-lang="c#"><span>  </span><span style="color:#b48ead;">public class </span><span style="color:#ebcb8b;">MyRequestHandler </span><span style="color:#eff1f5;">: </span><span style="color:#a3be8c;">RequestHandler
+</span><span style="color:#eff1f5;"> {
+</span><span style="color:#eff1f5;">     </span><span style="color:#b48ead;">protected override bool </span><span style="color:#8fa1b3;">OnBeforeBrowse</span><span style="color:#eff1f5;">(IWebBrowser </span><span style="color:#bf616a;">chromiumWebBrowser</span><span style="color:#eff1f5;">, IBrowser </span><span style="color:#bf616a;">browser</span><span style="color:#eff1f5;">, IFrame </span><span style="color:#bf616a;">frame</span><span style="color:#eff1f5;">, IRequest </span><span style="color:#bf616a;">request</span><span style="color:#eff1f5;">, </span><span style="color:#b48ead;">bool </span><span style="color:#bf616a;">userGesture</span><span style="color:#eff1f5;">,
+</span><span style="color:#eff1f5;">         </span><span style="color:#b48ead;">bool </span><span style="color:#bf616a;">isRedirect</span><span style="color:#eff1f5;">)
+</span><span style="color:#eff1f5;">     {
+</span><span style="color:#eff1f5;">         </span><span style="color:#65737e;">// 先调用基类的实现，断点调试
+</span><span style="color:#eff1f5;">         </span><span style="color:#b48ead;">return </span><span style="color:#bf616a;">base</span><span style="color:#eff1f5;">.</span><span style="color:#bf616a;">OnBeforeBrowse</span><span style="color:#eff1f5;">(</span><span style="color:#bf616a;">chromiumWebBrowser</span><span style="color:#eff1f5;">, </span><span style="color:#bf616a;">browser</span><span style="color:#eff1f5;">, </span><span style="color:#bf616a;">frame</span><span style="color:#eff1f5;">, </span><span style="color:#bf616a;">request</span><span style="color:#eff1f5;">, </span><span style="color:#bf616a;">userGesture</span><span style="color:#eff1f5;">, </span><span style="color:#bf616a;">isRedirect</span><span style="color:#eff1f5;">);
+</span><span style="color:#eff1f5;">     }
+</span><span style="color:#eff1f5;">
+</span><span style="color:#eff1f5;">     </span><span style="color:#b48ead;">protected override </span><span style="color:#eff1f5;">IResourceRequestHandler </span><span style="color:#8fa1b3;">GetResourceRequestHandler</span><span style="color:#eff1f5;">(IWebBrowser </span><span style="color:#bf616a;">chromiumWebBrowser</span><span style="color:#eff1f5;">, IBrowser </span><span style="color:#bf616a;">browser</span><span style="color:#eff1f5;">, IFrame </span><span style="color:#bf616a;">frame</span><span style="color:#eff1f5;">,
+</span><span style="color:#eff1f5;">         IRequest </span><span style="color:#bf616a;">request</span><span style="color:#eff1f5;">, </span><span style="color:#b48ead;">bool </span><span style="color:#bf616a;">isNavigation</span><span style="color:#eff1f5;">, </span><span style="color:#b48ead;">bool </span><span style="color:#bf616a;">isDownload</span><span style="color:#eff1f5;">, </span><span style="color:#b48ead;">string </span><span style="color:#bf616a;">requestInitiator</span><span style="color:#eff1f5;">, </span><span style="color:#b48ead;">ref bool </span><span style="color:#bf616a;">disableDefaultHandling</span><span style="color:#eff1f5;">)
+</span><span style="color:#eff1f5;">     {
+</span><span style="color:#eff1f5;">         </span><span style="color:#65737e;">// 先调用基类的实现，断点调试
+</span><span style="color:#eff1f5;">         </span><span style="color:#b48ead;">return </span><span style="color:#bf616a;">base</span><span style="color:#eff1f5;">.</span><span style="color:#bf616a;">GetResourceRequestHandler</span><span style="color:#eff1f5;">(
+</span><span style="color:#eff1f5;">             </span><span style="color:#bf616a;">chromiumWebBrowser</span><span style="color:#eff1f5;">, </span><span style="color:#bf616a;">browser</span><span style="color:#eff1f5;">, </span><span style="color:#bf616a;">frame</span><span style="color:#eff1f5;">, </span><span style="color:#bf616a;">request</span><span style="color:#eff1f5;">, </span><span style="color:#bf616a;">isNavigation</span><span style="color:#eff1f5;">, 
+</span><span style="color:#eff1f5;">             </span><span style="color:#bf616a;">isDownload</span><span style="color:#eff1f5;">, </span><span style="color:#bf616a;">requestInitiator</span><span style="color:#eff1f5;">, </span><span style="color:#b48ead;">ref </span><span style="color:#bf616a;">disableDefaultHandling</span><span style="color:#eff1f5;">);
+</span><span style="color:#eff1f5;">     }
+</span><span style="color:#eff1f5;"> }   
+</span></code></pre>
+<p>然后完成对该Handler的注册：</p>
+<pre data-lang="c#" style="background-color:#2b303b;color:#c0c5ce;" class="language-c# "><code class="language-c#" data-lang="c#"><span>  </span><span style="color:#bf616a;">this</span><span>.</span><span style="color:#bf616a;">_webBrowser </span><span>= new ChromiumWebBrowser(</span><span style="color:#b48ead;">string</span><span>.</span><span style="color:#bf616a;">Empty</span><span>)
+</span><span> {
+</span><span>     </span><span style="color:#bf616a;">RequestHandler </span><span>= new MyRequestHandler()
+</span><span> }; 
+</span></code></pre>
+<p>打上断点，开始访问我们的Example：index.html。这里会发现，OnBeforeBrowse调用了一次，而GetResourceRequestHandler会调用3次。检查OnBeforeBrowse中的request参数内容，是一次主页的请求，而GetResourceRequestHandler中的3次分别是：主页html资源、test1.js和test1.css。</p>
+<p><img src="https://static-res.zhen.wang/images/post/2020-08-23-cefsharp-resource-intercept/OnBeforeBrowse.png" alt="" /></p>
+<p><img src="https://static-res.zhen.wang/images/post/2020-08-23-cefsharp-resource-intercept/GetResourceRequestHandler.png" alt="" /></p>
+<p>结合官方注释和调试的结果，我们可以得出结论：要进行导航的拦截，我们可以重写OnBeforeBrowse方法，要想进行资源的拦截，我们需要实现自己的ResourceRequestHandler。</p>
+<h3 id="iresourcerequesthandler">IResourceRequestHandler</h3>
+<p>查看IResourceRequestHandler的定义，我们再次聚焦一个函数定义：</p>
+<pre data-lang="c#" style="background-color:#2b303b;color:#c0c5ce;" class="language-c# "><code class="language-c#" data-lang="c#"><span style="color:#65737e;">/// &lt;</span><span style="color:#bf616a;">summary</span><span style="color:#65737e;">&gt;
+</span><span style="color:#65737e;">/// Called on the CEF IO thread before a resource is loaded. To specify a handler for the resource return a &lt;</span><span style="color:#bf616a;">see </span><span style="color:#d08770;">cref</span><span style="color:#65737e;">=</span><span style="color:#a3be8c;">&quot;T:CefSharp.IResourceHandler&quot; </span><span style="color:#65737e;">/&gt; object
+</span><span style="color:#65737e;">/// &lt;/</span><span style="color:#bf616a;">summary</span><span style="color:#65737e;">&gt;
+</span><span style="color:#65737e;">/// &lt;</span><span style="color:#bf616a;">returns</span><span style="color:#65737e;">&gt;To allow the resource to load using the default network loader return null otherwise return an instance of &lt;</span><span style="color:#bf616a;">see </span><span style="color:#d08770;">cref</span><span style="color:#65737e;">=</span><span style="color:#a3be8c;">&quot;T:CefSharp.IResourceHandler&quot; </span><span style="color:#65737e;">/&gt; with a valid stream&lt;/</span><span style="color:#bf616a;">returns</span><span style="color:#65737e;">&gt;
+</span><span>IResourceHandler </span><span style="color:#8fa1b3;">GetResourceHandler</span><span>(
+</span><span>  IWebBrowser </span><span style="color:#bf616a;">chromiumWebBrowser</span><span>,
+</span><span>  IBrowser </span><span style="color:#bf616a;">browser</span><span>,
+</span><span>  IFrame </span><span style="color:#bf616a;">frame</span><span>,
+</span><span>  IRequest </span><span style="color:#bf616a;">request</span><span>);
+</span></code></pre>
+<p>该定义从注释可以看出，如果实现返回null，那么Cef会使用默认的网络加载器来发起请求，或者我们可以返回一个自定义的资源处理器ResourceHandler来处理一个合法的数据流（Stream）。也就是说，对于资源的处理，要想实现自定义的处理（不是拦截，拦截到目前为止我们可以在上述的两个Handler中进行处理）我们还需要实现一个IResourceHandler接口的实例，并在GetResourceHandler处进行返回，Cef才会在进行处理的时候使用我们的Handler。所以在<code>GetResourceHandler</code>中，我们进行资源的判断，如果是想要替换的资源，我们就使用WinForm提供的OpenFileDialog来选择本地的js或是css文件，并传给我们自定义的ResourceHandler，如果不是想要拦截的资源或是用户未选择任何的文件就走默认的：</p>
+<pre data-lang="c#" style="background-color:#2b303b;color:#c0c5ce;" class="language-c# "><code class="language-c#" data-lang="c#"><span style="color:#b48ead;">public class </span><span style="color:#ebcb8b;">MyResourceRequestHandler </span><span style="color:#eff1f5;">: </span><span style="color:#a3be8c;">ResourceRequestHandler
+</span><span style="color:#eff1f5;">{
+</span><span style="color:#eff1f5;">    </span><span style="color:#b48ead;">protected override </span><span style="color:#eff1f5;">IResourceHandler </span><span style="color:#8fa1b3;">GetResourceHandler</span><span style="color:#eff1f5;">(IWebBrowser </span><span style="color:#bf616a;">chromiumWebBrowser</span><span style="color:#eff1f5;">, IBrowser </span><span style="color:#bf616a;">browser</span><span style="color:#eff1f5;">, IFrame </span><span style="color:#bf616a;">frame</span><span style="color:#eff1f5;">, IRequest </span><span style="color:#bf616a;">request</span><span style="color:#eff1f5;">)
+</span><span style="color:#eff1f5;">    {
+</span><span style="color:#eff1f5;">        </span><span style="color:#b48ead;">if </span><span style="color:#eff1f5;">(</span><span style="color:#bf616a;">request</span><span style="color:#eff1f5;">.</span><span style="color:#bf616a;">Url</span><span style="color:#eff1f5;">.</span><span style="color:#bf616a;">EndsWith</span><span style="color:#eff1f5;">(</span><span>&quot;</span><span style="color:#a3be8c;">test1.js</span><span>&quot;</span><span style="color:#eff1f5;">) </span><span>|| </span><span style="color:#bf616a;">request</span><span style="color:#eff1f5;">.</span><span style="color:#bf616a;">Url</span><span style="color:#eff1f5;">.</span><span style="color:#bf616a;">EndsWith</span><span style="color:#eff1f5;">(</span><span>&quot;</span><span style="color:#a3be8c;">test1.css</span><span>&quot;</span><span style="color:#eff1f5;">))
+</span><span style="color:#eff1f5;">        {
+</span><span style="color:#eff1f5;">            </span><span style="color:#bf616a;">MessageBox</span><span style="color:#eff1f5;">.</span><span style="color:#bf616a;">Show</span><span style="color:#eff1f5;">(</span><span>$@&quot;</span><span style="color:#a3be8c;">资源拦截：</span><span style="color:#eff1f5;">{</span><span style="color:#bf616a;">request</span><span style="color:#eff1f5;">.</span><span style="color:#bf616a;">Url</span><span style="color:#eff1f5;">}</span><span>&quot;</span><span style="color:#eff1f5;">);
+</span><span style="color:#eff1f5;">
+</span><span style="color:#eff1f5;">            </span><span style="color:#b48ead;">string </span><span style="color:#bf616a;">type </span><span>= </span><span style="color:#bf616a;">request</span><span style="color:#eff1f5;">.</span><span style="color:#bf616a;">Url</span><span style="color:#eff1f5;">.</span><span style="color:#bf616a;">EndsWith</span><span style="color:#eff1f5;">(</span><span>&quot;</span><span style="color:#a3be8c;">.js</span><span>&quot;</span><span style="color:#eff1f5;">) </span><span>? &quot;</span><span style="color:#a3be8c;">js</span><span>&quot; : &quot;</span><span style="color:#a3be8c;">css</span><span>&quot;</span><span style="color:#eff1f5;">; </span><span style="color:#65737e;">// 这里简单判断js还是css，不过多编写
+</span><span style="color:#eff1f5;">            </span><span style="color:#b48ead;">string </span><span style="color:#bf616a;">fileName </span><span>= </span><span style="color:#d08770;">null</span><span style="color:#eff1f5;">;
+</span><span style="color:#eff1f5;">            </span><span style="color:#b48ead;">using </span><span style="color:#eff1f5;">(OpenFileDialog </span><span style="color:#bf616a;">openFileDialog </span><span>= new </span><span style="color:#eff1f5;">OpenFileDialog())
+</span><span style="color:#eff1f5;">            {
+</span><span style="color:#eff1f5;">                </span><span style="color:#bf616a;">openFileDialog</span><span style="color:#eff1f5;">.</span><span style="color:#bf616a;">Filter </span><span>= $@&quot;</span><span style="color:#eff1f5;">{</span><span style="color:#bf616a;">type</span><span style="color:#eff1f5;">}</span><span style="color:#a3be8c;">文件|*.</span><span style="color:#eff1f5;">{</span><span style="color:#bf616a;">type</span><span style="color:#eff1f5;">}</span><span>&quot;</span><span style="color:#eff1f5;">; </span><span style="color:#65737e;">// 过滤
+</span><span style="color:#eff1f5;">                </span><span style="color:#bf616a;">openFileDialog</span><span style="color:#eff1f5;">.</span><span style="color:#bf616a;">Multiselect </span><span>= </span><span style="color:#d08770;">true</span><span style="color:#eff1f5;">;
+</span><span style="color:#eff1f5;">                </span><span style="color:#b48ead;">if </span><span style="color:#eff1f5;">(</span><span style="color:#bf616a;">openFileDialog</span><span style="color:#eff1f5;">.</span><span style="color:#bf616a;">ShowDialog</span><span style="color:#eff1f5;">() </span><span>== </span><span style="color:#bf616a;">DialogResult</span><span style="color:#eff1f5;">.</span><span style="color:#bf616a;">OK</span><span style="color:#eff1f5;">)
+</span><span style="color:#eff1f5;">                {
+</span><span style="color:#eff1f5;">                    </span><span style="color:#bf616a;">fileName </span><span>= </span><span style="color:#bf616a;">openFileDialog</span><span style="color:#eff1f5;">.</span><span style="color:#bf616a;">FileName</span><span style="color:#eff1f5;">;
+</span><span style="color:#eff1f5;">                }
+</span><span style="color:#eff1f5;">            }
+</span><span style="color:#eff1f5;">
+</span><span style="color:#eff1f5;">            </span><span style="color:#b48ead;">if </span><span style="color:#eff1f5;">(</span><span style="color:#b48ead;">string</span><span style="color:#eff1f5;">.</span><span style="color:#bf616a;">IsNullOrWhiteSpace</span><span style="color:#eff1f5;">(</span><span style="color:#bf616a;">fileName</span><span style="color:#eff1f5;">))
+</span><span style="color:#eff1f5;">            {
+</span><span style="color:#eff1f5;">                </span><span style="color:#65737e;">// 没有选择文件，还是走默认的Handler
+</span><span style="color:#eff1f5;">                </span><span style="color:#b48ead;">return </span><span style="color:#bf616a;">base</span><span style="color:#eff1f5;">.</span><span style="color:#bf616a;">GetResourceHandler</span><span style="color:#eff1f5;">(</span><span style="color:#bf616a;">chromiumWebBrowser</span><span style="color:#eff1f5;">, </span><span style="color:#bf616a;">browser</span><span style="color:#eff1f5;">, </span><span style="color:#bf616a;">frame</span><span style="color:#eff1f5;">, </span><span style="color:#bf616a;">request</span><span style="color:#eff1f5;">);
+</span><span style="color:#eff1f5;">            }
+</span><span style="color:#eff1f5;">            </span><span style="color:#65737e;">// 否则使用选择的资源返回
+</span><span style="color:#eff1f5;">            </span><span style="color:#b48ead;">return </span><span>new </span><span style="color:#eff1f5;">MyResourceHandler(</span><span style="color:#bf616a;">fileName</span><span style="color:#eff1f5;">);
+</span><span style="color:#eff1f5;">        }
+</span><span style="color:#eff1f5;">
+</span><span style="color:#eff1f5;">        </span><span style="color:#b48ead;">return </span><span style="color:#bf616a;">base</span><span style="color:#eff1f5;">.</span><span style="color:#bf616a;">GetResourceHandler</span><span style="color:#eff1f5;">(</span><span style="color:#bf616a;">chromiumWebBrowser</span><span style="color:#eff1f5;">, </span><span style="color:#bf616a;">browser</span><span style="color:#eff1f5;">, </span><span style="color:#bf616a;">frame</span><span style="color:#eff1f5;">, </span><span style="color:#bf616a;">request</span><span style="color:#eff1f5;">);
+</span><span style="color:#eff1f5;">    }
+</span><span style="color:#eff1f5;">}
+</span></code></pre>
+<h3 id="iresourcehandler">IResourceHandler</h3>
+<p>根据上文，我们进一步探究IResourceHandler，对该Handler，官方有一个默认的实现：RequestHandler，该Handler通过阅读源码可以知道是网络加载的Handler，这里为了实现我们自定义拦截策略，我们最好单独实现自己的IResourceHandler。对于该接口，有如下的注释：</p>
+<pre data-lang="c#" style="background-color:#2b303b;color:#c0c5ce;" class="language-c# "><code class="language-c#" data-lang="c#"><span style="color:#65737e;">/// &lt;</span><span style="color:#bf616a;">summary</span><span style="color:#65737e;">&gt;
+</span><span style="color:#65737e;">/// Class used to implement a custom resource handler. The methods of this class will always be called on the CEF IO thread.
+</span><span style="color:#65737e;">/// Blocking the CEF IO thread will adversely affect browser performance. We suggest you execute your code in a Task (or similar).
+</span><span style="color:#65737e;">/// To implement async handling, spawn a new Task (or similar), keep a reference to the callback. When you have a
+</span><span style="color:#65737e;">/// fully populated stream, execute the callback. Once the callback Executes, GetResponseHeaders will be called where you
+</span><span style="color:#65737e;">/// can modify the response including headers, or even redirect to a new Url. Set your responseLength and headers
+</span><span style="color:#65737e;">/// Populate the dataOut stream in ReadResponse. For those looking for a sample implementation or upgrading from
+</span><span style="color:#65737e;">/// a previous version &lt;</span><span style="color:#bf616a;">see </span><span style="color:#d08770;">cref</span><span style="color:#65737e;">=</span><span style="color:#a3be8c;">&quot;T:CefSharp.ResourceHandler&quot; </span><span style="color:#65737e;">/&gt;. For those upgrading, inherit from ResourceHandler instead of IResourceHandler
+</span><span style="color:#65737e;">/// add the override keywoard to existing methods e.g. ProcessRequestAsync.
+</span><span style="color:#65737e;">/// &lt;/</span><span style="color:#bf616a;">summary</span><span style="color:#65737e;">&gt;
+</span><span style="color:#b48ead;">public interface </span><span>IResourceHandler : </span><span style="color:#a3be8c;">IDisposable
+</span><span>{ ... }
+</span></code></pre>
+<p>该类的注释意思大致为：我们可以通过实现该接口来实现自定义资源的处理类。该类中的方法总是在CEF的IO线程中调用。然而，阻塞CEF IO线程将会不利于浏览器的性能。所以官方建议开发者通过把自己的处理代码放在Task（或是类似的异步编程框架）中异步执行，然后在完成或取消（失败）时，在异步中调用callback对应的操作函数（continue、cancel等方法）。当你拥有一个完全填充（fully populated）好了的Stream的时候，再执行callback（这一步对应Open方法）。一旦callback执行了，GetResponseHeaders这个方法将会调用，于是你可以在这个方法里面对Reponse的内容包括headers进行修改，或者甚至是重定向到一个新的Url。设置你自己的reponseLength和headers。接下来，通过在ReadResponse（实际上即将作废，而是Read）函数中，实现并填充dataOut这个Stream。最终CEF会对该Stream进行读取数据，获得资源数据。</p>
+<p>事实上，该Handler的实现可以有很多花样，这里我们实现一个最简单的。</p>
+<h4 id="dispose">Dispose</h4>
+<p>对于通常进行资源释放的Dispose，因为我们这里只是一个Demo，所以暂时留空。</p>
+<h4 id="open-processrequest">Open（ProcessRequest）</h4>
+<p>官方注释指出，ProcessRequest将会在不久的将来弃用，改为Open。所以ProcessRequest我们直接返回true。对于Open方法，其注释告诉我们：</p>
+<ul>
+<li>要想要立刻进行资源处理（同步），请设置handleRequest参数为true，并返回true</li>
+<li>决定稍后再进行资源的处理（异步），设置handleRequest为false，并调用callback对应的continue和cancel方法来让请求处理继续还是取消，并且当前Open返回false。</li>
+<li>要立刻取消资源的处理，设置handleRequest为true，并返回false。</li>
+</ul>
+<p>也就是说，handleRequest的true或false决定是同步还是异步处理。若同步，则Cef会立刻通过Open的返回值true或false来决定后续继续进行还是取消。若为异步，则Cef会通过异步的方式来检查callback的调用情况（这里的callback实际上是要我们创建Task回调触发的）。这里我们选择同步的方式（选择异步也没有问题）编写如下的代码：</p>
+<pre data-lang="c#" style="background-color:#2b303b;color:#c0c5ce;" class="language-c# "><code class="language-c#" data-lang="c#"><span style="color:#b48ead;">public bool </span><span style="color:#8fa1b3;">Open</span><span>(IRequest </span><span style="color:#bf616a;">request</span><span>, </span><span style="color:#b48ead;">out bool </span><span style="color:#bf616a;">handleRequest</span><span>, ICallback </span><span style="color:#bf616a;">callback</span><span>)
+</span><span>{
+</span><span>    </span><span style="color:#bf616a;">handleRequest </span><span>= </span><span style="color:#d08770;">true</span><span>;
+</span><span>    </span><span style="color:#b48ead;">return </span><span style="color:#d08770;">true</span><span>;
+</span><span>}
+</span></code></pre>
+<h4 id="getresponseheaders">GetResponseHeaders</h4>
+<p>在上小节中我们已经完成了对资源数据的入口（Open）的分析。既然我们已经告诉了Cef我们准备开始进行资源请求的处理了，那么接下来我们显然需要着手进行资源的处理。根据前面的概要注释，我们需要实现GetResponseHeaders方法，因为这是资源处理的第二步。该方法的注释如下：</p>
+<pre data-lang="c#" style="background-color:#2b303b;color:#c0c5ce;" class="language-c# "><code class="language-c#" data-lang="c#"><span style="color:#65737e;">/// &lt;</span><span style="color:#bf616a;">summary</span><span style="color:#65737e;">&gt;
+</span><span style="color:#65737e;">/// Retrieve response header information. If the response length is not known
+</span><span style="color:#65737e;">/// set &lt;</span><span style="color:#bf616a;">paramref </span><span style="color:#d08770;">name</span><span style="color:#65737e;">=</span><span style="color:#a3be8c;">&quot;responseLength&quot; </span><span style="color:#65737e;">/&gt; to -1 and ReadResponse() will be called until it
+</span><span style="color:#65737e;">/// returns false. If the response length is known set &lt;</span><span style="color:#bf616a;">paramref </span><span style="color:#d08770;">name</span><span style="color:#65737e;">=</span><span style="color:#a3be8c;">&quot;responseLength&quot; </span><span style="color:#65737e;">/&gt;
+</span><span style="color:#65737e;">/// to a positive value and ReadResponse() will be called until it returns
+</span><span style="color:#65737e;">/// false or the specified number of bytes have been read.
+</span><span style="color:#65737e;">/// 
+</span><span style="color:#65737e;">/// It is also possible to set &lt;</span><span style="color:#bf616a;">paramref </span><span style="color:#d08770;">name</span><span style="color:#65737e;">=</span><span style="color:#a3be8c;">&quot;response&quot; </span><span style="color:#65737e;">/&gt; to a redirect http status code
+</span><span style="color:#65737e;">/// and pass the new URL via a Location header. Likewise with &lt;</span><span style="color:#bf616a;">paramref </span><span style="color:#d08770;">name</span><span style="color:#65737e;">=</span><span style="color:#a3be8c;">&quot;redirectUrl&quot; </span><span style="color:#65737e;">/&gt; it
+</span><span style="color:#65737e;">/// is valid to set a relative or fully qualified URL as the Location header
+</span><span style="color:#65737e;">/// value. If an error occured while setting up the request you can call
+</span><span style="color:#65737e;">/// &lt;</span><span style="color:#bf616a;">see </span><span style="color:#d08770;">cref</span><span style="color:#65737e;">=</span><span style="color:#a3be8c;">&quot;P:CefSharp.IResponse.ErrorCode&quot; </span><span style="color:#65737e;">/&gt; on &lt;</span><span style="color:#bf616a;">paramref </span><span style="color:#d08770;">name</span><span style="color:#65737e;">=</span><span style="color:#a3be8c;">&quot;response&quot; </span><span style="color:#65737e;">/&gt; to indicate the error condition.
+</span><span style="color:#65737e;">/// &lt;/</span><span style="color:#bf616a;">summary</span><span style="color:#65737e;">&gt;
+</span><span style="color:#b48ead;">void </span><span style="color:#8fa1b3;">GetResponseHeaders</span><span>(IResponse </span><span style="color:#bf616a;">response</span><span>, </span><span style="color:#b48ead;">out long </span><span style="color:#bf616a;">responseLength</span><span>, </span><span style="color:#b48ead;">out string </span><span style="color:#bf616a;">redirectUrl</span><span>);
+</span></code></pre>
+<p>Summary翻译解释如下：获取响应头信息。如果响应的数据长度未知，则设置<code>responseLength</code>为<code>-1</code>，然后CEF会一直调用<code>ReadResponse</code>（即将废除，实际上是<code>Read</code>方法）直到该Read方法返回<code>false</code>。如果响应数据的长度是已知的，可以直接设置<code>responseLength</code>长度为一个正数，然后<code>ReadResponse</code>（<code>Read</code>）将会一直调用，直到该Read方法返回false或者在已经读取的数据的字节长度达到了设置的responseLength的值。当然你也可以通过设置response.StatusCode值为重定向的值（30x）以及redirectUrl为对应的重定向Url来实现资源重定向。</p>
+<p>在本文中，我们采取简单的方式：直接返回资源的长度，然后交给下一步的<code>Read</code>方法来进行真正的资源处理。在该步骤中，我们编写获取本地文件字节数据来实现js和css文件的本地加载，并且将该数据保存在该ResourceHanlder实例私有变量中。</p>
+<pre data-lang="c#" style="background-color:#2b303b;color:#c0c5ce;" class="language-c# "><code class="language-c#" data-lang="c#"><span style="color:#b48ead;">public void </span><span style="color:#8fa1b3;">GetResponseHeaders</span><span>(IResponse </span><span style="color:#bf616a;">response</span><span>, </span><span style="color:#b48ead;">out long </span><span style="color:#bf616a;">responseLength</span><span>, </span><span style="color:#b48ead;">out string </span><span style="color:#bf616a;">redirectUrl</span><span>)
+</span><span>{
+</span><span>    </span><span style="color:#b48ead;">using </span><span>(FileStream </span><span style="color:#bf616a;">fileStream </span><span>= new FileStream(</span><span style="color:#bf616a;">this</span><span>.</span><span style="color:#bf616a;">_localResourceFileName</span><span>, </span><span style="color:#bf616a;">FileMode</span><span>.</span><span style="color:#bf616a;">Open</span><span>, </span><span style="color:#bf616a;">FileAccess</span><span>.</span><span style="color:#bf616a;">Read</span><span>))
+</span><span>    {
+</span><span>        </span><span style="color:#b48ead;">using </span><span>(BinaryReader </span><span style="color:#bf616a;">binaryReader </span><span>= new BinaryReader(</span><span style="color:#bf616a;">fileStream</span><span>))
+</span><span>        {
+</span><span>            </span><span style="color:#b48ead;">long </span><span style="color:#bf616a;">length </span><span>= </span><span style="color:#bf616a;">fileStream</span><span>.</span><span style="color:#bf616a;">Length</span><span>;
+</span><span>            </span><span style="color:#bf616a;">this</span><span>.</span><span style="color:#bf616a;">_localResourceData </span><span>= new </span><span style="color:#b48ead;">byte</span><span>[</span><span style="color:#bf616a;">length</span><span>];
+</span><span>            </span><span style="color:#65737e;">// 读取文件中的内容并保存到私有变量字节数组中
+</span><span>            </span><span style="color:#bf616a;">binaryReader</span><span>.</span><span style="color:#bf616a;">Read</span><span>(</span><span style="color:#bf616a;">this</span><span>.</span><span style="color:#bf616a;">_localResourceData</span><span>, </span><span style="color:#d08770;">0</span><span>, </span><span style="color:#bf616a;">this</span><span>.</span><span style="color:#bf616a;">_localResourceData</span><span>.</span><span style="color:#bf616a;">Length</span><span>);
+</span><span>        }
+</span><span>    }
+</span><span>
+</span><span>    </span><span style="color:#bf616a;">responseLength </span><span>= </span><span style="color:#bf616a;">this</span><span>.</span><span style="color:#bf616a;">_localResourceData</span><span>.</span><span style="color:#bf616a;">LongLength</span><span>;
+</span><span>    </span><span style="color:#bf616a;">redirectUrl </span><span>= </span><span style="color:#d08770;">null</span><span>;
+</span><span>}
+</span></code></pre>
+<h4 id="read">Read</h4>
+<p>该方法的定义和注释如下：</p>
+<pre data-lang="c#" style="background-color:#2b303b;color:#c0c5ce;" class="language-c# "><code class="language-c#" data-lang="c#"><span style="color:#65737e;">/// &lt;</span><span style="color:#bf616a;">summary</span><span style="color:#65737e;">&gt;
+</span><span style="color:#65737e;">/// Read response data. If data is available immediately copy up to
+</span><span style="color:#65737e;">/// dataOut.Length bytes into dataOut, set bytesRead to the number of
+</span><span style="color:#65737e;">/// bytes copied, and return true. To read the data at a later time keep a
+</span><span style="color:#65737e;">/// pointer to dataOut, set bytesRead to 0, return true and execute
+</span><span style="color:#65737e;">/// callback when the data is available (dataOut will remain valid until
+</span><span style="color:#65737e;">/// the callback is executed). To indicate response completion set bytesRead
+</span><span style="color:#65737e;">/// to 0 and return false. To indicate failure set bytesRead to &amp;lt; 0 (e.g. -2
+</span><span style="color:#65737e;">/// for ERR_FAILED) and return false. This method will be called in sequence
+</span><span style="color:#65737e;">/// but not from a dedicated thread.
+</span><span style="color:#65737e;">/// 
+</span><span style="color:#65737e;">/// For backwards compatibility set bytesRead to -1 and return false and the ReadResponse method will be called.
+</span><span style="color:#65737e;">/// &lt;/</span><span style="color:#bf616a;">summary</span><span style="color:#65737e;">&gt;
+</span><span style="color:#b48ead;">bool </span><span style="color:#8fa1b3;">Read</span><span>(Stream </span><span style="color:#bf616a;">dataOut</span><span>, </span><span style="color:#b48ead;">out int </span><span style="color:#bf616a;">bytesRead</span><span>, IResourceReadCallback </span><span style="color:#bf616a;">callback</span><span>);
+</span></code></pre>
+<p>Summary的翻译大致为：读取响应数据。如果数据是可以立即获得的，那么可以直接将<code>dataOut.Length</code>长度的字节数据拷贝到dataOut这个流中，然后设置bytesRead的值为拷贝的数据字节长度值，最后再返回<code>true</code>。如果开发者希望继续持有dataOut的引用（注释是pointer指针，但是个人觉得这里写为指向该dataOut的引用更好）然后在稍后填充该数据流，那么可以设置<code>bytesRead</code>为<code>0</code>，通过异步方式在数据准备好的时候执行callback的操作函数，然后立刻返回<code>true</code>。（dataOut这个流会一直保持不被释放直到callback被调用为止）。为了让CEF知道当前的响应数据已经填充完毕，需要设置<code>bytesRead</code>为<code>0</code>然后返回<code>false</code>。要想让CEF知道响应失败，需要设置<code>bytesRead</code>为一个小于零的数（例如ERR_FAILED: -2），然后返回<code>false</code>。这个方法将会依次调用但不是在一个专有线程。</p>
+<p>根据上述的注释，总结如下：</p>
+<ul>
+<li>bytesRead &gt; 0，return true：填充了数据，但Read还会被调用</li>
+<li>bytesRead = 0，return false：数据填充完毕，当前为最后一次调用</li>
+<li>bytesRead &lt; 0，return false：出错，当前为最后一次调用</li>
+<li>bytesRead = 0，return true：CEF不会释放dataOut流，在异步调用中准备好数据后调用callback</li>
+</ul>
+<p>针对本例，我们增加一个该类的私有变量<code>_dataReadCount</code>用于标识已读的资源数据字节量并在构造函数中初始化为0。</p>
+<p>每次在Read中进行读取的时候，首先检查剩余待读取字节数<code>this._localResourceData.LongLength - this._dataReadCount</code>，如果该值为零，则表明已经将所有的数据通过dataOut拷贝给了外围，此时设置bytesRead为0，直接返回false；若剩余值大于0，则需要继续进行拷贝操作，但需要注意的是dataOut并不是一个无限大的流，而是一个类似于缓存的流，它的Length值为<code>2^16 = 65536</code>，所以我们需要设置bytesRead来让外围知道我们实际在这个流中放了多少字节的数据。同时在使用<code>Stream.Write</code>API的时候，需要设置正确的offset和count。</p>
+<p>最终，<code>Read</code>的实现如下：</p>
+<pre data-lang="c#" style="background-color:#2b303b;color:#c0c5ce;" class="language-c# "><code class="language-c#" data-lang="c#"><span style="color:#b48ead;">public bool </span><span style="color:#8fa1b3;">Read</span><span>(Stream </span><span style="color:#bf616a;">dataOut</span><span>, </span><span style="color:#b48ead;">out int </span><span style="color:#bf616a;">bytesRead</span><span>, IResourceReadCallback </span><span style="color:#bf616a;">callback</span><span>)
+</span><span>{
+</span><span>    </span><span style="color:#b48ead;">int </span><span style="color:#bf616a;">leftToRead </span><span>= </span><span style="color:#bf616a;">this</span><span>.</span><span style="color:#bf616a;">_localResourceData</span><span>.</span><span style="color:#bf616a;">Length </span><span>- </span><span style="color:#bf616a;">this</span><span>.</span><span style="color:#bf616a;">_dataReadCount</span><span>;
+</span><span>    </span><span style="color:#b48ead;">if </span><span>(</span><span style="color:#bf616a;">leftToRead </span><span>== </span><span style="color:#d08770;">0</span><span>)
+</span><span>    {
+</span><span>        </span><span style="color:#bf616a;">bytesRead </span><span>= </span><span style="color:#d08770;">0</span><span>;
+</span><span>        </span><span style="color:#b48ead;">return </span><span style="color:#d08770;">false</span><span>;
+</span><span>    }
+</span><span>
+</span><span>    </span><span style="color:#b48ead;">int </span><span style="color:#bf616a;">needRead </span><span>= </span><span style="color:#bf616a;">Math</span><span>.</span><span style="color:#bf616a;">Min</span><span>((</span><span style="color:#b48ead;">int</span><span>)</span><span style="color:#bf616a;">dataOut</span><span>.</span><span style="color:#bf616a;">Length</span><span>, </span><span style="color:#bf616a;">leftToRead</span><span>); </span><span style="color:#65737e;">// 最大为dataOut.Lenght
+</span><span>    </span><span style="color:#bf616a;">dataOut</span><span>.</span><span style="color:#bf616a;">Write</span><span>(</span><span style="color:#bf616a;">this</span><span>.</span><span style="color:#bf616a;">_localResourceData</span><span>, </span><span style="color:#bf616a;">this</span><span>.</span><span style="color:#bf616a;">_dataReadCount</span><span>, </span><span style="color:#bf616a;">needRead</span><span>);
+</span><span>    </span><span style="color:#bf616a;">this</span><span>.</span><span style="color:#bf616a;">_dataReadCount </span><span>+= </span><span style="color:#bf616a;">needRead</span><span>;
+</span><span>    </span><span style="color:#bf616a;">bytesRead </span><span>= </span><span style="color:#bf616a;">needRead</span><span>;
+</span><span>    </span><span style="color:#b48ead;">return </span><span style="color:#d08770;">true</span><span>;
+</span><span>}
+</span></code></pre>
+<h4 id="qi-ta-de-ji-ge-fang-fa">其他的几个方法</h4>
+<p>对于Cancel和Skip方法，在本例不会调用，所以这里使用默认实现，不进行讨论，感兴趣的伙伴可以自己去研究。</p>
+<h2 id="zui-zhong-xiao-guo">最终效果</h2>
+<p>通过上文的代码设计和编写，我们最终完成了一个简单的资源拦截及自定义处理的Example。首先我们在不进行资源拦截的情况下，加载我们的web页面：</p>
+<p><img src="https://static-res.zhen.wang/images/post/2020-08-23-cefsharp-resource-intercept/load-without-intercept.png" alt="" /></p>
+<p>可以看到界面中呈现“test1 js file”的字样以及背景色为海蓝色。接下来我们开启资源拦截，再次加载页面，在加载过程中会有对应资源的拦截时的弹窗以及我们需要选择我们自定义的资源文件：</p>
+<p><img src="https://static-res.zhen.wang/images/post/2020-08-23-cefsharp-resource-intercept/js-intercept.png" alt="" /></p>
+<p><img src="https://static-res.zhen.wang/images/post/2020-08-23-cefsharp-resource-intercept/js-select.png" alt="" /></p>
+<p><img src="https://static-res.zhen.wang/images/post/2020-08-23-cefsharp-resource-intercept/css-intercept.png" alt="" /></p>
+<p><img src="https://static-res.zhen.wang/images/post/2020-08-23-cefsharp-resource-intercept/css-select.png" alt="" /></p>
+<p>完成处理后，得到如下的显示页面：</p>
+<p><img src="https://static-res.zhen.wang/images/post/2020-08-23-cefsharp-resource-intercept/load-with-intercept.png" alt="" /></p>
+<h2 id="yuan-ma">源码</h2>
+<p>本Example的源码已经开源在Github上，整个Demo较为简单，主要是对本文的验证</p>
+<p><a rel="noopener" target="_blank" href="https://github.com/w4ngzhen/CefSharpResourceInterceptExample">链接</a></p>
+
+    </div>
+</div>
+<script src="https://zhen.wang/libs/viewerjs@1.11.7/viewer.min.js"></script>
+<link rel="stylesheet" href="https://zhen.wang/libs/viewerjs@1.11.7/viewer.min.css"/>
+<script>
+  if (window.Viewer) {
+    document.querySelectorAll('img').forEach(img => {
+      new Viewer(img, {
+        inline: false,
+        navbar: false,
+        toolbar: {
+          zoomIn: 1,
+          zoomOut: 1,
+          reset: 1,
+          rotateLeft: 1,
+          rotateRight: 1,
+        },
+      });
+    });
+  }
+</script>
+
+
+</body>
+</html>

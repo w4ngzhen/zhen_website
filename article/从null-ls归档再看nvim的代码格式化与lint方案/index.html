@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="utf-8">
+    <meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover"
+          name="viewport">
+    
+    
+    <!-- umami web analysis -->
+    <script defer src="https://zhen.wang/libs/umami/umami.script.js"
+            data-website-id="d66cfe03-f6b3-4aa0-baf8-728700db1b09"></script>
+    
+    
+    
+    <link rel="icon" type="image/png" sizes="16x16" href="https://zhen.wang/images/blog-site-icon.svg">
+    <link rel="icon" type="image/png" sizes="32x32" href="https://zhen.wang/images/blog-site-icon.svg">
+    <title>zhen&#x27;s everything</title>
+    <link rel="stylesheet" href="https://zhen.wang/style.css">
+    
+<link rel="stylesheet" href="https://zhen.wang/article_content.css">
+<link rel="stylesheet" href="https://zhen.wang/article_markdown.css">
+
+</head>
+<body>
+
+<div id="article">
+    <header class="article-header">
+        
+<div class="base-title">
+    <a href="#" onclick="history.length > 1 ? history.back() : location.href = '/'; return false;">&LeftArrow; Back</a>
+    <h1>
+        从null-ls归档再看nvim的代码格式化与lint方案
+    </h1>
+</div>
+
+    </header>
+    <p class="article-date">2023-07-25</p>
+    
+    <!-- toc -->
+    <div class="article-toc">
+        <label class="toc-title" for="toc-trigger">目录</label>
+        <input id="toc-trigger" type="checkbox" checked/>
+        <div class="toc-content">
+            <ol class="toc">
+                
+                <li class="toc-item toc-level-1">
+                    <a class="toc-link" href="https://zhen.wang/article/从null-ls归档再看nvim的代码格式化与lint方案/#dai-ma-ge-shi-hua-fang-an">代码格式化方案</a>
+                    
+                </li>
+                
+                <li class="toc-item toc-level-1">
+                    <a class="toc-link" href="https://zhen.wang/article/从null-ls归档再看nvim的代码格式化与lint方案/#lintfang-an">lint方案</a>
+                    
+                </li>
+                
+                <li class="toc-item toc-level-1">
+                    <a class="toc-link" href="https://zhen.wang/article/从null-ls归档再看nvim的代码格式化与lint方案/#zong-jie">总结</a>
+                    
+                </li>
+                
+            </ol>
+        </div>
+    </div>
+    
+    <!-- real content -->
+    <div class="article-content markdown-content">
+        <p>由于null-lsp的归档和暂停更新，我们需要重新审视并思考还有哪些架构简单易于理解的插件配置方案。本文将介绍脱离null-ls插件体系下的代码格式化和lint的插件配置方案。</p>
+<span id="continue-reading"></span>
+<p>在之前的文章中《<a rel="noopener" target="_blank" href="https://zhuanlan.zhihu.com/p/643033884">详解nvim内建LSP体系与基于nvim-cmp的代码补全体系 - 知乎 (zhihu.com)</a>》中我们提到了null-ls这个插件的目的与作用：诸如prettier、eslint等本身不属于LSP范畴，但又对代码具有解析、处理的外部工具，我们可以通过null-ls插件暴露为语言服务（Language Server），于是用户可以直接使用nvim内置的<code>vim.lsp.*</code>相关的API来调用这些prettier、eslint等工具所提供的代码解析、格式化等功能。</p>
+<p>然而，null-lsp由于某些原因，即将归档并停止更新了（可以看这里：<a rel="noopener" target="_blank" href="https://github.com/jose-elias-alvarez/null-ls.nvim/issues/1621">IMPORTANT: Archiving null-ls</a>）。在这个背景下，笔者不得不重新审视目前关于代码格式化以及代码lint的插件方案。经过笔者的调研和实践，发现除了null-ls体系以外，其实还有很多架构简单易于理解的配置方案，本文将进行简单的介绍系下的代码格式化和lint配置方案。</p>
+<h1 id="dai-ma-ge-shi-hua-fang-an">代码格式化方案</h1>
+<p>nvim的代码格式化有一个比较经典的插件：<a rel="noopener" target="_blank" href="https://github.com/mhartington/formatter.nvim">mhartington/formatter.nvim</a>。插件安装就不再赘述了，这里主要讲解下formatter这个插件的基本配置思路。</p>
+<p>首先，这个插件不会提供格式化代码的能力，它只是一个调用者，你的机器是需要安装相关的代码格式化工具的（譬如要使用prettier，则要通<code>npm install -g prettier</code>安装）。</p>
+<p>其次，formatter这个插件的思路也很简单：你可以为每一种文件类型（filetype）配置想要调用外部的格式化工具，然后一旦使用插件提供的指令（譬如：<code>Format</code>），它就会调用你所配置的外部格式化工具。</p>
+<p><img src="https://static-res.zhen.wang/images/post/2023-07-25/010-formatter-plugin-runtime-arch.png" alt="010-formatter-plugin-runtime-arch" /></p>
+<p>而这个插件具体的配置方式，通过官方文档我们知道，我们需要在给formatter这个插件进行setup的时候，传入一个<code>filetype</code>的字段，这个字段值是一个table，里面的每一个key就是一个filetype，而值则是对应要调用的格式化工具的一段配置。</p>
+<p>formatter插件库实际上已经给很多主流的语言都编写了默认的格式化工具调用代码，包括javascript的prettier等。比如，你可以按照如下的方式来配置javascript使用formatter内置编写好的prettier调用代码：</p>
+<pre data-lang="lua" style="background-color:#2b303b;color:#c0c5ce;" class="language-lua "><code class="language-lua" data-lang="lua"><span style="color:#96b5b4;">require</span><span>(&quot;</span><span style="color:#a3be8c;">formatter</span><span>&quot;).</span><span style="color:#bf616a;">setup </span><span>{
+</span><span>  </span><span style="color:#65737e;">-- ... ...
+</span><span>  </span><span style="color:#a3be8c;">filetype </span><span>= {
+</span><span>    </span><span style="color:#a3be8c;">javascipt </span><span>= { </span><span style="color:#96b5b4;">require</span><span>(&#39;</span><span style="color:#a3be8c;">formatter.filetypes.javascript</span><span>&#39;).prettier }
+</span><span>  }
+</span><span>  </span><span style="color:#65737e;">-- ... ...
+</span><span>}
+</span></code></pre>
+<p>那么这个<code>'formatter.filetypes.javascript'</code>是什么呢？翻阅formatter插件代码，可以看到路径<code>lua/formatter/filetypes/javascript.lua</code>代码：</p>
+<p><img src="https://static-res.zhen.wang/images/post/2023-07-25/020-formatter-repo-filetypes-js.png" alt="020-formatter-repo-filetypes-js" /></p>
+<p>而该代码中的<code>local defaults = require "formatter.default"</code>就来源于<code>lua/formatter/defaults</code>目录下的模块，像prettier就来自于对应文件preitter.lua：</p>
+<p><img src="https://static-res.zhen.wang/images/post/2023-07-25/030-formatter-repo-default-prettier.png" alt="030-formatter-repo-default-prettier" /></p>
+<p>这里也能很清晰的看到，formatter调用prettier的时候，就是调用的命令行环境中的<code>prettier</code>，所以我们才在一开始的时候提到，需要安装对应外部格式化工具，并且能在命令行形式被访问调用。</p>
+<p>那么，再次回到笔者自己的配置：</p>
+<p><img src="https://static-res.zhen.wang/images/post/2023-07-25/035-my-formatter-plugin-setup.png" alt="035-my-formatter-plugin-setup" /></p>
+<p>主要分为了两个部分：</p>
+<ol>
+<li>
+<p>针对javascript、typescript以及它们的react扩展（jsx、tsx）文件类型，我们都配置了对应的格式化器使用prettier；这里通过lua脚本for遍历来方便的为一系列的文件类型均使用了prettier。</p>
+</li>
+<li>
+<p>keymap按键映射。使用leader+大小写f键，来映射调用formatter插件提供的FormatWrite和Format指令。</p>
+</li>
+</ol>
+<p>需要注意的是，这里的格式化要和nvim的lsp格式化（<code>vim.lsp.buf.format()</code>）区别开来。formatter插件的格式化，主要是使用外部格式化工具进行，往往更加专注代码格式化本身；而lsp的格式化是通过语言服务（往往伴随更加复杂的代码分析）完成的。它们的各有各的侧重点，但在笔者看来，如果一门语言有更加专业的格式化方案（譬如本例中js使用prettier这种成熟方案），那么笔者建议使用formatter插件配合对应的专业格式化工具来完成代码格式化，而之前文章《<a rel="noopener" target="_blank" href="https://zhuanlan.zhihu.com/p/643033884">详解nvim内建LSP体系与基于nvim-cmp的代码补全体系 - 知乎 (zhihu.com)</a>》中提到的监听<code>LspAttach</code>事件，然后注册keymap映射<code>&lt;cmd&gt;lua vim.lsp.buf.format()&lt;CR&gt;</code>可以用来兜底哪些暂时不使用专门的格式化工具的场景：</p>
+<p><img src="https://static-res.zhen.wang/images/post/2023-07-25/040-LspAttach-format.png" alt="040-LspAttach-format" /></p>
+<p>于是，在笔者的配置下，如果本人正打开的是有prettier规范的前端项目的时候，总是会使用<code>&lt;leader&gt;+f/F</code>来调用prettier来进行代码格式化；而假设正在编辑一段lua代码，那么会使用ctrl+alt+L来通过lua的语言服务进行代码格式化。读者在理解了这两种格式化机制以后，自行涉及方案了。</p>
+<h1 id="lintfang-an">lint方案</h1>
+<p>lint方案和上面的格式化会有所差别。在不使用null-ls的情况下，lint方案实际上完全可以通过nvim自己的lsp模块配置外部工具完成。翻阅lspconfig目前已经支持的语言服务，会看到eslint也在其中，同时你也能看到很多其他语言的lint都在这个语言服务的说明文件里面。</p>
+<p><img src="https://static-res.zhen.wang/images/post/2023-07-25/050-lint-eslint-by-ls.png" alt="050-lint-eslint-by-ls" /></p>
+<p>也就是说，至少对于lspconfig插件，它将各种lint也都视为了语言服务（至于格式化为什么没有作为语言服务，个人觉得格式化的功能比较单一）。同样的，我们只需要安装lint外部的命令行工具或者已经包含了lint功能的语言服务工具（说到底还是要在机器上安装对应的命令行工具），就能够获得lint的能力了。</p>
+<p>比如，在笔者的机器上为了使用eslint功能，则会全局安装vscode-langservers-extracted，里面就包含了一个名为<code>vscode-eslint-language-server</code>的专门做ESlint的语言服务能够在命令行中访问。然后只需要像配置普通的语言服务一样来启动eslint：</p>
+<pre data-lang="lua" style="background-color:#2b303b;color:#c0c5ce;" class="language-lua "><code class="language-lua" data-lang="lua"><span style="color:#96b5b4;">require</span><span>(&quot;</span><span style="color:#a3be8c;">lspconfig</span><span>&quot;).eslint.</span><span style="color:#bf616a;">setup</span><span>({})
+</span></code></pre>
+<h1 id="zong-jie">总结</h1>
+<p>总的来说，在没有null-ls这套体系的参与下，我们同样也能够很方便的配置格式化和lint。</p>
+<p>先说代码格式化，在nvim中，格式化有两种形式，一种是调用外部<strong>独立专用</strong>的格式化工具来完成代码格式化；另一种就是通过nvim提供的lsp模块的format来进行格式化，从本质上来讲，后者和前者是一样的，毕竟语言服务不过也是一种特殊的外部工具而已；</p>
+<p>再讲nvim工程调用lint工具，这里lspconfig讲lint工具也视为了一种特殊的语言服务，因为lint就支持<code>diagnostics</code>、<code>code actions</code>等。所以，实际上只需要安装了对应的lint工具（或是包含了lint功能的语言服务），然后通过lspconfig就能很方便的启用了。</p>
+<blockquote>
+<p>PS：笔者已经将自己的nvim配置中的null-ls和需要基于null-ls的prettier.nvim、eslint.nvim都删除了；换成使用formatter.nvim和lspconfig启用eslint来分别替代代码格式化和eslint检查了。</p>
+</blockquote>
+
+    </div>
+</div>
+<script src="https://zhen.wang/libs/viewerjs@1.11.7/viewer.min.js"></script>
+<link rel="stylesheet" href="https://zhen.wang/libs/viewerjs@1.11.7/viewer.min.css"/>
+<script>
+  if (window.Viewer) {
+    document.querySelectorAll('img').forEach(img => {
+      new Viewer(img, {
+        inline: false,
+        navbar: false,
+        toolbar: {
+          zoomIn: 1,
+          zoomOut: 1,
+          reset: 1,
+          rotateLeft: 1,
+          rotateRight: 1,
+        },
+      });
+    });
+  }
+</script>
+
+
+</body>
+</html>

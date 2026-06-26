@@ -1,0 +1,461 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="utf-8">
+    <meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover"
+          name="viewport">
+    
+    
+    <!-- umami web analysis -->
+    <script defer src="https://zhen.wang/libs/umami/umami.script.js"
+            data-website-id="d66cfe03-f6b3-4aa0-baf8-728700db1b09"></script>
+    
+    
+    
+    <link rel="icon" type="image/png" sizes="16x16" href="https://zhen.wang/images/blog-site-icon.svg">
+    <link rel="icon" type="image/png" sizes="32x32" href="https://zhen.wang/images/blog-site-icon.svg">
+    <title>zhen&#x27;s everything</title>
+    <link rel="stylesheet" href="https://zhen.wang/style.css">
+    
+<link rel="stylesheet" href="https://zhen.wang/article_content.css">
+<link rel="stylesheet" href="https://zhen.wang/article_markdown.css">
+
+</head>
+<body>
+
+<div id="article">
+    <header class="article-header">
+        
+<div class="base-title">
+    <a href="#" onclick="history.length > 1 ? history.back() : location.href = '/'; return false;">&LeftArrow; Back</a>
+    <h1>
+        IDEA Web渲染插件开发（二）— 自定义JsDialog
+    </h1>
+</div>
+
+    </header>
+    <p class="article-date">2021-10-06</p>
+    
+    <!-- toc -->
+    <div class="article-toc">
+        <label class="toc-title" for="toc-trigger">目录</label>
+        <input id="toc-trigger" type="checkbox" checked/>
+        <div class="toc-content">
+            <ol class="toc">
+                
+                <li class="toc-item toc-level-1">
+                    <a class="toc-link" href="https://zhen.wang/article/IDEA Web渲染插件开发（二）— 自定义JsDialog/#bei-jing">背景</a>
+                    
+                </li>
+                
+                <li class="toc-item toc-level-1">
+                    <a class="toc-link" href="https://zhen.wang/article/IDEA Web渲染插件开发（二）— 自定义JsDialog/#cefjsdialoghandler">CefJSDialogHandler</a>
+                    
+                </li>
+                
+                <li class="toc-item toc-level-1">
+                    <a class="toc-link" href="https://zhen.wang/article/IDEA Web渲染插件开发（二）— 自定义JsDialog/#ideacha-jian-dui-hua-kuang">IDEA插件对话框</a>
+                    
+                    <ol class="toc-child">
+                        
+                        <li class="toc-item toc-level-2">
+                            <a href="https://zhen.wang/article/IDEA Web渲染插件开发（二）— 自定义JsDialog/#dialogwrapper">DialogWrapper</a>
+                        </li>
+                        
+                        <li class="toc-item toc-level-2">
+                            <a href="https://zhen.wang/article/IDEA Web渲染插件开发（二）— 自定义JsDialog/#alertdialog">AlertDialog</a>
+                        </li>
+                        
+                        <li class="toc-item toc-level-2">
+                            <a href="https://zhen.wang/article/IDEA Web渲染插件开发（二）— 自定义JsDialog/#confirmdialog">ConfirmDialog</a>
+                        </li>
+                        
+                        <li class="toc-item toc-level-2">
+                            <a href="https://zhen.wang/article/IDEA Web渲染插件开发（二）— 自定义JsDialog/#promptdialog">PromptDialog</a>
+                        </li>
+                        
+                    </ol>
+                    
+                </li>
+                
+                <li class="toc-item toc-level-1">
+                    <a class="toc-link" href="https://zhen.wang/article/IDEA Web渲染插件开发（二）— 自定义JsDialog/#yuan-ma">源码</a>
+                    
+                </li>
+                
+            </ol>
+        </div>
+    </div>
+    
+    <!-- real content -->
+    <div class="article-content markdown-content">
+        <p>《IDEA Web渲染插件开发（一）》中，我们了解到了如何编写一款用于显示网页的插件，所需要的核心知识点就是<strong>IDEA插件开发</strong>和<strong>JCEF</strong>，在本文中，我们将继续插件的开发，为该插件的JS Dialog显示进行自定义处理。</p>
+<span id="continue-reading"></span><h1 id="bei-jing">背景</h1>
+<p>在开发之前，我们首先要了解下什么是JS Dialog。有过Web页面开发经历的开发者都或多或少使用过这样一个JS的API：<code>alert('this is a message')</code>，当JS页面执行这段脚本的时候，在浏览器上会有类似于如下的显示：</p>
+<p><img src="https://static-res.zhen.wang/images/post/2021-10-06-intelliJ-plugin-dev-2/010-show-js-alert.gif" alt="" /></p>
+<p>同样，当我们使用<code>confirm('ok?')</code>的时候，会显示如下：</p>
+<p><img src="https://static-res.zhen.wang/images/post/2021-10-06-intelliJ-plugin-dev-2/020-show-js-confirm.gif" alt="" /></p>
+<p>以及，使用<code>prompt(input your name: ')</code>，有如下的显示：</p>
+<p><img src="https://static-res.zhen.wang/images/post/2021-10-06-intelliJ-plugin-dev-2/030-show-js-prompt.gif" alt="" /></p>
+<p>这些弹框一般来说都是原生的窗体，例如，当我们在之前的《IDEA Web渲染插件开发（一）》中的Web渲染插件来打开上面的Demo网页的时候，效果如下：</p>
+<p><strong>alert</strong></p>
+<p><img src="https://static-res.zhen.wang/images/post/2021-10-06-intelliJ-plugin-dev-2/040-show-js-alert-in-jcef.gif" alt="" /></p>
+<p><strong>confirm</strong></p>
+<p><img src="https://static-res.zhen.wang/images/post/2021-10-06-intelliJ-plugin-dev-2/050-show-js-confirm-in-jcef.gif" alt="" /></p>
+<p><strong>prompt</strong></p>
+<p><img src="https://static-res.zhen.wang/images/post/2021-10-06-intelliJ-plugin-dev-2/060-show-js-prompt-in-jcef.gif" alt="" /></p>
+<p>可以看到，原生窗体显得不是那么好看。那么，我们能不能自定义这个原生窗体呢？答案是肯定的，接下来就要用到<strong>JCEF</strong>里面一个Handler CefJSDialogHandler（<a rel="noopener" target="_blank" href="https://github.com/chromiumembedded/java-cef/blob/master/java/org/cef/handler/CefJSDialogHandler.java">java-cef/CefJSDialogHandler</a>）。</p>
+<h1 id="cefjsdialoghandler">CefJSDialogHandler</h1>
+<p>对于该Handler，官方注释为：</p>
+<blockquote>
+<p>Implement this interface to handle events related to JavaScript dialogs. The methods of this class will be called on the UI thread.</p>
+<p>实现此接口以处理与JavaScript对话框相关的事件。将在UI线程上调用此类的方法。</p>
+</blockquote>
+<p>对于该Handler，里面有一个核心的接口方法：</p>
+<pre data-lang="java" style="background-color:#2b303b;color:#c0c5ce;" class="language-java "><code class="language-java" data-lang="java"><span>    </span><span style="color:#65737e;">/**
+</span><span style="color:#65737e;">     * Called to run a JavaScript dialog. Set suppress_message to true and
+</span><span style="color:#65737e;">     * return false to suppress the message (suppressing messages is preferable
+</span><span style="color:#65737e;">     * to immediately executing the callback as this is used to detect presumably
+</span><span style="color:#65737e;">     * malicious behavior like spamming alert messages in onbeforeunload). Set
+</span><span style="color:#65737e;">     * suppress_message to false and return false to use the default
+</span><span style="color:#65737e;">     * implementation (the default implementation will show one modal dialog at a
+</span><span style="color:#65737e;">     * time and suppress any additional dialog requests until the displayed dialog
+</span><span style="color:#65737e;">     * is dismissed). Return true if the application will use a custom dialog or
+</span><span style="color:#65737e;">     * if the callback has been executed immediately. Custom dialogs may be either
+</span><span style="color:#65737e;">     * modal or modeless. If a custom dialog is used the application must execute
+</span><span style="color:#65737e;">     * callback once the custom dialog is dismissed.
+</span><span style="color:#65737e;">     *
+</span><span style="color:#65737e;">     * </span><span style="color:#b48ead;">@param </span><span style="color:#bf616a;">browser</span><span style="color:#65737e;"> The corresponding browser.
+</span><span style="color:#65737e;">     * </span><span style="color:#b48ead;">@param </span><span style="color:#bf616a;">origin_url</span><span style="color:#65737e;"> The originating url.
+</span><span style="color:#65737e;">     * </span><span style="color:#b48ead;">@param </span><span style="color:#bf616a;">dialog_type</span><span style="color:#65737e;"> the dialog type.
+</span><span style="color:#65737e;">     * </span><span style="color:#b48ead;">@param </span><span style="color:#bf616a;">message_text</span><span style="color:#65737e;"> the text to be displayed.
+</span><span style="color:#65737e;">     * </span><span style="color:#b48ead;">@param </span><span style="color:#bf616a;">default_prompt_text</span><span style="color:#65737e;"> value will be specified for prompt dialogs only.
+</span><span style="color:#65737e;">     * </span><span style="color:#b48ead;">@param </span><span style="color:#bf616a;">callback</span><span style="color:#65737e;"> execute callback once the custom dialog is dismissed.
+</span><span style="color:#65737e;">     * </span><span style="color:#b48ead;">@param </span><span style="color:#bf616a;">suppress_message</span><span style="color:#65737e;"> set to true to suppress displaying the message.
+</span><span style="color:#65737e;">     * </span><span style="color:#b48ead;">@return</span><span style="color:#65737e;"> false to use the default dialog implementation. Return true if the
+</span><span style="color:#65737e;">     * application will use a custom dialog.
+</span><span style="color:#65737e;">     */
+</span><span style="color:#65737e;">    public boolean onJSDialog(CefBrowser browser, String origin_url, JSDialogType dialog_type,
+</span><span style="color:#65737e;">            String message_text, String default_prompt_text, CefJSDialogCallback callback,
+</span><span style="color:#65737e;">            BoolRef suppress_message);
+</span></code></pre>
+<p>注释翻译如下：</p>
+<blockquote>
+<p>在调用一个JS的Dialog的时候会调用该方法。设置<code>suppress_message</code>为<code>true</code>并使该方法返回<code>false</code>来抑制这个消息（抑制消息比立即执行回调更可取，因为它用于检测可能的恶意行为，如onbeforeunload中的垃圾邮件警报消息）。设置<code>suppress_message</code>为<code>false</code>并且返回<code>false</code>来使用默认的实现（默认的实现将会立刻展示一个模态对话框并抑制任何额外的对话框请求直到当前展示的对话框已经销毁）。如果应用程序想要使用一个自定义的对话框或是回调callback已经立刻被执行了，则返回<code>true</code>。自定义的对话框可以是模态或是非模态的。如果使用了一个自定义的对话框，那么一旦自定义对话框销毁后，应用程序需要立即执行回调。</p>
+</blockquote>
+<p>首先，我们编写类JsDialogHandler，实现该接口：</p>
+<pre data-lang="java" style="background-color:#2b303b;color:#c0c5ce;" class="language-java "><code class="language-java" data-lang="java"><span style="color:#b48ead;">package </span><span>com.compilemind.demo.handler;
+</span><span>
+</span><span style="color:#b48ead;">import </span><span>org.cef.browser.</span><span style="color:#ebcb8b;">CefBrowser</span><span>;
+</span><span style="color:#b48ead;">import </span><span>org.cef.callback.</span><span style="color:#ebcb8b;">CefJSDialogCallback</span><span>;
+</span><span style="color:#b48ead;">import </span><span>org.cef.handler.</span><span style="color:#ebcb8b;">CefJSDialogHandler</span><span>;
+</span><span style="color:#b48ead;">import </span><span>org.cef.misc.</span><span style="color:#ebcb8b;">BoolRef</span><span>;
+</span><span>
+</span><span style="color:#b48ead;">import static </span><span>org.cef.handler.</span><span style="color:#ebcb8b;">CefJSDialogHandler</span><span>.</span><span style="color:#ebcb8b;">JSDialogType</span><span>.*;
+</span><span>
+</span><span style="color:#b48ead;">public class </span><span style="color:#ebcb8b;">JsDialogHandler </span><span style="color:#b48ead;">implements </span><span style="color:#a3be8c;">CefJSDialogHandler </span><span style="color:#eff1f5;">{
+</span><span style="color:#eff1f5;">    
+</span><span style="color:#eff1f5;">    @</span><span style="color:#bf616a;">Override
+</span><span style="color:#eff1f5;">    </span><span style="color:#b48ead;">public boolean </span><span style="color:#8fa1b3;">onJSDialog</span><span style="color:#eff1f5;">(</span><span style="color:#ebcb8b;">CefBrowser </span><span style="color:#bf616a;">browser</span><span style="color:#eff1f5;">,
+</span><span style="color:#eff1f5;">                              java.lang.</span><span style="color:#ebcb8b;">String </span><span style="color:#bf616a;">origin_url</span><span style="color:#eff1f5;">,
+</span><span style="color:#eff1f5;">                              </span><span style="color:#ebcb8b;">CefJSDialogHandler</span><span style="color:#eff1f5;">.</span><span style="color:#ebcb8b;">JSDialogType </span><span style="color:#bf616a;">dialog_type</span><span style="color:#eff1f5;">,
+</span><span style="color:#eff1f5;">                              java.lang.</span><span style="color:#ebcb8b;">String </span><span style="color:#bf616a;">message_text</span><span style="color:#eff1f5;">,
+</span><span style="color:#eff1f5;">                              java.lang.</span><span style="color:#ebcb8b;">String </span><span style="color:#bf616a;">default_prompt_text</span><span style="color:#eff1f5;">,
+</span><span style="color:#eff1f5;">                              </span><span style="color:#ebcb8b;">CefJSDialogCallback </span><span style="color:#bf616a;">callback</span><span style="color:#eff1f5;">,
+</span><span style="color:#eff1f5;">                              </span><span style="color:#ebcb8b;">BoolRef </span><span style="color:#bf616a;">suppress_message</span><span style="color:#eff1f5;">) {
+</span><span style="color:#eff1f5;">        </span><span style="color:#65737e;">// 具体内容见下文
+</span><span style="color:#eff1f5;">    }
+</span><span style="color:#eff1f5;">
+</span><span style="color:#eff1f5;">    @</span><span style="color:#bf616a;">Override
+</span><span style="color:#eff1f5;">    </span><span style="color:#b48ead;">public boolean </span><span style="color:#8fa1b3;">onBeforeUnloadDialog</span><span style="color:#eff1f5;">(</span><span style="color:#ebcb8b;">CefBrowser </span><span style="color:#bf616a;">cefBrowser</span><span style="color:#eff1f5;">, </span><span style="color:#ebcb8b;">String </span><span style="color:#bf616a;">s</span><span style="color:#eff1f5;">, </span><span style="color:#b48ead;">boolean </span><span style="color:#bf616a;">b</span><span style="color:#eff1f5;">, </span><span style="color:#ebcb8b;">CefJSDialogCallback </span><span style="color:#bf616a;">cefJSDialogCallback</span><span style="color:#eff1f5;">) {
+</span><span style="color:#eff1f5;">        </span><span style="color:#b48ead;">return </span><span style="color:#d08770;">false</span><span style="color:#eff1f5;">;
+</span><span style="color:#eff1f5;">    }
+</span><span style="color:#eff1f5;">
+</span><span style="color:#eff1f5;">    @</span><span style="color:#bf616a;">Override
+</span><span style="color:#eff1f5;">    </span><span style="color:#b48ead;">public void </span><span style="color:#8fa1b3;">onResetDialogState</span><span style="color:#eff1f5;">(</span><span style="color:#ebcb8b;">CefBrowser </span><span style="color:#bf616a;">cefBrowser</span><span style="color:#eff1f5;">) {
+</span><span style="color:#eff1f5;">
+</span><span style="color:#eff1f5;">    }
+</span><span style="color:#eff1f5;">
+</span><span style="color:#eff1f5;">    @</span><span style="color:#bf616a;">Override
+</span><span style="color:#eff1f5;">    </span><span style="color:#b48ead;">public void </span><span style="color:#8fa1b3;">onDialogClosed</span><span style="color:#eff1f5;">(</span><span style="color:#ebcb8b;">CefBrowser </span><span style="color:#bf616a;">cefBrowser</span><span style="color:#eff1f5;">) {
+</span><span style="color:#eff1f5;">
+</span><span style="color:#eff1f5;">    }
+</span><span style="color:#eff1f5;">}
+</span><span>
+</span></code></pre>
+<p>除了<code>onJSDialog</code>方法，其他的我们暂时不关心，使用默认的处理。对于<code>onJSDialog</code>的方法，我们编写如下的内容：</p>
+<pre data-lang="java" style="background-color:#2b303b;color:#c0c5ce;" class="language-java "><code class="language-java" data-lang="java"><span>    @</span><span style="color:#bf616a;">Override
+</span><span>    </span><span style="color:#b48ead;">public boolean </span><span style="color:#bf616a;">onJSDialog</span><span>(</span><span style="color:#ebcb8b;">CefBrowser</span><span> browser,
+</span><span>                              java.lang.</span><span style="color:#ebcb8b;">String</span><span> origin_url,
+</span><span>                              </span><span style="color:#ebcb8b;">CefJSDialogHandler</span><span>.</span><span style="color:#ebcb8b;">JSDialogType</span><span> dialog_type,
+</span><span>                              java.lang.</span><span style="color:#ebcb8b;">String</span><span> message_text,
+</span><span>                              java.lang.</span><span style="color:#ebcb8b;">String</span><span> default_prompt_text,
+</span><span>                              </span><span style="color:#ebcb8b;">CefJSDialogCallback</span><span> callback,
+</span><span>                              </span><span style="color:#ebcb8b;">BoolRef</span><span> suppress_message) {
+</span><span>        </span><span style="color:#65737e;">// 不抑制消息
+</span><span>        suppress_message.</span><span style="color:#bf616a;">set</span><span>(</span><span style="color:#d08770;">false</span><span>);
+</span><span>        </span><span style="color:#b48ead;">if </span><span>(dialog_type == </span><span style="color:#d08770;">JSDIALOGTYPE_ALERT</span><span>) {
+</span><span>            </span><span style="color:#65737e;">// alert 对话框
+</span><span>
+</span><span>        } </span><span style="color:#b48ead;">else if </span><span>(dialog_type == </span><span style="color:#d08770;">JSDIALOGTYPE_CONFIRM</span><span>) {
+</span><span>            </span><span style="color:#65737e;">// confirm 对话框
+</span><span>            
+</span><span>        } </span><span style="color:#b48ead;">else if </span><span>(dialog_type == </span><span style="color:#d08770;">JSDIALOGTYPE_PROMPT</span><span>) {
+</span><span>            </span><span style="color:#65737e;">// prompt 对话框
+</span><span>            
+</span><span>        } </span><span style="color:#b48ead;">else </span><span>{
+</span><span>            </span><span style="color:#65737e;">// 默认处理，不过理论不会进入这一步
+</span><span>            </span><span style="color:#b48ead;">return </span><span style="color:#d08770;">false</span><span>;
+</span><span>        }
+</span><span>
+</span><span>        </span><span style="color:#65737e;">// 返回true，表明自行处理
+</span><span>        </span><span style="color:#b48ead;">return </span><span style="color:#d08770;">false</span><span>;
+</span><span>    }
+</span></code></pre>
+<p>接下来，我们向CefBrowser进行注册（MyWebToolWindowContent类的构造函数中）：</p>
+<pre data-lang="java" style="background-color:#2b303b;color:#c0c5ce;" class="language-java "><code class="language-java" data-lang="java"><span style="color:#65737e;">// 创建 JBCefBrowser
+</span><span style="color:#ebcb8b;">JBCefBrowser</span><span> jbCefBrowser = </span><span style="color:#b48ead;">new </span><span style="color:#ebcb8b;">JBCefBrowser</span><span>();
+</span><span style="color:#65737e;">// 注册我们的Handler
+</span><span>jbCefBrowser.</span><span style="color:#bf616a;">getJBCefClient</span><span>()
+</span><span>        .</span><span style="color:#bf616a;">addJSDialogHandler</span><span>(
+</span><span>                </span><span style="color:#b48ead;">new </span><span style="color:#ebcb8b;">JsDialogHandler</span><span>(),
+</span><span>                jbCefBrowser.</span><span style="color:#bf616a;">getCefBrowser</span><span>());
+</span><span style="color:#65737e;">// 将 JBCefBrowser 的UI控件设置到Panel中
+</span><span style="color:#bf616a;">this</span><span>.content.</span><span style="color:#bf616a;">add</span><span>(jbCefBrowser.</span><span style="color:#bf616a;">getComponent</span><span>(), </span><span style="color:#ebcb8b;">BorderLayout</span><span>.</span><span style="color:#d08770;">CENTER</span><span>);
+</span></code></pre>
+<p>至此，我们已经在该方法中对js的对话框类型进行了区分。接下来，就需要我们针对不同的对话框类型，展示不同的UI，那么需要我们了解如何在IDEA插件中弹出对话框。</p>
+<h1 id="ideacha-jian-dui-hua-kuang">IDEA插件对话框</h1>
+<h2 id="dialogwrapper">DialogWrapper</h2>
+<p>DialogWrapper是IntelliJ下的所有对话框的基类，他并不是一个实际的UI控件，而是一个抽象类，在调用其show方法的时候，由IntelliJ框架进行展示。</p>
+<p><a rel="noopener" target="_blank" href="https://plugins.jetbrains.com/docs/intellij/dialog-wrapper.html">Dialogs | IntelliJ Platform Plugin SDK (jetbrains.com)</a></p>
+<p>我们需要做的就是编写一个类来继承该Wrapper。</p>
+<h2 id="alertdialog">AlertDialog</h2>
+<p>为了实现JS中的alert效果，我们首先编写AlertDialog：</p>
+<pre data-lang="java" style="background-color:#2b303b;color:#c0c5ce;" class="language-java "><code class="language-java" data-lang="java"><span style="color:#b48ead;">import </span><span>com.intellij.openapi.ui.</span><span style="color:#ebcb8b;">DialogWrapper</span><span>;
+</span><span style="color:#b48ead;">import </span><span>org.jetbrains.annotations.</span><span style="color:#ebcb8b;">Nullable</span><span>;
+</span><span>
+</span><span style="color:#b48ead;">import </span><span>javax.swing.*;
+</span><span>
+</span><span style="color:#b48ead;">public class </span><span style="color:#ebcb8b;">AlertDialog </span><span style="color:#b48ead;">extends </span><span style="color:#a3be8c;">DialogWrapper </span><span style="color:#eff1f5;">{
+</span><span style="color:#eff1f5;">
+</span><span style="color:#eff1f5;">    </span><span style="color:#b48ead;">private final </span><span style="color:#ebcb8b;">String </span><span style="color:#eff1f5;">content;
+</span><span style="color:#eff1f5;">
+</span><span style="color:#eff1f5;">    </span><span style="color:#b48ead;">public </span><span style="color:#8fa1b3;">AlertDialog</span><span style="color:#eff1f5;">(</span><span style="color:#ebcb8b;">String </span><span style="color:#bf616a;">title</span><span style="color:#eff1f5;">, </span><span style="color:#ebcb8b;">String </span><span style="color:#bf616a;">content</span><span style="color:#eff1f5;">) {
+</span><span style="color:#eff1f5;">        </span><span style="color:#bf616a;">super</span><span style="color:#eff1f5;">(</span><span style="color:#d08770;">false</span><span style="color:#eff1f5;">);
+</span><span style="color:#eff1f5;">        </span><span style="color:#bf616a;">setTitle</span><span style="color:#eff1f5;">(title);
+</span><span style="color:#eff1f5;">        </span><span style="color:#bf616a;">this</span><span style="color:#eff1f5;">.content </span><span>=</span><span style="color:#eff1f5;"> content;
+</span><span style="color:#eff1f5;">        </span><span style="color:#65737e;">// init方法需要在所有的值设置到位的时候才进行调用
+</span><span style="color:#eff1f5;">        </span><span style="color:#bf616a;">init</span><span style="color:#eff1f5;">();
+</span><span style="color:#eff1f5;">    }
+</span><span style="color:#eff1f5;">
+</span><span style="color:#eff1f5;">    @</span><span style="color:#bf616a;">Override
+</span><span style="color:#eff1f5;">    </span><span style="color:#b48ead;">protected </span><span style="color:#eff1f5;">@</span><span style="color:#bf616a;">Nullable </span><span style="color:#ebcb8b;">JComponent </span><span style="color:#8fa1b3;">createCenterPanel</span><span style="color:#eff1f5;">() {
+</span><span style="color:#eff1f5;">        </span><span style="color:#b48ead;">return new </span><span style="color:#ebcb8b;">JLabel</span><span style="color:#eff1f5;">(</span><span style="color:#bf616a;">this</span><span style="color:#eff1f5;">.content);
+</span><span style="color:#eff1f5;">    }
+</span><span style="color:#eff1f5;">
+</span><span style="color:#eff1f5;">}
+</span></code></pre>
+<p>这个Dialog的实现非常的简单，通过构造函数传入对话框的title和content。其中，title在构造函数执行的时候，就通过<code>DialogWrapper.setTitle(string)</code>完成设置；content赋值给AlertDialog的私有变量content，之后调用<code>DialogWrapper.init()</code>方法进行初始化。</p>
+<p><strong>这里需要特别说明的是</strong>，init方法最好放在Dialog的私有变量赋值保存完成后才进行，因为init方法内部就会调用下面重写的<code>createCenterPanel</code>方法。<strong>如果没有这样做</strong>，而是先<code>init()</code>，再进行<code>this.content = content</code>赋值，那么初始化的时候流程就是：</p>
+<ol>
+<li>设置title。</li>
+<li>调用init()。</li>
+<li>Init()内部调用<code>createCenterPanel()</code>。</li>
+<li>createCenterPanel返回一个空白的JLabel，因为此时<code>this.content</code>还是null。</li>
+<li>进行<code>this.content = content</code>赋值操作。</li>
+</ol>
+<p>最终弹出的对话框效果就是没有任何的内容，本人在这里也是踩了坑。</p>
+<p>AlertDialog编写完成后，我们可以在需要的地方编写如下的代码进行弹框展示：</p>
+<pre data-lang="java" style="background-color:#2b303b;color:#c0c5ce;" class="language-java "><code class="language-java" data-lang="java"><span style="color:#b48ead;">new </span><span style="color:#ebcb8b;">AlertDialog</span><span>(&quot;</span><span style="color:#a3be8c;">注意</span><span>&quot;, &quot;</span><span style="color:#a3be8c;">这是一个弹出框</span><span>&quot;).</span><span style="color:#bf616a;">show</span><span>();
+</span><span style="color:#65737e;">// 或
+</span><span style="color:#b48ead;">boolean</span><span> isOk = </span><span style="color:#b48ead;">new </span><span style="color:#ebcb8b;">AlertDialog</span><span>(&quot;</span><span style="color:#a3be8c;">注意</span><span>&quot;, &quot;</span><span style="color:#a3be8c;">这是一个弹出框</span><span>&quot;).</span><span style="color:#bf616a;">showAndGet</span><span>();
+</span></code></pre>
+<p>于是，我们在之前的JSDialogHandler.onJSDialog中处理<code>dialog_type == JSDIALOGTYPE_ALERT</code>的场景：</p>
+<pre data-lang="java" style="background-color:#2b303b;color:#c0c5ce;" class="language-java "><code class="language-java" data-lang="java"><span>@</span><span style="color:#bf616a;">Override
+</span><span style="color:#b48ead;">public boolean </span><span style="color:#bf616a;">onJSDialog</span><span>(</span><span style="color:#ebcb8b;">CefBrowser</span><span> browser,
+</span><span>                          java.lang.</span><span style="color:#ebcb8b;">String</span><span> origin_url,
+</span><span>                          </span><span style="color:#ebcb8b;">CefJSDialogHandler</span><span>.</span><span style="color:#ebcb8b;">JSDialogType</span><span> dialog_type,
+</span><span>                          java.lang.</span><span style="color:#ebcb8b;">String</span><span> message_text,
+</span><span>                          java.lang.</span><span style="color:#ebcb8b;">String</span><span> default_prompt_text,
+</span><span>                          </span><span style="color:#ebcb8b;">CefJSDialogCallback</span><span> callback,
+</span><span>                          </span><span style="color:#ebcb8b;">BoolRef</span><span> suppress_message) {
+</span><span>    </span><span style="color:#65737e;">// 不抑制消息
+</span><span>    suppress_message.</span><span style="color:#bf616a;">set</span><span>(</span><span style="color:#d08770;">false</span><span>);
+</span><span>    </span><span style="color:#b48ead;">if </span><span>(dialog_type == </span><span style="color:#d08770;">JSDIALOGTYPE_ALERT</span><span>) {
+</span><span>        </span><span style="color:#65737e;">// alert 对话框
+</span><span>        </span><span style="color:#b48ead;">new </span><span style="color:#ebcb8b;">AlertDialog</span><span>(&quot;</span><span style="color:#a3be8c;">注意</span><span>&quot;, message_text).</span><span style="color:#bf616a;">show</span><span>();
+</span><span>        </span><span style="color:#b48ead;">return </span><span style="color:#d08770;">true</span><span>;
+</span><span>    }
+</span><span>    </span><span style="color:#b48ead;">return </span><span style="color:#d08770;">false</span><span>;
+</span><span>}
+</span></code></pre>
+<h3 id="wen-ti-chu-li">问题处理</h3>
+<p>调试插件，当JS执行alert的时候，发现依然还是原生窗体。经过排查还会发现，<strong>问题情况</strong>如下：</p>
+<ul>
+<li>JS的alert依然是原生窗体。</li>
+<li>onJSDialog方法也进入了（可以使用断点或是控制台输出确认）。</li>
+<li>控制台有异常：<code>Exception in thread "AWT-AppKit"</code>。</li>
+</ul>
+<p>对于控制台的异常，详细如下：</p>
+<pre style="background-color:#2b303b;color:#c0c5ce;"><code><span>Exception in thread &quot;AWT-AppKit&quot; com.intellij.openapi.diagnostic.RuntimeExceptionWithAttachments: EventQueue.isDispatchThread()=false Toolkit.getEventQueue()=com.intellij.ide.IdeEventQueue@fa771e7
+</span></code></pre>
+<p>对于EventQueue关键字的异常，有过GUI开发的读者应该很容易联想到应该是窗体事件消息机制的问题。</p>
+<p>简单来说，<strong>窗体GUI的线程一般都是独立的</strong>，在这个线程中，会启动一个GUI事件队列循环，外部GUI输入（点击、拖动等等）会不断产生GUI事件对象，并按照一定的顺序进入事件循环队列，事件循环框架不断处理队列中的事件。对GUI的操作，比如修改窗体某个控件的文本或是想要对一个窗体进行模态显示，都需要在窗体GUI主线程进行，否则就会出现GUI的处理异常。</p>
+<p>对于这类情况<strong>最常见问题场景</strong>就是：在窗体中点击一个按钮，点击后会单开一个线程异步加载大数据，加载完成后显示在窗体上。如果直接在加载大数据的线程中调用<code>Form.setBigData()</code>（假如有这样一个设置文本的方法），一般来说就会出现异常：<strong>在非GUI线程中尝试修改GUI的相关值</strong>。在Java AWT中解决的方式，调用<code>EventQueue.invokeLater(() -&gt; { // do something} )</code>（异步）或是<code>EventQueue.invokeAndWait(() -&gt; { // do something} )</code>（同步）。调用之后，<code>do something</code>就会被事件框架送入GUI线程执行了。</p>
+<p>现在，我们回到一开始的问题，我们重新修改代码：</p>
+<pre data-lang="java" style="background-color:#2b303b;color:#c0c5ce;" class="language-java "><code class="language-java" data-lang="java"><span style="color:#b48ead;">if </span><span>(dialog_type == </span><span style="color:#d08770;">JSDIALOGTYPE_ALERT</span><span>) {
+</span><span>    </span><span style="color:#65737e;">// alert 对话框
+</span><span>    </span><span style="color:#ebcb8b;">EventQueue</span><span>.</span><span style="color:#bf616a;">invokeLater</span><span>(() </span><span style="color:#b48ead;">-&gt; </span><span>{
+</span><span>      </span><span style="color:#b48ead;">new </span><span style="color:#ebcb8b;">AlertDialog</span><span>(&quot;</span><span style="color:#a3be8c;">注意</span><span>&quot;, message_text).</span><span style="color:#bf616a;">show</span><span>();
+</span><span>      callback.</span><span style="color:#ebcb8b;">Continue</span><span>(</span><span style="color:#d08770;">true</span><span>, &quot;&quot;);
+</span><span>    });
+</span><span>    </span><span style="color:#b48ead;">return </span><span style="color:#d08770;">true</span><span>;
+</span><span>}
+</span></code></pre>
+<p>我们对代码进行断点确认线程，在onJSDialog执行的时候，所运行的线程是：<code>AWT-AppKit</code>。</p>
+<p><img src="https://static-res.zhen.wang/images/post/2021-10-06-intelliJ-plugin-dev-2/070-onJSDialog-thread.jpg" alt="" /></p>
+<p>而EventQueue.invokeLater中所运行的线程是：<code>AWT-EventQueue-0</code>，这个线程就是IDEA插件中的GUI线程。</p>
+<p><img src="https://static-res.zhen.wang/images/post/2021-10-06-intelliJ-plugin-dev-2/080-EventQueueInvokeLater-thread.jpg" alt="" /></p>
+<p>修改线程处理后，让我们再次调用alert：</p>
+<p><img src="https://static-res.zhen.wang/images/post/2021-10-06-intelliJ-plugin-dev-2/090-new-not-perfect-alert-dialog.gif" alt="" /></p>
+<p>可以看到对话框已经显示为了使用IDEA插件下的dialog形式，但是这个dialog还不完全正确，一般的alert对话框，只会有一个确认按钮，而IDEA下的dialog默认是Cancel+OK的按钮组合。</p>
+<h3 id="dialogan-niu-zi-ding-yi-zhong-xie-createactions">Dialog按钮自定义（重写createActions）</h3>
+<p>IDEA插件的DialogWrapper默认情况下是Cancel+OK的按钮组合。那么如何自定义我们的按钮呢？可行的一种方式就是重写createActions。这个方法需要我们返回实现<code>javax.swing.Action</code>接口的实例的数组，当然，IDEA插件也有对应的Wrapper：DialogWrapperAction。我们编写我们自己的OkAction：</p>
+<pre data-lang="java" style="background-color:#2b303b;color:#c0c5ce;" class="language-java "><code class="language-java" data-lang="java"><span>    </span><span style="color:#b48ead;">protected class </span><span style="color:#ebcb8b;">OkAction </span><span style="color:#b48ead;">extends </span><span style="color:#a3be8c;">DialogWrapperAction </span><span style="color:#eff1f5;">{
+</span><span style="color:#eff1f5;">
+</span><span style="color:#eff1f5;">        </span><span style="color:#b48ead;">public </span><span style="color:#8fa1b3;">OkAction</span><span style="color:#eff1f5;">() {
+</span><span style="color:#eff1f5;">            </span><span style="color:#bf616a;">super</span><span style="color:#eff1f5;">(</span><span>&quot;</span><span style="color:#a3be8c;">确定</span><span>&quot;</span><span style="color:#eff1f5;">);
+</span><span style="color:#eff1f5;">        }
+</span><span style="color:#eff1f5;">
+</span><span style="color:#eff1f5;">        @</span><span style="color:#bf616a;">Override
+</span><span style="color:#eff1f5;">        </span><span style="color:#b48ead;">protected void </span><span style="color:#8fa1b3;">doAction</span><span style="color:#eff1f5;">(</span><span style="color:#ebcb8b;">ActionEvent </span><span style="color:#bf616a;">e</span><span style="color:#eff1f5;">) {
+</span><span style="color:#eff1f5;">            </span><span style="color:#bf616a;">close</span><span style="color:#eff1f5;">(</span><span style="color:#d08770;">OK_EXIT_CODE</span><span style="color:#eff1f5;">);
+</span><span style="color:#eff1f5;">        }
+</span><span style="color:#eff1f5;">    }
+</span></code></pre>
+<p><strong>务必注意，DialogWrapperAction的实现子类，必须是DialogWrapper的内部类，否则无法查看。</strong></p>
+<p><img src="https://static-res.zhen.wang/images/post/2021-10-06-intelliJ-plugin-dev-2/100-ok-action-in-alert.jpg" alt="" /></p>
+<p>重新运行，查看AlertDialog的效果：</p>
+<p><img src="https://static-res.zhen.wang/images/post/2021-10-06-intelliJ-plugin-dev-2/110-new-perfect-alert-dialog.gif" alt="" /></p>
+<p>接下来，我们需要编写ConfirmDialog，来处理JS中的confirm。</p>
+<h2 id="confirmdialog">ConfirmDialog</h2>
+<p>由于confirm天生需要取消和确定按钮，所以我们可以直接使用默认的DialogWrapper，不用重写Action的返回：</p>
+<pre data-lang="java" style="background-color:#2b303b;color:#c0c5ce;" class="language-java "><code class="language-java" data-lang="java"><span style="color:#b48ead;">import </span><span>com.intellij.openapi.ui.</span><span style="color:#ebcb8b;">DialogWrapper</span><span>;
+</span><span style="color:#b48ead;">import </span><span>org.jetbrains.annotations.</span><span style="color:#ebcb8b;">Nullable</span><span>;
+</span><span>
+</span><span style="color:#b48ead;">import </span><span>javax.swing.*;
+</span><span>
+</span><span style="color:#b48ead;">public class </span><span style="color:#ebcb8b;">ConfirmDialog </span><span style="color:#b48ead;">extends </span><span style="color:#a3be8c;">DialogWrapper </span><span style="color:#eff1f5;">{
+</span><span style="color:#eff1f5;">
+</span><span style="color:#eff1f5;">    </span><span style="color:#b48ead;">private final </span><span style="color:#ebcb8b;">String </span><span style="color:#eff1f5;">content;
+</span><span style="color:#eff1f5;">
+</span><span style="color:#eff1f5;">    </span><span style="color:#b48ead;">public </span><span style="color:#8fa1b3;">ConfirmDialog</span><span style="color:#eff1f5;">(</span><span style="color:#ebcb8b;">String </span><span style="color:#bf616a;">title</span><span style="color:#eff1f5;">, </span><span style="color:#ebcb8b;">String </span><span style="color:#bf616a;">content</span><span style="color:#eff1f5;">) {
+</span><span style="color:#eff1f5;">        </span><span style="color:#bf616a;">super</span><span style="color:#eff1f5;">(</span><span style="color:#d08770;">false</span><span style="color:#eff1f5;">);
+</span><span style="color:#eff1f5;">        </span><span style="color:#bf616a;">setTitle</span><span style="color:#eff1f5;">(title);
+</span><span style="color:#eff1f5;">        </span><span style="color:#bf616a;">this</span><span style="color:#eff1f5;">.content </span><span>=</span><span style="color:#eff1f5;"> content;
+</span><span style="color:#eff1f5;">        </span><span style="color:#65737e;">// init方法需要在所有的值设置到位的时候才进行调用
+</span><span style="color:#eff1f5;">        </span><span style="color:#bf616a;">init</span><span style="color:#eff1f5;">();
+</span><span style="color:#eff1f5;">    }
+</span><span style="color:#eff1f5;">
+</span><span style="color:#eff1f5;">    @</span><span style="color:#bf616a;">Override
+</span><span style="color:#eff1f5;">    </span><span style="color:#b48ead;">protected </span><span style="color:#eff1f5;">@</span><span style="color:#bf616a;">Nullable </span><span style="color:#ebcb8b;">JComponent </span><span style="color:#8fa1b3;">createCenterPanel</span><span style="color:#eff1f5;">() {
+</span><span style="color:#eff1f5;">        </span><span style="color:#b48ead;">return new </span><span style="color:#ebcb8b;">JLabel</span><span style="color:#eff1f5;">(</span><span style="color:#bf616a;">this</span><span style="color:#eff1f5;">.content);
+</span><span style="color:#eff1f5;">    }
+</span><span style="color:#eff1f5;">
+</span><span style="color:#eff1f5;">}
+</span></code></pre>
+<p>在Handler中，我们对<code>JSDIALOGTYPE_CONFIRM</code>分支进行：</p>
+<pre data-lang="java" style="background-color:#2b303b;color:#c0c5ce;" class="language-java "><code class="language-java" data-lang="java"><span style="color:#b48ead;">if </span><span>(dialog_type == </span><span style="color:#d08770;">JSDIALOGTYPE_CONFIRM</span><span>) {
+</span><span>    </span><span style="color:#65737e;">// confirm 对话框
+</span><span>    </span><span style="color:#ebcb8b;">EventQueue</span><span>.</span><span style="color:#bf616a;">invokeLater</span><span>(() </span><span style="color:#b48ead;">-&gt; </span><span>{
+</span><span>        </span><span style="color:#b48ead;">boolean</span><span> isOk = </span><span style="color:#b48ead;">new </span><span style="color:#ebcb8b;">ConfirmDialog</span><span>(&quot;</span><span style="color:#a3be8c;">注意</span><span>&quot;, message_text).</span><span style="color:#bf616a;">showAndGet</span><span>();
+</span><span>        callback.</span><span style="color:#ebcb8b;">Continue</span><span>(isOk, &quot;&quot;);
+</span><span>    });
+</span><span>    </span><span style="color:#b48ead;">return </span><span style="color:#d08770;">true</span><span>;
+</span><span>}
+</span></code></pre>
+<p>这点和AlertDialog的差别在于，需要调用<code>showAndGet</code>方法获取用户的点击是cancel还是ok的结果，使用callback返回给JS，才能使得JS的confirm调用获得正确的返回。下面是效果：</p>
+<p><img src="https://static-res.zhen.wang/images/post/2021-10-06-intelliJ-plugin-dev-2/120-new-confirm-dialog.gif" alt="" /></p>
+<h2 id="promptdialog">PromptDialog</h2>
+<p>对于PromptDialog，在对话框的界面，需要两个元素：<strong>文本提示</strong>和<strong>文本输入</strong>。同时，在对话框点击结束后，还需要获取用户的输入，代码如下：</p>
+<pre data-lang="java" style="background-color:#2b303b;color:#c0c5ce;" class="language-java "><code class="language-java" data-lang="java"><span style="color:#b48ead;">public class </span><span style="color:#ebcb8b;">PromptDialog </span><span style="color:#b48ead;">extends </span><span style="color:#a3be8c;">DialogWrapper </span><span style="color:#eff1f5;">{
+</span><span style="color:#eff1f5;">
+</span><span style="color:#eff1f5;">    </span><span style="color:#65737e;">/**
+</span><span style="color:#65737e;">     * 显示信息
+</span><span style="color:#65737e;">     */
+</span><span style="color:#65737e;">    private final String content;
+</span><span style="color:#65737e;">
+</span><span style="color:#65737e;">    /**
+</span><span style="color:#65737e;">     * 文本输入框
+</span><span style="color:#65737e;">     */
+</span><span style="color:#65737e;">    private final JTextField jTextField;
+</span><span style="color:#65737e;">
+</span><span style="color:#65737e;">    public PromptDialog(String title, String content) {
+</span><span style="color:#65737e;">        super(false);
+</span><span style="color:#65737e;">
+</span><span style="color:#65737e;">        this.jTextField = new JTextField(10);
+</span><span style="color:#65737e;">        this.content = content;
+</span><span style="color:#65737e;">
+</span><span style="color:#65737e;">        setTitle(title);
+</span><span style="color:#65737e;">        // init方法需要在所有的值设置到位的时候才进行调用
+</span><span style="color:#65737e;">        init();
+</span><span style="color:#65737e;">    }
+</span><span style="color:#65737e;">
+</span><span style="color:#65737e;">    @Override
+</span><span style="color:#65737e;">    protected @Nullable JComponent createCenterPanel() {
+</span><span style="color:#65737e;">        // 2行1列的结构
+</span><span style="color:#65737e;">        JPanel jPanel = new JPanel(new GridLayout(2, 1));
+</span><span style="color:#65737e;">        jPanel.add(new JLabel(this.content));
+</span><span style="color:#65737e;">        jPanel.add(this.jTextField);
+</span><span style="color:#65737e;">        return jPanel;
+</span><span style="color:#65737e;">    }
+</span><span style="color:#65737e;">
+</span><span style="color:#65737e;">    public String getText() {
+</span><span style="color:#65737e;">        return this.jTextField.getText();
+</span><span style="color:#65737e;">    }
+</span><span style="color:#65737e;">}
+</span></code></pre>
+<p>在这个类中，我们定义了一个私有字段<code>JTextField</code>，之所以需要在类中持有该引用，是因为我们定义一个方法<code>getText</code>，以便在对话框结束时，可以通过调用<code>PromptDialog.getText</code>来获取用户输入。</p>
+<p>编写完成后，我们在onJSDialog中对prompt类型的对话框进行处理：</p>
+<pre data-lang="java" style="background-color:#2b303b;color:#c0c5ce;" class="language-java "><code class="language-java" data-lang="java"><span style="color:#b48ead;">if </span><span>(dialog_type == </span><span style="color:#d08770;">JSDIALOGTYPE_PROMPT</span><span>) {
+</span><span>    </span><span style="color:#65737e;">// prompt 对话框
+</span><span>    </span><span style="color:#ebcb8b;">EventQueue</span><span>.</span><span style="color:#bf616a;">invokeLater</span><span>(() </span><span style="color:#b48ead;">-&gt; </span><span>{
+</span><span>        </span><span style="color:#ebcb8b;">PromptDialog</span><span> promptDialog = </span><span style="color:#b48ead;">new </span><span style="color:#ebcb8b;">PromptDialog</span><span>(&quot;</span><span style="color:#a3be8c;">注意</span><span>&quot;, message_text);
+</span><span>        </span><span style="color:#b48ead;">boolean</span><span> isOk = promptDialog.</span><span style="color:#bf616a;">showAndGet</span><span>();
+</span><span>        </span><span style="color:#ebcb8b;">String</span><span> text = promptDialog.</span><span style="color:#bf616a;">getText</span><span>();
+</span><span>        callback.</span><span style="color:#ebcb8b;">Continue</span><span>(isOk, text);
+</span><span>    });
+</span><span>    </span><span style="color:#b48ead;">return </span><span style="color:#d08770;">true</span><span>;
+</span><span>}
+</span></code></pre>
+<p>和之前不太一样的是，这里需要在showAndGet之后，调用getText来获取用户输入，并在<code>callback.Continue(isOk, text)方法中</code>传入用户的数据数据。最终效果如下：</p>
+<p><img src="https://static-res.zhen.wang/images/post/2021-10-06-intelliJ-plugin-dev-2/130-new-prompt-dialog.gif" alt="" /></p>
+<h1 id="yuan-ma">源码</h1>
+<p><a rel="noopener" target="_blank" href="https://github.com/w4ngzhen/intellij-jcef-plugin">w4ngzhen/intellij-jcef-plugin (github.com)</a></p>
+<p>本次相关代码提交：<a rel="noopener" target="_blank" href="https://github.com/w4ngzhen/intellij-jcef-plugin/commit/7df78f33845db89f46e33663967f9c5780cb5dca">support JsDialog</a></p>
+
+    </div>
+</div>
+<script src="https://zhen.wang/libs/viewerjs@1.11.7/viewer.min.js"></script>
+<link rel="stylesheet" href="https://zhen.wang/libs/viewerjs@1.11.7/viewer.min.css"/>
+<script>
+  if (window.Viewer) {
+    document.querySelectorAll('img').forEach(img => {
+      new Viewer(img, {
+        inline: false,
+        navbar: false,
+        toolbar: {
+          zoomIn: 1,
+          zoomOut: 1,
+          reset: 1,
+          rotateLeft: 1,
+          rotateRight: 1,
+        },
+      });
+    });
+  }
+</script>
+
+
+</body>
+</html>

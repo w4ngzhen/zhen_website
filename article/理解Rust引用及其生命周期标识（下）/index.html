@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="utf-8">
+    <meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover"
+          name="viewport">
+    
+    
+    <!-- umami web analysis -->
+    <script defer src="https://zhen.wang/libs/umami/umami.script.js"
+            data-website-id="d66cfe03-f6b3-4aa0-baf8-728700db1b09"></script>
+    
+    
+    
+    <link rel="icon" type="image/png" sizes="16x16" href="https://zhen.wang/images/blog-site-icon.svg">
+    <link rel="icon" type="image/png" sizes="32x32" href="https://zhen.wang/images/blog-site-icon.svg">
+    <title>zhen&#x27;s everything</title>
+    <link rel="stylesheet" href="https://zhen.wang/style.css">
+    
+<link rel="stylesheet" href="https://zhen.wang/article_content.css">
+<link rel="stylesheet" href="https://zhen.wang/article_markdown.css">
+
+</head>
+<body>
+
+<div id="article">
+    <header class="article-header">
+        
+<div class="base-title">
+    <a href="#" onclick="history.length > 1 ? history.back() : location.href = '/'; return false;">&LeftArrow; Back</a>
+    <h1>
+        理解Rust引用及其生命周期标识（下）
+    </h1>
+</div>
+
+    </header>
+    <p class="article-date">2025-03-30</p>
+    
+    <!-- toc -->
+    <div class="article-toc">
+        <label class="toc-title" for="toc-trigger">目录</label>
+        <input id="toc-trigger" type="checkbox" checked/>
+        <div class="toc-content">
+            <ol class="toc">
+                
+                <li class="toc-item toc-level-1">
+                    <a class="toc-link" href="https://zhen.wang/article/理解Rust引用及其生命周期标识（下）/#bao-han-yin-yong-de-jie-gou-ti-de-ben-zhi">包含引用的结构体的本质</a>
+                    
+                    <ol class="toc-child">
+                        
+                        <li class="toc-item toc-level-2">
+                            <a href="https://zhen.wang/article/理解Rust引用及其生命周期标识（下）/#dan-ge-yin-yong-de-jie-gou-ti">单个引用的结构体</a>
+                        </li>
+                        
+                        <li class="toc-item toc-level-2">
+                            <a href="https://zhen.wang/article/理解Rust引用及其生命周期标识（下）/#duo-ge-yin-yong-de-jie-gou-ti">多个引用的结构体</a>
+                        </li>
+                        
+                    </ol>
+                    
+                </li>
+                
+                <li class="toc-item toc-level-1">
+                    <a class="toc-link" href="https://zhen.wang/article/理解Rust引用及其生命周期标识（下）/#jie-gou-ti-de-sheng-ming-zhou-qi-can-shu-biao-shi">结构体的生命周期参数标识</a>
+                    
+                    <ol class="toc-child">
+                        
+                        <li class="toc-item toc-level-2">
+                            <a href="https://zhen.wang/article/理解Rust引用及其生命周期标识（下）/#tian-jia-can-shu-biao-shi-de-bi-yao-xing">添加参数标识的必要性</a>
+                        </li>
+                        
+                    </ol>
+                    
+                </li>
+                
+                <li class="toc-item toc-level-1">
+                    <a class="toc-link" href="https://zhen.wang/article/理解Rust引用及其生命周期标识（下）/#zhu-yi-jie-gou-ti-yu-jie-gou-ti-yin-yong">注意结构体与结构体引用</a>
+                    
+                </li>
+                
+                <li class="toc-item toc-level-1">
+                    <a class="toc-link" href="https://zhen.wang/article/理解Rust引用及其生命周期标识（下）/#sheng-ming-zhou-qi-can-shu-biao-ji-bu-gai-bian-ke-guan-cun-zai-de-sheng-ming-zhou-qi">生命周期参数标记不改变客观存在的生命周期</a>
+                    
+                </li>
+                
+                <li class="toc-item toc-level-1">
+                    <a class="toc-link" href="https://zhen.wang/article/理解Rust引用及其生命周期标识（下）/#xie-zai-zui-hou">写在最后</a>
+                    
+                </li>
+                
+            </ol>
+        </div>
+    </div>
+    
+    <!-- real content -->
+    <div class="article-content markdown-content">
+        <p>在上一篇文章中，我们围绕 “引用必然存在来源” 这一基本概念，介绍了Rust中引用之间的关系，以及生命周期标记的实际意义。我们首先从最简单的单参数方法入手，通过示例说明了返回引用与输入引用参数之间的逻辑关系；通过多引用参数的复杂场景，阐释了生命周期标注（本人给其命名为 “引用关系标记”）的必要性及其编译器检查机制。在上一篇文章的最后，我们还提到了关于包含引用的结构体，只不过由于篇幅原因以及文章结构原因，我们没有细讲。因此，在本文中，我们将继续通过实际示例出发，探讨包含引用的结构体的生命周期相关内容。</p>
+<h1 id="bao-han-yin-yong-de-jie-gou-ti-de-ben-zhi">包含引用的结构体的本质</h1>
+<p>单从数据结构的角度来看，结构体本质上是具有类型安全的复合数据体，即结构体是一个可以包含多个数据字段的逻辑单元：</p>
+<pre data-lang="rust" style="background-color:#2b303b;color:#c0c5ce;" class="language-rust "><code class="language-rust" data-lang="rust"><span style="color:#b48ead;">struct </span><span>MyData {
+</span><span>  </span><span style="color:#b48ead;">pub </span><span style="color:#bf616a;">num</span><span>: </span><span style="color:#b48ead;">i32</span><span>,
+</span><span>  </span><span style="color:#b48ead;">pub </span><span style="color:#bf616a;">is_ok</span><span>: </span><span style="color:#b48ead;">bool</span><span>,
+</span><span>}
+</span></code></pre>
+<p>引用的本质也是一份包含了被引用者内存地址信息（以及其他上下文）的数据，因此，我们当然可以让结构体包含引用字段：</p>
+<pre data-lang="rust" style="background-color:#2b303b;color:#c0c5ce;" class="language-rust "><code class="language-rust" data-lang="rust"><span style="color:#b48ead;">struct </span><span>MyData&lt;</span><span style="color:#b48ead;">&#39;a</span><span>&gt; {
+</span><span>  </span><span style="color:#b48ead;">pub </span><span style="color:#bf616a;">num_ref</span><span>: &amp;</span><span style="color:#b48ead;">&#39;a i32</span><span>,
+</span><span>  </span><span style="color:#b48ead;">pub </span><span style="color:#bf616a;">is_ok</span><span>: </span><span style="color:#b48ead;">bool</span><span>,
+</span><span>}
+</span></code></pre>
+<p>在这里我们先暂且不考虑具体的语法（添加生命周期参数标记），而是思考一下一个包含引用的结构体相比于没有包含任何引用的结构体究竟有什么特殊之处。首先，一个结构体一旦被创建出来，就意味着它内部的数据字段此时都是合法的数据，并且，结构体中的字段数据一定不可能晚于这个结构体创建时刻。</p>
+<pre data-lang="rust" style="background-color:#2b303b;color:#c0c5ce;" class="language-rust "><code class="language-rust" data-lang="rust"><span style="color:#b48ead;">struct </span><span>Data {
+</span><span>  </span><span style="color:#b48ead;">pub </span><span style="color:#bf616a;">num</span><span>: </span><span style="color:#b48ead;">i32
+</span><span>}
+</span><span style="color:#65737e;">// main
+</span><span style="color:#b48ead;">let</span><span> num_val = </span><span style="color:#d08770;">123</span><span>;
+</span><span style="color:#b48ead;">let</span><span> data = Data { num: num_val } </span><span style="color:#65737e;">// &lt;- Data实例化时，里面的字段的数据肯定早于实例化当前Data
+</span></code></pre>
+<p>有的读者可能会给出这样的反例：</p>
+<pre data-lang="rust" style="background-color:#2b303b;color:#c0c5ce;" class="language-rust "><code class="language-rust" data-lang="rust"><span style="color:#b48ead;">struct </span><span>Data {
+</span><span>  </span><span style="color:#b48ead;">pub </span><span style="color:#bf616a;">num</span><span>: Option&lt;</span><span style="color:#b48ead;">i32</span><span>&gt;
+</span><span>}
+</span><span style="color:#65737e;">// main
+</span><span style="color:#b48ead;">let mut</span><span> data = Data { num: None };
+</span><span style="color:#b48ead;">let</span><span> num_val = Some(</span><span style="color:#d08770;">123</span><span>);
+</span><span>data.num = num_val;
+</span></code></pre>
+<p>请注意，这里结构体中的<code>num</code>字段类型是<code>Option&lt;i32&gt;</code>，而不是<code>i32</code>，因此，我们需要在创建Data结构体实例数据的时候，把<code>Option&lt;i32&gt;</code>类型数据准备好，这里我们用的是<code>None</code>。这里并没有违背我们上面说的“结构体中的字段数据一定不可能晚于这个结构体创建时刻”。</p>
+<p>在笔者看来，一个包含了引用的结构体有如下两个信息点：</p>
+<ol>
+<li>本身可以作为一种引用类型来看。</li>
+<li>可以将其创建的实例等价为一个引用。</li>
+</ol>
+<p>我们先看第1点。我们知道，<code>i32</code>是一种类型，<code>&amp;i32</code>也是一种类型。同样的，像上述的<code>MyData</code>这个结构体同样是一种类型。同时，因为该结构体包含了引用，所以我们可以将其<strong>等价理解</strong>为某种引用类型：</p>
+<p><img src="https://static-res.zhen.wang/images/post/2025-03-30/010.png" alt="010" /></p>
+<p>上图中，笔者将<code>MyData1</code>归为了普通类型，而将<code>MyData2</code>归为了引用类型。它俩区别在于，<code>MyData1</code>不包含任何的引用字段，而<code>MyData2</code>包含引用字段。</p>
+<p>对于第2点，当我们创建一个包含引用的结构体的实例以后，这个实例本身也可以理解为一个引用：</p>
+<pre data-lang="rust" style="background-color:#2b303b;color:#c0c5ce;" class="language-rust "><code class="language-rust" data-lang="rust"><span style="color:#b48ead;">let</span><span> num = </span><span style="color:#d08770;">123</span><span>;
+</span><span style="color:#65737e;">//    ┍ data这个变量本质上一个引用
+</span><span style="color:#b48ead;">let</span><span> data: MyData2 = { num_ref: &amp;num }
+</span></code></pre>
+<p>这里的<code>data</code>变量，可以等价为一个引用，它类似于这样的代码：</p>
+<pre data-lang="rust" style="background-color:#2b303b;color:#c0c5ce;" class="language-rust "><code class="language-rust" data-lang="rust"><span style="color:#b48ead;">let</span><span> num = </span><span style="color:#d08770;">123</span><span>;
+</span><span style="color:#b48ead;">let</span><span> other = &amp;num;
+</span></code></pre>
+<p>只不过在结构体形式下，我们把这个所谓的<code>&amp;num</code>赋值给了结构体内部某个字段而已。</p>
+<h2 id="dan-ge-yin-yong-de-jie-gou-ti">单个引用的结构体</h2>
+<p>在大体上能够理解包含引用的结构体的本质以后，我们就可以按照之前的思路，来理解这种含引用的结构体实例变量的其生命周期相关内容了。</p>
+<p>首先，一个创建出来的含引用的结构体的实例本身就成为了一个引用数据，而不是普通数据了，那这个引用必然有其来源，而这个引用的来源自然是先前另一个变量借用而来的引用：</p>
+<p><img src="https://static-res.zhen.wang/images/post/2025-03-30/020.png" alt="020" /></p>
+<p>注意看上图，我将<code>num_ref</code>和<code>data</code>圈在了一起，并用“等价”相连接，是因为<code>num_ref</code>一旦设置到了<code>MyData</code>结构体的字段中，就意味着<code>num_ref</code>这个引用被转移到了<code>MyData</code>内部，成为了其一部分，此时<code>data: MyData</code>尽管看起来就是一个普通的数据，但此时它就是一个引用数据。</p>
+<p>从上面的关系图我们很容易知道，如果要满足正确的生命周期，很显然，<code>data</code>（<code>num_ref</code>的 “代名词”）不能存活的比其来源<code>num</code>久。</p>
+<blockquote>
+<p>始终牢记：”引用必然有其来源，且不能活的比其来源更久“</p>
+</blockquote>
+<h2 id="duo-ge-yin-yong-de-jie-gou-ti">多个引用的结构体</h2>
+<p>事实上，包含多个引用的结构体本质上和包含单个引用的结构体的理解思路一致的，即结构体中多个引用字段都有其来源，唯一需要注意的为了保证包含多引用的结构体实例在运行时合法，很显然这个结构体实例的存活时间不能超过结构体所包含的多个引用字段的各自存活时间。还是用来源关系图来表达如下的代码：</p>
+<pre data-lang="rust" style="background-color:#2b303b;color:#c0c5ce;" class="language-rust "><code class="language-rust" data-lang="rust"><span style="color:#b48ead;">let</span><span> num: </span><span style="color:#b48ead;">i32 </span><span>= </span><span style="color:#d08770;">123</span><span>;
+</span><span style="color:#b48ead;">let</span><span> val: </span><span style="color:#b48ead;">bool </span><span>= </span><span style="color:#d08770;">true</span><span>;
+</span><span style="color:#b48ead;">let</span><span> data: MyData = {
+</span><span>  num_ref: &amp;num,
+</span><span>  val_ref: &amp;val,
+</span><span>}
+</span></code></pre>
+<p><img src="https://static-res.zhen.wang/images/post/2025-03-30/030.png" alt="030" /></p>
+<p><code>data</code>来包含了<code>num_ref</code>和<code>val_ref</code>，也就是说，<code>data</code>此时应该视为<code>num_ref</code>和<code>val_ref</code>这两个引用的“结合体”。而<code>num_ref</code>和<code>val_ref</code>又各自来源于<code>num</code>和<code>val</code>，那么为了满足内存安全的要求，我们只有让<code>data</code>的存活时间<strong>同时</strong>不能超过<code>num_ref</code>和<code>val_ref</code>各自所引用的源头数据<code>num</code>和<code>val</code>的存活时间。如果<strong>随时都要同时满足</strong>，就只有让<code>data</code>的存活时间不能超过<code>num</code>和<code>val</code>其中距离销毁时刻最近的那一个：</p>
+<p><img src="https://static-res.zhen.wang/images/post/2025-03-30/040.png" alt="040" /></p>
+<h1 id="jie-gou-ti-de-sheng-ming-zhou-qi-can-shu-biao-shi">结构体的生命周期参数标识</h1>
+<p>目前为止，我们基本理解了包含引用的结构体究竟是一个什么“东西”以及它的存活要求，但Rust中让很多新手难以理解的，其实是结构体中的生命周期参数标识，比如：</p>
+<pre data-lang="rust" style="background-color:#2b303b;color:#c0c5ce;" class="language-rust "><code class="language-rust" data-lang="rust"><span style="color:#b48ead;">struct </span><span>MyData&lt;</span><span style="color:#b48ead;">&#39;a</span><span>&gt; {
+</span><span>    </span><span style="color:#b48ead;">pub </span><span style="color:#bf616a;">num_ref</span><span>: &amp;</span><span style="color:#b48ead;">&#39;a i32
+</span><span>}
+</span></code></pre>
+<p>甚至有一些“丧心病狂”的代码：</p>
+<pre data-lang="rust" style="background-color:#2b303b;color:#c0c5ce;" class="language-rust "><code class="language-rust" data-lang="rust"><span style="color:#b48ead;">struct </span><span>MyData&lt;</span><span style="color:#b48ead;">&#39;a</span><span>&gt; {
+</span><span>    </span><span style="color:#b48ead;">pub </span><span style="color:#bf616a;">num_ref</span><span>: &amp;</span><span style="color:#b48ead;">&#39;a i32
+</span><span>}
+</span><span>
+</span><span style="color:#b48ead;">struct </span><span>MyDataWrapper&lt;</span><span style="color:#b48ead;">&#39;a</span><span>, </span><span style="color:#b48ead;">&#39;b</span><span>&gt; {
+</span><span>    </span><span style="color:#b48ead;">pub </span><span style="color:#bf616a;">my_data</span><span>: &amp;</span><span style="color:#b48ead;">&#39;a </span><span>MyData&lt;</span><span style="color:#b48ead;">&#39;b</span><span>&gt;, </span><span style="color:#65737e;">// wtf!
+</span><span>    </span><span style="color:#b48ead;">pub </span><span style="color:#bf616a;">len</span><span>: &amp;</span><span style="color:#b48ead;">&#39;b i32</span><span>,
+</span><span>}
+</span></code></pre>
+<p>但请不要担心，在阅读了本文以后，我相信你能够很轻松的理解上面这些代码的意义。在继续之前，让我们回顾一下在《理解Rust引用及其生命周期标识（上）》一个例子：</p>
+<pre data-lang="rust" style="background-color:#2b303b;color:#c0c5ce;" class="language-rust "><code class="language-rust" data-lang="rust"><span style="color:#b48ead;">fn </span><span style="color:#8fa1b3;">func</span><span>&lt;</span><span style="color:#b48ead;">&#39;a</span><span>&gt;(</span><span style="color:#bf616a;">num_ref</span><span>: &amp;</span><span style="color:#b48ead;">&#39;a i32</span><span>) -&gt; &amp;</span><span style="color:#b48ead;">&#39;a i32 </span><span>{
+</span><span>    num_ref
+</span><span>}
+</span><span>
+</span><span style="color:#b48ead;">fn </span><span style="color:#8fa1b3;">main</span><span>() {
+</span><span>    </span><span style="color:#b48ead;">let</span><span> num = </span><span style="color:#d08770;">123</span><span>;
+</span><span>    </span><span style="color:#b48ead;">let</span><span> num_ref = &amp;num;
+</span><span>    </span><span style="color:#b48ead;">let</span><span> res = </span><span style="color:#96b5b4;">func</span><span>(num_ref);
+</span><span>}
+</span></code></pre>
+<p>在这个例子中，生命周期参数标识的核心作用，是把<code>func</code>方法的输入引用参数<code>num_ref</code>和输出引用<code>&amp;i32</code>建立<strong>依赖关联</strong>（它们都使用了相同的生命周期参数<code>'a</code>）。而正是由于该关联关系，我们可以分析出上述的<code>res</code>（返回的引用）本质上依赖<code>num</code>变量。因此，为了内存安全性，我们很显然不能让<code>res</code>这一引用的存活时间超过它的来源<code>num</code>。所以，一旦编译器发现<code>num</code>和<code>res</code>的生命周期不正确时，会予以编译错误。</p>
+<h2 id="tian-jia-can-shu-biao-shi-de-bi-yao-xing">添加参数标识的必要性</h2>
+<p>那<strong>为什么包含引用的结构体需要为其添加生命周期参数呢</strong>？在笔者看来，核心作用是为了让开发者通过引用关系标记来更加明确的指定相关的引用依赖关系。让我们用一个例子来更好的解释。</p>
+<p>首先，让我们还是定义一个包含引用的结构体：</p>
+<pre data-lang="rust" style="background-color:#2b303b;color:#c0c5ce;" class="language-rust "><code class="language-rust" data-lang="rust"><span style="color:#b48ead;">struct </span><span>MyData { </span><span style="color:#65737e;">// 先假设此时没有生命周期参数
+</span><span>  </span><span style="color:#bf616a;">num_ref</span><span>: &amp;</span><span style="color:#b48ead;">i32
+</span><span>}
+</span></code></pre>
+<p>然后，我们定义如下签名的方法，该方法能够返回一个包含引用的结构体实例：</p>
+<pre data-lang="rust" style="background-color:#2b303b;color:#c0c5ce;" class="language-rust "><code class="language-rust" data-lang="rust"><span style="color:#b48ead;">fn </span><span style="color:#8fa1b3;">func</span><span>(</span><span style="color:#bf616a;">num_ref1</span><span>: &amp;</span><span style="color:#b48ead;">i32</span><span>, </span><span style="color:#bf616a;">num_ref2</span><span>: &amp;</span><span style="color:#b48ead;">i32</span><span>) -&gt; MyData;
+</span></code></pre>
+<p>基于这个方法签名，无论其内部的代码怎样编写，我们都可以将其简化为如下的流程：</p>
+<pre data-lang="rust" style="background-color:#2b303b;color:#c0c5ce;" class="language-rust "><code class="language-rust" data-lang="rust"><span style="color:#b48ead;">fn </span><span style="color:#8fa1b3;">func</span><span>(</span><span style="color:#bf616a;">num_ref1</span><span>: &amp;</span><span style="color:#b48ead;">i32</span><span>, </span><span style="color:#bf616a;">num_ref2</span><span>: &amp;</span><span style="color:#b48ead;">i32</span><span>) -&gt; MyData {
+</span><span>    </span><span style="color:#b48ead;">let</span><span> num_ref: &amp;</span><span style="color:#b48ead;">i32 </span><span>= ???;
+</span><span>    </span><span style="color:#b48ead;">let</span><span> data = MyData { num_ref: num_ref };
+</span><span>    data
+</span><span>}
+</span></code></pre>
+<p><code>MyData</code>中的<code>num_ref</code>字段是一个引用，基于 “引用不可能凭空产生” ，一定要有一个来源，这里只能是<code>num_ref1</code>或者<code>num_ref2</code>。然而，究竟是<code>num_ref1</code>还是<code>num_ref2</code>呢？很显然我们（以及Rust编译器）是无法通过静态的代码就能分析出，毕竟这是一个运行时才能知道的结果，例如下面的伪代码就没法静态确定：</p>
+<pre data-lang="rust" style="background-color:#2b303b;color:#c0c5ce;" class="language-rust "><code class="language-rust" data-lang="rust"><span style="color:#b48ead;">fn </span><span style="color:#8fa1b3;">func</span><span>(</span><span style="color:#bf616a;">num_ref1</span><span>: &amp;</span><span style="color:#b48ead;">i32</span><span>, </span><span style="color:#bf616a;">num_ref2</span><span>: &amp;</span><span style="color:#b48ead;">i32</span><span>) -&gt; MyData {
+</span><span>  	</span><span style="color:#b48ead;">let</span><span> current_sec = ... </span><span style="color:#65737e;">// 当前运行时的秒数
+</span><span>
+</span><span>  	</span><span style="color:#b48ead;">let</span><span> num_ref: &amp;</span><span style="color:#b48ead;">i32</span><span>;
+</span><span>  	</span><span style="color:#b48ead;">if</span><span> current_sec % </span><span style="color:#d08770;">2 </span><span>== </span><span style="color:#d08770;">1 </span><span style="color:#65737e;">// 秒数为奇数
+</span><span>  		num_ref = num_ref1;
+</span><span>  	</span><span style="color:#b48ead;">else
+</span><span>  		num_ref = num_ref2;
+</span><span>
+</span><span>    </span><span style="color:#b48ead;">let</span><span> data = MyData { num_ref: num_ref };
+</span><span>    data
+</span><span>}
+</span></code></pre>
+<p>既然无法确定返回结构体中的引用字段究竟与哪个入参存在依赖关系，编译器可以做到的一种检查方式就是确保返回的<code>MyData</code>的实例的存活时间不能超过入参<code>num_ref1</code>和<code>num_ref2</code>这两个引用的来源变量存活时间最短的那一个，因为<code>MyData</code>持有的<code>num_ref</code>引用不管依赖哪一个，但只要其存活时间不超过<code>num_ref1</code>和<code>num_ref2</code>所对应的来源变量最先销毁的那个，<code>MyData</code>持有的<code>num_ref</code>就一定是合法的。</p>
+<p>尽管这样的处理限制理论上来讲是“最保险最安全”的，但在某些场景下又过于严格了，比如如下的代码从内存安全的角度来看，也是合理的：</p>
+<pre data-lang="rust" style="background-color:#2b303b;color:#c0c5ce;" class="language-rust "><code class="language-rust" data-lang="rust"><span style="color:#b48ead;">fn </span><span style="color:#8fa1b3;">func</span><span>(</span><span style="color:#bf616a;">num_ref1</span><span>: &amp;</span><span style="color:#b48ead;">i32</span><span>, </span><span style="color:#bf616a;">num_ref2</span><span>: &amp;</span><span style="color:#b48ead;">i32</span><span>) -&gt; MyData {
+</span><span>  	println!(&#39;{}&#39;, num_ref2) </span><span style="color:#65737e;">// &lt;- num_ref2只用做其它用途，不会与最终返回的MyData产生关系
+</span><span>  	</span><span style="color:#65737e;">// 返回的MyData只依赖num_ref1，即只依赖num_ref1的来源
+</span><span>    </span><span style="color:#b48ead;">let</span><span> data = MyData { num_ref: num_ref1 }; 
+</span><span>    data
+</span><span>}
+</span></code></pre>
+<p>上述<code>func</code>返回的<code>MyData</code>实例所包含的引用只会来自于<code>num_ref1</code>，永远不会来自<code>num_ref2</code>，也就是说，返回的<code>MyData</code>只需要保证其存活时间不超过<code>num_ref1</code>的来源变量的存活时间即可。但如果按照上述“最安全最保险”的方式进行生命周期检查，Rust编译器是不会给我们通过的。为了即可以保证内存安全，又不过于严格限制引用关系（例如此时这种情况），Rust做法是要求开发者<strong>通过显式的生命周期参数标识</strong>来告诉告知编译器：返回的<code>MyData</code>中的<code>num_ref</code>字段只会和入参<code>num_ref1</code>产生关系。</p>
+<p>对于<code>func</code>的入参，只需要给<code>num_ref1</code>和<code>num_ref2</code>分别给予不同的生命周期参数来区分它们：</p>
+<p><img src="https://static-res.zhen.wang/images/post/2025-03-30/050.png" alt="050" /></p>
+<p>但是对于<code>MyData</code>来说，我们应该如何的将入参<code>num_ref1</code>的生命周期参数<code>'a</code>与<code>MyData</code>中的<code>num_ref</code>这个引用字段进行关联呢？Rust语言规范给出的答案就是对于包含引用的结构体在定义时必须要增加生命周期“形式”参数。比如<code>MyData</code>我们可以这样定义：</p>
+<pre data-lang="rust" style="background-color:#2b303b;color:#c0c5ce;" class="language-rust "><code class="language-rust" data-lang="rust"><span style="color:#b48ead;">struct </span><span>MyData&lt;</span><span style="color:#b48ead;">&#39;hello</span><span>&gt; {
+</span><span>  </span><span style="color:#bf616a;">num_ref</span><span>: &amp;</span><span style="color:#b48ead;">&#39;hello i32</span><span>,
+</span><span>}
+</span></code></pre>
+<p>面对上述定义的结构体，我们可以按照这样的理解思路来看：</p>
+<ol>
+<li><code>MyData</code>放置参数列表的尖括号<code>&lt;xxx&gt;</code>中的<strong>第一个位置是一个引用生命周期参数标识</strong>，这里写作<code>'hello</code>；</li>
+<li><code>MyData</code>中的<code>num_ref</code>这个引用类型的字段的生命周期参数标识使用了参数列表中第一个位置上的的<code>'hello</code>，因此，在将来我们使用<code>MyData</code>的时候，填入的实际周期参数就对应了<code>num_ref</code>字段。</li>
+</ol>
+<p>紧接着，我们不气上面的方法签名。此时，我们只需要在返回的<code>MyData</code>把实际的生命周期参数标识<code>'a</code>填入到尖括号中即可：</p>
+<p><img src="https://static-res.zhen.wang/images/post/2025-03-30/060.png" alt="060" /></p>
+<p>而此时的<code>'a</code>这个生命周期参数标识叫做“实际参数 ”，它放在了参数列表的第一位，指代了<code>MyData</code>在定义时的参数<code>'hello</code>：</p>
+<p><img src="https://static-res.zhen.wang/images/post/2025-03-30/070.png" alt="070" /></p>
+<p>至此，我们就完成了整个依赖的链路的确定。相信读者在阅读了上述的内容以后，能够理解对于包含引用的结构体添加需要添加生命周期参数标识的必要性了吧。记住，对于结构体上定义时的生命周期参数标识，是一种标记，它在参数列表（就是结构体名称后面的尖括号列表<code>&lt;xxx, xxx&gt;</code>）中的位置用于在将来实际使用时传入到对应的位置来表达实际的意义。</p>
+<h1 id="zhu-yi-jie-gou-ti-yu-jie-gou-ti-yin-yong">注意结构体与结构体引用</h1>
+<p>关于包含结构体引用的实例还有一个需要读者注意点就是仔细区分结构体实例与其借用而来的引用。例如下面的代码：</p>
+<pre data-lang="rust" style="background-color:#2b303b;color:#c0c5ce;" class="language-rust "><code class="language-rust" data-lang="rust"><span style="color:#b48ead;">struct </span><span>MyData&lt;</span><span style="color:#b48ead;">&#39;a</span><span>&gt; {
+</span><span>  </span><span style="color:#bf616a;">num_ref</span><span>: &amp;</span><span style="color:#b48ead;">&#39;a i32
+</span><span>}
+</span><span>
+</span><span style="color:#b48ead;">fn </span><span style="color:#8fa1b3;">func</span><span>&lt;</span><span style="color:#b48ead;">&#39;a</span><span>, </span><span style="color:#b48ead;">&#39;b</span><span>&gt;(</span><span style="color:#bf616a;">data_ref</span><span>: &amp;</span><span style="color:#b48ead;">&#39;a </span><span>MyData&lt;</span><span style="color:#b48ead;">&#39;b</span><span>&gt;);
+</span></code></pre>
+<p>上述的方法有两个生命周期参数标识<code>'a</code>和<code>'b</code>，其中<code>'a</code>用于标记<code>&amp;MyData</code>这个结构体实例的引用；而<code>'b</code>则用于标记<code>MyData</code>实例中的字段<code>num_ref</code>这个引用。注意它俩有着不同的概念，用依赖图可能更加直接：</p>
+<p><img src="https://static-res.zhen.wang/images/post/2025-03-30/080.png" alt="080" /></p>
+<p><code>data_ref</code>依赖<code>data</code>，而<code>data</code>包含<code>num_ref</code>，即依赖于<code>num</code>，因此<code>data_ref</code>的生命周期存活时间，不能超过<code>num</code>的存活时间。</p>
+<h1 id="sheng-ming-zhou-qi-can-shu-biao-ji-bu-gai-bian-ke-guan-cun-zai-de-sheng-ming-zhou-qi">生命周期参数标记不改变客观存在的生命周期</h1>
+<p>很多Rust新手可能会有这样的误区，认为当修改了或者设置了方法的生命周期参数标记的时候，就会改变实际传入的变量的生命周期，这是很多新手无法掌握生命周期参数标记的典型问题。但实际上，生命周期参数标记的核心作用是通过语法约束向编译器提供引用关系的逻辑描述，而不会改变引用本身客观存在的生命周期范围。通常，我们需要从“客观生命周期事实”和“主观引用关系逻辑描述”两个方面来看待包含生命周期参数标记的代码。例如，如下的代码：</p>
+<pre data-lang="rust" style="background-color:#2b303b;color:#c0c5ce;" class="language-rust "><code class="language-rust" data-lang="rust"><span style="color:#b48ead;">fn </span><span style="color:#8fa1b3;">func</span><span>&lt;</span><span style="color:#b48ead;">&#39;a</span><span>&gt;(</span><span style="color:#bf616a;">num_ref</span><span>: &amp;</span><span style="color:#b48ead;">&#39;a i32</span><span>) -&gt; &amp;</span><span style="color:#b48ead;">&#39;a i32 </span><span>{
+</span><span>  </span><span style="color:#65737e;">// ... ... 
+</span><span>}
+</span><span style="color:#b48ead;">fn </span><span style="color:#8fa1b3;">main</span><span>() {
+</span><span>  </span><span style="color:#b48ead;">let</span><span> result: &amp;</span><span style="color:#b48ead;">i32</span><span>;
+</span><span>  {
+</span><span>    </span><span style="color:#b48ead;">let</span><span> num: </span><span style="color:#b48ead;">i32 </span><span>= </span><span style="color:#d08770;">123</span><span>;
+</span><span>  	</span><span style="color:#b48ead;">let</span><span> num_ref: &amp;</span><span style="color:#b48ead;">i32 </span><span>= &amp;num;
+</span><span>  	result = </span><span style="color:#96b5b4;">func</span><span>(num_ref);
+</span><span>  }
+</span><span>  println!(&quot;</span><span style="color:#d08770;">{}</span><span>&quot;, result);
+</span><span>}
+</span></code></pre>
+<p>从“客观生命周期事实”的角度来看，<code>result</code>这个<code>&amp;i32</code>引用的生命周期是最长的，比起<code>num_ref</code>以及<code>num</code>都长；而“主观引用关系逻辑描述”来看，这个<code>result</code>是由<code>func</code>输出而来，而观察该方法的签名，我们知道通过<code>'a</code>引用生命周期参数标记，返回的引用生命周期依赖于入参，而入参是<code>num_ref</code>，来源于<code>num</code>，因此它不能超过<code>num</code>的生命周期。因此，我们（Rust编译器）能够根据其中的矛盾点而识别到错误。</p>
+<h1 id="xie-zai-zui-hou">写在最后</h1>
+<p>本文在编写过程中也是断断续续，修修改改了有小半个月才完成，虽然文章已经编写了完成了，但是笔者还有很多内容想说，就放在后续的文章讲吧。</p>
+
+    </div>
+</div>
+<script src="https://zhen.wang/libs/viewerjs@1.11.7/viewer.min.js"></script>
+<link rel="stylesheet" href="https://zhen.wang/libs/viewerjs@1.11.7/viewer.min.css"/>
+<script>
+  if (window.Viewer) {
+    document.querySelectorAll('img').forEach(img => {
+      new Viewer(img, {
+        inline: false,
+        navbar: false,
+        toolbar: {
+          zoomIn: 1,
+          zoomOut: 1,
+          reset: 1,
+          rotateLeft: 1,
+          rotateRight: 1,
+        },
+      });
+    });
+  }
+</script>
+
+
+</body>
+</html>

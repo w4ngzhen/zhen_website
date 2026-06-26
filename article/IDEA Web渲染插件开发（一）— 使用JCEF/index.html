@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="utf-8">
+    <meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover"
+          name="viewport">
+    
+    
+    <!-- umami web analysis -->
+    <script defer src="https://zhen.wang/libs/umami/umami.script.js"
+            data-website-id="d66cfe03-f6b3-4aa0-baf8-728700db1b09"></script>
+    
+    
+    
+    <link rel="icon" type="image/png" sizes="16x16" href="https://zhen.wang/images/blog-site-icon.svg">
+    <link rel="icon" type="image/png" sizes="32x32" href="https://zhen.wang/images/blog-site-icon.svg">
+    <title>zhen&#x27;s everything</title>
+    <link rel="stylesheet" href="https://zhen.wang/style.css">
+    
+<link rel="stylesheet" href="https://zhen.wang/article_content.css">
+<link rel="stylesheet" href="https://zhen.wang/article_markdown.css">
+
+</head>
+<body>
+
+<div id="article">
+    <header class="article-header">
+        
+<div class="base-title">
+    <a href="#" onclick="history.length > 1 ? history.back() : location.href = '/'; return false;">&LeftArrow; Back</a>
+    <h1>
+        IDEA Web渲染插件开发（一）— 使用JCEF
+    </h1>
+</div>
+
+    </header>
+    <p class="article-date">2021-07-16</p>
+    
+    <!-- toc -->
+    <div class="article-toc">
+        <label class="toc-title" for="toc-trigger">目录</label>
+        <input id="toc-trigger" type="checkbox" checked/>
+        <div class="toc-content">
+            <ol class="toc">
+                
+                <li class="toc-item toc-level-1">
+                    <a class="toc-link" href="https://zhen.wang/article/IDEA Web渲染插件开发（一）— 使用JCEF/#qian-yan">前言</a>
+                    
+                </li>
+                
+                <li class="toc-item toc-level-1">
+                    <a class="toc-link" href="https://zhen.wang/article/IDEA Web渲染插件开发（一）— 使用JCEF/#huan-jing-zhun-bei">环境准备</a>
+                    
+                </li>
+                
+                <li class="toc-item toc-level-1">
+                    <a class="toc-link" href="https://zhen.wang/article/IDEA Web渲染插件开发（一）— 使用JCEF/#dai-ma-bian-xie">代码编写</a>
+                    
+                    <ol class="toc-child">
+                        
+                        <li class="toc-item toc-level-2">
+                            <a href="https://zhen.wang/article/IDEA Web渲染插件开发（一）— 使用JCEF/#ji-chu-toolwindowkai-fa">基础ToolWindow开发</a>
+                        </li>
+                        
+                        <li class="toc-item toc-level-2">
+                            <a href="https://zhen.wang/article/IDEA Web渲染插件开发（一）— 使用JCEF/#webye-mian-toolwindowkai-fa">Web页面ToolWindow开发</a>
+                        </li>
+                        
+                    </ol>
+                    
+                </li>
+                
+                <li class="toc-item toc-level-1">
+                    <a class="toc-link" href="https://zhen.wang/article/IDEA Web渲染插件开发（一）— 使用JCEF/#fu-lu">附录</a>
+                    
+                </li>
+                
+            </ol>
+        </div>
+    </div>
+    
+    <!-- real content -->
+    <div class="article-content markdown-content">
+        <p>目前网上已经有了很多关于IDEA（IntelliJ平台）的插件开发教程了，本人觉得简书上这位作者<a rel="noopener" target="_blank" href="https://www.jianshu.com/u/3adf83c26b4e">秋水畏寒 </a>的关于插件开发的文章很不错，在我进行插件开发的过程中指导了我很多。但是综合下来看，在IDEA上加载网页的插件的教程还不是特别多，官方文档也不是那么的完整。本系列将会从这个角度出发，探讨如何编写加载Web页面的插件。</p>
+<span id="continue-reading"></span><h1 id="qian-yan">前言</h1>
+<p>为什么会有想到开发处理Web网页的插件呢？实际上因为在IDEA中，我们可以打开markdown文件，并且IDEA具有markdown实时渲染的能力：</p>
+<p><img src="https://static-res.zhen.wang/images/post/2021-07-16-intelliJ-plugin-dev-1/010-idea-md-show.jpg" alt="" /></p>
+<p>因为之前，本人使用过JCEF进行开发。看到这个渲染，心里大概猜测，应该用了浏览器内核。打开任务管理器：</p>
+<p><img src="https://static-res.zhen.wang/images/post/2021-07-16-intelliJ-plugin-dev-1/020-idea-use-jcef.jpg" alt="" /></p>
+<p>果然，熟悉的JCEF。然后进入JetBrains的官网，在插件开发的文档中找到了：<a rel="noopener" target="_blank" href="https://plugins.jetbrains.com/docs/intellij/jcef.html">JCEF - Java Chromium Embedded Framework | IntelliJ Platform Plugin SDK (jetbrains.com)</a>。</p>
+<p>那么，接下来我们从零开始，编写一款属于自己的插件，这款插件能够加载Web页面。</p>
+<h1 id="huan-jing-zhun-bei">环境准备</h1>
+<ul>
+<li>JDK 11</li>
+<li>Gradle</li>
+<li>良好的网络环境</li>
+</ul>
+<p>我们先创建一个IntelliJ Platform Plugin，名为：intellij-jcef-plugin</p>
+<p><img src="https://static-res.zhen.wang/images/post/2021-07-16-intelliJ-plugin-dev-1/030-create-plugin-proj-1.jpg" alt="" /></p>
+<p><img src="https://static-res.zhen.wang/images/post/2021-07-16-intelliJ-plugin-dev-1/040-create-plugin-proj-2.jpg" alt="" /></p>
+<p>然后进行这个Gradle项目的配置工作，完成整个项目搭建。本项目会在最后提交到github供读者下载。</p>
+<p><img src="https://static-res.zhen.wang/images/post/2021-07-16-intelliJ-plugin-dev-1/050-proj-arch.jpg" alt="" /></p>
+<h1 id="dai-ma-bian-xie">代码编写</h1>
+<p>首先说明我们的目的，就是希望能够类似于gradle、maven插件一样，能够在IDEA的侧边有一个显示我们Web页面的地方：</p>
+<p><img src="https://static-res.zhen.wang/images/post/2021-07-16-intelliJ-plugin-dev-1/060-display-like-gradle-page.jpg" alt="" /></p>
+<p>通过阅读官方的文档我们可以知道，我们需要编写的是ToolWindow（<a rel="noopener" target="_blank" href="https://plugins.jetbrains.com/docs/intellij/tool-windows.html">Tool Windows | IntelliJ Platform Plugin SDK (jetbrains.com)</a>）这样一个页面窗体。</p>
+<h2 id="ji-chu-toolwindowkai-fa">基础ToolWindow开发</h2>
+<p>在开发之前，我们需要明确一点，尽管这一节的标题写着"空白ToolWindow开发"，似乎在暗示我们，接下来我们会开发一个所谓的ToolWindow的实现类。实际上，ToolWindow是插件框架本身提供的，我们只需要做的是创建UI组件（例如JPanel），然后调用ToolWindow实例通过相关的API帮我们把UI组件设置到ToolWindow内部，具体的步骤如下：</p>
+<h3 id="shi-xian-toolwindowfactory">实现ToolWindowFactory</h3>
+<p>创建一个ToolWindowFactory的实现类，这里我们取名MyToolWindowFactory，然后重写<code>createToolWindowContent</code>方法。</p>
+<pre data-lang="java" style="background-color:#2b303b;color:#c0c5ce;" class="language-java "><code class="language-java" data-lang="java"><span style="color:#b48ead;">public class </span><span style="color:#ebcb8b;">MyToolWindowFactory </span><span style="color:#b48ead;">implements </span><span style="color:#a3be8c;">ToolWindowFactory </span><span style="color:#eff1f5;">{
+</span><span style="color:#eff1f5;">    @</span><span style="color:#bf616a;">Override
+</span><span style="color:#eff1f5;">    </span><span style="color:#b48ead;">public void </span><span style="color:#8fa1b3;">createToolWindowContent</span><span style="color:#eff1f5;">(
+</span><span style="color:#eff1f5;">            @</span><span style="color:#bf616a;">NotNull </span><span style="color:#ebcb8b;">Project </span><span style="color:#bf616a;">project</span><span style="color:#eff1f5;">,
+</span><span style="color:#eff1f5;">            @</span><span style="color:#bf616a;">NotNull </span><span style="color:#ebcb8b;">ToolWindow </span><span style="color:#bf616a;">toolWindow</span><span style="color:#eff1f5;">) {
+</span><span style="color:#eff1f5;">        </span><span style="color:#65737e;">// 此处方法将会在点击ToolWindow的时候触发
+</span><span style="color:#eff1f5;">        </span><span style="color:#65737e;">// 获取ContentManager
+</span><span style="color:#eff1f5;">        </span><span style="color:#ebcb8b;">ContentManager</span><span style="color:#eff1f5;"> contentManager </span><span>=</span><span style="color:#eff1f5;"> toolWindow.</span><span style="color:#bf616a;">getContentManager</span><span style="color:#eff1f5;">();
+</span><span style="color:#eff1f5;">        </span><span style="color:#ebcb8b;">Content</span><span style="color:#eff1f5;"> labelContent </span><span>=
+</span><span style="color:#eff1f5;">                contentManager.</span><span style="color:#bf616a;">getFactory</span><span style="color:#eff1f5;">() </span><span style="color:#65737e;">// 内容管理器获取工厂类
+</span><span style="color:#eff1f5;">                        .</span><span style="color:#bf616a;">createContent</span><span style="color:#eff1f5;">( </span><span style="color:#65737e;">// 创建Content（组件类实例、显示名称、是否可以锁定）
+</span><span style="color:#eff1f5;">                                </span><span style="color:#b48ead;">new </span><span style="color:#ebcb8b;">JLabel</span><span style="color:#eff1f5;">(</span><span>&quot;</span><span style="color:#a3be8c;">hello, world</span><span>&quot;</span><span style="color:#eff1f5;">),
+</span><span style="color:#eff1f5;">                                </span><span>&quot;</span><span style="color:#a3be8c;">MyTab</span><span>&quot;</span><span style="color:#eff1f5;">,
+</span><span style="color:#eff1f5;">                                </span><span style="color:#d08770;">false
+</span><span style="color:#eff1f5;">                        );
+</span><span style="color:#eff1f5;">        </span><span style="color:#65737e;">// 利用ContentManager添加Content
+</span><span style="color:#eff1f5;">        contentManager.</span><span style="color:#bf616a;">addContent</span><span style="color:#eff1f5;">(labelContent);
+</span><span style="color:#eff1f5;">    }
+</span><span style="color:#eff1f5;">}
+</span></code></pre>
+<p>在重写的<code>createToolWindowContent</code>方法中，插件框架会为我们传入两个对象：Project以及ToolWindow对象。其中，Project对象是当前项目的内容抽象，而ToolWindow这个对象就是插件框架本身内部构造的，抽象了我们需求所说的，点击侧边栏时候弹出的页面。</p>
+<p>在该方法实现中，主要有以下步骤：</p>
+<ol>
+<li>使用ContentFactory（ContentManager.getFactory()获取）的<code>createContent</code>API创建Content对象。这个创建时候，需要swing组件对象（JPanel、JLabel等等）。</li>
+<li>使用ContentManager的<code>addContent</code>API添加步骤1的Content对象。</li>
+</ol>
+<h3 id="zhu-ce-cha-jian">注册插件</h3>
+<p>接下来，我们将我们实现的MyToolWindowFactory通过<code>plugin.xml</code>进行注册，<code>alt+enter</code>，IDEA帮助我们快速完成填写xml配置到<code>plugin.xml</code>中：</p>
+<p><img src="https://static-res.zhen.wang/images/post/2021-07-16-intelliJ-plugin-dev-1/070-register-toolwindow.jpg" alt="" /></p>
+<p>进行上述操作后，IDEA自动为我们在plugin.xml文件的<code>extensions节点</code>中，添加了<code>toolWindow节点</code>的内容，但是我们还需要填写必备的属性<code>id</code>：</p>
+<pre data-lang="xml" style="background-color:#2b303b;color:#c0c5ce;" class="language-xml "><code class="language-xml" data-lang="xml"><span style="color:#65737e;">&lt;!-- plugin.xml文件 --&gt;
+</span><span>    &lt;</span><span style="color:#bf616a;">extensions </span><span style="color:#d08770;">defaultExtensionNs</span><span>=&quot;</span><span style="color:#a3be8c;">com.intellij</span><span>&quot;&gt;
+</span><span>        </span><span style="color:#65737e;">&lt;!-- Add your extensions here --&gt;
+</span><span>        </span><span style="color:#65737e;">&lt;!-- id是必须的属性，我们进行添加 --&gt;
+</span><span>        </span><span style="color:#65737e;">&lt;!-- anchor锚点非必须，但是为了像Gradle插件一样默认显示在右边，我们设置为right --&gt;
+</span><span>        &lt;</span><span style="color:#bf616a;">toolWindow </span><span style="color:#d08770;">id</span><span>=&quot;</span><span style="color:#a3be8c;">myToolWindowFactory</span><span>&quot;
+</span><span>                    </span><span style="color:#d08770;">anchor</span><span>=&quot;</span><span style="color:#a3be8c;">right</span><span>&quot;
+</span><span>                    </span><span style="color:#d08770;">factoryClass</span><span>=&quot;</span><span style="color:#a3be8c;">com.compilemind.demo.ui.MyToolWindowFactory</span><span>&quot;
+</span><span>        /&gt;
+</span><span>    &lt;/</span><span style="color:#bf616a;">extensions</span><span>&gt;
+</span></code></pre>
+<h3 id="jie-jue-diao-shi-huan-jing-wen-ti">解决调试环境问题</h3>
+<p>目前为止，我们实现了ToolWindowFactory以及将我们的实现类注册到plugin.xml中。现在，我们先什么内容都不编写，开始调试我们的插件：</p>
+<p><img src="https://static-res.zhen.wang/images/post/2021-07-16-intelliJ-plugin-dev-1/080-begin-debug.jpg" alt="" /></p>
+<p>不过开始调试后，会有很多的情况发生，这里我做了一些遇到的问题的总结。</p>
+<h4 id="gradleluan-ma">Gradle乱码</h4>
+<p>此时进行Debug调试，在我的机器上会出现乱码：</p>
+<p><img src="https://static-res.zhen.wang/images/post/2021-07-16-intelliJ-plugin-dev-1/090-debug-but-encode-error.jpg" alt="" /></p>
+<p>解决方案为，在build.gradle中添加如下的语句：</p>
+<pre data-lang="groovy" style="background-color:#2b303b;color:#c0c5ce;" class="language-groovy "><code class="language-groovy" data-lang="groovy"><span>tasks.withType(</span><span style="color:#b48ead;">JavaCompile</span><span>) {
+</span><span>    options.encoding = &quot;</span><span style="color:#a3be8c;">UTF-8</span><span>&quot;
+</span><span>}
+</span></code></pre>
+<h4 id="gradlebao-cuo-bu-zhi-dao-zhe-yang-de-zhu-ji-unknown-host">Gradle报错不知道这样的主机（Unknown host）</h4>
+<p>如果出现了类似于<code>Unknown host 'xxxxx.cloudfront.net'. You may need to adjust the proxy settings in Gradle.</code>这样的报错，一般是当前网络的连通问题，导致无法下载cloudfront.net一些jar文件。此时挂代理是最好的办法。</p>
+<h4 id="rumide-download-jcef">rumIde：Download JCEF</h4>
+<p>如果使用调试模式，intellij插件开发的Gradle插件会下载jcef的运行时，这个过程会比较漫长，目前解决办法是使用好的网络等待下载：</p>
+<p><img src="https://static-res.zhen.wang/images/post/2021-07-16-intelliJ-plugin-dev-1/100-downloading-jcef.jpg" alt="" /></p>
+<p>在本人机器上，第一次调试的时候主要就是遇到上面的三种情况。</p>
+<h3 id="yan-zheng-ji-chu-toolwindow">验证基础ToolWindow</h3>
+<p>解决完上述的几个问题之后，界面弹出了我们的调试下的社区版的IDEA（ideaIC），并且，查看Plugins页签，会发现我们编写的插件已经被这个ideaIC安装了：</p>
+<p><img src="https://static-res.zhen.wang/images/post/2021-07-16-intelliJ-plugin-dev-1/110-first-run-ideaIC-with-my-plugin.jpg" alt="" /></p>
+<p>我们使用这个IDEA创建一个简单的空项目，然后可以看到右侧有我们提供的ToolWindow：</p>
+<p><img src="https://static-res.zhen.wang/images/post/2021-07-16-intelliJ-plugin-dev-1/120-first-display-my-toolwindow.jpg" alt="" /></p>
+<p>可以看到，此时的ToolWindow中的内容显示为我们上面设置的<code>new JLabel("hello, world")</code>，该ToolWindow上方有我们设置的"My Tab"标题。截至目前的代码，包含在这个github上这个提交：</p>
+<p><a rel="noopener" target="_blank" href="https://github.com/w4ngzhen/intellij-jcef-plugin/commit/bf2ca8eb71c36a46077d222b031439537d8015cd">simple ToolWindow Content · w4ngzhen/intellij-jcef-plugin@bf2ca8e (github.com)</a></p>
+<h2 id="webye-mian-toolwindowkai-fa">Web页面ToolWindow开发</h2>
+<p>通过上面一些系列的环境搭建，以及ToolWindow开发练习，我们已经了解了如何开发一款用于IDEA侧边栏展示内容的插件。当然，我们一开始的需求是要在ToolWindow中展示网页，并且也知道了，JetBrains已经将JCEF引入到了IntelliJ插件平台。接下来，我们使用JCef以及JBCef相关API创建一个用于展示Web的UI组件，再通过上述的方式，添加到ToolWindow。</p>
+<h3 id="chuang-jian-mywebtoolwindowcontent">创建MyWebToolWindowContent</h3>
+<pre data-lang="java" style="background-color:#2b303b;color:#c0c5ce;" class="language-java "><code class="language-java" data-lang="java"><span style="color:#b48ead;">package </span><span>com.compilemind.demo.ui;
+</span><span>
+</span><span style="color:#b48ead;">import </span><span>com.intellij.ui.jcef.</span><span style="color:#ebcb8b;">JBCefApp</span><span>;
+</span><span style="color:#b48ead;">import </span><span>com.intellij.ui.jcef.</span><span style="color:#ebcb8b;">JBCefBrowser</span><span>;
+</span><span>
+</span><span style="color:#b48ead;">import </span><span>javax.swing.*;
+</span><span style="color:#b48ead;">import </span><span>java.awt.*;
+</span><span>
+</span><span style="color:#b48ead;">public class </span><span style="color:#ebcb8b;">MyWebToolWindowContent </span><span style="color:#eff1f5;">{
+</span><span style="color:#eff1f5;">
+</span><span style="color:#eff1f5;">    </span><span style="color:#b48ead;">private final </span><span style="color:#ebcb8b;">JPanel </span><span style="color:#eff1f5;">content;
+</span><span style="color:#eff1f5;">
+</span><span style="color:#eff1f5;">    </span><span style="color:#65737e;">/**
+</span><span style="color:#65737e;">     * 构造函数
+</span><span style="color:#65737e;">     */
+</span><span style="color:#65737e;">    public MyWebToolWindowContent() {
+</span><span style="color:#65737e;">        this.content = new JPanel(new BorderLayout());
+</span><span style="color:#65737e;">        // 判断所处的IDEA环境是否支持JCEF
+</span><span style="color:#65737e;">        if (!JBCefApp.isSupported()) {
+</span><span style="color:#65737e;">            this.content.add(new JLabel(&quot;当前环境不支持JCEF&quot;, SwingConstants.CENTER));
+</span><span style="color:#65737e;">            return;
+</span><span style="color:#65737e;">        }
+</span><span style="color:#65737e;">        // 创建 JBCefBrowser
+</span><span style="color:#65737e;">        JBCefBrowser jbCefBrowser = new JBCefBrowser();
+</span><span style="color:#65737e;">        // 将 JBCefBrowser 的UI控件设置到Panel中
+</span><span style="color:#65737e;">        this.content.add(jbCefBrowser.getComponent(), BorderLayout.CENTER);
+</span><span style="color:#65737e;">        // 加载URL
+</span><span style="color:#65737e;">        jbCefBrowser.loadURL(&quot;https://zhen.wang&quot;);
+</span><span style="color:#65737e;">    }
+</span><span style="color:#65737e;">
+</span><span style="color:#65737e;">    /**
+</span><span style="color:#65737e;">     * 返回创建的JPanel
+</span><span style="color:#65737e;">     * </span><span style="color:#b48ead;">@return</span><span style="color:#65737e;"> JPanel
+</span><span style="color:#65737e;">     */
+</span><span style="color:#65737e;">    public JPanel getContent() {
+</span><span style="color:#65737e;">        return content;
+</span><span style="color:#65737e;">    }
+</span><span style="color:#65737e;">}
+</span></code></pre>
+<h3 id="xiu-gai-mytoolwindowfactory">修改MyToolWindowFactory</h3>
+<p><img src="https://static-res.zhen.wang/images/post/2021-07-16-intelliJ-plugin-dev-1/130-modify-factory.jpg" alt="" /></p>
+<p>这里，我们将创建<code>MyWebToolWindowContent</code>实例，然后返回其Panel，按同样的方式设置到ToolWindow中。</p>
+<h3 id="yan-zheng-webxuan-ran-toolwindow">验证Web渲染ToolWindow</h3>
+<p>上述代码完成开发后，我们再次运行Debug模式，可以看到此时的界面显示了相关的网页：</p>
+<p><img src="https://static-res.zhen.wang/images/post/2021-07-16-intelliJ-plugin-dev-1/140-display-toolwindow-with-web-page.jpg" alt="" /></p>
+<h1 id="fu-lu">附录</h1>
+<p>本次代码本人放在了Github上，地址为：<a rel="noopener" target="_blank" href="https://github.com/w4ngzhen/intellij-jcef-plugin">w4ngzhen/intellij-jcef-plugin (github.com)</a>。</p>
+<p>上面<strong>基础ToolWindow开发</strong>以及<strong>web页面ToolWindow开发</strong>两节的内容，按如下提交对应：</p>
+<p>基础ToolWindow开发 ：<a rel="noopener" target="_blank" href="https://github.com/w4ngzhen/intellij-jcef-plugin/commit/bf2ca8eb71c36a46077d222b031439537d8015cd">simple ToolWindow Content · w4ngzhen/intellij-jcef-plugin@bf2ca8e (github.com)</a></p>
+<p>web页面ToolWindow开发：<a rel="noopener" target="_blank" href="https://github.com/w4ngzhen/intellij-jcef-plugin/commit/45604d374eaead417b16df2ade1b5d6700e291f3">web ToolWindow Content · w4ngzhen/intellij-jcef-plugin@45604d3 (github.com)</a></p>
+
+    </div>
+</div>
+<script src="https://zhen.wang/libs/viewerjs@1.11.7/viewer.min.js"></script>
+<link rel="stylesheet" href="https://zhen.wang/libs/viewerjs@1.11.7/viewer.min.css"/>
+<script>
+  if (window.Viewer) {
+    document.querySelectorAll('img').forEach(img => {
+      new Viewer(img, {
+        inline: false,
+        navbar: false,
+        toolbar: {
+          zoomIn: 1,
+          zoomOut: 1,
+          reset: 1,
+          rotateLeft: 1,
+          rotateRight: 1,
+        },
+      });
+    });
+  }
+</script>
+
+
+</body>
+</html>

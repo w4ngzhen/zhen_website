@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="utf-8">
+    <meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover"
+          name="viewport">
+    
+    
+    <!-- umami web analysis -->
+    <script defer src="https://zhen.wang/libs/umami/umami.script.js"
+            data-website-id="d66cfe03-f6b3-4aa0-baf8-728700db1b09"></script>
+    
+    
+    
+    <link rel="icon" type="image/png" sizes="16x16" href="https://zhen.wang/images/blog-site-icon.svg">
+    <link rel="icon" type="image/png" sizes="32x32" href="https://zhen.wang/images/blog-site-icon.svg">
+    <title>zhen&#x27;s everything</title>
+    <link rel="stylesheet" href="https://zhen.wang/style.css">
+    
+<link rel="stylesheet" href="https://zhen.wang/article_content.css">
+<link rel="stylesheet" href="https://zhen.wang/article_markdown.css">
+
+</head>
+<body>
+
+<div id="article">
+    <header class="article-header">
+        
+<div class="base-title">
+    <a href="#" onclick="history.length > 1 ? history.back() : location.href = '/'; return false;">&LeftArrow; Back</a>
+    <h1>
+        Linux Bash命令杂记(cut sort uniq wc tee)
+    </h1>
+</div>
+
+    </header>
+    <p class="article-date">2018-03-12</p>
+    
+    <!-- real content -->
+    <div class="article-content markdown-content">
+        <span id="continue-reading"></span>
+<p><strong>数据流重定向</strong></p>
+<pre style="background-color:#2b303b;color:#c0c5ce;"><code><span>标准输入（stdin）：代码为0，使用&lt;或&lt;&lt;；
+</span><span>标准输出（stdout）：代码为1，使用&gt;或&gt;&gt;；
+</span><span>标准错误输出（stderr）：代码为2，使用2&gt;或2&gt;&gt;；
+</span><span>&gt;：覆盖的方式，&gt;&gt;：追加的方式
+</span></code></pre>
+<p>如果想要一般输出与错误输出同时输入到某一个文件，如果采取如下的方式进行输出是错误的：</p>
+<pre data-lang="shell" style="background-color:#2b303b;color:#c0c5ce;" class="language-shell "><code class="language-shell" data-lang="shell"><span>输出数据  1&gt; list 2&gt; list
+</span></code></pre>
+<p>如果按照上面的方式输出到list文件中时而没有采用特殊的语法，会因为两个输出进程的同步问题，导致正确的数据与错误的数据可能会交叉的输入到list文件中。正确的方式应该如下：</p>
+<pre data-lang="shell" style="background-color:#2b303b;color:#c0c5ce;" class="language-shell "><code class="language-shell" data-lang="shell"><span>输出数据 &gt; list 2&gt;&amp;1
+</span><span># 或者是
+</span><span>输出数据 &amp;&gt; list
+</span></code></pre>
+<p><strong>命令执行&amp;&amp; ||</strong></p>
+<pre style="background-color:#2b303b;color:#c0c5ce;"><code><span>cmd1 &amp;&amp; cmd2
+</span><span>若cmd1执行完毕且正确执行($?==0)，则执行cmd2
+</span><span>若cmd1执行完毕且错误执行($?!=0)，则不执行cmd2
+</span><span>
+</span><span>cmd1 || cmd2
+</span><span>若cmd1执行完毕且执行正确($?==0)，则不执行cmd2
+</span><span>若cmd1执行完毕且执行错误($?!=0)，则执行cmd2
+</span></code></pre>
+<p><strong>cut命令</strong></p>
+<p>cut命令按行数据进行处理，常用的方式如下：</p>
+<pre data-lang="shell" style="background-color:#2b303b;color:#c0c5ce;" class="language-shell "><code class="language-shell" data-lang="shell"><span>#参数 -d -f（组合使用）
+</span><span>输出数据 | cut -d &#39;分个字符&#39; -f fields
+</span><span># 例
+</span><span>str=ni:hao:ma:?
+</span><span>echo $str | cut -d &#39;:&#39; -f 2
+</span><span>表示将echo出的str字符串按照&#39;:&#39;字符分割，且取第2个字段
+</span><span>得到的结果是
+</span><span>hao
+</span><span># 补充
+</span><span>-f 1,3 代表取第1和第3字段，输出 ni:man
+</span><span>-f 1-3 取1到3字段，输出 ni:hao:ma
+</span><span>
+</span><span># 参数 -c
+</span><span>输出数据 | cut -c 字符范围
+</span><span># 例
+</span><span>str=hello
+</span><span>echo $str | cut -c 1
+</span><span>输出
+</span><span>h
+</span><span># 补充
+</span><span>-c 1-，输出 hello
+</span><span>-c 1-3，输出 hel
+</span></code></pre>
+<p><strong>sort命令</strong></p>
+<pre data-lang="shell" style="background-color:#2b303b;color:#c0c5ce;" class="language-shell "><code class="language-shell" data-lang="shell"><span>head -4 /etc/passswd
+</span><span># output
+</span><span>root:x:0:0:root:/root:/bin/bash
+</span><span>bin:x:1:1:bin:/bin:/sbin/nologin
+</span><span>daemon:x:2:2:daemon:/sbin:/sbin/nologin
+</span><span>adm:x:3:4:adm:/var/adm:/sbin/nologin
+</span><span>我们可以看到并没有按照首字母排序
+</span><span>
+</span><span>head -4 /etc/passwd | sort
+</span><span># output
+</span><span>adm:x:3:4:adm:/var/adm:/sbin/nologin
+</span><span>bin:x:1:1:bin:/bin:/sbin/nologin
+</span><span>daemon:x:2:2:daemon:/sbin:/sbin/nologin
+</span><span>root:x:0:0:root:/root:/bin/bash
+</span><span>我们可以看到已经按照首字母排序了
+</span><span>
+</span><span>同样，我们可以指定想按照哪一个字段来排序，
+</span><span>head /etc/passwd | sort -t &#39;:&#39; -k 3
+</span><span># 不看前4行了，准备输出所有行
+</span><span># 将输出按照类型&#39;:&#39;分割(-t &#39;:&#39;)，并且取第3个字段(-k 3)
+</span><span># 然而此时的字段依然是按照字符进行，如本测试机上输出的结果注意看第二行：
+</span><span>root:x:0:0:root:/root:/bin/bash
+</span><span>operator:x:11:0:operator:/root:/sbin/nologin
+</span><span>bin:x:1:1:bin:/bin:/sbin/nologin
+</span><span>daemon:x:2:2:daemon:/sbin:/sbin/nologin
+</span><span># 注意第三个字段，11跑到了2前面去了，因为字符串11排在2前面
+</span><span>此时我们需要加上 -n 参数提示按照数字进行
+</span><span>head /etc/passwd | sort -t &#39;:&#39; -k 3 -n
+</span></code></pre>
+<p><strong>last命令</strong></p>
+<pre data-lang="shell" style="background-color:#2b303b;color:#c0c5ce;" class="language-shell "><code class="language-shell" data-lang="shell"><span># 该命令用来列出目前与过去登录系统的用户相关信息
+</span><span>last
+</span><span># output
+</span><span>root     tty1                          Mon Mar 12 18:33   still logged in   
+</span><span>reboot   system boot  3.10.0-693.17.1. Mon Mar 12 18:33 - 19:02  (00:29)    
+</span><span>root     tty1                          Sat Mar 10 20:18 - 20:18  (00:00)    
+</span><span>reboot   system boot  3.10.0-693.17.1. Sat Mar 10 20:18 - 20:18  (00:00)    
+</span><span>root     tty1                          Fri Mar  9 19:10 - 20:50  (01:40)    
+</span><span>...
+</span><span>其中：
+</span><span>第一列：用户名
+</span><span>第二列：终端位置。(pts/0通过ssh或者telnet远程连接的用户，tty：直接连接到计算机或者本地用户)
+</span><span>第三列：登陆IP或者内核（看到0.0或者什么都没有，意味着用户通过本地终端连接，除了重启，内核版本会显示在状态中）
+</span><span>
+</span><span>第四列：开始时间(如：sun apr 3 ：四月三号星期天)
+</span><span>第五列：结束时间（still login in 还未退出，down：直到正常关机，crash：直到强制关机）
+</span><span>第六列:持续时间
+</span></code></pre>
+<p><strong>uniq命令</strong></p>
+<pre data-lang="shell" style="background-color:#2b303b;color:#c0c5ce;" class="language-shell "><code class="language-shell" data-lang="shell"><span>last | cut -d &#39; &#39; -f 1 | sort | uniq
+</span><span># 先取用户名，然后排序，最后去重
+</span><span># output
+</span><span>reboot
+</span><span>root
+</span><span>wtmp
+</span><span>zhen
+</span><span># 加上 -c 显示统计
+</span><span>last | cut -d &#39; &#39; -f 1 | sort | uniq -c
+</span><span># output
+</span><span>1
+</span><span>27 reboot
+</span><span>26 root
+</span><span>1 wtmp
+</span><span>3 zhen
+</span></code></pre>
+<p>务必注意，uniq命令是通过叠加去重<strong>相邻</strong>的字符串，如果你不首先进行排序，那么会出现下面的情况：</p>
+<pre data-lang="shell" style="background-color:#2b303b;color:#c0c5ce;" class="language-shell "><code class="language-shell" data-lang="shell"><span>      1 root
+</span><span>      1 reboot
+</span><span>      1 root
+</span><span>      1 reboot
+</span><span>      1 root
+</span><span>      1 reboot
+</span><span>      1 root
+</span><span>      1 reboot
+</span><span>      1 zhen
+</span><span>      1 root
+</span><span>      1 reboot
+</span><span>...
+</span></code></pre>
+<p><strong>wc命令</strong></p>
+<pre data-lang="shell" style="background-color:#2b303b;color:#c0c5ce;" class="language-shell "><code class="language-shell" data-lang="shell"><span>wc [-lwm]
+</span><span>-l: 仅列出行
+</span><span>-w: 仅列出多少个英文单词
+</span><span>-m: 仅列出多少个字符
+</span><span>head /etc/passwd | wc
+</span><span># output
+</span><span>  10  10  385
+</span><span># 分别代表行数，词数，字符数（这里10个“词”应该是因为每一行没有空格的原因，wc统计是按空格来分词的）
+</span></code></pre>
+<p><strong>tee双向重定向</strong></p>
+<p>由前面的数据流我们可以知道，我们在将数据定向时，如果不采取特殊的操作，数据要么输出到屏幕，要么输出到文件或者是设备中，没有办法，既输出到屏幕有输出到文件中；又或者是，我们想要对数据进行处理存放到一个文件中，但是同时对原始数据又存到另一个文件中。使用tee命令，我们就可以做到。</p>
+<p>例如，我们使用last命令首先要把数据存放到last.log中，同时要对用户去重并输出到屏幕上：</p>
+<pre data-lang="shell" style="background-color:#2b303b;color:#c0c5ce;" class="language-shell "><code class="language-shell" data-lang="shell"><span>last | tee [-a 追加] last.log | cut -d &#39; &#39; -f 1 | sort | uniq
+</span><span># output
+</span><span>
+</span><span>reboot
+</span><span>root
+</span><span>wtmp
+</span><span>zhen
+</span><span># 同时我们打开last.log文件可以看到没有做任何处理的原始数据
+</span><span>root     tty1                          Mon Mar 12 18:33   still logged in   
+</span><span>reboot   system boot  3.10.0-693.17.1. Mon Mar 12 18:33 - 19:29  (00:56)    
+</span><span>root     tty1                          Sat Mar 10 20:18 - 20:18  (00:00)    
+</span><span>reboot   system boot  3.10.0-693.17.1. Sat Mar 10 20:18 - 20:18  (00:00)    
+</span><span>root     tty1                          Fri Mar  9 19:10 - 20:50  (01:40)    
+</span><span>...
+</span></code></pre>
+
+    </div>
+</div>
+<script src="https://zhen.wang/libs/viewerjs@1.11.7/viewer.min.js"></script>
+<link rel="stylesheet" href="https://zhen.wang/libs/viewerjs@1.11.7/viewer.min.css"/>
+<script>
+  if (window.Viewer) {
+    document.querySelectorAll('img').forEach(img => {
+      new Viewer(img, {
+        inline: false,
+        navbar: false,
+        toolbar: {
+          zoomIn: 1,
+          zoomOut: 1,
+          reset: 1,
+          rotateLeft: 1,
+          rotateRight: 1,
+        },
+      });
+    });
+  }
+</script>
+
+
+</body>
+</html>

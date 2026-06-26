@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="utf-8">
+    <meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover"
+          name="viewport">
+    
+    
+    <!-- umami web analysis -->
+    <script defer src="https://zhen.wang/libs/umami/umami.script.js"
+            data-website-id="d66cfe03-f6b3-4aa0-baf8-728700db1b09"></script>
+    
+    
+    
+    <link rel="icon" type="image/png" sizes="16x16" href="https://zhen.wang/images/blog-site-icon.svg">
+    <link rel="icon" type="image/png" sizes="32x32" href="https://zhen.wang/images/blog-site-icon.svg">
+    <title>zhen&#x27;s everything</title>
+    <link rel="stylesheet" href="https://zhen.wang/style.css">
+    
+<link rel="stylesheet" href="https://zhen.wang/article_content.css">
+<link rel="stylesheet" href="https://zhen.wang/article_markdown.css">
+
+</head>
+<body>
+
+<div id="article">
+    <header class="article-header">
+        
+<div class="base-title">
+    <a href="#" onclick="history.length > 1 ? history.back() : location.href = '/'; return false;">&LeftArrow; Back</a>
+    <h1>
+        极简SpringBoot指南-Chapter05-SpringBoot中的AOP面向切面编程简介
+    </h1>
+</div>
+
+    </header>
+    <p class="article-date">2021-08-10</p>
+    
+    <!-- toc -->
+    <div class="article-toc">
+        <label class="toc-title" for="toc-trigger">目录</label>
+        <input id="toc-trigger" type="checkbox" checked/>
+        <div class="toc-content">
+            <ol class="toc">
+                
+                <li class="toc-item toc-level-1">
+                    <a class="toc-link" href="https://zhen.wang/article/极简SpringBoot指南-chapter05-SpringBoot中的AOP面向切面编程简介/#cang-ku-di-zhi">仓库地址</a>
+                    
+                </li>
+                
+                <li class="toc-item toc-level-1">
+                    <a class="toc-link" href="https://zhen.wang/article/极简SpringBoot指南-chapter05-SpringBoot中的AOP面向切面编程简介/#chapter05-springbootzhong-de-aopmian-xiang-qie-mian-bian-cheng-jian-jie">Chapter05-SpringBoot中的AOP面向切面编程简介</a>
+                    
+                    <ol class="toc-child">
+                        
+                        <li class="toc-item toc-level-2">
+                            <a href="https://zhen.wang/article/极简SpringBoot指南-chapter05-SpringBoot中的AOP面向切面编程简介/#ji-ben-fang-shi">基本方式</a>
+                        </li>
+                        
+                        <li class="toc-item toc-level-2">
+                            <a href="https://zhen.wang/article/极简SpringBoot指南-chapter05-SpringBoot中的AOP面向切面编程简介/#aop">AOP</a>
+                        </li>
+                        
+                        <li class="toc-item toc-level-2">
+                            <a href="https://zhen.wang/article/极简SpringBoot指南-chapter05-SpringBoot中的AOP面向切面编程简介/#cang-ku-di-zhi-1">仓库地址</a>
+                        </li>
+                        
+                    </ol>
+                    
+                </li>
+                
+            </ol>
+        </div>
+    </div>
+    
+    <!-- real content -->
+    <div class="article-content markdown-content">
+        <h2 id="cang-ku-di-zhi">仓库地址</h2>
+<p><a rel="noopener" target="_blank" href="https://github.com/w4ngzhen/springboot-simple-guide">w4ngzhen/springboot-simple-guide: This is a project that guides SpringBoot users to get started quickly through a series of examples (github.com)</a></p>
+<h1 id="chapter05-springbootzhong-de-aopmian-xiang-qie-mian-bian-cheng-jian-jie">Chapter05-SpringBoot中的AOP面向切面编程简介</h1>
+<span id="continue-reading"></span>
+<p>在上一章中，我们编写了一款基于SpringBoot的书籍信息管理Web应用，实现了对书籍信息的增删查改操作。现在，我们有了一个新的需求：为了方便后台服务监管我们的Web服务的请求耗时，我们需要增强一下对我们的Web应用，希望对每个请求都能够打印一下处理耗时。</p>
+<h2 id="ji-ben-fang-shi">基本方式</h2>
+<p>为了实现这样的需求，我们首先以<strong>获取指定ID的书籍信息</strong>这个API为例，开始进行编程：</p>
+<pre data-lang="java" style="background-color:#2b303b;color:#c0c5ce;" class="language-java "><code class="language-java" data-lang="java"><span>    @</span><span style="color:#bf616a;">GetMapping</span><span>(&quot;</span><span style="color:#a3be8c;">{id}</span><span>&quot;)
+</span><span>    </span><span style="color:#b48ead;">public </span><span style="color:#ebcb8b;">Book </span><span style="color:#bf616a;">getBookById</span><span>(@</span><span style="color:#bf616a;">PathVariable</span><span>(&quot;</span><span style="color:#a3be8c;">id</span><span>&quot;) </span><span style="color:#ebcb8b;">String</span><span> id) {
+</span><span>        </span><span style="color:#b48ead;">long</span><span> currentTimeMillis = </span><span style="color:#ebcb8b;">System</span><span>.</span><span style="color:#bf616a;">currentTimeMillis</span><span>();
+</span><span>        </span><span style="color:#b48ead;">try </span><span>{
+</span><span>            </span><span style="color:#65737e;">// 为了更加明显，我模拟了一个耗时
+</span><span>            </span><span style="color:#ebcb8b;">Thread</span><span>.</span><span style="color:#bf616a;">sleep</span><span>(</span><span style="color:#d08770;">500</span><span>); 
+</span><span>        } </span><span style="color:#b48ead;">catch </span><span>(</span><span style="color:#ebcb8b;">InterruptedException </span><span style="color:#bf616a;">e</span><span>) {
+</span><span>            e.</span><span style="color:#bf616a;">printStackTrace</span><span>();
+</span><span>        }
+</span><span>        </span><span style="color:#ebcb8b;">Optional</span><span>&lt;</span><span style="color:#ebcb8b;">Book</span><span>&gt; first = </span><span style="color:#bf616a;">this</span><span>.bookList
+</span><span>                .</span><span style="color:#bf616a;">stream</span><span>()
+</span><span>                .</span><span style="color:#bf616a;">filter</span><span>(</span><span style="color:#bf616a;">b </span><span style="color:#b48ead;">-&gt;</span><span> b.</span><span style="color:#bf616a;">getId</span><span>().</span><span style="color:#bf616a;">equals</span><span>(id))
+</span><span>                .</span><span style="color:#bf616a;">findFirst</span><span>();
+</span><span>        </span><span style="color:#ebcb8b;">System</span><span>.out.</span><span style="color:#bf616a;">printf</span><span>(&quot;</span><span style="color:#a3be8c;">处理耗时：%d ms %n</span><span>&quot;, (</span><span style="color:#ebcb8b;">System</span><span>.</span><span style="color:#bf616a;">currentTimeMillis</span><span>() - currentTimeMillis));
+</span><span>        </span><span style="color:#b48ead;">return</span><span> first.</span><span style="color:#bf616a;">orElse</span><span>(</span><span style="color:#d08770;">null</span><span>);
+</span><span>    }
+</span></code></pre>
+<p>为了模拟一个耗时，我在请求处理的时候对当前处理线程sleep500ms。然后使用对应postman进行请求调用，调用后查看控制台打印：</p>
+<pre style="background-color:#2b303b;color:#c0c5ce;"><code><span>处理耗时：513 ms 
+</span></code></pre>
+<p>效果还行，但是现在需要对所有的调用都进行日志记录呢？有的同学可能会说，直接开写，一个一个加。牛！此外，我今天的需求是耗时打印，我以后可能需要耗时上传进行预警了，再后来我还希望统计各个API的调用接口，似乎我们愈来愈无法控制这些需求了。每变更一个需求，都需要我们去对每个API进行修改。</p>
+<p>还好，我们还有一大杀器：AOP。</p>
+<h2 id="aop">AOP</h2>
+<p>AOP全称<code>Aspect Oriented Programming</code>意为面向切面编程，也叫做面向方法编程，是通过预编译方式和运行期动态代理的方式实现不修改源代码的情况下给程序动态统一添加功能的技术。</p>
+<pre style="background-color:#2b303b;color:#c0c5ce;"><code><span>流程起点
+</span><span> |
+</span><span> |
+</span><span>---&gt; 切入点1
+</span><span> |
+</span><span> |
+</span><span>---&gt; 切入点2
+</span><span> |
+</span><span> V
+</span><span>流程终点
+</span></code></pre>
+<p>上图的流程中，我们可以在任何希望的时候<strong>切入</strong>处理。其好处的就是是的业务逻辑各个部分之间的耦合度降低，提高程序的可重用性。我们可以在完全不侵入业务逻辑代码的情况下就完成各个阶段的切入处理。</p>
+<h3 id="he-xin-shu-yu">核心术语</h3>
+<h4 id="lian-jie-dian-joinpoint">连接点（JoinPoint）</h4>
+<p>连接点是在应用执行过程中能够插入切面（Aspect）的一个点。这些点可以是调用方法时、甚至修改一个字段时。它是一个虚拟的概念，例如坐地铁的时候，每一个站都可以下车，那么这每一个站都是一个连接点。假如一个对象中有多个方法，那么这个每一个方法就是一个连接点。</p>
+<h4 id="qie-ru-dian-pointcut">切入点（Pointcut）</h4>
+<p>切入点是一些特殊的连接点，是具体附加通知的地方。例如坐地铁的时候，具体在某个站下车，那这个站就是切入点。</p>
+<h4 id="tong-zhi-advice">通知（Advice）</h4>
+<p>在某个特定的Pointcut切点上需要的执行的动作，如日志记录，权限校验等具体要应用切入点的代码。</p>
+<p>五种通知类型：</p>
+<ul>
+<li>环绕通知：<strong>@Around</strong></li>
+<li>前置通知：<strong>@Before</strong></li>
+<li>返回通知：<strong>@After</strong></li>
+<li>正常返回通知：<strong>@AfterReturning</strong></li>
+<li>异常返回通知：<strong>@AfterThrowing</strong></li>
+</ul>
+<h4 id="qie-mian-aspect">切面（Aspect）</h4>
+<p>切面是<strong>通知</strong>和<strong>切入点</strong>的结合，通知规定了在什么时机干什么事，切入点规定了在什么地方。如“在8点钟在天府广场站下车“ 就是一个切面：时间8点，动作下车就是一个通知；西站就是一个切入点。</p>
+<p>对于概念术语还是很抽象，我们直接编写一个切面吧。编写切面之前，首先需要引入相关的依赖。因为切面相关的模块是可选模块，我们在pom中添加如下的依赖：</p>
+<pre data-lang="xml" style="background-color:#2b303b;color:#c0c5ce;" class="language-xml "><code class="language-xml" data-lang="xml"><span>&lt;</span><span style="color:#bf616a;">dependencies</span><span>&gt;
+</span><span>	</span><span style="color:#65737e;">&lt;!-- 其他依赖 --&gt;
+</span><span>    &lt;</span><span style="color:#bf616a;">dependency</span><span>&gt;
+</span><span>        &lt;</span><span style="color:#bf616a;">groupId</span><span>&gt;org.springframework.boot&lt;/</span><span style="color:#bf616a;">groupId</span><span>&gt;
+</span><span>        &lt;</span><span style="color:#bf616a;">artifactId</span><span>&gt;spring-boot-starter-aop&lt;/</span><span style="color:#bf616a;">artifactId</span><span>&gt;
+</span><span>	&lt;/</span><span style="color:#bf616a;">dependency</span><span>&gt;
+</span><span>&lt;/</span><span style="color:#bf616a;">dependencies</span><span>&gt;
+</span></code></pre>
+<p>完成依赖导入后，我们编写一个切面类：</p>
+<pre data-lang="java" style="background-color:#2b303b;color:#c0c5ce;" class="language-java "><code class="language-java" data-lang="java"><span style="color:#65737e;">/**
+</span><span style="color:#65737e;"> * 定义一个日志切面
+</span><span style="color:#65737e;"> */
+</span><span style="color:#65737e;">@Aspect
+</span><span style="color:#65737e;">@Component // 切面不是Bean，需要添加注解
+</span><span style="color:#65737e;">public class LogAspect {
+</span><span style="color:#65737e;">    private static final Logger LOGGER = LoggerFactory.getLogger(LogAspect.class);
+</span><span style="color:#65737e;">
+</span><span style="color:#65737e;">    /**
+</span><span style="color:#65737e;">     * 定义切点表明要通知的地方
+</span><span style="color:#65737e;">     * 这里使用了pointcut expression表达式，具体语法请自行搜索
+</span><span style="color:#65737e;">     * 这里解释为包 com.compilemind.guide包以及子包的所有类的所有公共方法
+</span><span style="color:#65737e;">     */
+</span><span>    @</span><span style="color:#bf616a;">Pointcut</span><span>(&quot;</span><span style="color:#a3be8c;">execution(* com.compilemind.guide..*.*(..))</span><span>&quot;)
+</span><span>    </span><span style="color:#b48ead;">public</span><span> void </span><span style="color:#bf616a;">webLog</span><span>() {
+</span><span>    }
+</span><span>
+</span><span>    </span><span style="color:#65737e;">/**
+</span><span style="color:#65737e;">     * 指代上面的切点：webLog，并且是调用前执行
+</span><span style="color:#65737e;">     */
+</span><span style="color:#65737e;">    @Before(&quot;webLog()&quot;)
+</span><span style="color:#65737e;">    public void doBefore(JoinPoint joinPoint) {
+</span><span style="color:#65737e;">        ServletRequestAttributes requestAttributes =
+</span><span style="color:#65737e;">                (ServletRequestAttributes) RequestContextHolder.getRequestAttributes();
+</span><span style="color:#65737e;">        if (requestAttributes == null) {
+</span><span style="color:#65737e;">            return;
+</span><span style="color:#65737e;">        }
+</span><span style="color:#65737e;">        HttpServletRequest request = requestAttributes.getRequest();
+</span><span style="color:#65737e;">        LOGGER.info(&quot;发生请求：&quot; + request.getRequestURI());
+</span><span style="color:#65737e;">        LOGGER.info(&quot;调用方法：&quot; + joinPoint.getSignature());
+</span><span style="color:#65737e;">    }
+</span><span style="color:#65737e;">
+</span><span style="color:#65737e;">    /**
+</span><span style="color:#65737e;">     * 一个关于对应切点的环绕执行的处理
+</span><span style="color:#65737e;">     */
+</span><span>    @</span><span style="color:#bf616a;">Around</span><span>(&quot;</span><span style="color:#a3be8c;">webLog()</span><span>&quot;)
+</span><span>    </span><span style="color:#b48ead;">public </span><span style="color:#ebcb8b;">Object </span><span style="color:#bf616a;">around</span><span>(</span><span style="color:#ebcb8b;">ProceedingJoinPoint</span><span> joinPoint) {
+</span><span>        </span><span style="color:#b48ead;">long</span><span> currentTimeMillis = </span><span style="color:#ebcb8b;">System</span><span>.</span><span style="color:#bf616a;">currentTimeMillis</span><span>();
+</span><span>        </span><span style="color:#65737e;">// 调用参数
+</span><span>        </span><span style="color:#ebcb8b;">Object</span><span style="color:#b48ead;">[]</span><span> invokeArgs = joinPoint.</span><span style="color:#bf616a;">getArgs</span><span>();
+</span><span>        </span><span style="color:#65737e;">// 返回数据
+</span><span>        </span><span style="color:#ebcb8b;">Object</span><span> returnObj;
+</span><span>        </span><span style="color:#b48ead;">try </span><span>{
+</span><span>            </span><span style="color:#65737e;">// 执行对应的方法，得到结果
+</span><span>            returnObj = joinPoint.</span><span style="color:#bf616a;">proceed</span><span>(invokeArgs);
+</span><span>        } </span><span style="color:#b48ead;">catch </span><span>(</span><span style="color:#ebcb8b;">Throwable </span><span style="color:#bf616a;">e</span><span>) {
+</span><span>            </span><span style="color:#d08770;">LOGGER</span><span>.</span><span style="color:#bf616a;">error</span><span>(&quot;</span><span style="color:#a3be8c;">统计某方法执行耗时环绕通知出错</span><span>&quot;, e);
+</span><span>            </span><span style="color:#b48ead;">return </span><span style="color:#d08770;">null</span><span>;
+</span><span>        }
+</span><span>        </span><span style="color:#d08770;">LOGGER</span><span>.</span><span style="color:#bf616a;">info</span><span>(&quot;</span><span style="color:#a3be8c;">处理耗时：{} ms</span><span>&quot;, </span><span style="color:#ebcb8b;">System</span><span>.</span><span style="color:#bf616a;">currentTimeMillis</span><span>() - currentTimeMillis);
+</span><span>        </span><span style="color:#b48ead;">return</span><span> returnObj;
+</span><span>    }
+</span><span style="background-color:#bf616a;color:#2b303b;">}</span><span>
+</span></code></pre>
+<p>这个切面由以下几个部分组成：</p>
+<ol>
+<li>在类上使用<code>@Aspect</code>注解标记为切面，使用<code>@Component</code>注解标记为组件，由Spring管理；</li>
+<li>编写方法<code>webLog</code>，并在其方法上添加注解<code>@Pointcut</code>，并按照规则填写切点的位置；</li>
+<li>分别编写由<code>@Before</code>和<code>@Around</code>注解标记的方法，用以处理对应的切点位置<strong>处理前</strong>和<strong>整个环绕</strong>的处理代码。</li>
+</ol>
+<p>最后，让我们再次启动程序，进行相关的API调用，可以看到输出：</p>
+<pre style="background-color:#2b303b;color:#c0c5ce;"><code><span>2021-08-09 16:42:46.494  INFO 18528 --- [nio-8080-exec-2] c.c.guide.chapter04_05.aspect.LogAspect  : 发生请求：/books/1
+</span><span>2021-08-09 16:42:46.495  INFO 18528 --- [nio-8080-exec-2] c.c.guide.chapter04_05.aspect.LogAspect  : 调用方法：Book com.compilemind.guide.chapter04_05.controller.BookController.getBookById(String)
+</span><span>处理耗时：502 ms 
+</span><span>2021-08-09 16:42:47.004  INFO 18528 --- [nio-8080-exec-2] c.c.guide.chapter04_05.aspect.LogAspect  : 处理耗时：510 ms
+</span></code></pre>
+<h2 id="cang-ku-di-zhi-1">仓库地址</h2>
+<p><a rel="noopener" target="_blank" href="https://github.com/w4ngzhen/springboot-simple-guide">w4ngzhen/springboot-simple-guide: This is a project that guides SpringBoot users to get started quickly through a series of examples (github.com)</a></p>
+
+    </div>
+</div>
+<script src="https://zhen.wang/libs/viewerjs@1.11.7/viewer.min.js"></script>
+<link rel="stylesheet" href="https://zhen.wang/libs/viewerjs@1.11.7/viewer.min.css"/>
+<script>
+  if (window.Viewer) {
+    document.querySelectorAll('img').forEach(img => {
+      new Viewer(img, {
+        inline: false,
+        navbar: false,
+        toolbar: {
+          zoomIn: 1,
+          zoomOut: 1,
+          reset: 1,
+          rotateLeft: 1,
+          rotateRight: 1,
+        },
+      });
+    });
+  }
+</script>
+
+
+</body>
+</html>

@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="utf-8">
+    <meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover"
+          name="viewport">
+    
+    
+    <!-- umami web analysis -->
+    <script defer src="https://zhen.wang/libs/umami/umami.script.js"
+            data-website-id="d66cfe03-f6b3-4aa0-baf8-728700db1b09"></script>
+    
+    
+    
+    <link rel="icon" type="image/png" sizes="16x16" href="https://zhen.wang/images/blog-site-icon.svg">
+    <link rel="icon" type="image/png" sizes="32x32" href="https://zhen.wang/images/blog-site-icon.svg">
+    <title>zhen&#x27;s everything</title>
+    <link rel="stylesheet" href="https://zhen.wang/style.css">
+    
+<link rel="stylesheet" href="https://zhen.wang/article_content.css">
+<link rel="stylesheet" href="https://zhen.wang/article_markdown.css">
+
+</head>
+<body>
+
+<div id="article">
+    <header class="article-header">
+        
+<div class="base-title">
+    <a href="#" onclick="history.length > 1 ? history.back() : location.href = '/'; return false;">&LeftArrow; Back</a>
+    <h1>
+        iframe、SameSite与CEF
+    </h1>
+</div>
+
+    </header>
+    <p class="article-date">2021-03-08</p>
+    
+    <!-- toc -->
+    <div class="article-toc">
+        <label class="toc-title" for="toc-trigger">目录</label>
+        <input id="toc-trigger" type="checkbox" checked/>
+        <div class="toc-content">
+            <ol class="toc">
+                
+                <li class="toc-item toc-level-1">
+                    <a class="toc-link" href="https://zhen.wang/article/iframe、SameSite与CEF/#iframe-samesiteyu-cef">iframe、SameSite与CEF</a>
+                    
+                    <ol class="toc-child">
+                        
+                        <li class="toc-item toc-level-2">
+                            <a href="https://zhen.wang/article/iframe、SameSite与CEF/#bei-jing">背景</a>
+                        </li>
+                        
+                        <li class="toc-item toc-level-2">
+                            <a href="https://zhen.wang/article/iframe、SameSite与CEF/#yuan-yin">原因</a>
+                        </li>
+                        
+                        <li class="toc-item toc-level-2">
+                            <a href="https://zhen.wang/article/iframe、SameSite与CEF/#jie-jue-fang-an">解决方案</a>
+                        </li>
+                        
+                        <li class="toc-item toc-level-2">
+                            <a href="https://zhen.wang/article/iframe、SameSite与CEF/#can-kao">参考</a>
+                        </li>
+                        
+                    </ol>
+                    
+                </li>
+                
+            </ol>
+        </div>
+    </div>
+    
+    <!-- real content -->
+    <div class="article-content markdown-content">
+        <h1 id="iframe-samesiteyu-cef">iframe、SameSite与CEF</h1>
+<h2 id="bei-jing">背景</h2>
+<p>本人使用CEF（或是Chrome）来加载开发的前端页面，其中使用iframe嵌入了第三方页面，在第三方页面中需要发送cookie到后端，然而加载会报错，第三方页面后端无法接受到Cookie。</p>
+<span id="continue-reading"></span><h2 id="yuan-yin">原因</h2>
+<p>由于CEF（Chrome内核）的安全策略，在51版本以前、80版本以后，绝大多数情况下是禁止嵌入的iframe提交Cookie的（下文会列出哪些禁止），所以需要浏览器配置策略来允许iframe提交Cookie，这个策略就是SameSite。</p>
+<p>SameSite 属性可以让 Cookie 在跨站请求时不会被发送，从而可以阻止跨站请求伪造攻击（CSRF）。
+SameSite 可以有下面三种值：</p>
+<ul>
+<li><strong>Strict</strong>（严格的）。仅允许一方请求携带 Cookie，即浏览器将只发送相同站点请求的 Cookie，即当前网页 URL 与请求目标 URL 完全一致。</li>
+<li><strong>Lax</strong>（松懈的）。允许部分第三方请求携带 Cookie。</li>
+</ul>
+<table><thead><tr><th style="text-align: left">请求类型</th><th style="text-align: center">示例</th><th style="text-align: right">正常情况</th><th style="text-align: left">Lax</th></tr></thead><tbody>
+<tr><td style="text-align: left">链接</td><td style="text-align: center"><code>&lt;a href="..."&gt;&lt;/a&gt;</code></td><td style="text-align: right">发送 Cookie</td><td style="text-align: left">发送 Cookie</td></tr>
+<tr><td style="text-align: left">预加载</td><td style="text-align: center"><code>&lt;link rel="prerender" href="..."/&gt;</code></td><td style="text-align: right">发送 Cookie</td><td style="text-align: left">发送 Cookie</td></tr>
+<tr><td style="text-align: left">GET 表单</td><td style="text-align: center"><code>&lt;form method="GET" action="..."&gt;</code></td><td style="text-align: right">发送 Cookie</td><td style="text-align: left">发送 Cookie</td></tr>
+<tr><td style="text-align: left">POST 表单</td><td style="text-align: center"><code>&lt;form method="POST" action="..."&gt;</code></td><td style="text-align: right">发送 Cookie</td><td style="text-align: left">不发送</td></tr>
+<tr><td style="text-align: left">iframe</td><td style="text-align: center"><code>&lt;iframe src="..."&gt;&lt;/iframe&gt;</code></td><td style="text-align: right">发送 Cookie</td><td style="text-align: left">不发送</td></tr>
+<tr><td style="text-align: left">AJAX</td><td style="text-align: center"><code>$.get("...")</code></td><td style="text-align: right">发送 Cookie</td><td style="text-align: left">不发送</td></tr>
+<tr><td style="text-align: left">Image</td><td style="text-align: center"><code>&lt;img src="..."&gt;</code></td><td style="text-align: right">发送 Cookie</td><td style="text-align: left">不发送</td></tr>
+</tbody></table>
+<ul>
+<li><strong>None</strong>（无）。无论是否跨站都会发送 Cookie。</li>
+</ul>
+<h2 id="jie-jue-fang-an">解决方案</h2>
+<h3 id="chrome-huo-shi-ji-yu-chromiumde-edge">Chrome（或是基于Chromium的Edge）</h3>
+<p>在基于Chrome中，可以进入如下的页面进行配置：</p>
+<ul>
+<li>地址栏输入：<code>chrome://flags/</code>（Edge中会自动转为<code>edge://</code>）</li>
+<li>找到<code>SameSite by default cookies</code>和<code>Cookies without SameSite must be secure</code></li>
+<li>将上面两项设置为 <code>Disable</code></li>
+</ul>
+<h3 id="cef">CEF</h3>
+<p>上面的方法很通用，不过，对于CEF项目来说，并没有这个页面供我们配置。我们可以通过命令行形式传入：</p>
+<pre style="background-color:#2b303b;color:#c0c5ce;"><code><span>cef-app.exe（你的cef应用程序） --disable-features=SameSiteByDefaultCookies
+</span></code></pre>
+<h2 id="can-kao">参考</h2>
+<p>http://www.ruanyifeng.com/blog/2019/09/cookie-samesite.html</p>
+
+    </div>
+</div>
+<script src="https://zhen.wang/libs/viewerjs@1.11.7/viewer.min.js"></script>
+<link rel="stylesheet" href="https://zhen.wang/libs/viewerjs@1.11.7/viewer.min.css"/>
+<script>
+  if (window.Viewer) {
+    document.querySelectorAll('img').forEach(img => {
+      new Viewer(img, {
+        inline: false,
+        navbar: false,
+        toolbar: {
+          zoomIn: 1,
+          zoomOut: 1,
+          reset: 1,
+          rotateLeft: 1,
+          rotateRight: 1,
+        },
+      });
+    });
+  }
+</script>
+
+
+</body>
+</html>

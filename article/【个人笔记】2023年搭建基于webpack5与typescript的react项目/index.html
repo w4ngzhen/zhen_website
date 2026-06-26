@@ -1,0 +1,389 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="utf-8">
+    <meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover"
+          name="viewport">
+    
+    
+    <!-- umami web analysis -->
+    <script defer src="https://zhen.wang/libs/umami/umami.script.js"
+            data-website-id="d66cfe03-f6b3-4aa0-baf8-728700db1b09"></script>
+    
+    
+    
+    <link rel="icon" type="image/png" sizes="16x16" href="https://zhen.wang/images/blog-site-icon.svg">
+    <link rel="icon" type="image/png" sizes="32x32" href="https://zhen.wang/images/blog-site-icon.svg">
+    <title>zhen&#x27;s everything</title>
+    <link rel="stylesheet" href="https://zhen.wang/style.css">
+    
+<link rel="stylesheet" href="https://zhen.wang/article_content.css">
+<link rel="stylesheet" href="https://zhen.wang/article_markdown.css">
+
+</head>
+<body>
+
+<div id="article">
+    <header class="article-header">
+        
+<div class="base-title">
+    <a href="#" onclick="history.length > 1 ? history.back() : location.href = '/'; return false;">&LeftArrow; Back</a>
+    <h1>
+        【个人笔记】2023年搭建基于webpack5与typescript的react项目
+    </h1>
+</div>
+
+    </header>
+    <p class="article-date">2023-01-26</p>
+    
+    <!-- toc -->
+    <div class="article-toc">
+        <label class="toc-title" for="toc-trigger">目录</label>
+        <input id="toc-trigger" type="checkbox" checked/>
+        <div class="toc-content">
+            <ol class="toc">
+                
+                <li class="toc-item toc-level-1">
+                    <a class="toc-link" href="https://zhen.wang/article/【个人笔记】2023年搭建基于webpack5与typescript的react项目/#xie-zai-qian-mian">写在前面</a>
+                    
+                </li>
+                
+                <li class="toc-item toc-level-1">
+                    <a class="toc-link" href="https://zhen.wang/article/【个人笔记】2023年搭建基于webpack5与typescript的react项目/#xiang-mu-chu-shi-hua">项目初始化</a>
+                    
+                </li>
+                
+                <li class="toc-item toc-level-1">
+                    <a class="toc-link" href="https://zhen.wang/article/【个人笔记】2023年搭建基于webpack5与typescript的react项目/#0-npmyi-lai-tian-jia">（0）NPM依赖添加</a>
+                    
+                </li>
+                
+                <li class="toc-item toc-level-1">
+                    <a class="toc-link" href="https://zhen.wang/article/【个人笔记】2023年搭建基于webpack5与typescript的react项目/#1-webpack-config-js">（1）webpack.config.js</a>
+                    
+                </li>
+                
+                <li class="toc-item toc-level-1">
+                    <a class="toc-link" href="https://zhen.wang/article/【个人笔记】2023年搭建基于webpack5与typescript的react项目/#2-babelrc">（2）.babelrc</a>
+                    
+                </li>
+                
+                <li class="toc-item toc-level-1">
+                    <a class="toc-link" href="https://zhen.wang/article/【个人笔记】2023年搭建基于webpack5与typescript的react项目/#3-tsconfig-json">（3）tsconfig.json</a>
+                    
+                </li>
+                
+                <li class="toc-item toc-level-1">
+                    <a class="toc-link" href="https://zhen.wang/article/【个人笔记】2023年搭建基于webpack5与typescript的react项目/#4-xiang-mu-dai-ma">（4）项目代码</a>
+                    
+                    <ol class="toc-child">
+                        
+                        <li class="toc-item toc-level-2">
+                            <a href="https://zhen.wang/article/【个人笔记】2023年搭建基于webpack5与typescript的react项目/#src-index-tsx">src&#x2F;index.tsx</a>
+                        </li>
+                        
+                        <li class="toc-item toc-level-2">
+                            <a href="https://zhen.wang/article/【个人笔记】2023年搭建基于webpack5与typescript的react项目/#src-index-module-less">src&#x2F;index.module.less</a>
+                        </li>
+                        
+                        <li class="toc-item toc-level-2">
+                            <a href="https://zhen.wang/article/【个人笔记】2023年搭建基于webpack5与typescript的react项目/#src-react-app-d-ts-te-bie">src&#x2F;react-app.d.ts（特别）</a>
+                        </li>
+                        
+                        <li class="toc-item toc-level-2">
+                            <a href="https://zhen.wang/article/【个人笔记】2023年搭建基于webpack5与typescript的react项目/#public-index-html">public&#x2F;index.html</a>
+                        </li>
+                        
+                    </ol>
+                    
+                </li>
+                
+                <li class="toc-item toc-level-1">
+                    <a class="toc-link" href="https://zhen.wang/article/【个人笔记】2023年搭建基于webpack5与typescript的react项目/#yun-xing">运行</a>
+                    
+                </li>
+                
+                <li class="toc-item toc-level-1">
+                    <a class="toc-link" href="https://zhen.wang/article/【个人笔记】2023年搭建基于webpack5与typescript的react项目/#fu-lu">附录</a>
+                    
+                    <ol class="toc-child">
+                        
+                        <li class="toc-item toc-level-2">
+                            <a href="https://zhen.wang/article/【个人笔记】2023年搭建基于webpack5与typescript的react项目/#tu-jie-webpackpei-zhi-yu-npmbao-guan-xi">图解webpack配置与NPM包关系</a>
+                        </li>
+                        
+                        <li class="toc-item toc-level-2">
+                            <a href="https://zhen.wang/article/【个人笔记】2023年搭建基于webpack5与typescript的react项目/#githubcang-ku">github仓库</a>
+                        </li>
+                        
+                    </ol>
+                    
+                </li>
+                
+            </ol>
+        </div>
+    </div>
+    
+    <!-- real content -->
+    <div class="article-content markdown-content">
+        <h1 id="xie-zai-qian-mian">写在前面</h1>
+<p>由于我在另外的一些文章所讨论或分析的内容可能基于一个已经初始化好的项目，为了避免每一个文章都重复的描述如何搭建项目，我在本文会统一记录下来，今后相关的文章直接引用文本，方便读者阅读。此文主要为个人笔记，不会有太多的关于思路的描述；另外，本文仅仅描述如何搭建基础react项目，不涉及图片等资源的加载，关于图片等资源的处理，我会单独编写一期。</p>
+<span id="continue-reading"></span><h1 id="xiang-mu-chu-shi-hua">项目初始化</h1>
+<p>创建一个目录，例如：webpack5-react-demo，然后进入目录执行初始化指令</p>
+<pre data-lang="shell" style="background-color:#2b303b;color:#c0c5ce;" class="language-shell "><code class="language-shell" data-lang="shell"><span>$ mkdir webpack5-react-demo
+</span><span>$ cd webpack5-react-demo 
+</span><span>$ yarn init
+</span><span>yarn init v1.22.19
+</span><span>question name (webpack5-react-demo): 
+</span><span>question version (1.0.0): 
+</span><span>question description: 
+</span><span>question entry point (index.js): 
+</span><span>question repository url: 
+</span><span>question author: 
+</span><span>question license (MIT): 
+</span><span>question private: 
+</span><span>success Saved package.json
+</span><span>✨  Done in 10.32s.
+</span></code></pre>
+<p>添加gitignore文件，路径为<code>项目根目录/.gitignore</code>：</p>
+<pre style="background-color:#2b303b;color:#c0c5ce;"><code><span>.idea
+</span><span>.vscode
+</span><span>node_modules
+</span><span>dist
+</span></code></pre>
+<p>初始化git仓库：</p>
+<pre data-lang="shell" style="background-color:#2b303b;color:#c0c5ce;" class="language-shell "><code class="language-shell" data-lang="shell"><span>$ git init
+</span><span>$ git add .
+</span><span>$ git commit -m &#39;init&#39;
+</span></code></pre>
+<h1 id="0-npmyi-lai-tian-jia">（0）NPM依赖添加</h1>
+<pre data-lang="shell" style="background-color:#2b303b;color:#c0c5ce;" class="language-shell "><code class="language-shell" data-lang="shell"><span>echo &#39;【1】基于webpack的项目核心相关内容&#39;
+</span><span>echo &#39;添加webpack基础四件套依赖&#39;
+</span><span>yarn add -D webpack webpack-cli webpack-dev-server html-webpack-plugin
+</span><span>
+</span><span>echo &#39;【2】处理js(x)、ts(x)的相关模块&#39;
+</span><span>echo &#39;添加babel核心模块&#39;
+</span><span>yarn add -D @babel/core
+</span><span>echo &#39;添加babel相关preset欲集&#39;
+</span><span>yarn add -D @babel/preset-env @babel/preset-react @babel/preset-typescript
+</span><span>echo &#39;添加babel相关plugin插件&#39;
+</span><span>yarn add -D @babel/plugin-proposal-class-properties @babel/plugin-proposal-object-rest-spread
+</span><span>echo &#39;添加babel-loader&#39;
+</span><span>yarn add -D babel-loader
+</span><span>
+</span><span>echo &#39;【3】处理style样式的相关模块&#39;
+</span><span>echo &#39;添加css-loader以及MiniCssExtractPlugin&#39;
+</span><span>yarn add -D css-loader mini-css-extract-plugin
+</span><span>yarn add -D less less-loader
+</span><span>
+</span><span>echo &#39;【4】添加react/react-dom的类型定义以及运行依赖&#39;
+</span><span>yarn add react react-dom
+</span><span>yarn add -D @types/react @types/react-dom
+</span></code></pre>
+<h1 id="1-webpack-config-js">（1）webpack.config.js</h1>
+<p>作用：webpack基本配置，定义入口、各种loader、plugin等。</p>
+<p>路径：项目根目录/webpack.config.js</p>
+<p>内容：</p>
+<pre data-lang="js" style="background-color:#2b303b;color:#c0c5ce;" class="language-js "><code class="language-js" data-lang="js"><span style="color:#b48ead;">const </span><span>{</span><span style="color:#bf616a;">resolve</span><span>} = </span><span style="color:#96b5b4;">require</span><span>(&#39;</span><span style="color:#a3be8c;">path</span><span>&#39;);
+</span><span style="color:#b48ead;">const </span><span style="color:#bf616a;">HtmlWebpackPlugin </span><span>= </span><span style="color:#96b5b4;">require</span><span>(&quot;</span><span style="color:#a3be8c;">html-webpack-plugin</span><span>&quot;);
+</span><span style="color:#b48ead;">const </span><span style="color:#bf616a;">MiniCssExtractPlugin </span><span>= </span><span style="color:#96b5b4;">require</span><span>(&quot;</span><span style="color:#a3be8c;">mini-css-extract-plugin</span><span>&quot;);
+</span><span>module.exports = {
+</span><span>    mode: &quot;</span><span style="color:#a3be8c;">development</span><span>&quot;,
+</span><span>    entry: {
+</span><span>        main: </span><span style="color:#8fa1b3;">resolve</span><span>(__dirname, &#39;</span><span style="color:#a3be8c;">src</span><span>&#39;, &#39;</span><span style="color:#a3be8c;">index.tsx</span><span>&#39;)
+</span><span>    },
+</span><span>    output: {
+</span><span>        filename: &quot;</span><span style="color:#a3be8c;">index.js</span><span>&quot;,
+</span><span>        path: </span><span style="color:#8fa1b3;">resolve</span><span>(__dirname, &#39;</span><span style="color:#a3be8c;">dist</span><span>&#39;)
+</span><span>    },
+</span><span>    resolve: {
+</span><span>        </span><span style="color:#65737e;">// webpack 默认只处理js、jsx等js代码
+</span><span>        </span><span style="color:#65737e;">// 为了防止在import其他ts代码的时候，出现
+</span><span>        </span><span style="color:#65737e;">// &quot; Can&#39;t resolve &#39;xxx&#39; &quot;的错误，需要特别配置
+</span><span>        extensions: [&#39;</span><span style="color:#a3be8c;">.js</span><span>&#39;, &#39;</span><span style="color:#a3be8c;">.jsx</span><span>&#39;, &#39;</span><span style="color:#a3be8c;">.ts</span><span>&#39;, &#39;</span><span style="color:#a3be8c;">.tsx</span><span>&#39;]
+</span><span>    },
+</span><span>    module: {
+</span><span>        rules: [
+</span><span>            {
+</span><span>                test: /</span><span style="color:#96b5b4;">\.tsx</span><span>?/,
+</span><span>                use: [
+</span><span>                    &#39;</span><span style="color:#a3be8c;">babel-loader</span><span>&#39;
+</span><span>                ],
+</span><span>                exclude: /</span><span style="color:#96b5b4;">node_moudles</span><span>/
+</span><span>            },
+</span><span>            {
+</span><span>                test: /</span><span style="color:#96b5b4;">\.css</span><span style="color:#b48ead;">$</span><span>/,
+</span><span>                use: [
+</span><span>                    </span><span style="color:#bf616a;">MiniCssExtractPlugin</span><span>.</span><span style="color:#bf616a;">loader</span><span>,
+</span><span>                    &#39;</span><span style="color:#a3be8c;">css-loader</span><span>&#39;
+</span><span>                ]
+</span><span>            },
+</span><span>            {
+</span><span>                test: /</span><span style="color:#96b5b4;">\.less</span><span style="color:#b48ead;">$</span><span>/,
+</span><span>                use: [
+</span><span>                    </span><span style="color:#bf616a;">MiniCssExtractPlugin</span><span>.</span><span style="color:#bf616a;">loader</span><span>,
+</span><span>                    &#39;</span><span style="color:#a3be8c;">css-loader</span><span>&#39;,
+</span><span>                    &#39;</span><span style="color:#a3be8c;">less-loader</span><span>&#39;
+</span><span>                ]
+</span><span>            }
+</span><span>        ]
+</span><span>    },
+</span><span>    plugins: [
+</span><span>        new HtmlWebpackPlugin({
+</span><span>            template: </span><span style="color:#8fa1b3;">resolve</span><span>(__dirname, &#39;</span><span style="color:#a3be8c;">public</span><span>&#39;, &#39;</span><span style="color:#a3be8c;">index.html</span><span>&#39;),
+</span><span>            inject: &#39;</span><span style="color:#a3be8c;">body</span><span>&#39;
+</span><span>        }),
+</span><span>        new MiniCssExtractPlugin({
+</span><span>            filename: &#39;</span><span style="color:#a3be8c;">app.css</span><span>&#39;
+</span><span>        })
+</span><span>    ],
+</span><span>    devServer: {
+</span><span>        port: </span><span style="color:#d08770;">8080
+</span><span>    }
+</span><span>}
+</span></code></pre>
+<h1 id="2-babelrc">（2）.babelrc</h1>
+<p>作用：被@babel/core读取使用，其中定义了@babel/core要用到的preset、plugin等组件，对ts文件进行编译。想要深入理解，可以阅读另一篇文章：<a rel="noopener" target="_blank" href="https://zhuanlan.zhihu.com/p/561186916">【长文详解】TypeScript与Babel、webpack的关系以及IDE对TS的类型检查 - 知乎 (zhihu.com)</a>。</p>
+<p>路径：项目根目录/.babelrc</p>
+<p>内容：</p>
+<pre data-lang="json" style="background-color:#2b303b;color:#c0c5ce;" class="language-json "><code class="language-json" data-lang="json"><span>{
+</span><span>  &quot;</span><span style="color:#a3be8c;">presets</span><span>&quot;: [
+</span><span>    &quot;</span><span style="color:#a3be8c;">@babel/preset-env</span><span>&quot;,
+</span><span>    &quot;</span><span style="color:#a3be8c;">@babel/preset-typescript</span><span>&quot;,
+</span><span>    [&quot;</span><span style="color:#a3be8c;">@babel/preset-react</span><span>&quot;, {&quot;</span><span style="color:#a3be8c;">runtime</span><span>&quot;: &quot;</span><span style="color:#a3be8c;">automatic</span><span>&quot;}]
+</span><span>  ],
+</span><span>  &quot;</span><span style="color:#a3be8c;">plugins</span><span>&quot;: [
+</span><span>    &quot;</span><span style="color:#a3be8c;">@babel/plugin-proposal-object-rest-spread</span><span>&quot;,
+</span><span>    &quot;</span><span style="color:#a3be8c;">@babel/plugin-proposal-class-properties</span><span>&quot;
+</span><span>  ]
+</span><span>}
+</span></code></pre>
+<h1 id="3-tsconfig-json">（3）tsconfig.json</h1>
+<p>作用：仅作为IDE进行TypeScript类型检查服务的文件，与ts代码编译没有直接关系。可以阅读另一篇文章来了解：<a rel="noopener" target="_blank" href="https://zhuanlan.zhihu.com/p/561186916">【长文详解】TypeScript与Babel、webpack的关系以及IDE对TS的类型检查 - 知乎 (zhihu.com)</a></p>
+<p>路径：项目根目录/tsconfig.json</p>
+<p>内容：</p>
+<pre data-lang="json" style="background-color:#2b303b;color:#c0c5ce;" class="language-json "><code class="language-json" data-lang="json"><span>{
+</span><span>  &quot;</span><span style="color:#a3be8c;">compilerOptions</span><span>&quot;: {
+</span><span>    &quot;</span><span style="color:#a3be8c;">module</span><span>&quot;: &quot;</span><span style="color:#a3be8c;">commonjs</span><span>&quot;,
+</span><span>    &quot;</span><span style="color:#a3be8c;">rootDir</span><span>&quot;: &quot;</span><span style="color:#a3be8c;">./src</span><span>&quot;,
+</span><span>    &quot;</span><span style="color:#a3be8c;">outDir</span><span>&quot;: &quot;</span><span style="color:#a3be8c;">./dist</span><span>&quot;,
+</span><span>    &quot;</span><span style="color:#a3be8c;">jsx</span><span>&quot;: &quot;</span><span style="color:#a3be8c;">react-jsx</span><span>&quot;
+</span><span>  }
+</span><span>}
+</span></code></pre>
+<h1 id="4-xiang-mu-dai-ma">（4）项目代码</h1>
+<p>src目录下，三个文件：index.tsx、index.module.less、react-app.d.ts。</p>
+<h2 id="src-index-tsx">src/index.tsx</h2>
+<p>路径：项目根目录/src/index.tsx</p>
+<p>内容：</p>
+<pre data-lang="tsx" style="background-color:#2b303b;color:#c0c5ce;" class="language-tsx "><code class="language-tsx" data-lang="tsx"><span style="color:#b48ead;">import </span><span>{</span><span style="color:#bf616a;">createRoot</span><span>} </span><span style="color:#b48ead;">from </span><span>&quot;</span><span style="color:#a3be8c;">react-dom/client</span><span>&quot;;
+</span><span style="color:#b48ead;">import </span><span style="color:#bf616a;">styles </span><span style="color:#b48ead;">from </span><span>&#39;</span><span style="color:#a3be8c;">./index.module.less</span><span>&#39;;
+</span><span>
+</span><span style="color:#b48ead;">const </span><span style="color:#8fa1b3;">App </span><span>= () </span><span style="color:#b48ead;">=&gt; </span><span>{
+</span><span>    </span><span style="color:#b48ead;">return </span><span>&lt;</span><span style="color:#bf616a;">div </span><span style="color:#d08770;">className</span><span>=</span><span style="color:#ab7967;">{</span><span style="color:#bf616a;">styles</span><span>.</span><span style="color:#bf616a;">app</span><span style="color:#ab7967;">}</span><span>&gt;Hello, &lt;</span><span style="color:#bf616a;">span</span><span>&gt;App&lt;/</span><span style="color:#bf616a;">span</span><span>&gt;&lt;/</span><span style="color:#bf616a;">div</span><span>&gt;
+</span><span>}
+</span><span>
+</span><span style="color:#8fa1b3;">createRoot</span><span>(document.</span><span style="color:#96b5b4;">querySelector</span><span>(&#39;</span><span style="color:#a3be8c;">#app</span><span>&#39;)).</span><span style="color:#8fa1b3;">render</span><span>(&lt;</span><span style="color:#ebcb8b;">App</span><span>/&gt;)
+</span></code></pre>
+<h2 id="src-index-module-less">src/index.module.less</h2>
+<p>路径：项目根目录/src/index.module.less</p>
+<p>内容：</p>
+<pre data-lang="less" style="background-color:#2b303b;color:#c0c5ce;" class="language-less "><code class="language-less" data-lang="less"><span style="color:#bf616a;">html</span><span style="color:#b48ead;">, </span><span style="color:#bf616a;">body </span><span>{
+</span><span>  height: </span><span style="color:#d08770;">100%</span><span>;
+</span><span>  width: </span><span style="color:#d08770;">100%</span><span>;
+</span><span>  margin: </span><span style="color:#d08770;">0</span><span>;
+</span><span>}
+</span><span>
+</span><span style="color:#bf616a;">div </span><span>{
+</span><span>  box-sizing: border-box;
+</span><span>}
+</span><span>
+</span><span style="color:#8fa1b3;">.</span><span style="color:#d08770;">app </span><span>{
+</span><span>  height: </span><span style="color:#d08770;">100%</span><span>;
+</span><span>  width: </span><span style="color:#d08770;">100%</span><span>;
+</span><span>  font-size: </span><span style="color:#d08770;">20px</span><span>;
+</span><span>
+</span><span style="color:#b48ead;">  </span><span style="color:#bf616a;">span </span><span>{
+</span><span>    color: </span><span style="color:#96b5b4;">rgb</span><span>(</span><span style="color:#d08770;">0</span><span>, </span><span style="color:#d08770;">111</span><span>, </span><span style="color:#d08770;">222</span><span>);
+</span><span>    font-size: </span><span style="color:#d08770;">24px</span><span>;
+</span><span>  }
+</span><span>}
+</span></code></pre>
+<h2 id="src-react-app-d-ts-te-bie">src/react-app.d.ts（特别）</h2>
+<p>作用：<em>仅仅用于类型定义，目前定义的是模块化less文件的结构定义。</em></p>
+<p>路径：项目根目录/src/react-app.d.ts</p>
+<p>内容：</p>
+<pre data-lang="typescript" style="background-color:#2b303b;color:#c0c5ce;" class="language-typescript "><code class="language-typescript" data-lang="typescript"><span style="color:#b48ead;">declare module </span><span>&#39;</span><span style="color:#a3be8c;">*.module.less</span><span>&#39; {
+</span><span>    </span><span style="color:#b48ead;">const </span><span style="color:#bf616a;">content</span><span>: {
+</span><span>        [</span><span style="color:#bf616a;">className</span><span>: string]: any
+</span><span>    }
+</span><span>    </span><span style="color:#b48ead;">export default </span><span style="color:#bf616a;">content</span><span>;
+</span><span>}
+</span></code></pre>
+<h2 id="public-index-html">public/index.html</h2>
+<p>作用：指定的html模板，根webpack.config.js里面HtmlWebpackPlugin所制定的模板路径保持一致。</p>
+<p>路径：项目根目录/public/index.html</p>
+<p>内容：</p>
+<pre data-lang="html" style="background-color:#2b303b;color:#c0c5ce;" class="language-html "><code class="language-html" data-lang="html"><span>&lt;!</span><span style="color:#b48ead;">DOCTYPE </span><span style="color:#d08770;">html</span><span>&gt;
+</span><span>&lt;</span><span style="color:#bf616a;">html </span><span style="color:#d08770;">lang</span><span>=&quot;</span><span style="color:#a3be8c;">en</span><span>&quot;&gt;
+</span><span>&lt;</span><span style="color:#bf616a;">head</span><span>&gt;
+</span><span>    &lt;</span><span style="color:#bf616a;">meta </span><span style="color:#d08770;">charset</span><span>=&quot;</span><span style="color:#a3be8c;">UTF-8</span><span>&quot;&gt;
+</span><span>    &lt;</span><span style="color:#bf616a;">title</span><span>&gt;Title&lt;/</span><span style="color:#bf616a;">title</span><span>&gt;
+</span><span>&lt;/</span><span style="color:#bf616a;">head</span><span>&gt;
+</span><span>&lt;</span><span style="color:#bf616a;">body</span><span>&gt;
+</span><span>&lt;</span><span style="color:#bf616a;">div </span><span style="color:#8fa1b3;">id</span><span>=&quot;</span><span style="color:#a3be8c;">app</span><span>&quot;&gt;&lt;/</span><span style="color:#bf616a;">div</span><span>&gt;
+</span><span>&lt;/</span><span style="color:#bf616a;">body</span><span>&gt;
+</span><span>&lt;/</span><span style="color:#bf616a;">html</span><span>&gt;
+</span></code></pre>
+<h1 id="yun-xing">运行</h1>
+<p>在package.json中添加运行脚本：</p>
+<pre data-lang="diff" style="background-color:#2b303b;color:#c0c5ce;" class="language-diff "><code class="language-diff" data-lang="diff"><span>{
+</span><span>  &quot;name&quot;: &quot;webpack5-react-demo&quot;,
+</span><span>  &quot;version&quot;: &quot;1.0.0&quot;,
+</span><span>  &quot;main&quot;: &quot;index.js&quot;,
+</span><span>  &quot;license&quot;: &quot;MIT&quot;,
+</span><span style="color:#a3be8c;">+ &quot;scripts&quot;: {
+</span><span style="color:#a3be8c;">+  &quot;dev&quot;: &quot;webpack-dev-server --config webpack.config.js&quot;
+</span><span style="color:#a3be8c;">+ },
+</span><span>  &quot;devDependencies&quot;: {
+</span><span>		... ...
+</span><span>  },
+</span><span>  &quot;dependencies&quot;: {
+</span><span>    ... ...
+</span><span>  }
+</span><span>}
+</span><span>
+</span></code></pre>
+<p>效果：</p>
+<p><img src="https://static-res.zhen.wang/images/post/2023-01-26/020-run.png" alt="020-run" /></p>
+<h1 id="fu-lu">附录</h1>
+<h2 id="tu-jie-webpackpei-zhi-yu-npmbao-guan-xi">图解webpack配置与NPM包关系</h2>
+<p><img src="https://static-res.zhen.wang/images/post/2023-01-26/010-webpack-config-and-npm.png" alt="010-webpack-config-and-npm" /></p>
+<h2 id="githubcang-ku">github仓库</h2>
+<p><a rel="noopener" target="_blank" href="https://github.com/w4ngzhen/webpack5-react-demo">w4ngzhen/webpack5-react-demo (github.com)</a></p>
+
+    </div>
+</div>
+<script src="https://zhen.wang/libs/viewerjs@1.11.7/viewer.min.js"></script>
+<link rel="stylesheet" href="https://zhen.wang/libs/viewerjs@1.11.7/viewer.min.css"/>
+<script>
+  if (window.Viewer) {
+    document.querySelectorAll('img').forEach(img => {
+      new Viewer(img, {
+        inline: false,
+        navbar: false,
+        toolbar: {
+          zoomIn: 1,
+          zoomOut: 1,
+          reset: 1,
+          rotateLeft: 1,
+          rotateRight: 1,
+        },
+      });
+    });
+  }
+</script>
+
+
+</body>
+</html>

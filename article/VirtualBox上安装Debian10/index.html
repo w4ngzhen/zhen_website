@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="utf-8">
+    <meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover"
+          name="viewport">
+    
+    
+    <!-- umami web analysis -->
+    <script defer src="https://zhen.wang/libs/umami/umami.script.js"
+            data-website-id="d66cfe03-f6b3-4aa0-baf8-728700db1b09"></script>
+    
+    
+    
+    <link rel="icon" type="image/png" sizes="16x16" href="https://zhen.wang/images/blog-site-icon.svg">
+    <link rel="icon" type="image/png" sizes="32x32" href="https://zhen.wang/images/blog-site-icon.svg">
+    <title>zhen&#x27;s everything</title>
+    <link rel="stylesheet" href="https://zhen.wang/style.css">
+    
+<link rel="stylesheet" href="https://zhen.wang/article_content.css">
+<link rel="stylesheet" href="https://zhen.wang/article_markdown.css">
+
+</head>
+<body>
+
+<div id="article">
+    <header class="article-header">
+        
+<div class="base-title">
+    <a href="#" onclick="history.length > 1 ? history.back() : location.href = '/'; return false;">&LeftArrow; Back</a>
+    <h1>
+        VirtualBox上安装Debian10
+    </h1>
+</div>
+
+    </header>
+    <p class="article-date">2020-09-29</p>
+    
+    <!-- toc -->
+    <div class="article-toc">
+        <label class="toc-title" for="toc-trigger">目录</label>
+        <input id="toc-trigger" type="checkbox" checked/>
+        <div class="toc-content">
+            <ol class="toc">
+                
+                <li class="toc-item toc-level-1">
+                    <a class="toc-link" href="https://zhen.wang/article/VirtualBox上安装Debian10/#zhun-bei">准备</a>
+                    
+                    <ol class="toc-child">
+                        
+                        <li class="toc-item toc-level-2">
+                            <a href="https://zhen.wang/article/VirtualBox上安装Debian10/#virtualbox">VirtualBox</a>
+                        </li>
+                        
+                        <li class="toc-item toc-level-2">
+                            <a href="https://zhen.wang/article/VirtualBox上安装Debian10/#debian">Debian</a>
+                        </li>
+                        
+                    </ol>
+                    
+                </li>
+                
+                <li class="toc-item toc-level-1">
+                    <a class="toc-link" href="https://zhen.wang/article/VirtualBox上安装Debian10/#an-zhuang-guo-cheng">安装过程</a>
+                    
+                    <ol class="toc-child">
+                        
+                        <li class="toc-item toc-level-2">
+                            <a href="https://zhen.wang/article/VirtualBox上安装Debian10/#virtualbox-1">VirtualBox</a>
+                        </li>
+                        
+                        <li class="toc-item toc-level-2">
+                            <a href="https://zhen.wang/article/VirtualBox上安装Debian10/#debian-1">Debian</a>
+                        </li>
+                        
+                    </ol>
+                    
+                </li>
+                
+                <li class="toc-item toc-level-1">
+                    <a class="toc-link" href="https://zhen.wang/article/VirtualBox上安装Debian10/#huan-jing-chu-shi-hua">环境初始化</a>
+                    
+                    <ol class="toc-child">
+                        
+                        <li class="toc-item toc-level-2">
+                            <a href="https://zhen.wang/article/VirtualBox上安装Debian10/#tian-jia-yong-hu-dao-sudoers">添加用户到sudoers</a>
+                        </li>
+                        
+                        <li class="toc-item toc-level-2">
+                            <a href="https://zhen.wang/article/VirtualBox上安装Debian10/#sudofang-shi-xiu-gai-aptyuan">sudo方式修改apt源</a>
+                        </li>
+                        
+                        <li class="toc-item toc-level-2">
+                            <a href="https://zhen.wang/article/VirtualBox上安装Debian10/#an-zhuang-linux-headers">安装linux-headers</a>
+                        </li>
+                        
+                        <li class="toc-item toc-level-2">
+                            <a href="https://zhen.wang/article/VirtualBox上安装Debian10/#an-zhuang-gcc-make-perldeng">安装gcc、make、perl等</a>
+                        </li>
+                        
+                    </ol>
+                    
+                </li>
+                
+                <li class="toc-item toc-level-1">
+                    <a class="toc-link" href="https://zhen.wang/article/VirtualBox上安装Debian10/#wen-ti-ji-jie-jue">问题及解决</a>
+                    
+                    <ol class="toc-child">
+                        
+                        <li class="toc-item toc-level-2">
+                            <a href="https://zhen.wang/article/VirtualBox上安装Debian10/#vboxqi-dong-debian-xfcetu-xing-jie-mian-hei-ping">VBox启动Debian&#x2F;Xfce图形界面黑屏</a>
+                        </li>
+                        
+                    </ol>
+                    
+                </li>
+                
+            </ol>
+        </div>
+    </div>
+    
+    <!-- real content -->
+    <div class="article-content markdown-content">
+        <p>本文将介绍如何使用VBox进行Debian10的安装</p>
+<span id="continue-reading"></span><h1 id="zhun-bei">准备</h1>
+<h2 id="virtualbox">VirtualBox</h2>
+<p>下载链接：<a rel="noopener" target="_blank" href="https://www.virtualbox.org/wiki/Downloads">Downloads – Oracle VM VirtualBox</a>，下载完成后安装即可。</p>
+<h2 id="debian">Debian</h2>
+<p>下载链接：<a rel="noopener" target="_blank" href="https://www.debian.org/CD/http-ftp/#stable">通过 HTTP/FTP 下载 Debian CD/DVD 映像</a></p>
+<p>下载说明：</p>
+<p>从下载页面可以看到有两个介质的下载，如果你希望最大限度的离线安装的话，可以选择DVD版本</p>
+<p><img src="https://static-res.zhen.wang/images/post/2020-09-29-install-debian/download-debian.png" alt="" /></p>
+<p>这里本人选择CD介质中的amd64，进入后会看到下方有一系列的ISO，到底该下载哪个呢？其实在DVD介质页面里面已经给了说明：</p>
+<pre style="background-color:#2b303b;color:#c0c5ce;"><code><span>There are lots of files here! Do I need all of them?
+</span><span>In most cases it is not necessary to download and use all of these images to be able to install Debian on your computer. Debian comes with a massive set of software packages, hence why it takes so many disks for a complete set. Most typical users only need a small subset of those software packages.
+</span><span>
+</span><span>Initially, you will only need to download and use the first image of a set (labelled as debian-something-1 to be able to start the Debian installer and set up Debian on your computer. If there are more images available here (labelled debian-something-2, debian-something-3, etc.), they contain the extra packages that can be installed on a Debian system (as mentioned previously). They will not be bootable and are entirely optional. If you have a fast Internet connection, you&#39;re most likely better off installing any desired extra packages directly from the Debian mirrors on the Internet instead of by using these extra images.
+</span></code></pre>
+<p>简而言之，下载Debian-XXX-1.iso的即可，其他的都是可选包，可以通过网络下载。</p>
+<h1 id="an-zhuang-guo-cheng">安装过程</h1>
+<h2 id="virtualbox-1">VirtualBox</h2>
+<p>VirtualBox的安装没有什么特殊的处理，Python的支持可以去掉，然后安装路径按需放置。</p>
+<p><img src="https://static-res.zhen.wang/images/post/2020-09-29-install-debian/install-vbox.png" alt="" /></p>
+<p>安装完成后，进入VirtualBox创建一个新的虚拟机：<strong>Machine -&gt; New</strong></p>
+<p><img src="https://static-res.zhen.wang/images/post/2020-09-29-install-debian/new-vm.png" alt="" /></p>
+<p><img src="https://static-res.zhen.wang/images/post/2020-09-29-install-debian/new-vm-disk.png" alt="" /></p>
+<p>接下来的进行<code>Create</code>，等待VirtualBox进行虚拟机的磁盘存储等初始化操作。这个过程的处理时间取决于工作电脑的处理器和磁盘类型。</p>
+<p><img src="https://static-res.zhen.wang/images/post/2020-09-29-install-debian/create-over.png" alt="" /></p>
+<h2 id="debian-1">Debian</h2>
+<h3 id="qi-dong-bing-xuan-ze-jing-xiang">启动并选择镜像</h3>
+<p><img src="https://static-res.zhen.wang/images/post/2020-09-29-install-debian/pre-choose-image.png" alt="" /></p>
+<p><img src="https://static-res.zhen.wang/images/post/2020-09-29-install-debian/choose-image.png" alt="" /></p>
+<h3 id="yi-xi-lie-de-an-zhuang-guo-cheng">一系列的安装过程</h3>
+<p>由于步骤很多，详情可以参考这篇很有用的知乎文章：<a rel="noopener" target="_blank" href="https://zhuanlan.zhihu.com/p/73122221">图解 Debian 10（Buster）安装步骤 - 知乎 (zhihu.com)</a></p>
+<p><img src="https://static-res.zhen.wang/images/post/2020-09-29-install-debian/install-debian-step01.png" alt="" /></p>
+<h1 id="huan-jing-chu-shi-hua">环境初始化</h1>
+<h2 id="tian-jia-yong-hu-dao-sudoers">添加用户到sudoers</h2>
+<pre data-lang="sh" style="background-color:#2b303b;color:#c0c5ce;" class="language-sh "><code class="language-sh" data-lang="sh"><span style="color:#65737e;"># 1.切换到root用户
+</span><span style="color:#bf616a;">$</span><span> su
+</span><span>
+</span><span style="color:#65737e;"># 2.编辑sudoer文件
+</span><span style="color:#bf616a;">$</span><span> vi /etc/sudoers
+</span><span>
+</span><span style="color:#65737e;"># 3.在User privilege specification一行复制root对应的内容，添加一行当前用户的记录，内容为
+</span><span style="color:#bf616a;">xxx</span><span>(你的用户名，本人使用的w4ngzhen) </span><span style="color:#bf616a;">ALL</span><span>=(ALL:ALL) </span><span style="color:#bf616a;">ALL
+</span><span>
+</span><span style="color:#65737e;"># 4.强制保存
+</span><span>
+</span><span style="color:#65737e;"># 5.退出root用户
+</span><span style="color:#bf616a;">$</span><span> exit
+</span></code></pre>
+<h2 id="sudofang-shi-xiu-gai-aptyuan">sudo方式修改apt源</h2>
+<p>实际上该步骤可以在上述安装Debian的时候就可以选择镜像完成配置，这里写出来主要是为了方便以后查阅修改镜像。</p>
+<pre data-lang="sh" style="background-color:#2b303b;color:#c0c5ce;" class="language-sh "><code class="language-sh" data-lang="sh"><span style="color:#65737e;"># 1.编辑apt源配置文件
+</span><span style="color:#bf616a;">$</span><span> sudo vi /etc/apt/sources.list
+</span><span>
+</span><span style="color:#65737e;"># 2.添加国内能快速访问的镜像源，这里选择腾讯。修改完成后，保存退出到命令行
+</span><span style="color:#bf616a;">deb</span><span> http://mirrors.cloud.tencent.com/debian/ buster main non-free contrib
+</span><span style="color:#bf616a;">deb</span><span> http://mirrors.cloud.tencent.com/debian-security buster/updates main
+</span><span style="color:#bf616a;">deb</span><span> http://mirrors.cloud.tencent.com/debian/ buster-updates main non-free contrib
+</span><span style="color:#bf616a;">deb</span><span> http://mirrors.cloud.tencent.com/debian/ buster-backports main non-free contrib
+</span><span style="color:#bf616a;">deb-src</span><span> http://mirrors.cloud.tencent.com/debian-security buster/updates main
+</span><span style="color:#bf616a;">deb-src</span><span> http://mirrors.cloud.tencent.com/debian/ buster main non-free contrib
+</span><span style="color:#bf616a;">deb-src</span><span> http://mirrors.cloud.tencent.com/debian/ buster-updates main non-free contrib
+</span><span style="color:#bf616a;">deb-src</span><span> http://mirrors.cloud.tencent.com/debian/ buster-backports main non-free contrib
+</span><span>
+</span><span style="color:#65737e;"># 3.更新apt源
+</span><span style="color:#bf616a;">$</span><span> sudo apt-get update
+</span><span>
+</span><span style="color:#65737e;"># 4.更新apt已安装包
+</span><span style="color:#bf616a;">$</span><span> sudo apt-get upgrade
+</span></code></pre>
+<h2 id="an-zhuang-linux-headers">安装linux-headers</h2>
+<pre data-lang="sh" style="background-color:#2b303b;color:#c0c5ce;" class="language-sh "><code class="language-sh" data-lang="sh"><span style="color:#65737e;"># linux-headers的版本需要与当前内核发行版一致，查看内核发行版本命令如下：
+</span><span style="color:#bf616a;">$</span><span> uname</span><span style="color:#bf616a;"> -r
+</span><span style="color:#65737e;"># 本人机器输出：4.19.0-9-amd64
+</span><span style="color:#65737e;"># 所以需要安装的linux-headers为：linux-headers-4.19.0-9-amd64，这里使用shell命令便捷操作
+</span><span style="color:#bf616a;">$</span><span> sudo apt-get install</span><span style="color:#bf616a;"> -y</span><span> linux-headers-$(</span><span style="color:#bf616a;">uname -r</span><span>) 
+</span></code></pre>
+<h2 id="an-zhuang-gcc-make-perldeng">安装gcc、make、perl等</h2>
+<pre data-lang="sh" style="background-color:#2b303b;color:#c0c5ce;" class="language-sh "><code class="language-sh" data-lang="sh"><span style="color:#bf616a;">$</span><span> sudo apt-get install</span><span style="color:#bf616a;"> -y</span><span> gcc make perl
+</span></code></pre>
+<h1 id="wen-ti-ji-jie-jue">问题及解决</h1>
+<h2 id="vboxqi-dong-debian-xfcetu-xing-jie-mian-hei-ping">VBox启动Debian/Xfce图形界面黑屏</h2>
+<ul>
+<li>原因1：VBox虚拟机【设置】-【显示】中启用了3D加速</li>
+<li>解决方式：关闭3D加速</li>
+</ul>
+
+    </div>
+</div>
+<script src="https://zhen.wang/libs/viewerjs@1.11.7/viewer.min.js"></script>
+<link rel="stylesheet" href="https://zhen.wang/libs/viewerjs@1.11.7/viewer.min.css"/>
+<script>
+  if (window.Viewer) {
+    document.querySelectorAll('img').forEach(img => {
+      new Viewer(img, {
+        inline: false,
+        navbar: false,
+        toolbar: {
+          zoomIn: 1,
+          zoomOut: 1,
+          reset: 1,
+          rotateLeft: 1,
+          rotateRight: 1,
+        },
+      });
+    });
+  }
+</script>
+
+
+</body>
+</html>

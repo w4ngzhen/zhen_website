@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="utf-8">
+    <meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover"
+          name="viewport">
+    
+    
+    <!-- umami web analysis -->
+    <script defer src="https://zhen.wang/libs/umami/umami.script.js"
+            data-website-id="d66cfe03-f6b3-4aa0-baf8-728700db1b09"></script>
+    
+    
+    
+    <link rel="icon" type="image/png" sizes="16x16" href="https://zhen.wang/images/blog-site-icon.svg">
+    <link rel="icon" type="image/png" sizes="32x32" href="https://zhen.wang/images/blog-site-icon.svg">
+    <title>zhen&#x27;s everything</title>
+    <link rel="stylesheet" href="https://zhen.wang/style.css">
+    
+<link rel="stylesheet" href="https://zhen.wang/article_content.css">
+<link rel="stylesheet" href="https://zhen.wang/article_markdown.css">
+
+</head>
+<body>
+
+<div id="article">
+    <header class="article-header">
+        
+<div class="base-title">
+    <a href="#" onclick="history.length > 1 ? history.back() : location.href = '/'; return false;">&LeftArrow; Back</a>
+    <h1>
+        Java学习路线【转】
+    </h1>
+</div>
+
+    </header>
+    <p class="article-date">2017-02-21</p>
+    
+    <!-- real content -->
+    <div class="article-content markdown-content">
+        <span id="continue-reading"></span>
+<ol>
+<li><strong>第一阶段：JavaSE（Java基础部分）</strong></li>
+</ol>
+<ul>
+<li>Java开发前奏
+计算机基本原理，Java语言发展简史以及开发环境的搭建，体验Java程序的开发，环境变量的设置，程序的执行过程，相关反编译工具介绍，java开发工具Eclipse的安装和使用，javadoc的说明。</li>
+<li>Java基础语法
+Java语法格式，常量和变量，变量的作用域，方法和方法的重载，运算符，程序流程控制，数组和操作数组的类，对数组循环遍历以及针对数组的常用查找、排序算法原理，最后使用Java程序进行功能实现。</li>
+<li>面向对象编程
+理解对象的本质，以及面向对象，类与对象之间的关系，如何用面向对象的思想分析和解决显示生活中的问题，并java程序的手段编写出来。如何设计类，设计类的基本原则，类的实例化过程，类元素：构造函数、this关键字、方法和方法的参数传递过程、static关键字、内部类，Java的垃圾对象回收机制。对象的三大特性：封装、继承和多态。子类对象的实例化过程、方法的重写和重载、final关键字、抽象类、接口、继承的优点和缺点。 对象的多态性：子类和父类之间的转换、父类纸箱子类的引用、抽象类和接口在多态中的应用、多态优点。常用设计模式如单利、模版等模式。什么是异常 异常的捕捉和抛出 异常捕捉的原则 finally的使用，package的应用import关键字。</li>
+<li>多线程应用
+多线程的概念，如何在程序中创建多线程(Thread、Runnable)，线程安全问题，线程的同步，线程之间的通讯、死锁问题的剖析。</li>
+<li>JavaAPI详解
+JavaAPI介绍、String和StringBuffer、各种基本数据类型包装类，System和Runtime类，Date和DateFomat类等。常用的集合类使用如下：Java Collections Framework：Collection、Set、List、ArrayList、Vector、LinkedList、Hashset、TreeSet、Map、HashMap、TreeMap、Iterator、Enumeration等常用集合类API。</li>
+<li>IO技术
+什么是IO，File及相关类，字节流InputStream和OutputStream，字符流Reader和Writer，以及相应缓冲流和管道流，字节和字符的转化流，包装流，以及常用包装类使用，分析java的IO性能。</li>
+<li>网络编程
+Java网络编程，网络通信底层协议TCP/UDP/IP，Socket编程。网络通信常用应用层协议简介：HTTP、FTP等，以及WEB服务器的工作原理。</li>
+<li>Java高级特性
+递归程序，Java的高级特性：反射、代理和泛型、枚举、Java正则表达式API详解及其应用。</li>
+</ul>
+<ol start="2">
+<li><strong>第二阶段：数据库技术</strong></li>
+</ol>
+<ul>
+<li>ORACLE基础管理
+Oracle背景简介，数据库的安装，数据库的用户名和密码，客户端登录数据库服务SQLPLUS，数据库基本概。</li>
+<li>SQL语句
+数据库的创建，表的创建，修改，删除，查询，索引的创建，主从表的建立，数据控制授权和回收，事务控制，查询语句以及运算符的详解，sql中的函数使用。</li>
+<li>多表连接和字查询
+等值和非等值连接，外连接，自连接；交叉连接，自然连接，using子句连接，完全外连接和左右外连接，子查询使用以及注意事项。</li>
+<li>触发器、存储过程
+触发器和存储过程使用场合， 通过实例进行详解。</li>
+<li>数据库设计优化
+WHERE子句中的连接顺序，选择最有效率的表名顺序，SELECT子句中避免使用 ‘ * ’计算记录条数等等。</li>
+<li>数据备份与移植
+移植技巧，备份方案；导入导出等。</li>
+</ul>
+<ol start="3">
+<li><strong>第三阶段：JDBC技术</strong></li>
+</ol>
+<ul>
+<li>JDBC基础
+JDBC Connection、Statement、PreparedStatement、CallableStatement、ResultSet等不同类的使用。</li>
+<li>连接池技术
+了解连接池的概念，掌握连接池的建立、治理、关闭和配置。</li>
+<li>ORM与DAO封装
+对象关系映射思想，JDBC的DAO封装，实现自己的JDBC。</li>
+</ul>
+<ol start="4">
+<li><strong>第四阶段：WEB基础技术</strong></li>
+</ol>
+<ul>
+<li>XML技术
+使用jdom和dom4j来对xml文档的解析和生成操作，xml的作用和使用场合。</li>
+<li>HTML/CSS
+Java掌握基本的html标签的格式和使用，css层叠样式表对div的定义，实现对网站布局的基本实现。</li>
+<li>JavaScript
+了解javascript的基本语法以及相关函数的使用，并结合html页面实现流程控制和页面效果展示。什么是异常 异常的捕捉和抛出 异常捕捉的原则 finally的使用，package的应用import关键字。</li>
+<li>JSP/Servlet
+Servlet和JSP技术、上传下载、Tomcat服务器技术、servlet过滤器和监听器。</li>
+<li>JSTL与EL
+JSTL核心标签库、函数标签库、格式化标签库、自定义标签技术、EL表达式在jsp页面的使用。</li>
+<li>AJAX及框架技术
+AJAX框架Jquery渲染页面效果和相关的强大的第三方类库，dwr如何和后台服务进行数据传输，以及页面逻辑控制等。</li>
+<li>JSON高级应用
+Java使用JSON支持的方式对字符串进行封装和解析，实现页面和Java后台服务的数据通信。</li>
+<li>Fckeditor编辑器
+FCKEditor在线编辑器技术、配置、处理图片和文件上传。</li>
+<li>JavaMail技术
+了解域名解析与MX记录、电子邮件工作原理、邮件传输协议：SMTP、POP3、IMAP、邮件组织结构：RFC822邮件格式、MIME协议、邮件编码、复合邮件结构分析、JavaMail API及其体系结构、编程创建邮件内容：简单邮件内容、包含内嵌图片的复杂邮件、包含内嵌图片和附件的复杂邮件。</li>
+<li>JfreeChart报表
+统计报表；图表处理。</li>
+<li>BBS项目实战
+采用Jquery+dwr+jsp+servlet+Fckeditor+JfreeChart+tomcat+jdbc(oracle)完成BBS项目的实战。学完此实战你至少已经是拥有近1年开发经验的程序员了，但是你不应该满足现状，继续下去！</li>
+</ul>
+<ol start="5">
+<li><strong>第五阶段：WEB主流框架技术（项目实战）</strong></li>
+</ol>
+<ul>
+<li>Struts2.x
+struts2框架的工作原理和架构分析，struts-default.xml与default.properties文件的作用，struts。Xml中引入多个配置文件。OGNL表达式、Struts2 UI和非UI标签、输入校验、使用通配符定义action、动态方法调用、多文件上传、自定义类型转换器、为Action的属性注入值、自定义拦截器、异常处理、使用struts2实现的CRUD操作的案例。</li>
+<li>Hibernate
+Hibernate应用开发基础； ORM基础理论； 关系映射技术； 性能调优技术； 性能优化 一级缓存 二级缓存 查询缓存 事务与并发 悲观锁、乐观锁。</li>
+<li>Spring4.x
+Spring IoC技术；Spring AOP技术；Spring声明事务管理；Spring常用功能说明，spring4.x的新特性，Spring整合Struts2和Hibernate3的运用。</li>
+<li>Log4j与Junit
+Logging API；JUnit单元测试技术； 压力测试技术：badboy进行测试计划跟踪获取以及JMeter压力测试。</li>
+<li>在线支付技术
+完成支付宝的支付接口的在线支付功能。</li>
+<li>电子商务网站实战
+采用Spring4.x + Hibernate3 + Struts2 + Jquery + dwr + FckEditor + Tomcat完成电子商务网站实战开发。</li>
+</ul>
+<ol start="6">
+<li><strong>第六阶段：WEB高级进阶（项目实战）</strong></li>
+</ol>
+<ul>
+<li>OpenJPA技术
+JPA介绍及开发环境搭建、单表实体映射、一对多/多对一、一对一、多对多关联、实体继承、复合主键、JPQL语句、EntityManager API、事务管理，了解一下jpa2.0的新特性以及应用。</li>
+<li>Lucene搜索引擎
+了解全文搜索原理、全文搜索引擎、什么是OSEM、OSEM框架Compass、基于使用Lucene使用Compass实现全文增量型索引创建和搜索、探索Lucene 3.0以及API。</li>
+<li>电子商务重构
+此项目采用了Lucene+compass+openJpa+上一版电子商务网站的技术进行重构。</li>
+<li>Excel/PDF文档处理技术
+Java对Excel和pdf文档分别利用poi和itext来进行解析和生成。此技术在企业级系统的报表中经常使用。</li>
+<li>OA工作流技术JBPM
+工作流是什么、JBPM介绍、JBPM的主要用法、各类节点的用法、任务各种分派方式、JBPM的整体架构原理、工作流定义模型分析、运行期工作流实例模型分析、数据库表模型分析、流程定义管理、流程实例监控、对JBPM的相关接口进行封装，构建自己的工作流应用平台等。</li>
+<li>WebService技术
+WebService技术原理、WebService技术的应用、Soap服务的创建与管理、WSDL描述文档规范、UDDI注册中心运行原理;使用Axis和Xfire创建WEB服务、Webservice客户端的编写、使用TCPMonitor监听SOAP协议、异构平台的整合。</li>
+<li>Linux操作系统
+Linux系统安装，卸载、linux使用的核心思想、Linux下的用户管理，文件管理,系统管理、程序的安装，使用，卸载。Linux下作为server的基本应用：web服务器，j2ee服务器，ftp服务器的安装和项目的部署。</li>
+<li>CRM项目实战
+此项目能了解和熟悉客户关系管理的基本流程以及功能的实现，采用上面几个阶段学到的主流框架实现，同时加入了JBPM的技术。！</li>
+</ul>
+<ol start="7">
+<li><strong>第七阶段：大型高并发网站优化解决（项目实战）</strong></li>
+</ol>
+<ul>
+<li>如何构建一个高性能网站详解
+什么样的网站需要高性能，高性能的指标体系，构建高性能网站需要做哪些工作，注意哪些细节。</li>
+<li>SSI技术
+什么是SSI，使用他有什么好处，什么样的系统才使用SSI，SSI技术详解和使用，应用到项目中。</li>
+<li>静态页面生成技术
+什么是静态页，为什么需要静态页以及带来的好处，生成静态页的模版技术Velocity和Freemark，生成静态页的访问规则等。</li>
+<li>缓存技术
+为什么使用缓存技术，oscache缓存技术的介绍和使用，memcached缓存技术的介绍和使用、两者缓存技术的比较和如何去使用。</li>
+<li>经典WEb服务器
+什么是web服务器，什么是JavaWeb服务器，他们存在什么关系，当前技术主流中常用的Web服务器有哪些，WEB服务器Apache和Nginx的应用。</li>
+<li>Nginx架构实战
+什么是反向代理，负载均衡以及集群，在Nginx中如何实现这些高性能的系统架构。</li>
+</ul>
+
+    </div>
+</div>
+<script src="https://zhen.wang/libs/viewerjs@1.11.7/viewer.min.js"></script>
+<link rel="stylesheet" href="https://zhen.wang/libs/viewerjs@1.11.7/viewer.min.css"/>
+<script>
+  if (window.Viewer) {
+    document.querySelectorAll('img').forEach(img => {
+      new Viewer(img, {
+        inline: false,
+        navbar: false,
+        toolbar: {
+          zoomIn: 1,
+          zoomOut: 1,
+          reset: 1,
+          rotateLeft: 1,
+          rotateRight: 1,
+        },
+      });
+    });
+  }
+</script>
+
+
+</body>
+</html>

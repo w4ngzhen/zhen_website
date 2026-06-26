@@ -1,0 +1,799 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="utf-8">
+    <meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover"
+          name="viewport">
+    
+    
+    <!-- umami web analysis -->
+    <script defer src="https://zhen.wang/libs/umami/umami.script.js"
+            data-website-id="d66cfe03-f6b3-4aa0-baf8-728700db1b09"></script>
+    
+    
+    
+    <link rel="icon" type="image/png" sizes="16x16" href="https://zhen.wang/images/blog-site-icon.svg">
+    <link rel="icon" type="image/png" sizes="32x32" href="https://zhen.wang/images/blog-site-icon.svg">
+    <title>zhen&#x27;s everything</title>
+    <link rel="stylesheet" href="https://zhen.wang/style.css">
+    
+<link rel="stylesheet" href="https://zhen.wang/article_content.css">
+<link rel="stylesheet" href="https://zhen.wang/article_markdown.css">
+
+</head>
+<body>
+
+<div id="article">
+    <header class="article-header">
+        
+<div class="base-title">
+    <a href="#" onclick="history.length > 1 ? history.back() : location.href = '/'; return false;">&LeftArrow; Back</a>
+    <h1>
+        使用CEF（二）— 基于VS2019编写一个简单CEF样例
+    </h1>
+</div>
+
+    </header>
+    <p class="article-date">2021-01-15</p>
+    
+    <!-- toc -->
+    <div class="article-toc">
+        <label class="toc-title" for="toc-trigger">目录</label>
+        <input id="toc-trigger" type="checkbox" checked/>
+        <div class="toc-content">
+            <ol class="toc">
+                
+                <li class="toc-item toc-level-1">
+                    <a class="toc-link" href="https://zhen.wang/article/使用CEF（二）— 基于VS2019编写一个简单CEF样例/#shi-yong-cef-er-ji-yu-vs2019bian-xie-yi-ge-jian-dan-cefyang-li">使用CEF（二）— 基于VS2019编写一个简单CEF样例</a>
+                    
+                    <ol class="toc-child">
+                        
+                        <li class="toc-item toc-level-2">
+                            <a href="https://zhen.wang/article/使用CEF（二）— 基于VS2019编写一个简单CEF样例/#qian-ti">前提</a>
+                        </li>
+                        
+                        <li class="toc-item toc-level-2">
+                            <a href="https://zhen.wang/article/使用CEF（二）— 基于VS2019编写一个简单CEF样例/#wen-jian-zhun-bei">文件准备</a>
+                        </li>
+                        
+                        <li class="toc-item toc-level-2">
+                            <a href="https://zhen.wang/article/使用CEF（二）— 基于VS2019编写一个简单CEF样例/#xiang-mu-chuang-jian">项目创建</a>
+                        </li>
+                        
+                        <li class="toc-item toc-level-2">
+                            <a href="https://zhen.wang/article/使用CEF（二）— 基于VS2019编写一个简单CEF样例/#yi-lai-tian-jia">依赖添加</a>
+                        </li>
+                        
+                        <li class="toc-item toc-level-2">
+                            <a href="https://zhen.wang/article/使用CEF（二）— 基于VS2019编写一个简单CEF样例/#dai-ma-bian-xie-yu-shuo-ming">代码编写与说明</a>
+                        </li>
+                        
+                        <li class="toc-item toc-level-2">
+                            <a href="https://zhen.wang/article/使用CEF（二）— 基于VS2019编写一个简单CEF样例/#bian-yi-yu-yun-xing">编译与运行</a>
+                        </li>
+                        
+                        <li class="toc-item toc-level-2">
+                            <a href="https://zhen.wang/article/使用CEF（二）— 基于VS2019编写一个简单CEF样例/#xie-zai-jie-wei">写在结尾</a>
+                        </li>
+                        
+                        <li class="toc-item toc-level-2">
+                            <a href="https://zhen.wang/article/使用CEF（二）— 基于VS2019编写一个简单CEF样例/#yuan-dai-ma">源代码</a>
+                        </li>
+                        
+                    </ol>
+                    
+                </li>
+                
+            </ol>
+        </div>
+    </div>
+    
+    <!-- real content -->
+    <div class="article-content markdown-content">
+        <h1 id="shi-yong-cef-er-ji-yu-vs2019bian-xie-yi-ge-jian-dan-cefyang-li">使用CEF（二）— 基于VS2019编写一个简单CEF样例</h1>
+<p>在这一节中，本人将会在Windows下使用VS2019创建一个空白的C++<strong>Windows Desktop Application</strong>项目，逐步进行修改配置和代码编写，并在这个过程中介绍vs使用过程中和C++项目的结合。源码见文章末尾Github链接。</p>
+<span id="continue-reading"></span><h2 id="qian-ti">前提</h2>
+<p>你已经阅读过《使用CEF（1）— 起步》，你可以在这些地方读到：<a rel="noopener" target="_blank" href="https://zhuanlan.zhihu.com/p/344306287">知乎链接</a>，或你知道如何获得libcef的库以及libcef_dll_wrapper静态库。</p>
+<h2 id="wen-jian-zhun-bei">文件准备</h2>
+<p>接下来，本人将以Debug的模式下完成代码的开发工作。在Release下是同样的步骤，但是需要注意的是你所选择的目标是Debug或是Release都需要和libcef库以及libcef_dll_wrapper完全一致。</p>
+<ul>
+<li>现在，你需要libcef库文件相关文件，它来自于：</li>
+</ul>
+<p><img src="https://static-res.zhen.wang/images/post/2021-01-15-write-simple-cef/libcef-lib-list.jpg" alt="" /></p>
+<ul>
+<li>你需要使用libcef_dll_wrapper静态库文件，它来自于你编译出来的静态库：</li>
+</ul>
+<p><img src="https://static-res.zhen.wang/images/post/2021-01-15-write-simple-cef/libcef-dll-lib-list.jpg" alt="" /></p>
+<ul>
+<li>你需要libcef与wrapper的include文件，它来自于：</li>
+</ul>
+<p><img src="https://static-res.zhen.wang/images/post/2021-01-15-write-simple-cef/include-files.jpg" alt="" /></p>
+<p>接下来我们创建一个名为cef的文件夹，并且把上述提到的文件夹和文件放到该目录下：</p>
+<pre style="background-color:#2b303b;color:#c0c5ce;"><code><span>cef
+</span><span>│  libcef_dll_wrapper.lib
+</span><span>│  libcef_dll_wrapper.pdb
+</span><span>│
+</span><span>├─Debug
+</span><span>│  │  ......
+</span><span>│  │  libcef.dll
+</span><span>│  │  libcef.lib
+</span><span>│  │  libEGL.dll
+</span><span>│  │  libGLESv2.dll
+</span><span>│  │  ......
+</span><span>│  │
+</span><span>│  └─swiftshader
+</span><span>│          libEGL.dll
+</span><span>│          libGLESv2.dll
+</span><span>│
+</span><span>└─include
+</span><span>    │  cef_accessibility_handler.h
+</span><span>    │  cef_api_hash.h
+</span><span>    │  cef_app.h
+</span><span>    │  cef_audio_handler.h
+</span><span>    |  .....
+</span></code></pre>
+<p><img src="https://static-res.zhen.wang/images/post/2021-01-15-write-simple-cef/files-dir.jpg" alt="" /></p>
+<p>基础文件创建完成后，我们开始编写一个简单的基于CEF的程序吧！</p>
+<h2 id="xiang-mu-chuang-jian">项目创建</h2>
+<p>创建一个Windows桌面应用程序</p>
+<p><img src="https://static-res.zhen.wang/images/post/2021-01-15-write-simple-cef/create-sln.jpg" alt="" /></p>
+<p>创建一个名为simple-cef的项目</p>
+<p><img src="https://static-res.zhen.wang/images/post/2021-01-15-write-simple-cef/create-proj.jpg" alt="" /></p>
+<p>创建完成后，我们删除所有模板生成的代码，得到一个完全空白的应用程序项目：</p>
+<p><img src="https://static-res.zhen.wang/images/post/2021-01-15-write-simple-cef/delete-all-files.jpg" alt="" /></p>
+<h2 id="yi-lai-tian-jia">依赖添加</h2>
+<h3 id="tou-wen-jian-tian-jia">头文件添加</h3>
+<p>众所周知，C/C++头文件作为声明定义，对于编译过程有着举足轻重的位置。当我们引入CEF编译我们的项目时候，首先需要include正确位置的头文件，才能实现编译（狭义的编译，不包括链接）。我们首先把上述做好的cef文件夹放到<strong>项目</strong>所在目录下，也就是说我们把cef的inlucde头文件以及静态库文件全都加到了项目中：</p>
+<p><img src="https://static-res.zhen.wang/images/post/2021-01-15-write-simple-cef/20210122161019.png" alt="" /></p>
+<p>然后，在VS中，我们通过如下的方式为我们的项目引入CEF的头文件：</p>
+<p><strong>右键项目</strong> — <strong>properties</strong> — <strong>C/C++</strong> — <strong>General</strong> — <strong>Additional Include Directories</strong></p>
+<p>PS：如果你发现没有C/C++分类，是因为你没有创建任何的源代码文件，<a rel="noopener" target="_blank" href="https://developercommunity.visualstudio.com/content/problem/87843/property-pages-cc-category-missing.html">官方FAQ</a>。所以我们在Source Files目录下先创建一个main.cpp，然后继续上述的配置。</p>
+<p><img src="https://static-res.zhen.wang/images/post/2021-01-15-write-simple-cef/additional-include-dir.jpg" alt="" /></p>
+<p>PS：这里本人使用了<code>$(ProjectDir)</code>，它是一个VS宏变量，返回项目所在目录（即，vcxproj所在目录），且目录末尾带反斜杠<code>\</code>。从上面的Evaluated value里面展示的经过实际计算得到的值，可以验证我们配置是否正确。这里正确的返回了我们<strong>放在项目目录下的cef文件夹</strong>。</p>
+<p>这里只需要添加到<strong>cef文件夹</strong>这一层级，是因为<strong>cef/include</strong>里面的头文件在include的时候，采用了对应的"include/xxx.h"，即需要从<strong>引入目录</strong>中找到include文件夹，里面查找xxx.h头文件。当我们指定到了cef层级后，就能够使得编译器正确处理cef头文件中include的位置。</p>
+<p>这里以**$(ProjectDir)cef/include/cef_broweser.h**这个头文件举例：</p>
+<p><img src="https://static-res.zhen.wang/images/post/2021-01-15-write-simple-cef/20210122162053.png" alt="" /></p>
+<p>当编译器发现里面的#include预编译命令后，会从头文件目录中去查找，即希望从上述配置的<code>$(ProjectDir)cef/</code>以及默认目录下查找，默认的项目目录应该是找不到了，但是可以在<code>$(ProjectDir)cef/</code>目录下找到<strong>include/cef_base.h</strong>等文件，因为<code>$(ProjectDir)cef/include/cef_base.h</code>确实是正确的文件路径。因此，上述额外的include文件夹只需要指定到cef层级即可。</p>
+<h3 id="ku-wen-jian-tian-jia">库文件添加</h3>
+<p>完成头文件的添加后，我们还需要添加链接目标，即cef的静态库。添加方式为：</p>
+<p><strong>properties</strong> — <strong>Linker</strong> — <strong>Input</strong>— <strong>Additional Dependencies</strong></p>
+<p><img src="https://static-res.zhen.wang/images/post/2021-01-15-write-simple-cef/add-the-additional-dependencies.jpg" alt="" /></p>
+<p>同样使用宏变量来指定对应的lib静态库：libcef_dll_wrapper.lib、libcef.lib、cef_sandbox.lib。</p>
+<p>通过上述的库文件添加，我们就完成了**编译（狭义，头文件查找）——链接（库文件链接）**这两个步骤的配置了，接下来就是进一步，开始我们的代码编写之路。</p>
+<h2 id="dai-ma-bian-xie-yu-shuo-ming">代码编写与说明</h2>
+<p>CEF的整体架构以及CefApp以及CefClient的概念可以参考<a rel="noopener" target="_blank" href="https://github.com/fanfeilong/cefutil">该仓库里面的文档</a>，或者是<a rel="noopener" target="_blank" href="https://bitbucket.org/chromiumembedded/cef/wiki/GeneralUsage.md">阅读官方文档</a>。接下来将使用cefsimple代码进行解释说明，并适当增加一些小的细节。</p>
+<h3 id="simple-app">simple_app</h3>
+<h4 id="simple-app-h">simple_app.h</h4>
+<pre data-lang="c++" style="background-color:#2b303b;color:#c0c5ce;" class="language-c++ "><code class="language-c++" data-lang="c++"><span style="color:#b48ead;">#ifndef</span><span> SIMPLE_APP_H
+</span><span style="color:#b48ead;">#define </span><span>SIMPLE_APP_H
+</span><span style="color:#b48ead;">#pragma</span><span> once
+</span><span>
+</span><span style="color:#b48ead;">#include </span><span>&quot;</span><span style="color:#a3be8c;">include/cef_app.h</span><span>&quot;
+</span><span>
+</span><span style="color:#65737e;">// Implement application-level callbacks for the browser process.
+</span><span style="color:#b48ead;">class </span><span style="color:#ebcb8b;">SimpleApp </span><span style="color:#eff1f5;">: </span><span style="color:#b48ead;">public </span><span style="color:#a3be8c;">CefApp</span><span style="color:#eff1f5;">, </span><span style="color:#b48ead;">public </span><span style="color:#a3be8c;">CefBrowserProcessHandler </span><span style="color:#eff1f5;">{
+</span><span style="color:#b48ead;">public</span><span style="color:#eff1f5;">:
+</span><span style="color:#eff1f5;">    </span><span style="color:#8fa1b3;">SimpleApp</span><span style="color:#eff1f5;">();
+</span><span style="color:#eff1f5;">
+</span><span style="color:#eff1f5;">    </span><span style="color:#65737e;">// CefApp methods:
+</span><span style="color:#eff1f5;">    </span><span style="color:#b48ead;">virtual</span><span style="color:#eff1f5;"> CefRefPtr&lt;CefBrowserProcessHandler&gt; </span><span style="color:#8fa1b3;">GetBrowserProcessHandler</span><span style="color:#eff1f5;">()
+</span><span style="color:#eff1f5;">        </span><span style="color:#bf616a;">OVERRIDE </span><span style="color:#eff1f5;">{
+</span><span style="color:#eff1f5;">        </span><span style="color:#b48ead;">return </span><span style="color:#bf616a;">this</span><span style="color:#eff1f5;">;
+</span><span style="color:#eff1f5;">    }
+</span><span style="color:#eff1f5;">
+</span><span style="color:#eff1f5;">    </span><span style="color:#65737e;">// CefBrowserProcessHandler methods:
+</span><span style="color:#eff1f5;">    </span><span style="color:#b48ead;">virtual void </span><span style="color:#8fa1b3;">OnContextInitialized</span><span style="color:#eff1f5;">() OVERRIDE;
+</span><span style="color:#eff1f5;">
+</span><span style="color:#b48ead;">private</span><span style="color:#eff1f5;">:
+</span><span style="color:#eff1f5;">    </span><span style="color:#65737e;">// Include the default reference counting implementation.
+</span><span style="color:#eff1f5;">    </span><span style="color:#bf616a;">IMPLEMENT_REFCOUNTING</span><span style="color:#eff1f5;">(SimpleApp);
+</span><span style="color:#eff1f5;">}</span><span>;
+</span><span>
+</span><span style="color:#b48ead;">#endif
+</span></code></pre>
+<p>这里引入的时候，如果发现VS提示，<code>#include "include/cef_app.h"</code>无效，首先检查上述的对项目的配置是否正确！上述项目Properties中配置的平台是x64，VS中也请选择一致的平台。而且在本Demo是无法使用32位的，因为我们下载的静态库是x64位的。</p>
+<p><img src="https://static-res.zhen.wang/images/post/2021-01-15-write-simple-cef/same-config.jpg" alt="" /></p>
+<h4 id="simple-app-cpp">simple_app.cpp</h4>
+<p>在simple_app的实现中，主要需要提供3个部分的代码实现：</p>
+<ul>
+<li>CefWindowDelegate</li>
+<li>CefBrowserViewDelegate</li>
+<li>SimpleApp</li>
+</ul>
+<h5 id="cefwindowdelegateyu-cefbrowserviewdelegate">CefWindowDelegate与CefBrowserViewDelegate</h5>
+<p>Cef窗体代理以及Cef浏览器视图代理，他们是CEF提供的一套图形视图框架。这一套图形接口目前在Windows和Linux上支持了，所以在Windows和Linux我们完全可以不用选择原生的窗体框架（例如在Windows上的WinForm和Linux上的QT之类的），而是直接使用CEF提供的图形视图框架。而CEF的图形视图框架的内部实现原理我们暂时不需要知道，可以把它们想象成一些窗体和控件对象，它们需要在SimpleApp中的实现用到，所以也写在了simple_app.cpp中。相关代码如下：</p>
+<pre data-lang="c++" style="background-color:#2b303b;color:#c0c5ce;" class="language-c++ "><code class="language-c++" data-lang="c++"><span style="color:#65737e;">// SimpleBrowserViewDelegate
+</span><span style="color:#65737e;">// 继承CefBrowserViewDelegate，即CEF浏览器视图代理。
+</span><span style="color:#65737e;">// 该代理由CEF屏蔽细节，只暴露出视图控件指定的接口回调供我们实现即可
+</span><span style="color:#b48ead;">class </span><span style="color:#ebcb8b;">SimpleBrowserViewDelegate </span><span style="color:#eff1f5;">: </span><span style="color:#b48ead;">public </span><span style="color:#a3be8c;">CefBrowserViewDelegate 
+</span><span style="color:#eff1f5;">{
+</span><span style="color:#b48ead;">public</span><span style="color:#eff1f5;">: 
+</span><span style="color:#eff1f5;">    </span><span style="color:#8fa1b3;">SimpleBrowserViewDelegate</span><span style="color:#eff1f5;">()
+</span><span style="color:#eff1f5;">    {
+</span><span style="color:#eff1f5;">    }
+</span><span style="color:#eff1f5;">
+</span><span style="color:#eff1f5;">    </span><span style="color:#b48ead;">bool </span><span style="color:#8fa1b3;">OnPopupBrowserViewCreated</span><span style="color:#eff1f5;">(CefRefPtr&lt;CefBrowserView&gt; </span><span style="color:#bf616a;">browser_view</span><span style="color:#eff1f5;">,
+</span><span style="color:#eff1f5;">                                   CefRefPtr&lt;CefBrowserView&gt; </span><span style="color:#bf616a;">popup_browser_view</span><span style="color:#eff1f5;">,
+</span><span style="color:#eff1f5;">                                   </span><span style="color:#b48ead;">bool </span><span style="color:#bf616a;">is_devtools</span><span style="color:#eff1f5;">) OVERRIDE
+</span><span style="color:#eff1f5;">    {
+</span><span style="color:#eff1f5;">        </span><span style="color:#65737e;">// Create a new top-level Window for the popup. It will show itself after
+</span><span style="color:#eff1f5;">        </span><span style="color:#65737e;">// creation.
+</span><span style="color:#eff1f5;">        CefWindow::</span><span style="color:#bf616a;">CreateTopLevelWindow</span><span style="color:#eff1f5;">(
+</span><span style="color:#eff1f5;">            </span><span style="color:#b48ead;">new </span><span style="color:#bf616a;">SimpleWindowDelegate</span><span style="color:#eff1f5;">(popup_browser_view));
+</span><span style="color:#eff1f5;">
+</span><span style="color:#eff1f5;">        </span><span style="color:#65737e;">// We created the Window.
+</span><span style="color:#eff1f5;">        </span><span style="color:#b48ead;">return </span><span style="color:#d08770;">true</span><span style="color:#eff1f5;">;
+</span><span style="color:#eff1f5;">    }
+</span><span style="color:#eff1f5;">
+</span><span style="color:#b48ead;">private</span><span style="color:#eff1f5;">:
+</span><span style="color:#eff1f5;">    </span><span style="color:#bf616a;">IMPLEMENT_REFCOUNTING</span><span style="color:#eff1f5;">(SimpleBrowserViewDelegate);
+</span><span style="color:#eff1f5;">    </span><span style="color:#bf616a;">DISALLOW_COPY_AND_ASSIGN</span><span style="color:#eff1f5;">(SimpleBrowserViewDelegate);
+</span><span style="color:#eff1f5;">}</span><span>;
+</span></code></pre>
+<pre data-lang="c++" style="background-color:#2b303b;color:#c0c5ce;" class="language-c++ "><code class="language-c++" data-lang="c++"><span style="color:#65737e;">// SimpleWindowDelegate
+</span><span style="color:#65737e;">// 继承CefWindowDelegate，即CEF窗口代理。
+</span><span style="color:#65737e;">// 该代理由CEF屏蔽细节，只暴露窗口一些接口回调供我们实现即可。
+</span><span style="color:#b48ead;">class </span><span style="color:#ebcb8b;">SimpleWindowDelegate </span><span style="color:#eff1f5;">: </span><span style="color:#b48ead;">public </span><span style="color:#a3be8c;">CefWindowDelegate
+</span><span style="color:#eff1f5;">{
+</span><span style="color:#b48ead;">public</span><span style="color:#eff1f5;">: 
+</span><span style="color:#eff1f5;">    </span><span style="color:#b48ead;">explicit </span><span style="color:#8fa1b3;">SimpleWindowDelegate</span><span style="color:#eff1f5;">(CefRefPtr&lt;CefBrowserView&gt; </span><span style="color:#bf616a;">browser_view</span><span style="color:#eff1f5;">)
+</span><span style="color:#eff1f5;">        : </span><span style="color:#bf616a;">browser_view_</span><span style="color:#eff1f5;">(browser_view)
+</span><span style="color:#eff1f5;">        {
+</span><span style="color:#eff1f5;">        }
+</span><span style="color:#eff1f5;">	</span><span style="color:#65737e;">// 窗体创建时
+</span><span style="color:#eff1f5;">    </span><span style="color:#b48ead;">void </span><span style="color:#8fa1b3;">OnWindowCreated</span><span style="color:#eff1f5;">(CefRefPtr&lt;CefWindow&gt; </span><span style="color:#bf616a;">window</span><span style="color:#eff1f5;">) OVERRIDE
+</span><span style="color:#eff1f5;">    {
+</span><span style="color:#eff1f5;">        </span><span style="color:#65737e;">// Add the browser view and show the window.
+</span><span style="color:#eff1f5;">        window-&gt;</span><span style="color:#bf616a;">AddChildView</span><span style="color:#eff1f5;">(browser_view_);
+</span><span style="color:#eff1f5;">        window-&gt;</span><span style="color:#bf616a;">Show</span><span style="color:#eff1f5;">();
+</span><span style="color:#eff1f5;">
+</span><span style="color:#eff1f5;">        </span><span style="color:#65737e;">// Give keyboard focus to the browser view.
+</span><span style="color:#eff1f5;">        browser_view_-&gt;</span><span style="color:#bf616a;">RequestFocus</span><span style="color:#eff1f5;">();
+</span><span style="color:#eff1f5;">    }
+</span><span style="color:#eff1f5;">	</span><span style="color:#65737e;">// 窗体销毁时
+</span><span style="color:#eff1f5;">    </span><span style="color:#b48ead;">void </span><span style="color:#8fa1b3;">OnWindowDestroyed</span><span style="color:#eff1f5;">(CefRefPtr&lt;CefWindow&gt; </span><span style="color:#bf616a;">window</span><span style="color:#eff1f5;">) OVERRIDE
+</span><span style="color:#eff1f5;">    {
+</span><span style="color:#eff1f5;">        browser_view_ </span><span>= </span><span style="color:#d08770;">nullptr</span><span style="color:#eff1f5;">;
+</span><span style="color:#eff1f5;">    }
+</span><span style="color:#eff1f5;">	</span><span style="color:#65737e;">// 窗体是否可以关闭
+</span><span style="color:#eff1f5;">    </span><span style="color:#b48ead;">bool </span><span style="color:#8fa1b3;">CanClose</span><span style="color:#eff1f5;">(CefRefPtr&lt;CefWindow&gt; </span><span style="color:#bf616a;">window</span><span style="color:#eff1f5;">) OVERRIDE
+</span><span style="color:#eff1f5;">    {
+</span><span style="color:#eff1f5;">        </span><span style="color:#65737e;">// Allow the window to close if the browser says it&#39;s OK.
+</span><span style="color:#eff1f5;">        CefRefPtr&lt;CefBrowser&gt; browser </span><span>=</span><span style="color:#eff1f5;"> browser_view_-&gt;</span><span style="color:#bf616a;">GetBrowser</span><span style="color:#eff1f5;">();
+</span><span style="color:#eff1f5;">        </span><span style="color:#b48ead;">if </span><span style="color:#eff1f5;">(browser)
+</span><span style="color:#eff1f5;">            </span><span style="color:#b48ead;">return</span><span style="color:#eff1f5;"> browser-&gt;</span><span style="color:#bf616a;">GetHost</span><span style="color:#eff1f5;">()-&gt;</span><span style="color:#bf616a;">TryCloseBrowser</span><span style="color:#eff1f5;">();
+</span><span style="color:#eff1f5;">        </span><span style="color:#b48ead;">return </span><span style="color:#d08770;">true</span><span style="color:#eff1f5;">;
+</span><span style="color:#eff1f5;">    }
+</span><span style="color:#eff1f5;">	</span><span style="color:#65737e;">// 获取窗体展示的最佳尺寸
+</span><span style="color:#eff1f5;">    CefSize </span><span style="color:#8fa1b3;">GetPreferredSize</span><span style="color:#eff1f5;">(CefRefPtr&lt;CefView&gt; </span><span style="color:#bf616a;">view</span><span style="color:#eff1f5;">) OVERRIDE
+</span><span style="color:#eff1f5;">    {
+</span><span style="color:#eff1f5;">        </span><span style="color:#b48ead;">return </span><span style="color:#bf616a;">CefSize</span><span style="color:#eff1f5;">(</span><span style="color:#d08770;">800</span><span style="color:#eff1f5;">, </span><span style="color:#d08770;">600</span><span style="color:#eff1f5;">);
+</span><span style="color:#eff1f5;">    }
+</span><span style="color:#eff1f5;">
+</span><span style="color:#b48ead;">private</span><span style="color:#eff1f5;">:
+</span><span style="color:#eff1f5;">    CefRefPtr&lt;CefBrowserView&gt; browser_view_;
+</span><span style="color:#eff1f5;">
+</span><span style="color:#eff1f5;">    </span><span style="color:#bf616a;">IMPLEMENT_REFCOUNTING</span><span style="color:#eff1f5;">(SimpleWindowDelegate);
+</span><span style="color:#eff1f5;">    </span><span style="color:#bf616a;">DISALLOW_COPY_AND_ASSIGN</span><span style="color:#eff1f5;">(SimpleWindowDelegate);
+</span><span style="color:#eff1f5;">}</span><span>;
+</span></code></pre>
+<h5 id="simpleapp">SimpleApp</h5>
+<pre data-lang="c++" style="background-color:#2b303b;color:#c0c5ce;" class="language-c++ "><code class="language-c++" data-lang="c++"><span>SimpleApp::</span><span style="color:#8fa1b3;">SimpleApp</span><span>()
+</span><span>{
+</span><span>}
+</span><span>
+</span><span style="color:#b48ead;">void </span><span>SimpleApp::</span><span style="color:#8fa1b3;">OnContextInitialized</span><span>()
+</span><span>{
+</span><span>    </span><span style="color:#bf616a;">CEF_REQUIRE_UI_THREAD</span><span>();
+</span><span>
+</span><span>    CefRefPtr&lt;CefCommandLine&gt; command_line =
+</span><span>        CefCommandLine::</span><span style="color:#bf616a;">GetGlobalCommandLine</span><span>();
+</span><span>
+</span><span>    </span><span style="color:#b48ead;">const bool</span><span> enable_chrome_runtime =
+</span><span>        command_line-&gt;</span><span style="color:#bf616a;">HasSwitch</span><span>(&quot;</span><span style="color:#a3be8c;">enable-chrome-runtime</span><span>&quot;);
+</span><span>
+</span><span style="color:#b48ead;">#if defined</span><span>(OS_WIN) || </span><span style="color:#b48ead;">defined</span><span>(OS_LINUX)
+</span><span>    </span><span style="color:#65737e;">// Create the browser using the Views framework if &quot;--use-views&quot; is specified
+</span><span>    </span><span style="color:#65737e;">// via the command-line. Otherwise, create the browser using the native
+</span><span>    </span><span style="color:#65737e;">// platform framework. The Views framework is currently only supported on
+</span><span>    </span><span style="color:#65737e;">// Windows and Linux.
+</span><span>    </span><span style="color:#b48ead;">const bool</span><span> use_views = command_line-&gt;</span><span style="color:#bf616a;">HasSwitch</span><span>(&quot;</span><span style="color:#a3be8c;">use-views</span><span>&quot;);
+</span><span style="color:#b48ead;">#else
+</span><span>    </span><span style="color:#b48ead;">const bool</span><span> use_views = </span><span style="color:#d08770;">false</span><span>;
+</span><span style="color:#b48ead;">#endif
+</span><span>
+</span><span>    </span><span style="color:#65737e;">// SimpleHandler implements browser-level callbacks.
+</span><span>    CefRefPtr&lt;SimpleClient&gt; </span><span style="color:#bf616a;">handler</span><span>(</span><span style="color:#b48ead;">new </span><span style="color:#bf616a;">SimpleClient</span><span>(use_views));
+</span><span>
+</span><span>    </span><span style="color:#65737e;">// Specify CEF browser settings here.
+</span><span>    CefBrowserSettings browser_settings;
+</span><span>
+</span><span>    std::string url;
+</span><span>
+</span><span>    </span><span style="color:#65737e;">// Check if a &quot;--url=&quot; value was provided via the command-line. If so, use
+</span><span>    </span><span style="color:#65737e;">// that instead of the default URL.
+</span><span>    url = command_line-&gt;</span><span style="color:#bf616a;">GetSwitchValue</span><span>(&quot;</span><span style="color:#a3be8c;">url</span><span>&quot;);
+</span><span>    </span><span style="color:#b48ead;">if </span><span>(url.</span><span style="color:#bf616a;">empty</span><span>())
+</span><span>        url = &quot;</span><span style="color:#a3be8c;">https://zhen.wang/</span><span>&quot;;
+</span><span>
+</span><span>    </span><span style="color:#b48ead;">if </span><span>(use_views &amp;&amp; !enable_chrome_runtime)
+</span><span>    {
+</span><span>        </span><span style="color:#65737e;">// Create the BrowserView.
+</span><span>        CefRefPtr&lt;CefBrowserView&gt; browser_view = CefBrowserView::</span><span style="color:#bf616a;">CreateBrowserView</span><span>(
+</span><span>            handler, url, browser_settings, </span><span style="color:#d08770;">nullptr</span><span>, </span><span style="color:#d08770;">nullptr</span><span>,
+</span><span>            </span><span style="color:#b48ead;">new </span><span style="color:#bf616a;">SimpleBrowserViewDelegate</span><span>());
+</span><span>
+</span><span>        </span><span style="color:#65737e;">// Create the Window. It will show itself after creation.
+</span><span>        CefWindow::</span><span style="color:#bf616a;">CreateTopLevelWindow</span><span>(</span><span style="color:#b48ead;">new </span><span style="color:#bf616a;">SimpleWindowDelegate</span><span>(browser_view));
+</span><span>    }
+</span><span>    </span><span style="color:#b48ead;">else
+</span><span>    {
+</span><span>        </span><span style="color:#65737e;">// Information used when creating the native window.
+</span><span>        CefWindowInfo window_info;
+</span><span>
+</span><span style="color:#b48ead;">#if defined</span><span>(OS_WIN)
+</span><span>        </span><span style="color:#65737e;">// On Windows we need to specify certain flags that will be passed to
+</span><span>        </span><span style="color:#65737e;">// CreateWindowEx().
+</span><span>        window_info.</span><span style="color:#bf616a;">SetAsPopup</span><span>(</span><span style="color:#d08770;">NULL</span><span>, &quot;</span><span style="color:#a3be8c;">simple-cef by w4ngzhen</span><span>&quot;);
+</span><span style="color:#b48ead;">#endif
+</span><span>
+</span><span>        </span><span style="color:#65737e;">// Create the first browser window.
+</span><span>        CefBrowserHost::</span><span style="color:#bf616a;">CreateBrowser</span><span>(window_info, handler, url, browser_settings,
+</span><span>                                      </span><span style="color:#d08770;">nullptr</span><span>, </span><span style="color:#d08770;">nullptr</span><span>);
+</span><span>    }
+</span><span>}
+</span></code></pre>
+<h3 id="simple-client">simple_client</h3>
+<h5 id="simple-client-h">simple_client.h</h5>
+<pre data-lang="c++" style="background-color:#2b303b;color:#c0c5ce;" class="language-c++ "><code class="language-c++" data-lang="c++"><span style="color:#b48ead;">#ifndef</span><span> SIMPLE_CLIENT_H
+</span><span style="color:#b48ead;">#define </span><span>SIMPLE_CLIENT_H
+</span><span>
+</span><span style="color:#b48ead;">#include </span><span>&quot;</span><span style="color:#a3be8c;">include/cef_client.h</span><span>&quot;
+</span><span>
+</span><span style="color:#b48ead;">#include </span><span>&lt;</span><span style="color:#a3be8c;">list</span><span>&gt;
+</span><span>
+</span><span style="color:#b48ead;">class </span><span style="color:#ebcb8b;">SimpleClient </span><span style="color:#eff1f5;">: </span><span style="color:#b48ead;">public </span><span style="color:#a3be8c;">CefClient</span><span style="color:#eff1f5;">,
+</span><span style="color:#eff1f5;">                     </span><span style="color:#b48ead;">public </span><span style="color:#a3be8c;">CefDisplayHandler</span><span style="color:#eff1f5;">,
+</span><span style="color:#eff1f5;">                     </span><span style="color:#b48ead;">public </span><span style="color:#a3be8c;">CefLifeSpanHandler</span><span style="color:#eff1f5;">,
+</span><span style="color:#eff1f5;">                     </span><span style="color:#b48ead;">public </span><span style="color:#a3be8c;">CefLoadHandler
+</span><span style="color:#eff1f5;">{
+</span><span style="color:#b48ead;">public</span><span style="color:#eff1f5;">:
+</span><span style="color:#eff1f5;">	</span><span style="color:#b48ead;">explicit </span><span style="color:#8fa1b3;">SimpleClient</span><span style="color:#eff1f5;">(</span><span style="color:#b48ead;">bool </span><span style="color:#bf616a;">use_views</span><span style="color:#eff1f5;">);
+</span><span style="color:#eff1f5;">	</span><span style="color:#8fa1b3;">~SimpleClient</span><span style="color:#eff1f5;">();
+</span><span style="color:#eff1f5;">
+</span><span style="color:#eff1f5;">	</span><span style="color:#b48ead;">static</span><span style="color:#eff1f5;"> SimpleClient</span><span>* </span><span style="color:#8fa1b3;">GetInstance</span><span style="color:#eff1f5;">();
+</span><span style="color:#eff1f5;">
+</span><span style="color:#eff1f5;">	</span><span style="color:#b48ead;">virtual</span><span style="color:#eff1f5;"> CefRefPtr&lt;CefDisplayHandler&gt; </span><span style="color:#8fa1b3;">GetDisplayHandler</span><span style="color:#eff1f5;">() OVERRIDE
+</span><span style="color:#eff1f5;">	{ </span><span style="color:#b48ead;">return </span><span style="color:#bf616a;">this</span><span style="color:#eff1f5;">; }
+</span><span style="color:#eff1f5;">
+</span><span style="color:#eff1f5;">	</span><span style="color:#b48ead;">virtual</span><span style="color:#eff1f5;"> CefRefPtr&lt;CefLifeSpanHandler&gt; </span><span style="color:#8fa1b3;">GetLifeSpanHandler</span><span style="color:#eff1f5;">() OVERRIDE
+</span><span style="color:#eff1f5;">	{ </span><span style="color:#b48ead;">return </span><span style="color:#bf616a;">this</span><span style="color:#eff1f5;">; }
+</span><span style="color:#eff1f5;">
+</span><span style="color:#eff1f5;">	</span><span style="color:#b48ead;">virtual</span><span style="color:#eff1f5;"> CefRefPtr&lt;CefLoadHandler&gt; </span><span style="color:#8fa1b3;">GetLoadHandler</span><span style="color:#eff1f5;">() </span><span style="color:#bf616a;">OVERRIDE </span><span style="color:#eff1f5;">{ </span><span style="color:#b48ead;">return </span><span style="color:#bf616a;">this</span><span style="color:#eff1f5;">; }
+</span><span style="color:#eff1f5;">
+</span><span style="color:#eff1f5;">	</span><span style="color:#65737e;">// CefDisplayHandler的实现声明:
+</span><span style="color:#eff1f5;">	</span><span style="color:#b48ead;">virtual void </span><span style="color:#8fa1b3;">OnTitleChange</span><span style="color:#eff1f5;">(CefRefPtr&lt;CefBrowser&gt; </span><span style="color:#bf616a;">browser</span><span style="color:#eff1f5;">,
+</span><span style="color:#eff1f5;">	                           </span><span style="color:#b48ead;">const</span><span style="color:#eff1f5;"> CefString</span><span>&amp; </span><span style="color:#bf616a;">title</span><span style="color:#eff1f5;">) OVERRIDE;
+</span><span style="color:#eff1f5;">	</span><span style="color:#65737e;">// CefLifeSpanHandler的实现声明:
+</span><span style="color:#eff1f5;">	</span><span style="color:#b48ead;">virtual void </span><span style="color:#8fa1b3;">OnAfterCreated</span><span style="color:#eff1f5;">(CefRefPtr&lt;CefBrowser&gt; </span><span style="color:#bf616a;">browser</span><span style="color:#eff1f5;">) OVERRIDE;
+</span><span style="color:#eff1f5;">	</span><span style="color:#b48ead;">virtual bool </span><span style="color:#8fa1b3;">DoClose</span><span style="color:#eff1f5;">(CefRefPtr&lt;CefBrowser&gt; </span><span style="color:#bf616a;">browser</span><span style="color:#eff1f5;">) OVERRIDE;
+</span><span style="color:#eff1f5;">	</span><span style="color:#b48ead;">virtual void </span><span style="color:#8fa1b3;">OnBeforeClose</span><span style="color:#eff1f5;">(CefRefPtr&lt;CefBrowser&gt; </span><span style="color:#bf616a;">browser</span><span style="color:#eff1f5;">) OVERRIDE;
+</span><span style="color:#eff1f5;">	</span><span style="color:#65737e;">// CefLoadHandler的实现声明:
+</span><span style="color:#eff1f5;">	</span><span style="color:#b48ead;">virtual void </span><span style="color:#8fa1b3;">OnLoadError</span><span style="color:#eff1f5;">(CefRefPtr&lt;CefBrowser&gt; </span><span style="color:#bf616a;">browser</span><span style="color:#eff1f5;">,
+</span><span style="color:#eff1f5;">	                         CefRefPtr&lt;CefFrame&gt; </span><span style="color:#bf616a;">frame</span><span style="color:#eff1f5;">,
+</span><span style="color:#eff1f5;">	                         ErrorCode </span><span style="color:#bf616a;">errorCode</span><span style="color:#eff1f5;">,
+</span><span style="color:#eff1f5;">	                         </span><span style="color:#b48ead;">const</span><span style="color:#eff1f5;"> CefString</span><span>&amp; </span><span style="color:#bf616a;">errorText</span><span style="color:#eff1f5;">,
+</span><span style="color:#eff1f5;">	                         </span><span style="color:#b48ead;">const</span><span style="color:#eff1f5;"> CefString</span><span>&amp; </span><span style="color:#bf616a;">failedUrl</span><span style="color:#eff1f5;">) OVERRIDE;
+</span><span style="color:#eff1f5;">	
+</span><span style="color:#eff1f5;">	</span><span style="color:#b48ead;">void </span><span style="color:#8fa1b3;">CloseAllBrowsers</span><span style="color:#eff1f5;">(</span><span style="color:#b48ead;">bool </span><span style="color:#bf616a;">force_close</span><span style="color:#eff1f5;">); </span><span style="color:#65737e;">// 请求将所有的已经存在的浏览器窗体进行关闭
+</span><span style="color:#eff1f5;">	</span><span style="color:#b48ead;">bool </span><span style="color:#8fa1b3;">IsClosing</span><span style="color:#eff1f5;">() </span><span style="color:#b48ead;">const </span><span style="color:#eff1f5;">{ </span><span style="color:#b48ead;">return</span><span style="color:#eff1f5;"> is_closing_; }
+</span><span style="color:#eff1f5;">
+</span><span style="color:#b48ead;">private</span><span style="color:#eff1f5;">:
+</span><span style="color:#eff1f5;">	</span><span style="color:#65737e;">// 平台特定的标题修改
+</span><span style="color:#eff1f5;">    </span><span style="color:#65737e;">// 当我们没有CEF的GUI视图框架的时候，就需要特定平台的标题修改实现
+</span><span style="color:#eff1f5;">    </span><span style="color:#65737e;">// 例如，Windows中需要我们获取窗体句柄，调用Windows的API完成对该窗体的标题修改
+</span><span style="color:#eff1f5;">	</span><span style="color:#b48ead;">void </span><span style="color:#8fa1b3;">PlatformTitleChange</span><span style="color:#eff1f5;">(CefRefPtr&lt;CefBrowser&gt; </span><span style="color:#bf616a;">browser</span><span style="color:#eff1f5;">,
+</span><span style="color:#eff1f5;">	                         </span><span style="color:#b48ead;">const</span><span style="color:#eff1f5;"> CefString</span><span>&amp; </span><span style="color:#bf616a;">title</span><span style="color:#eff1f5;">);
+</span><span style="color:#eff1f5;">	</span><span style="color:#b48ead;">const bool</span><span style="color:#eff1f5;"> use_views_; </span><span style="color:#65737e;">// 是否使用了CEF的GUI视图框架
+</span><span style="color:#eff1f5;">	</span><span style="color:#65737e;">// List of existing browser windows. Only accessed on the CEF UI thread.
+</span><span style="color:#eff1f5;">	</span><span style="color:#b48ead;">typedef</span><span style="color:#eff1f5;"> std::list&lt;CefRefPtr&lt;CefBrowser&gt;&gt; BrowserList;
+</span><span style="color:#eff1f5;">	BrowserList browser_list_;
+</span><span style="color:#eff1f5;">
+</span><span style="color:#eff1f5;">	</span><span style="color:#b48ead;">bool</span><span style="color:#eff1f5;"> is_closing_;
+</span><span style="color:#eff1f5;">
+</span><span style="color:#eff1f5;">	</span><span style="color:#65737e;">// Include the default reference counting implementation.
+</span><span style="color:#bf616a;">IMPLEMENT_REFCOUNTING</span><span style="color:#eff1f5;">(SimpleClient);
+</span><span style="color:#eff1f5;">}</span><span>;
+</span><span>
+</span><span style="color:#b48ead;">#endif
+</span></code></pre>
+<h5 id="simple-client-cppyi-ji-simple-client-os-win-cpp">simple_client.cpp以及simple_client_os_win.cpp</h5>
+<p>这里我们提供了两份源代码，第一份是所有平台的通用实现，而第二份源码从名称可以看出跟特定的操作系统平台有关，这里就是Windows，为什么会有两份源码我们下文会逐步了解。</p>
+<p>首先看simple_client.cpp的源代码：</p>
+<pre data-lang="C++" style="background-color:#2b303b;color:#c0c5ce;" class="language-C++ "><code class="language-C++" data-lang="C++"><span style="color:#b48ead;">#include </span><span>&quot;</span><span style="color:#a3be8c;">simple_client.h</span><span>&quot;
+</span><span>
+</span><span style="color:#b48ead;">#include </span><span>&lt;</span><span style="color:#a3be8c;">sstream</span><span>&gt;
+</span><span style="color:#b48ead;">#include </span><span>&lt;</span><span style="color:#a3be8c;">string</span><span>&gt;
+</span><span>
+</span><span style="color:#b48ead;">#include </span><span>&quot;</span><span style="color:#a3be8c;">include/base/cef_bind.h</span><span>&quot;
+</span><span style="color:#b48ead;">#include </span><span>&quot;</span><span style="color:#a3be8c;">include/cef_app.h</span><span>&quot;
+</span><span style="color:#b48ead;">#include </span><span>&quot;</span><span style="color:#a3be8c;">include/cef_parser.h</span><span>&quot;
+</span><span style="color:#b48ead;">#include </span><span>&quot;</span><span style="color:#a3be8c;">include/views/cef_browser_view.h</span><span>&quot;
+</span><span style="color:#b48ead;">#include </span><span>&quot;</span><span style="color:#a3be8c;">include/views/cef_window.h</span><span>&quot;
+</span><span style="color:#b48ead;">#include </span><span>&quot;</span><span style="color:#a3be8c;">include/wrapper/cef_closure_task.h</span><span>&quot;
+</span><span style="color:#b48ead;">#include </span><span>&quot;</span><span style="color:#a3be8c;">include/wrapper/cef_helpers.h</span><span>&quot;
+</span><span>
+</span><span style="color:#b48ead;">namespace
+</span><span>{
+</span><span>    SimpleClient* g_instance = </span><span style="color:#d08770;">nullptr</span><span>;
+</span><span>
+</span><span>    </span><span style="color:#65737e;">// Returns a data: URI with the specified contents.
+</span><span>    std::string </span><span style="color:#8fa1b3;">GetDataURI</span><span>(</span><span style="color:#b48ead;">const</span><span> std::string&amp; </span><span style="color:#bf616a;">data</span><span>, </span><span style="color:#b48ead;">const</span><span> std::string&amp; </span><span style="color:#bf616a;">mime_type</span><span>)
+</span><span>    {
+</span><span>        </span><span style="color:#b48ead;">return </span><span>&quot;</span><span style="color:#a3be8c;">data:</span><span>&quot; + mime_type + &quot;</span><span style="color:#a3be8c;">;base64,</span><span>&quot; +
+</span><span>            </span><span style="color:#bf616a;">CefURIEncode</span><span>(</span><span style="color:#bf616a;">CefBase64Encode</span><span>(data.</span><span style="color:#bf616a;">data</span><span>(), data.</span><span style="color:#bf616a;">size</span><span>()), </span><span style="color:#d08770;">false</span><span>)
+</span><span>            .</span><span style="color:#bf616a;">ToString</span><span>();
+</span><span>    }
+</span><span>} </span><span style="color:#65737e;">// namespace
+</span><span>
+</span><span>SimpleClient::</span><span style="color:#8fa1b3;">SimpleClient</span><span>(</span><span style="color:#b48ead;">bool </span><span style="color:#bf616a;">use_views</span><span>)
+</span><span>    : </span><span style="color:#bf616a;">use_views_</span><span>(use_views), </span><span style="color:#bf616a;">is_closing_</span><span>(</span><span style="color:#d08770;">false</span><span>)
+</span><span>{
+</span><span>    </span><span style="color:#bf616a;">DCHECK</span><span>(!g_instance);
+</span><span>    g_instance = </span><span style="color:#bf616a;">this</span><span>;
+</span><span>}
+</span><span>
+</span><span>SimpleClient::</span><span style="color:#8fa1b3;">~SimpleClient</span><span>()
+</span><span>{
+</span><span>    g_instance = </span><span style="color:#d08770;">nullptr</span><span>;
+</span><span>}
+</span><span>
+</span><span style="color:#65737e;">// static
+</span><span>SimpleClient* SimpleClient::</span><span style="color:#8fa1b3;">GetInstance</span><span>()
+</span><span>{
+</span><span>    </span><span style="color:#b48ead;">return</span><span> g_instance;
+</span><span>}
+</span><span>
+</span><span style="color:#b48ead;">void </span><span>SimpleClient::</span><span style="color:#8fa1b3;">OnTitleChange</span><span>(CefRefPtr&lt;CefBrowser&gt; </span><span style="color:#bf616a;">browser</span><span>,
+</span><span>                                 </span><span style="color:#b48ead;">const</span><span> CefString&amp; </span><span style="color:#bf616a;">title</span><span>)
+</span><span>{
+</span><span>    </span><span style="color:#bf616a;">CEF_REQUIRE_UI_THREAD</span><span>();
+</span><span>
+</span><span>    </span><span style="color:#b48ead;">if </span><span>(use_views_)
+</span><span>    {
+</span><span>        </span><span style="color:#65737e;">// 如果使用CEF的GUI视图框架，那么修改窗体的标题通过调用该视图框架的API完成
+</span><span>        CefRefPtr&lt;CefBrowserView&gt; browser_view =
+</span><span>            CefBrowserView::</span><span style="color:#bf616a;">GetForBrowser</span><span>(browser);
+</span><span>        </span><span style="color:#b48ead;">if </span><span>(browser_view)
+</span><span>        {
+</span><span>            CefRefPtr&lt;CefWindow&gt; window = browser_view-&gt;</span><span style="color:#bf616a;">GetWindow</span><span>();
+</span><span>            </span><span style="color:#b48ead;">if </span><span>(window)
+</span><span>                window-&gt;</span><span style="color:#bf616a;">SetTitle</span><span>(title);
+</span><span>        }
+</span><span>    }
+</span><span>    </span><span style="color:#b48ead;">else
+</span><span>    {
+</span><span>        </span><span style="color:#65737e;">// 否则使用特定平台窗体标题修改API
+</span><span>        </span><span style="color:#65737e;">// 详情见simple_client_os_win.cpp
+</span><span>        </span><span style="color:#bf616a;">PlatformTitleChange</span><span>(browser, title);
+</span><span>    }
+</span><span>}
+</span><span>
+</span><span style="color:#b48ead;">void </span><span>SimpleClient::</span><span style="color:#8fa1b3;">OnAfterCreated</span><span>(CefRefPtr&lt;CefBrowser&gt; </span><span style="color:#bf616a;">browser</span><span>)
+</span><span>{
+</span><span>    </span><span style="color:#bf616a;">CEF_REQUIRE_UI_THREAD</span><span>();
+</span><span>
+</span><span>    </span><span style="color:#65737e;">// Add to the list of existing browsers.
+</span><span>    browser_list_.</span><span style="color:#bf616a;">push_back</span><span>(browser);
+</span><span>}
+</span><span>
+</span><span style="color:#b48ead;">bool </span><span>SimpleClient::</span><span style="color:#8fa1b3;">DoClose</span><span>(CefRefPtr&lt;CefBrowser&gt; </span><span style="color:#bf616a;">browser</span><span>)
+</span><span>{
+</span><span>    </span><span style="color:#bf616a;">CEF_REQUIRE_UI_THREAD</span><span>();
+</span><span>
+</span><span>    </span><span style="color:#65737e;">// Closing the main window requires special handling. See the DoClose()
+</span><span>    </span><span style="color:#65737e;">// documentation in the CEF header for a detailed destription of this
+</span><span>    </span><span style="color:#65737e;">// process.
+</span><span>    </span><span style="color:#b48ead;">if </span><span>(browser_list_.</span><span style="color:#bf616a;">size</span><span>() == </span><span style="color:#d08770;">1</span><span>)
+</span><span>    {
+</span><span>        </span><span style="color:#65737e;">// Set a flag to indicate that the window close should be allowed.
+</span><span>        is_closing_ = </span><span style="color:#d08770;">true</span><span>;
+</span><span>    }
+</span><span>
+</span><span>    </span><span style="color:#65737e;">// Allow the close. For windowed browsers this will result in the OS close
+</span><span>    </span><span style="color:#65737e;">// event being sent.
+</span><span>    </span><span style="color:#b48ead;">return </span><span style="color:#d08770;">false</span><span>;
+</span><span>}
+</span><span>
+</span><span style="color:#b48ead;">void </span><span>SimpleClient::</span><span style="color:#8fa1b3;">OnBeforeClose</span><span>(CefRefPtr&lt;CefBrowser&gt; </span><span style="color:#bf616a;">browser</span><span>)
+</span><span>{
+</span><span>    </span><span style="color:#bf616a;">CEF_REQUIRE_UI_THREAD</span><span>();
+</span><span>
+</span><span>    </span><span style="color:#65737e;">// Remove from the list of existing browsers.
+</span><span>    BrowserList::iterator bit = browser_list_.</span><span style="color:#bf616a;">begin</span><span>();
+</span><span>    </span><span style="color:#b48ead;">for </span><span>(; bit != browser_list_.</span><span style="color:#bf616a;">end</span><span>(); ++bit)
+</span><span>    {
+</span><span>        </span><span style="color:#b48ead;">if </span><span>((*bit)-&gt;</span><span style="color:#bf616a;">IsSame</span><span>(browser))
+</span><span>        {
+</span><span>            browser_list_.</span><span style="color:#bf616a;">erase</span><span>(bit);
+</span><span>            </span><span style="color:#b48ead;">break</span><span>;
+</span><span>        }
+</span><span>    }
+</span><span>
+</span><span>    </span><span style="color:#b48ead;">if </span><span>(browser_list_.</span><span style="color:#bf616a;">empty</span><span>())
+</span><span>    {
+</span><span>        </span><span style="color:#65737e;">// All browser windows have closed. Quit the application message loop.
+</span><span>        </span><span style="color:#bf616a;">CefQuitMessageLoop</span><span>();
+</span><span>    }
+</span><span>}
+</span><span>
+</span><span style="color:#b48ead;">void </span><span>SimpleClient::</span><span style="color:#8fa1b3;">OnLoadError</span><span>(CefRefPtr&lt;CefBrowser&gt; </span><span style="color:#bf616a;">browser</span><span>,
+</span><span>                               CefRefPtr&lt;CefFrame&gt; </span><span style="color:#bf616a;">frame</span><span>,
+</span><span>                               ErrorCode </span><span style="color:#bf616a;">errorCode</span><span>,
+</span><span>                               </span><span style="color:#b48ead;">const</span><span> CefString&amp; </span><span style="color:#bf616a;">errorText</span><span>,
+</span><span>                               </span><span style="color:#b48ead;">const</span><span> CefString&amp; </span><span style="color:#bf616a;">failedUrl</span><span>)
+</span><span>{
+</span><span>    </span><span style="color:#bf616a;">CEF_REQUIRE_UI_THREAD</span><span>();
+</span><span>
+</span><span>    </span><span style="color:#65737e;">// Don&#39;t display an error for downloaded files.
+</span><span>    </span><span style="color:#b48ead;">if </span><span>(errorCode == ERR_ABORTED)
+</span><span>        </span><span style="color:#b48ead;">return</span><span>;
+</span><span>
+</span><span>    </span><span style="color:#65737e;">// Display a load error message using a data: URI.
+</span><span>    std::stringstream ss;
+</span><span>    ss &lt;&lt; &quot;</span><span style="color:#a3be8c;">&lt;html&gt;&lt;body bgcolor=</span><span style="color:#96b5b4;">\&quot;</span><span style="color:#a3be8c;">white</span><span style="color:#96b5b4;">\&quot;</span><span style="color:#a3be8c;">&gt;</span><span>&quot;
+</span><span>        &quot;</span><span style="color:#a3be8c;">&lt;h2&gt;Failed to load URL </span><span>&quot;
+</span><span>        &lt;&lt; std::</span><span style="color:#bf616a;">string</span><span>(failedUrl) &lt;&lt; &quot;</span><span style="color:#a3be8c;"> with error </span><span>&quot; &lt;&lt; std::</span><span style="color:#bf616a;">string</span><span>(errorText)
+</span><span>        &lt;&lt; &quot;</span><span style="color:#a3be8c;"> (</span><span>&quot; &lt;&lt; errorCode &lt;&lt; &quot;</span><span style="color:#a3be8c;">).&lt;/h2&gt;&lt;/body&gt;&lt;/html&gt;</span><span>&quot;;
+</span><span>
+</span><span>    frame-&gt;</span><span style="color:#bf616a;">LoadURL</span><span>(</span><span style="color:#bf616a;">GetDataURI</span><span>(ss.</span><span style="color:#bf616a;">str</span><span>(), &quot;</span><span style="color:#a3be8c;">text/html</span><span>&quot;));
+</span><span>}
+</span><span>
+</span><span style="color:#b48ead;">void </span><span>SimpleClient::</span><span style="color:#8fa1b3;">CloseAllBrowsers</span><span>(</span><span style="color:#b48ead;">bool </span><span style="color:#bf616a;">force_close</span><span>)
+</span><span>{
+</span><span>    </span><span style="color:#b48ead;">if </span><span>(!</span><span style="color:#bf616a;">CefCurrentlyOn</span><span>(TID_UI))
+</span><span>    {
+</span><span>        </span><span style="color:#65737e;">// Execute on the UI thread.
+</span><span>        </span><span style="color:#bf616a;">CefPostTask</span><span>(TID_UI, base::</span><span style="color:#bf616a;">Bind</span><span>(&amp;SimpleClient::CloseAllBrowsers, </span><span style="color:#bf616a;">this</span><span>,
+</span><span>                                       force_close));
+</span><span>        </span><span style="color:#b48ead;">return</span><span>;
+</span><span>    }
+</span><span>
+</span><span>    </span><span style="color:#b48ead;">if </span><span>(browser_list_.</span><span style="color:#bf616a;">empty</span><span>())
+</span><span>        </span><span style="color:#b48ead;">return</span><span>;
+</span><span>
+</span><span>    BrowserList::const_iterator it = browser_list_.</span><span style="color:#bf616a;">begin</span><span>();
+</span><span>    </span><span style="color:#b48ead;">for </span><span>(; it != browser_list_.</span><span style="color:#bf616a;">end</span><span>(); ++it)
+</span><span>        (*it)-&gt;</span><span style="color:#bf616a;">GetHost</span><span>()-&gt;</span><span style="color:#bf616a;">CloseBrowser</span><span>(force_close);
+</span><span>}
+</span></code></pre>
+<p>上述代码有重要部分为函数<code>SimpleClient::OnTitleChange</code>的实现。在该实现代码中，通过判断变量<code>use_views_</code>来决定是否使用CEF提供的视图框架，也就有了下面两种情况：</p>
+<ul>
+<li>使用了CEF提供的视图框架：在这种情况下，窗体的标题改变直接使用CEF视图框架提供的API完成修改；</li>
+<li><strong>未</strong>使用CEF提供的视图框架：在这种情况下，我们一定用了原生的窗体框架或者是第三方的（QT或者GTK+），那么就需要调用相关原生窗体的API或者第三方的API来完成窗体标题的修改。</li>
+</ul>
+<p>由于存在上面的情况2，才有了下面的simple_client_os_win.cpp的代码。（PS：上面的代码并没有实现头文件里面的PlatformTitleChange声明哟，只是调用了而已）</p>
+<pre data-lang="C++" style="background-color:#2b303b;color:#c0c5ce;" class="language-C++ "><code class="language-C++" data-lang="C++"><span style="color:#65737e;">// simple_client_os_win.cpp代码
+</span><span style="color:#b48ead;">#include </span><span>&quot;</span><span style="color:#a3be8c;">simple_client.h</span><span>&quot;
+</span><span>
+</span><span style="color:#b48ead;">#include </span><span>&lt;</span><span style="color:#a3be8c;">windows.h</span><span>&gt;
+</span><span style="color:#b48ead;">#include </span><span>&lt;</span><span style="color:#a3be8c;">string</span><span>&gt;
+</span><span>
+</span><span style="color:#b48ead;">#include </span><span>&quot;</span><span style="color:#a3be8c;">include/cef_browser.h</span><span>&quot;
+</span><span>
+</span><span style="color:#b48ead;">void </span><span>SimpleClient::</span><span style="color:#8fa1b3;">PlatformTitleChange</span><span>(CefRefPtr&lt;CefBrowser&gt; </span><span style="color:#bf616a;">browser</span><span>,
+</span><span>    </span><span style="color:#b48ead;">const</span><span> CefString&amp; </span><span style="color:#bf616a;">title</span><span>) {
+</span><span>    </span><span style="color:#65737e;">// 通过GetHost()来获取CEF浏览器对象的宿主对象（这里就是Windows原生窗体）
+</span><span>    </span><span style="color:#65737e;">// 再获取对应的窗体句柄
+</span><span>    </span><span style="color:#65737e;">// 通过#include &lt;windows.h&gt;得到的WindowsAPI完成标题修改
+</span><span>    CefWindowHandle hwnd = browser-&gt;</span><span style="color:#bf616a;">GetHost</span><span>()-&gt;</span><span style="color:#bf616a;">GetWindowHandle</span><span>();
+</span><span>    </span><span style="color:#b48ead;">if </span><span>(hwnd)
+</span><span>        </span><span style="color:#bf616a;">SetWindowText</span><span>(hwnd, std::</span><span style="color:#bf616a;">wstring</span><span>(title).</span><span style="color:#bf616a;">c_str</span><span>());
+</span><span>}
+</span></code></pre>
+<p>这段代码实际上跟特定的平台有关，这里就是Windows平台。</p>
+<ol>
+<li>通过GetHost()来获取CEF浏览器对象的宿主对象（这里就是Windows原生窗体）；</li>
+<li>再获取对应的窗体句柄；</li>
+<li>通过#include &lt;windows.h&gt;得到的WindowsAPI完成标题修改。</li>
+</ol>
+<h3 id="ru-kou-dai-ma-main-cpp">入口代码main.cpp</h3>
+<p>编写完成上述的CEF应用模块后，我们最后编写入口代码。</p>
+<pre data-lang="c++" style="background-color:#2b303b;color:#c0c5ce;" class="language-c++ "><code class="language-c++" data-lang="c++"><span style="color:#65737e;">// Copyright (c) 2013 The Chromium Embedded Framework Authors. All rights
+</span><span style="color:#65737e;">// reserved. Use of this source code is governed by a BSD-style license that
+</span><span style="color:#65737e;">// can be found in the LICENSE file.
+</span><span>
+</span><span style="color:#b48ead;">#include </span><span>&lt;</span><span style="color:#a3be8c;">windows.h</span><span>&gt;
+</span><span>
+</span><span style="color:#b48ead;">#include </span><span>&quot;</span><span style="color:#a3be8c;">include/cef_command_line.h</span><span>&quot;
+</span><span style="color:#b48ead;">#include </span><span>&quot;</span><span style="color:#a3be8c;">include/cef_sandbox_win.h</span><span>&quot;
+</span><span style="color:#b48ead;">#include </span><span>&quot;</span><span style="color:#a3be8c;">simple_app.h</span><span>&quot;
+</span><span>
+</span><span style="color:#65737e;">// When generating projects with CMake the CEF_USE_SANDBOX value will be defined
+</span><span style="color:#65737e;">// automatically if using the required compiler version. Pass -DUSE_SANDBOX=OFF
+</span><span style="color:#65737e;">// to the CMake command-line to disable use of the sandbox.
+</span><span style="color:#65737e;">// Uncomment this line to manually enable sandbox support.
+</span><span style="color:#65737e;">// #define CEF_USE_SANDBOX 1
+</span><span>
+</span><span style="color:#b48ead;">#if defined</span><span>(CEF_USE_SANDBOX)
+</span><span style="color:#65737e;">// The cef_sandbox.lib static library may not link successfully with all VS
+</span><span style="color:#65737e;">// versions.
+</span><span style="color:#b48ead;">#pragma</span><span> comment(lib, &quot;cef_sandbox.lib&quot;)
+</span><span style="color:#b48ead;">#endif
+</span><span>
+</span><span style="color:#65737e;">// Entry point function for all processes.
+</span><span style="color:#b48ead;">int </span><span>APIENTRY </span><span style="color:#8fa1b3;">wWinMain</span><span>(HINSTANCE </span><span style="color:#bf616a;">hInstance</span><span>,
+</span><span>    HINSTANCE </span><span style="color:#bf616a;">hPrevInstance</span><span>,
+</span><span>    LPTSTR </span><span style="color:#bf616a;">lpCmdLine</span><span>,
+</span><span>    </span><span style="color:#b48ead;">int </span><span style="color:#bf616a;">nCmdShow</span><span>) {
+</span><span>    </span><span style="color:#bf616a;">UNREFERENCED_PARAMETER</span><span>(hPrevInstance);
+</span><span>    </span><span style="color:#bf616a;">UNREFERENCED_PARAMETER</span><span>(lpCmdLine);
+</span><span>
+</span><span>    </span><span style="color:#65737e;">// Enable High-DPI support on Windows 7 or newer.
+</span><span>    </span><span style="color:#bf616a;">CefEnableHighDPISupport</span><span>();
+</span><span>
+</span><span>    </span><span style="color:#b48ead;">void</span><span>* sandbox_info = </span><span style="color:#d08770;">nullptr</span><span>;
+</span><span>
+</span><span style="color:#b48ead;">#if defined</span><span>(CEF_USE_SANDBOX)
+</span><span>    </span><span style="color:#65737e;">// Manage the life span of the sandbox information object. This is necessary
+</span><span>    </span><span style="color:#65737e;">// for sandbox support on Windows. See cef_sandbox_win.h for complete details.
+</span><span>    CefScopedSandboxInfo scoped_sandbox;
+</span><span>    sandbox_info = scoped_sandbox.</span><span style="color:#bf616a;">sandbox_info</span><span>();
+</span><span style="color:#b48ead;">#endif
+</span><span>
+</span><span>    </span><span style="color:#65737e;">// Provide CEF with command-line arguments.
+</span><span>    CefMainArgs </span><span style="color:#bf616a;">main_args</span><span>(hInstance);
+</span><span>
+</span><span>    </span><span style="color:#65737e;">// CEF applications have multiple sub-processes (render, plugin, GPU, etc)
+</span><span>    </span><span style="color:#65737e;">// that share the same executable. This function checks the command-line and,
+</span><span>    </span><span style="color:#65737e;">// if this is a sub-process, executes the appropriate logic.
+</span><span>    </span><span style="color:#b48ead;">int</span><span> exit_code = </span><span style="color:#bf616a;">CefExecuteProcess</span><span>(main_args, </span><span style="color:#d08770;">nullptr</span><span>, sandbox_info);
+</span><span>    </span><span style="color:#b48ead;">if </span><span>(exit_code &gt;= </span><span style="color:#d08770;">0</span><span>) {
+</span><span>        </span><span style="color:#65737e;">// The sub-process has completed so return here.
+</span><span>        </span><span style="color:#b48ead;">return</span><span> exit_code;
+</span><span>    }
+</span><span>
+</span><span>    </span><span style="color:#65737e;">// Parse command-line arguments for use in this method.
+</span><span>    CefRefPtr&lt;CefCommandLine&gt; command_line = CefCommandLine::</span><span style="color:#bf616a;">CreateCommandLine</span><span>();
+</span><span>    command_line-&gt;</span><span style="color:#bf616a;">InitFromString</span><span>(::</span><span style="color:#bf616a;">GetCommandLineW</span><span>());
+</span><span>
+</span><span>    </span><span style="color:#65737e;">// Specify CEF global settings here.
+</span><span>    CefSettings settings;
+</span><span>
+</span><span>    </span><span style="color:#b48ead;">if </span><span>(command_line-&gt;</span><span style="color:#bf616a;">HasSwitch</span><span>(&quot;</span><span style="color:#a3be8c;">enable-chrome-runtime</span><span>&quot;)) {
+</span><span>        </span><span style="color:#65737e;">// Enable experimental Chrome runtime. See issue #2969 for details.
+</span><span>        settings.</span><span style="color:#bf616a;">chrome_runtime </span><span>= </span><span style="color:#d08770;">true</span><span>;
+</span><span>    }
+</span><span>
+</span><span style="color:#b48ead;">#if</span><span> !</span><span style="color:#b48ead;">defined</span><span>(CEF_USE_SANDBOX)
+</span><span>    settings.</span><span style="color:#bf616a;">no_sandbox </span><span>= </span><span style="color:#d08770;">true</span><span>;
+</span><span style="color:#b48ead;">#endif
+</span><span>
+</span><span>    </span><span style="color:#65737e;">// SimpleApp implements application-level callbacks for the browser process.
+</span><span>    </span><span style="color:#65737e;">// It will create the first browser instance in OnContextInitialized() after
+</span><span>    </span><span style="color:#65737e;">// CEF has initialized.
+</span><span>    CefRefPtr&lt;SimpleApp&gt; </span><span style="color:#bf616a;">app</span><span>(</span><span style="color:#b48ead;">new</span><span> SimpleApp);
+</span><span>
+</span><span>    </span><span style="color:#65737e;">// Initialize CEF.
+</span><span>    </span><span style="color:#bf616a;">CefInitialize</span><span>(main_args, settings, app.</span><span style="color:#bf616a;">get</span><span>(), sandbox_info);
+</span><span>
+</span><span>    </span><span style="color:#65737e;">// Run the CEF message loop. This will block until CefQuitMessageLoop() is
+</span><span>    </span><span style="color:#65737e;">// called.
+</span><span>    </span><span style="color:#bf616a;">CefRunMessageLoop</span><span>();
+</span><span>
+</span><span>    </span><span style="color:#65737e;">// Shut down CEF.
+</span><span>    </span><span style="color:#bf616a;">CefShutdown</span><span>();
+</span><span>
+</span><span>    </span><span style="color:#b48ead;">return </span><span style="color:#d08770;">0</span><span>;
+</span><span>}
+</span></code></pre>
+<h2 id="bian-yi-yu-yun-xing">编译与运行</h2>
+<p>上述代码完成后，我们的代码结构如下：</p>
+<p><img src="https://static-res.zhen.wang/images/post/2021-01-15-write-simple-cef/files-arch.jpg" alt="" /></p>
+<p>我们右键项目使用build指令进行尝试编译，如果不出意外会看到这些内容：</p>
+<p><img src="https://static-res.zhen.wang/images/post/2021-01-15-write-simple-cef/compile-error.jpg" alt="" /></p>
+<pre style="background-color:#2b303b;color:#c0c5ce;"><code><span>error LNK2038: mismatch detected for &#39;RuntimeLibrary&#39;: value &#39;MTd_StaticDebug&#39; doesn&#39;t match value &#39;MDd_DynamicDebug&#39;
+</span></code></pre>
+<p>译为中文大意为：未检测到运行时库：<code>MTd_StaticDebug</code>无法匹配<code>MDd_DynamicDebug</code>，MTd是什么？MDd又是什么？关键字：MD、MDd、MT以及MTd。读者可以参考这篇文章深入了解：<a rel="noopener" target="_blank" href="https://www.cnblogs.com/xzabg/p/5875296.html">VS运行时 /MD、/MDd 和 /MT、/MTd之间的区别</a>。简单一点讲，我们编译出来的libcef_dll_wrapper.lib库的某个标志与我们当前编译的程序的某个标志不一致：一个是MTd一个是MDd。那么这个标志在哪儿设置呢？我们可以右键项目工程——properties——C/C++——Code Generation（代码生成）——Runtime Library中看到。</p>
+<p><img src="https://static-res.zhen.wang/images/post/2021-01-15-write-simple-cef/proj-runtime-lib.jpg" alt="" /></p>
+<p>在我们的simple项目中，VS在创建项目的时候默认使用了MDd，那么libcef_dll_wrapper.lib又是使用的什么呢？在《使用CEF（1）— 起步》文章中编译libcef_dll_wrapper.lib的项目目录下使用的是MTd。下图是再回看当时的项目使用的运行库类型：</p>
+<p><img src="https://static-res.zhen.wang/images/post/2021-01-15-write-simple-cef/wrapper-runtime-lib.jpg" alt="" /></p>
+<p>当然，具体情况也要具体判断。例如Debug与Release的不同，又或者是当时确实是使用MD(d)进行编译的，总之需要一一对应起来。这里我们修改我们的simple项目的RuntimeLibrary为对应的MTd，再次进行编译。不出意外，你会看到如下的编译成功的输出：</p>
+<pre style="background-color:#2b303b;color:#c0c5ce;"><code><span>Rebuild started...
+</span><span>1&gt;------ Rebuild All started: Project: simple-cef, Configuration: Debug x64 ------
+</span><span>1&gt;main.cpp
+</span><span>1&gt;simple_app.cpp
+</span><span>1&gt;simple_client.cpp
+</span><span>1&gt;simple_client_os_win.cpp
+</span><span>1&gt;Generating Code...
+</span><span>1&gt;simple-cef.vcxproj -&gt; D:\Projects\cef-projects\simple-cef\x64\Debug\simple-cef.exe
+</span><span>========== Rebuild All: 1 succeeded, 0 failed, 0 skipped ==========
+</span></code></pre>
+<p>于是，我们运行生成出来的exe，不出意外会有弹框报错。</p>
+<pre style="background-color:#2b303b;color:#c0c5ce;"><code><span>---------------------------
+</span><span>simple-cef.exe - 系统错误
+</span><span>---------------------------
+</span><span>由于找不到 libcef.dll，无法继续执行代码。重新安装程序可能会解决此问题。 
+</span><span>---------------------------
+</span><span>确定   
+</span><span>---------------------------
+</span></code></pre>
+<p>检查目录下发现，确实只有个孤单的可执行程序，并没有那些依赖库。此时我们需要将所有的依赖文件全部复制到运行目录下，主要有以下几个部分需要拷贝：</p>
+<ul>
+<li>Resources</li>
+</ul>
+<p><img src="https://static-res.zhen.wang/images/post/2021-01-15-write-simple-cef/cef-resources.jpg" alt="" /></p>
+<p>把<strong>Resources</strong>文件夹里面的所有文件和子文件夹复制到运行目录下。</p>
+<ul>
+<li>CEF依赖库文件</li>
+</ul>
+<p><img src="https://static-res.zhen.wang/images/post/2021-01-15-write-simple-cef/cef-runtime-dep-lib.jpg" alt="" /></p>
+<p>将上图中<strong>除了两个lib库文件之外</strong>的组件拷贝到运行目录下。</p>
+<p>此时，我们的编译出来的运行目录如下：</p>
+<p><img src="https://static-res.zhen.wang/images/post/2021-01-15-write-simple-cef/app-files-list.png" alt="" /></p>
+<p>我们再次尝试运行该simple-cef，终于能够成功打开，然而<strong>再次</strong>不出意外的话，会看到一个白屏的浏览器窗口。<strong>首先会看到标题，然后转为对应的空白</strong>：</p>
+<p><img src="https://static-res.zhen.wang/images/post/2021-01-15-write-simple-cef/title-change-and-white-screen.gif" alt="" /></p>
+<h3 id="yun-xing-wen-ti-check-failed-fallback-available-base-win-getversion-base-win-version-win8-1-vs-0">运行问题：Check failed: fallback_available == base::win::GetVersion() &gt; base::win::Version::WIN8 (1 vs. 0)</h3>
+<p>上述白屏后，还会在运行目录下会看到一个名为<code>debug.log</code>的文件，打开检查内容。</p>
+<p><img src="https://static-res.zhen.wang/images/post/2021-01-15-write-simple-cef/debug-log-error.png" alt="" /></p>
+<pre style="background-color:#2b303b;color:#c0c5ce;"><code><span>// debug.log
+</span><span>[0124/113454.346:INFO:content_main_runner_impl.cc(976)] Chrome is running in full browser mode.
+</span><span>[0124/113454.488:FATAL:dwrite_font_proxy_init_impl_win.cc(91)] Check failed: fallback_available == base::win::GetVersion() &gt; base::win::Version::WIN8 (1 vs. 0)
+</span><span>[0124/113454.545:FATAL:dwrite_font_proxy_init_impl_win.cc(91)] Check failed: fallback_available == base::win::GetVersion() &gt; base::win::Version::WIN8 (1 vs. 0)
+</span></code></pre>
+<p>该错误的关键字：CEF base::win::GetVersion() &gt; base::win::Version::WIN8。这里能够得到一个CEF官方论坛的解答：<a rel="noopener" target="_blank" href="https://magpcss.org/ceforum/viewtopic.php?t=14721&amp;start=10">CEF Forum  Check failed: fallback_available (magpcss.org)</a>。简单来说，浏览器程序无法加载manifest文件从而无法处理操作系统的版本问题。</p>
+<h4 id="jie-jue-fang-an">解决方案</h4>
+<ol>
+<li>创建manifest文件放在项目根目录下</li>
+</ol>
+<p>在<strong>项目根目录下</strong>创建一个manifest文件：<strong>simple-cef.manifest</strong></p>
+<pre style="background-color:#2b303b;color:#c0c5ce;"><code><span>&lt;?xml version=&quot;1.0&quot; encoding=&quot;utf-8&quot;?&gt;
+</span><span>&lt;assembly xmlns=&quot;urn:schemas-microsoft-com:asm.v1&quot; manifestVersion=&quot;1.0&quot;&gt;  
+</span><span>  &lt;compatibility xmlns=&quot;urn:schemas-microsoft-com:compatibility.v1&quot;&gt;  
+</span><span>    &lt;application&gt; 
+</span><span>      &lt;!--The ID below indicates application support for Windows 8.1 --&gt;  
+</span><span>      &lt;supportedOS Id=&quot;{1f676c76-80e1-4239-95bb-83d0f6d0da78}&quot;/&gt;  
+</span><span>      &lt;!-- 10.0 --&gt;  
+</span><span>      &lt;supportedOS Id=&quot;{8e0f7a12-bfb3-4fe8-b9a5-48fd50a15a9a}&quot;/&gt; 
+</span><span>    &lt;/application&gt; 
+</span><span>  &lt;/compatibility&gt; 
+</span><span>&lt;/assembly&gt;
+</span></code></pre>
+<ol start="2">
+<li>为项目添加上述manifest</li>
+</ol>
+<p>打开项目的属性，找到<strong>Manifest Tool —— Input and Output —— Additional Manifest Files</strong>，选择项目根目录下的<strong>simple-cef.manifest</strong>。</p>
+<p><img src="https://static-res.zhen.wang/images/post/2021-01-15-write-simple-cef/add-my-manifest.png" alt="" /></p>
+<p>保存后，我们再次构建项目并运行我们的simple-cef.exe，终于看到了期待已久的页面：</p>
+<p><img src="https://static-res.zhen.wang/images/post/2021-01-15-write-simple-cef/simple-cef-demo-show.gif" alt="" /></p>
+<h2 id="xie-zai-jie-wei">写在结尾</h2>
+<p>在不断的踩坑下，我们终于得到了一个网络页面，不过这并不意味着我们的使用CEF之旅就结束了，恰恰相反，通过这个Demo，我们接触到了更多的东西，有CefApp、CefClient类，有CefBrowserProcessHandler等等，这些类是干什么的？CefWindowDelegate、CefBrowserViewDelegate这里些CEF框架提供的窗体GUI代理又是怎样的概念？CEF跨平台的实现策略又是怎样的呢？问题只增不减，本人也会就着这些问题继续探索并给出总结。</p>
+<h2 id="yuan-dai-ma">源代码</h2>
+<p><a rel="noopener" target="_blank" href="https://github.com/w4ngzhen/simple-cef">w4ngzhen/simple-cef (github.com)</a></p>
+<p>PS：在改源码中，没有将上述的cef相关库以及include文件放在源码库中，因为静态库超过了大小。请读者自行编译并按照指定的方式添加。</p>
+
+    </div>
+</div>
+<script src="https://zhen.wang/libs/viewerjs@1.11.7/viewer.min.js"></script>
+<link rel="stylesheet" href="https://zhen.wang/libs/viewerjs@1.11.7/viewer.min.css"/>
+<script>
+  if (window.Viewer) {
+    document.querySelectorAll('img').forEach(img => {
+      new Viewer(img, {
+        inline: false,
+        navbar: false,
+        toolbar: {
+          zoomIn: 1,
+          zoomOut: 1,
+          reset: 1,
+          rotateLeft: 1,
+          rotateRight: 1,
+        },
+      });
+    });
+  }
+</script>
+
+
+</body>
+</html>

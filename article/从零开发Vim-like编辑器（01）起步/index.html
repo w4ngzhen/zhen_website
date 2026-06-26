@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="utf-8">
+    <meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover"
+          name="viewport">
+    
+    
+    <!-- umami web analysis -->
+    <script defer src="https://zhen.wang/libs/umami/umami.script.js"
+            data-website-id="d66cfe03-f6b3-4aa0-baf8-728700db1b09"></script>
+    
+    
+    
+    <link rel="icon" type="image/png" sizes="16x16" href="https://zhen.wang/images/blog-site-icon.svg">
+    <link rel="icon" type="image/png" sizes="32x32" href="https://zhen.wang/images/blog-site-icon.svg">
+    <title>zhen&#x27;s everything</title>
+    <link rel="stylesheet" href="https://zhen.wang/style.css">
+    
+<link rel="stylesheet" href="https://zhen.wang/article_content.css">
+<link rel="stylesheet" href="https://zhen.wang/article_markdown.css">
+
+</head>
+<body>
+
+<div id="article">
+    <header class="article-header">
+        
+<div class="base-title">
+    <a href="#" onclick="history.length > 1 ? history.back() : location.href = '/'; return false;">&LeftArrow; Back</a>
+    <h1>
+        从零开发Vim-like编辑器（01）起步
+    </h1>
+</div>
+
+    </header>
+    <p class="article-date">2025-05-28</p>
+    
+    <!-- toc -->
+    <div class="article-toc">
+        <label class="toc-title" for="toc-trigger">目录</label>
+        <input id="toc-trigger" type="checkbox" checked/>
+        <div class="toc-content">
+            <ol class="toc">
+                
+                <li class="toc-item toc-level-1">
+                    <a class="toc-link" href="https://zhen.wang/article/从零开发Vim-like编辑器（01）起步/#qian-yan">前言</a>
+                    
+                </li>
+                
+                <li class="toc-item toc-level-1">
+                    <a class="toc-link" href="https://zhen.wang/article/从零开发Vim-like编辑器（01）起步/#qian-zhi-zhun-bei">前置准备</a>
+                    
+                    <ol class="toc-child">
+                        
+                        <li class="toc-item toc-level-2">
+                            <a href="https://zhen.wang/article/从零开发Vim-like编辑器（01）起步/#ratatuide-ji-ben-shi-yong">ratatui的基本使用</a>
+                        </li>
+                        
+                        <li class="toc-item toc-level-2">
+                            <a href="https://zhen.wang/article/从零开发Vim-like编辑器（01）起步/#ratatuide-si-wei-mo-xing">ratatui的思维模型</a>
+                        </li>
+                        
+                        <li class="toc-item toc-level-2">
+                            <a href="https://zhen.wang/article/从零开发Vim-like编辑器（01）起步/#ratatuide-jin-yi-bu-shi-jian">ratatui的进一步实践</a>
+                        </li>
+                        
+                    </ol>
+                    
+                </li>
+                
+                <li class="toc-item toc-level-1">
+                    <a class="toc-link" href="https://zhen.wang/article/从零开发Vim-like编辑器（01）起步/#xie-zai-zui-hou">写在最后</a>
+                    
+                </li>
+                
+            </ol>
+        </div>
+    </div>
+    
+    <!-- real content -->
+    <div class="article-content markdown-content">
+        <h1 id="qian-yan">前言</h1>
+<p>Vim和Neovim因其独特的模态编辑和高度可定制化，被列为程序员常用的文本编辑器选项之一，与Sublime Text、VS Code、Emacs等编辑器共同丰富了开发者工具生态。就目前而言，网络上绝大多数的文章都在讲解如何为Vim、Neovim编写配置，更深入一点的文章会教大家如何开发相关的插件。但作为开发者的你是否有想过，Vim、Neovim这样amazing的编辑器是如何开发出来的，甚至更大胆一点，你是否有想过能否自己编写一款类Vim编辑器呢？</p>
+<p>本系列文章笔者将带你从零开始，基于Vim现有的功能，拆解模态编辑的实现原理，使用Rust一步步开发构建一个具备Vim基本特性的轻量级编辑器。</p>
+<h1 id="qian-zhi-zhun-bei">前置准备</h1>
+<p>"工欲善其事，必先利其器"。</p>
+<p>本系列文章所开发的Vim-like编辑器，将会运行在命令行中，以TUI的形式进行呈现。在代码编写的过程中，我们将会使用<a rel="noopener" target="_blank" href="https://ratatui.rs/">Rataui</a>这个三方库来作为最基础的TUI渲染框架。</p>
+<p><img src="https://static-res.zhen.wang/images/post/2025-05-28/010.png" alt="010" /></p>
+<p>Ratatui是一个Rust库，用于烹饪美味的TUI（终端用户界面）。它是一个轻量级库，提供了一组小部件和实用程序来构建简单或复杂的Rust TUI。作为TUI构建库，Ratatui也内建了一些<a rel="noopener" target="_blank" href="https://ratatui.rs/showcase/widgets/">基础的 UI 组件</a>，同时社区也有许多基于Ratatui开发的<a rel="noopener" target="_blank" href="https://ratatui.rs/showcase/third-party-widgets/">第三方 UI 组件</a>，上手会比较快。</p>
+<p>考虑到本文读者不一定都了解这个库，所以笔者在接下来将会简单介绍Ratatui的基本概念和基础使用，让读者对该库有一个直观的感受。同时，在后续文章介绍过程中页会根据实际的情况适当的介绍Ratatui的一些深入的内容，但考虑文章重点，不会过多讲解（不然就成了《从零开始使用Ratatui》了），因此还请笔者自行通过官方的教程学习Ratatui的使用。</p>
+<h2 id="ratatuide-ji-ben-shi-yong">ratatui的基本使用</h2>
+<p>我们首先通过官方的一个基础例子，来理解ratatui的使用思路：</p>
+<p><img src="https://static-res.zhen.wang/images/post/2025-05-28/020.png" alt="020" /></p>
+<p>这个例子中最核心部分的莫过于我们在一个<code>loop</code>循环迭代中，先调用终端（terminal）实例的<code>draw</code>方法，完成对 UI 组件的绘制，紧接着读取事件做出对应按键的逻辑响应：</p>
+<p><img src="https://static-res.zhen.wang/images/post/2025-05-28/030.png" alt="030" /></p>
+<p>其中的绘制具体流程为：</p>
+<ol>
+<li>执行终端实例的<code>draw</code>方法，传递一个方法回调，该方法入参是一个帧（Frame）实例，代表了每一次绘制的上下文</li>
+<li>调用帧实例的<code>area</code>方法获取终端为当前帧分配的的区域（Rect）</li>
+<li>调用帧实例的<code>draw</code>方法，将 UI 组件绘制到指定区域中</li>
+</ol>
+<p><img src="https://static-res.zhen.wang/images/post/2025-05-28/040.png" alt="040" /></p>
+<p>绘制环节完成后，我们调用<code>ratatui::crossterm::event::read()</code>来获取捕获到的事件消息，并针对这些事件的具体分类执行对应逻辑。</p>
+<p>读者可能很疑惑，这里的<code>ratatui::crossterm</code>是什么？要解释这个问题，我们要理解一个事实：ratatui是一个TUI渲染引擎，它对实际运行的命令行环境进行了抽象，在内容绘制层面提供了统一的API，而绘制的具体细节逻辑在其内部，通过调用实际的后端（backend）实现，进而调用底层不同的绘制逻辑。当我们调用<code>ratatui::init()</code>时，得到的是一个<strong>默认终端实例</strong>（DefaultTerminal），该默认终端实例在ratatui内部使用的是<code>crossterm</code>这个底层后端，因此，我们相对应的，需要调用ratatui内置默认依赖的<code>crossterm</code>的相关API来读取事件消息。</p>
+<p><img src="https://static-res.zhen.wang/images/post/2025-05-28/050.png" alt="050" /></p>
+<h2 id="ratatuide-si-wei-mo-xing">ratatui的思维模型</h2>
+<p>值得介绍的是，ratatui的核心采取的是<strong>立即模式渲染（Immediate Mode Rendering）</strong>，立即模式渲染是一种 UI 范例，其中每帧都会重新创建 UI。与之相对应的是保留模式渲染（Retained Mode Rendering），该模式下通常会创建一组固定的 UI 组件，并在后续的某些时刻更新其状态以达到预期的UI效果。简单来讲：</p>
+<ul>
+<li>保留模式（Retained Mode）：程序只需进行一次的 UI 组件创建，在随后过程中修改这些组件的其属性或处理组件触发的事件。</li>
+<li>即时模式（Immediate Mode）：程序根据应用程序<strong>状态</strong>每帧重新绘制 UI，UI只是对状态的渲染表达，是一个瞬时的对象。</li>
+</ul>
+<blockquote>
+<p>关于这块更多的内容，请读者自行阅读相关的文章进行了解</p>
+</blockquote>
+<p>现在，让我们再通过一个例子来理解立即模式渲染思维。假设我们要在屏幕上渲染一个光标（cursor），这个光标可以随着我们的上下左右按键移动：</p>
+<p><img src="https://static-res.zhen.wang/images/post/2025-05-28/060.gif" alt="060" /></p>
+<p>对于保留模式渲染来说，我们通常会这样做：</p>
+<ol>
+<li>创建一个光标组件实例</li>
+<li>将光标实例添加到界面上</li>
+<li>响应按键事件，修改光标的位置</li>
+</ol>
+<pre data-lang="rust" style="background-color:#2b303b;color:#c0c5ce;" class="language-rust "><code class="language-rust" data-lang="rust"><span style="color:#b48ead;">let</span><span> cursor = 创建光标(); </span><span style="color:#65737e;">// &lt;- 创建“光标”实例
+</span><span>application.屏幕.添加(cursor); </span><span style="color:#65737e;">// &lt;- 将“光标”添加到屏幕实例上
+</span><span style="color:#65737e;">// ...
+</span><span style="color:#65737e;">// 注册全局按键事件：键盘右方向键按下时，光标位置右移一个单位
+</span><span>application.onRightKeyPress = () =&gt; cursor.position.x += </span><span style="color:#d08770;">1
+</span><span>
+</span><span>application.</span><span style="color:#96b5b4;">run</span><span>(); </span><span style="color:#65737e;">// 运行程序
+</span></code></pre>
+<p>而如果是立即渲染模式的架构，cursor仅仅是具有状态的数据，我们每一次循环，都是将光标的状态读取出来，调用应用的绘图API，在对应的位置上画一个“光标”：</p>
+<pre data-lang="rust" style="background-color:#2b303b;color:#c0c5ce;" class="language-rust "><code class="language-rust" data-lang="rust"><span style="color:#b48ead;">let mut</span><span> cursor = { x: </span><span style="color:#d08770;">0</span><span>, y: </span><span style="color:#d08770;">0 </span><span>}
+</span><span style="color:#b48ead;">loop </span><span>{
+</span><span>    </span><span style="color:#96b5b4;">draw_at</span><span>(cursor.x, cursor.y, </span><span style="color:#d08770;">RED</span><span>); </span><span style="color:#65737e;">// &lt;- 每一帧读取光标的位置，在对应位置上绘制
+</span><span>    </span><span style="color:#b48ead;">if </span><span>(存在右方向键按下) {
+</span><span>        cursor.x += </span><span style="color:#d08770;">1</span><span>;
+</span><span>    }
+</span><span>}
+</span></code></pre>
+<h2 id="ratatuide-jin-yi-bu-shi-jian">ratatui的进一步实践</h2>
+<p>为了巩固这块的内容，让我们再实现一个稍微复杂的例子：渲染一个光标，我们可以通过按下空格键来切换是否激活该光标；非激活态的光标呈现白色，且不会响应方向键，激活态光标呈现蓝色，且能够根据方向键进行上下左右移动；无论是否激活，我们总是可以通过按下<code>q</code>键来退出应用。</p>
+<p>开发ratatui应用时，最重要的一步是要合理的梳理出应用中所涉及的状态。比如，为了实现上述效果，我们首先梳理出应用所具有的状态：光标的位置（position）、颜色（color）、是否激活（activated）。因此，我们编写如下的Rust结构体来描述上述的状态：</p>
+<pre data-lang="rust" style="background-color:#2b303b;color:#c0c5ce;" class="language-rust "><code class="language-rust" data-lang="rust"><span style="color:#b48ead;">struct </span><span>Cursor {
+</span><span>    </span><span style="color:#bf616a;">x</span><span>: </span><span style="color:#b48ead;">u16</span><span>,
+</span><span>    </span><span style="color:#bf616a;">y</span><span>: </span><span style="color:#b48ead;">u16</span><span>,
+</span><span>    </span><span style="color:#bf616a;">activated</span><span>: </span><span style="color:#b48ead;">bool</span><span>, </span><span style="color:#65737e;">// &lt;- 注意，因为光标的颜色与是否激活有关，这里我们简化为只记录是否激活即可
+</span><span>}
+</span></code></pre>
+<p>接下来，让我们按照三步走：初始化状态；根据状态绘制UI；响应事件修改状态。整体如下：</p>
+<p><img src="https://static-res.zhen.wang/images/post/2025-05-28/070.png" alt="070" /></p>
+<p>对于第一步初始化过程很简单：</p>
+<pre data-lang="rust" style="background-color:#2b303b;color:#c0c5ce;" class="language-rust "><code class="language-rust" data-lang="rust"><span style="color:#b48ead;">let mut</span><span> cursor = Cursor {
+</span><span>    x: </span><span style="color:#d08770;">0</span><span>,
+</span><span>    y: </span><span style="color:#d08770;">0</span><span>,
+</span><span>    activated: </span><span style="color:#d08770;">false</span><span>,
+</span><span>};
+</span></code></pre>
+<p>对于第二步根据状态绘制UI，这里我们在循环中编写如下代码：</p>
+<pre data-lang="rust" style="background-color:#2b303b;color:#c0c5ce;" class="language-rust "><code class="language-rust" data-lang="rust"><span>terminal.</span><span style="color:#96b5b4;">draw</span><span>(|</span><span style="color:#bf616a;">f</span><span>: &amp;</span><span style="color:#b48ead;">mut</span><span> Frame| {
+</span><span>    </span><span style="color:#65737e;">// 先渲染一个灰色背景
+</span><span>    f.</span><span style="color:#96b5b4;">render_widget</span><span>(Block::default().</span><span style="color:#96b5b4;">bg</span><span>(Color::Gray), f.</span><span style="color:#96b5b4;">area</span><span>());
+</span><span>    </span><span style="color:#65737e;">// 在对应位置渲染光标
+</span><span>    </span><span style="color:#b48ead;">let</span><span> color = </span><span style="color:#b48ead;">if</span><span> cursor.activated {
+</span><span>        Color::Blue
+</span><span>    } </span><span style="color:#b48ead;">else </span><span>{
+</span><span>        Color::White
+</span><span>    };
+</span><span>    f.</span><span style="color:#96b5b4;">buffer_mut</span><span>()
+</span><span>        .</span><span style="color:#96b5b4;">cell_mut</span><span>(Position::new(cursor.x, cursor.y))
+</span><span>        .</span><span style="color:#96b5b4;">unwrap</span><span>()
+</span><span>        .</span><span style="color:#96b5b4;">set_style</span><span>(Style::default().</span><span style="color:#96b5b4;">fg</span><span>(color).</span><span style="color:#96b5b4;">bg</span><span>(color));
+</span><span>})?;
+</span></code></pre>
+<p>该过程的具体逻辑为：我们首先调用Frame的render_widget方法在整个命令行界面绘制了一个灰色区块（占满了整个屏幕）；接着，根据当前光标的激活状态（<code>activated</code>）来计算出接下来要渲染的光标的颜色；最后，调用Frame的API来获取命令行屏幕缓冲区的某个位置块（Cell），在这个Cell中，我们可以填入了前面计算而来的颜色。</p>
+<p>第三步响应事件修改状态的代码如下：</p>
+<pre data-lang="rust" style="background-color:#2b303b;color:#c0c5ce;" class="language-rust "><code class="language-rust" data-lang="rust"><span style="color:#b48ead;">let</span><span> event = event::read()?;
+</span><span style="color:#b48ead;">match</span><span> event {
+</span><span>    Event::Key(KeyEvent { code, .. }) =&gt; {
+</span><span>        </span><span style="color:#b48ead;">let</span><span> activated = cursor.activated;
+</span><span>        </span><span style="color:#b48ead;">if </span><span>KeyCode::Char(&#39;</span><span style="color:#a3be8c;">q</span><span>&#39;) == code {
+</span><span>            </span><span style="color:#b48ead;">break </span><span>Ok(());
+</span><span>        } </span><span style="color:#b48ead;">else if </span><span>KeyCode::Char(&#39; &#39;) == code {
+</span><span>            cursor.activated = !activated;
+</span><span>        } </span><span style="color:#b48ead;">else if</span><span> activated {
+</span><span>            </span><span style="color:#b48ead;">match</span><span> code {
+</span><span>                KeyCode::Up =&gt; cursor.y = cursor.y.</span><span style="color:#96b5b4;">saturating_sub</span><span>(</span><span style="color:#d08770;">1</span><span>),
+</span><span>                KeyCode::Down =&gt; cursor.y = cursor.y.</span><span style="color:#96b5b4;">saturating_add</span><span>(</span><span style="color:#d08770;">1</span><span>),
+</span><span>                KeyCode::Left =&gt; cursor.x = cursor.x.</span><span style="color:#96b5b4;">saturating_sub</span><span>(</span><span style="color:#d08770;">1</span><span>),
+</span><span>                KeyCode::Right =&gt; cursor.x = cursor.x.</span><span style="color:#96b5b4;">saturating_add</span><span>(</span><span style="color:#d08770;">1</span><span>),
+</span><span>                _ =&gt; {}
+</span><span>            }
+</span><span>        }
+</span><span>    }
+</span><span>    _ =&gt; {}
+</span><span>}
+</span></code></pre>
+<blockquote>
+<p>上述代码中，调用的saturating_add、saturating_sub是Rust所提供的安全的加减值操作，避免数字因为其字节长度造成溢出。</p>
+</blockquote>
+<p>在上述代码中，我们通过响应空格键（<code>KeyCode::Char(' ')</code>）来切换光标的激活状态；通过响应<code>q</code>键退出循环；通过上下左右按键来控制光标的位置。</p>
+<p>至此，我们完成了上述例子的代码编写，运行该应用，我们可以看到对应的效果：</p>
+<p><img src="https://static-res.zhen.wang/images/post/2025-05-28/080.gif" alt="080" /></p>
+<p>该节实践代码已上传至 github gist：</p>
+<p><a rel="noopener" target="_blank" href="https://gist.github.com/w4ngzhen/96e49b5054054cab2138c976adf8c98d#file-main-rs">https://gist.github.com/w4ngzhen/96e49b5054054cab2138c976adf8c98d#file-main-rs</a></p>
+<h1 id="xie-zai-zui-hou">写在最后</h1>
+<p>本文作为本系列的开篇，还没开始涉及到vim-like编辑器的设计，主要是介绍ratatui这个库的基本的思路概念和一些基本使用。当然，就上述的内容还远远无法胜任接下来的文章，因此笔者希望读者能够仔细阅读<a rel="noopener" target="_blank" href="https://ratatui.rs/concepts/">官方的文档</a>，掌握ratatui的更多内容，这将有助于更好地理解后续文章内容。</p>
+<p>在下一篇文章，笔者将会正式搭建项目，并将详细介绍想要实现一款Vim-like编辑器所必要的一些模型设计。</p>
+
+    </div>
+</div>
+<script src="https://zhen.wang/libs/viewerjs@1.11.7/viewer.min.js"></script>
+<link rel="stylesheet" href="https://zhen.wang/libs/viewerjs@1.11.7/viewer.min.css"/>
+<script>
+  if (window.Viewer) {
+    document.querySelectorAll('img').forEach(img => {
+      new Viewer(img, {
+        inline: false,
+        navbar: false,
+        toolbar: {
+          zoomIn: 1,
+          zoomOut: 1,
+          reset: 1,
+          rotateLeft: 1,
+          rotateRight: 1,
+        },
+      });
+    });
+  }
+</script>
+
+
+</body>
+</html>
