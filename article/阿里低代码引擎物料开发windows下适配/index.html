@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="utf-8">
+    <meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover"
+          name="viewport">
+    
+    
+    <!-- umami web analysis -->
+    <script defer src="https://zhen.wang/libs/umami/umami.script.js"
+            data-website-id="d66cfe03-f6b3-4aa0-baf8-728700db1b09"></script>
+    
+    
+    
+    <link rel="icon" type="image/png" sizes="16x16" href="https://zhen.wang/images/blog-site-icon.svg">
+    <link rel="icon" type="image/png" sizes="32x32" href="https://zhen.wang/images/blog-site-icon.svg">
+    <title>zhen&#x27;s everything</title>
+    <link rel="stylesheet" href="https://zhen.wang/style.css">
+    
+<link rel="stylesheet" href="https://zhen.wang/article_content.css">
+<link rel="stylesheet" href="https://zhen.wang/article_markdown.css">
+
+</head>
+<body>
+
+<div id="article">
+    <header class="article-header">
+        
+<div class="base-title">
+    <a href="#" onclick="history.length > 1 ? history.back() : location.href = '/'; return false;">&LeftArrow; Back</a>
+    <h1>
+        阿里低代码引擎物料开发windows下路径问题临时处理
+    </h1>
+</div>
+
+    </header>
+    <p class="article-date">2022-04-22</p>
+    
+    <!-- real content -->
+    <div class="article-content markdown-content">
+        <p>阿里低代码引擎物料开发windows下路径问题临时处理</p>
+<span id="continue-reading"></span>
+<p>使用阿里低代码进行物料开发过程中，官方文档推荐使用macOS、Linux或者windows下的WSL，其原因在于<strong>物料开发脚手架</strong>在对开发组件进行物料相关内容打包的时候会将路径字符串写入到生成文件中，这个过程会使用<code>@alifd/build-plugin-lowcode</code>插件里面的脚本代码进行。而如果直接使用的windows开发，会发现生成过程会报类似如下错误：</p>
+<pre style="background-color:#2b303b;color:#c0c5ce;"><code><span>(undefined) ./.tmp/view.js
+</span><span>Module not found: Can&#39;t resolve &#39;D:Projecsmy-materials&#39; 巴拉巴拉
+</span></code></pre>
+<p>仔细分析可以看出，在对应.tmp/view.js里面，路径写的是：</p>
+<pre style="background-color:#2b303b;color:#c0c5ce;"><code><span>import xxx from &#39;D:\Projects\my-materials\meta.js&#39;
+</span><span>// 这个地方实际应该是：
+</span><span>import xxx from &#39;D:\\Projects\\my-mterials\\meta.js&#39;
+</span><span>// 由于在JS，单个\是转义符，所以D:\Projects中的\P实际上被转义了。
+</span></code></pre>
+<p>根据最新的@alifd/build-plugin-lowcode的0.3.0-beta.1，还是有同样的问。如果在windows下，通过path.join拿到路径本身没有问题，例如：</p>
+<pre style="background-color:#2b303b;color:#c0c5ce;"><code><span>path.join(&#39;A&#39;, &#39;B&#39;) =&gt; &#39;D:\A\B&#39;
+</span></code></pre>
+<p>这个路径在程序使用上没有问题，但是生成.tmp里面的文件的时候，把路径字符串写入到文件后，文件中的文本实际上是一段转义字符串。所以需要在写入文件的时候，把对应的文本进行<code>\</code>替换为<code>\\</code>。
+我这边的处理方法是：
+对@alifd/build-plugin-lowcode\index.js进行改造，适配windows路径。
+具体方案为：</p>
+<ol>
+<li>增加 const os = require('os');</li>
+<li>在<code>function getEntry(rootDir, entryPath)</code>之前加一个方法normalizePathTextForWindows：</li>
+</ol>
+<pre data-lang="js" style="background-color:#2b303b;color:#c0c5ce;" class="language-js "><code class="language-js" data-lang="js"><span style="color:#b48ead;">function </span><span style="color:#8fa1b3;">normalizePathTextForWindows</span><span>(</span><span style="color:#bf616a;">pathText</span><span>) {
+</span><span>  </span><span style="color:#b48ead;">if </span><span>(</span><span style="color:#bf616a;">os</span><span>.</span><span style="color:#8fa1b3;">platform</span><span>() === &#39;</span><span style="color:#a3be8c;">win32</span><span>&#39;) {
+</span><span>    </span><span style="color:#b48ead;">return </span><span style="color:#bf616a;">pathText</span><span>.</span><span style="color:#96b5b4;">replace</span><span>(/</span><span style="color:#96b5b4;">\\</span><span>/</span><span style="color:#b48ead;">g</span><span>, &#39;</span><span style="color:#96b5b4;">\\\\</span><span>&#39;);
+</span><span>  }
+</span><span>  </span><span style="color:#b48ead;">return </span><span style="color:#bf616a;">pathText</span><span>;
+</span><span>}
+</span></code></pre>
+<ol start="3">
+<li>修改getEntry和getScssEntry方法：</li>
+</ol>
+<pre data-lang="diff" style="background-color:#2b303b;color:#c0c5ce;" class="language-diff "><code class="language-diff" data-lang="diff"><span>function getEntry(rootDir, entryPath, needNormalizeForWindows) {
+</span><span>  if (entryPath &amp;&amp; fse.existsSync(path.resolve(rootDir, entryPath))) {
+</span><span style="color:#bf616a;">-    return path.resolve(rootDir, entryPath)
+</span><span style="color:#a3be8c;">+    return needNormalizeForWindows ? normalizePathTextForWindows(path.resolve(rootDir, entryPath)) : path.resolve(rootDir, entryPath);
+</span><span>  }
+</span><span>  for (let i = 0; i &lt; defaultEntryPaths.length; i++) {
+</span><span>    const p = path.resolve(rootDir, defaultEntryPaths[i]);
+</span><span>    if (fse.existsSync(p)) {
+</span><span style="color:#bf616a;">-      return p;
+</span><span style="color:#a3be8c;">+      return needNormalizeForWindows ? normalizePathTextForWindows(p) : p;
+</span><span>    }
+</span><span>  }
+</span><span>  return &#39;&#39;;
+</span><span>}
+</span><span>
+</span><span>function getScssEntry(rootDir, needNormalizeForWindows) {
+</span><span>  for (let i = 0; i &lt; defaultScssEntryPaths.length; i++) {
+</span><span>    const p = path.resolve(rootDir, defaultScssEntryPaths[i]);
+</span><span>    if (fse.existsSync(p)) {
+</span><span style="color:#bf616a;">-      return p;
+</span><span style="color:#a3be8c;">+      return needNormalizeForWindows ? normalizePathTextForWindows(p) : p
+</span><span>    }
+</span><span>  }
+</span><span>  return &#39;&#39;;
+</span><span>}
+</span></code></pre>
+<ol start="4">
+<li>找到getEntry和getScssEntry调用点：
+getEntry第一个调用点：</li>
+</ol>
+<pre data-lang="diff" style="background-color:#2b303b;color:#c0c5ce;" class="language-diff "><code class="language-diff" data-lang="diff"><span>  INIT_STATE = true;
+</span><span>  if (!PARSED_NPM_NAME) {
+</span><span>    PARSED_NPM_NAME = parseNpmName(package.name);
+</span><span>  }
+</span><span style="color:#bf616a;">-  const entry = getEntry(rootDir, entryPath);
+</span><span style="color:#a3be8c;">+  const entry = getEntry(rootDir, entryPath, false); 
+</span><span>// 这里要设置为false，因为下面使用entry的地方并不是要用路径字符串，所以不能normalize
+</span></code></pre>
+<p>getEntry的第二个调用点传true：</p>
+<pre data-lang="diff" style="background-color:#2b303b;color:#c0c5ce;" class="language-diff "><code class="language-diff" data-lang="diff"><span>    componentViewsExportStr = _componentViews
+</span><span>      .map((component) =&gt; {
+</span><span>        return `const ${component} = getRealComponent(${component}Data, &#39;${component}&#39;);\nexport { ${component} };`;
+</span><span>      })
+</span><span>      .join(&#39;\n&#39;);
+</span><span style="color:#bf616a;">-    componentViewsExportStr += `\nexport { default } from &#39;${getEntry(rootDir, entryPath)}&#39;;`;
+</span><span style="color:#a3be8c;">+   componentViewsExportStr += `\nexport { default } from &#39;${getEntry(rootDir, entryPath, true)}&#39;;`;
+</span><span>    componentViewsImportStr = _componentViews
+</span><span>      .map((component) =&gt; {
+</span><span>        const componentNameFolder = camel2KebabComponentName(component);
+</span><span>        const viewJsPath = path.resolve(rootDir, `${lowcodeDir}/${componentNameFolder}/view`);
+</span><span>        return `import * as ${component}Data from &#39;${viewJsPath}&#39;`;
+</span><span>      })
+</span><span>      .join(&#39;\n&#39;);
+</span></code></pre>
+<p>getEntry的第三个调用点和getScss的唯一调用点：</p>
+<pre data-lang="diff" style="background-color:#2b303b;color:#c0c5ce;" class="language-diff "><code class="language-diff" data-lang="diff"><span style="color:#a3be8c;">+  const scssEntry = getScssEntry(rootDir, true);
+</span><span style="color:#bf616a;">-  const scssEntry = getScssEntry(rootDir);
+</span><span>  const viewPath = generateEntry({
+</span><span>    template: &#39;view.js&#39;,
+</span><span>    filename: &#39;view.js&#39;,
+</span><span>    rootDir,
+</span><span>    params: {
+</span><span style="color:#bf616a;">-      entryPath: getEntry(rootDir, entryPath),
+</span><span style="color:#a3be8c;">+      entryPath: getEntry(rootDir, entryPath, true),
+</span><span>      scssImport: scssEntry ? `import &#39;${scssEntry}&#39;` : &#39;&#39;,
+</span><span>      componentViews,
+</span><span>      componentViewsExportStr,
+</span><span>      componentViewsImportStr,
+</span><span>      library,
+</span><span>      execCompile,
+</span><span>    },
+</span><span>  });
+</span><span>
+</span></code></pre>
+<p>相关讨论在：</p>
+<p><a rel="noopener" target="_blank" href="https://github.com/alibaba/lowcode-engine/issues/301">windows10 系统下 .tmp 目录内的meta.js 等文件中的路径转义符错误 · Issue #301 · alibaba/lowcode-engine (github.com)</a></p>
+<p>希望阿里可以花点时间修复吧～</p>
+
+    </div>
+</div>
+<script src="https://zhen.wang/libs/viewerjs@1.11.7/viewer.min.js"></script>
+<link rel="stylesheet" href="https://zhen.wang/libs/viewerjs@1.11.7/viewer.min.css"/>
+<script>
+  if (window.Viewer) {
+    document.querySelectorAll('img').forEach(img => {
+      new Viewer(img, {
+        inline: false,
+        navbar: false,
+        toolbar: {
+          zoomIn: 1,
+          zoomOut: 1,
+          reset: 1,
+          rotateLeft: 1,
+          rotateRight: 1,
+        },
+      });
+    });
+  }
+</script>
+
+
+</body>
+</html>

@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="utf-8">
+    <meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover"
+          name="viewport">
+    
+    
+    <!-- umami web analysis -->
+    <script defer src="https://zhen.wang/libs/umami/umami.script.js"
+            data-website-id="d66cfe03-f6b3-4aa0-baf8-728700db1b09"></script>
+    
+    
+    
+    <link rel="icon" type="image/png" sizes="16x16" href="https://zhen.wang/images/blog-site-icon.svg">
+    <link rel="icon" type="image/png" sizes="32x32" href="https://zhen.wang/images/blog-site-icon.svg">
+    <title>zhen&#x27;s everything</title>
+    <link rel="stylesheet" href="https://zhen.wang/style.css">
+    
+<link rel="stylesheet" href="https://zhen.wang/article_content.css">
+<link rel="stylesheet" href="https://zhen.wang/article_markdown.css">
+
+</head>
+<body>
+
+<div id="article">
+    <header class="article-header">
+        
+<div class="base-title">
+    <a href="#" onclick="history.length > 1 ? history.back() : location.href = '/'; return false;">&LeftArrow; Back</a>
+    <h1>
+        一文详解如何在基于webpack5的react项目中使用svg
+    </h1>
+</div>
+
+    </header>
+    <p class="article-date">2023-01-29</p>
+    
+    <!-- toc -->
+    <div class="article-toc">
+        <label class="toc-title" for="toc-trigger">目录</label>
+        <input id="toc-trigger" type="checkbox" checked/>
+        <div class="toc-content">
+            <ol class="toc">
+                
+                <li class="toc-item toc-level-1">
+                    <a class="toc-link" href="https://zhen.wang/article/一文详解如何在基于webpack5的react项目中使用svg/#htmlzhong-svgjing-dian-yong-fa">HTML中SVG经典用法</a>
+                    
+                </li>
+                
+                <li class="toc-item toc-level-1">
+                    <a class="toc-link" href="https://zhen.wang/article/一文详解如何在基于webpack5的react项目中使用svg/#reactbian-xie-svgzu-jian">React编写SVG组件</a>
+                    
+                </li>
+                
+                <li class="toc-item toc-level-1">
+                    <a class="toc-link" href="https://zhen.wang/article/一文详解如何在基于webpack5的react项目中使用svg/#svgwen-jian-zai-reactzhong-de-shi-yong-fang-shi">SVG文件在React中的使用方式</a>
+                    
+                    <ol class="toc-child">
+                        
+                        <li class="toc-item toc-level-2">
+                            <a href="https://zhen.wang/article/一文详解如何在基于webpack5的react项目中使用svg/#zu-jian-mo-shi-shi-yong">组件模式使用</a>
+                        </li>
+                        
+                        <li class="toc-item toc-level-2">
+                            <a href="https://zhen.wang/article/一文详解如何在基于webpack5的react项目中使用svg/#zi-yuan-mo-shi-shi-yong">资源模式使用</a>
+                        </li>
+                        
+                    </ol>
+                    
+                </li>
+                
+                <li class="toc-item toc-level-1">
+                    <a class="toc-link" href="https://zhen.wang/article/一文详解如何在基于webpack5的react项目中使用svg/#demodi-zhi">demo地址</a>
+                    
+                </li>
+                
+            </ol>
+        </div>
+    </div>
+    
+    <!-- real content -->
+    <div class="article-content markdown-content">
+        <p>本文主要讨论基于webpack5+TypeScript的React项目（cra、craco底层本质都是使用webpack，所以同理）在2023年的今天是如何在项目中使用svg资源的。</p>
+<span id="continue-reading"></span>
+<p>首先，假定您已经完成基于webpack5+TypeScript的React项目的搭建工作（如果您不太清楚搭建的背景，可以参考这篇笔记：<a rel="noopener" target="_blank" href="https://zhuanlan.zhihu.com/p/601013407">【个人笔记】2023年搭建基于webpack5与typescript的react项目 - 知乎 (zhihu.com)</a>）。</p>
+<h1 id="htmlzhong-svgjing-dian-yong-fa">HTML中SVG经典用法</h1>
+<p><a rel="noopener" target="_blank" href="https://developer.mozilla.org/zh-CN/docs/Web/SVG">SVG：可缩放矢量图形 | MDN (mozilla.org)</a></p>
+<p>要在一般的html中使用SVG，我们可以直接编写标签：</p>
+<pre data-lang="html" style="background-color:#2b303b;color:#c0c5ce;" class="language-html "><code class="language-html" data-lang="html"><span>&lt;!</span><span style="color:#b48ead;">DOCTYPE </span><span style="color:#d08770;">html</span><span>&gt;
+</span><span>&lt;</span><span style="color:#bf616a;">html </span><span style="color:#d08770;">lang</span><span>=&quot;</span><span style="color:#a3be8c;">en</span><span>&quot;&gt;
+</span><span>&lt;</span><span style="color:#bf616a;">head</span><span>&gt;
+</span><span>    &lt;</span><span style="color:#bf616a;">meta </span><span style="color:#d08770;">charset</span><span>=&quot;</span><span style="color:#a3be8c;">UTF-8</span><span>&quot;&gt;
+</span><span>    &lt;</span><span style="color:#bf616a;">title</span><span>&gt;Title&lt;/</span><span style="color:#bf616a;">title</span><span>&gt;
+</span><span>&lt;/</span><span style="color:#bf616a;">head</span><span>&gt;
+</span><span>&lt;</span><span style="color:#bf616a;">body</span><span>&gt;
+</span><span>&lt;</span><span style="color:#bf616a;">div </span><span style="color:#8fa1b3;">id</span><span>=&quot;</span><span style="color:#a3be8c;">app</span><span>&quot;&gt;
+</span><span>    &lt;</span><span style="color:#bf616a;">svg </span><span style="color:#d08770;">xmlns</span><span>=&quot;</span><span style="color:#a3be8c;">http://www.w3.org/2000/svg</span><span>&quot;
+</span><span>         </span><span style="color:#d08770;">viewBox</span><span>=&quot;</span><span style="color:#a3be8c;">0 0 512 512</span><span>&quot; </span><span style="color:#d08770;">width</span><span>=&quot;</span><span style="color:#a3be8c;">200</span><span>&quot; </span><span style="color:#d08770;">height</span><span>=&quot;</span><span style="color:#a3be8c;">200</span><span>&quot;&gt;
+</span><span>        &lt;</span><span style="color:#bf616a;">path </span><span style="color:#d08770;">d</span><span>=&quot;</span><span style="color:#a3be8c;">M256 32C114.6 32 0 125.1 0 240c0 47.6 19.9 91.2 52.9 126.3C38 405.7 7 439.1 6.5 439.5c-6.6 7-8.4 17.2-4.6 26S14.4 480 24 480c61.5 0 110-25.7 139.1-46.3C192 442.8 223.2 448 256 448c141.4 0 256-93.1 256-208S397.4 32 256 32zm0 368c-26.7 0-53.1-4.1-78.4-12.1l-22.7-7.2-19.5 13.8c-14.3 10.1-33.9 21.4-57.5 29 7.3-12.1 14.4-25.7 19.9-40.2l10.6-28.1-20.6-21.8C69.7 314.1 48 282.2 48 240c0-88.2 93.3-160 208-160s208 71.8 208 160-93.3 160-208 160z</span><span>&quot;/&gt;
+</span><span>    &lt;/</span><span style="color:#bf616a;">svg</span><span>&gt;
+</span><span>&lt;/</span><span style="color:#bf616a;">div</span><span>&gt;
+</span><span>&lt;/</span><span style="color:#bf616a;">body</span><span>&gt;
+</span><span>&lt;/</span><span style="color:#bf616a;">html</span><span>&gt;
+</span></code></pre>
+<p><img src="https://static-res.zhen.wang/images/post/2023-01-29/010-html-svg-usecase.png" alt="010-html-svg-usecase" /></p>
+<h1 id="reactbian-xie-svgzu-jian">React编写SVG组件</h1>
+<p>在React中，React的jsx标签与HTML中的标签几乎是一一对应的，我们可以通过编写jsx来描述组件。所以不难想到，我们可以使用svg以及与其关联的jsx标签（譬如<code>&lt;path&gt;</code>、<code>&lt;g&gt;</code>等）来手写一个React的SVG组件：</p>
+<pre data-lang="tsx" style="background-color:#2b303b;color:#c0c5ce;" class="language-tsx "><code class="language-tsx" data-lang="tsx"><span style="color:#b48ead;">export const </span><span style="color:#8fa1b3;">IconComment </span><span>= () </span><span style="color:#b48ead;">=&gt; </span><span>{
+</span><span>    </span><span style="color:#b48ead;">return </span><span>(
+</span><span>        &lt;</span><span style="color:#bf616a;">svg </span><span style="color:#d08770;">xmlns</span><span>=&quot;</span><span style="color:#a3be8c;">http://www.w3.org/2000/svg</span><span>&quot;
+</span><span>             </span><span style="color:#d08770;">viewBox</span><span>=&quot;</span><span style="color:#a3be8c;">0 0 512 512</span><span>&quot;
+</span><span>             </span><span style="color:#d08770;">width</span><span>=&quot;</span><span style="color:#a3be8c;">200</span><span>&quot;
+</span><span>             </span><span style="color:#d08770;">height</span><span>=&quot;</span><span style="color:#a3be8c;">200</span><span>&quot;&gt;
+</span><span>            &lt;</span><span style="color:#bf616a;">path
+</span><span>                </span><span style="color:#d08770;">d</span><span>=&quot;</span><span style="color:#a3be8c;">M256 32C114.6 32 0 125.1 0 240c0 47.6 19.9 91.2 52.9 126.3C38 405.7 7 439.1 6.5 439.5c-6.6 7-8.4 17.2-4.6 26S14.4 480 24 480c61.5 0 110-25.7 139.1-46.3C192 442.8 223.2 448 256 448c141.4 0 256-93.1 256-208S397.4 32 256 32zm0 368c-26.7 0-53.1-4.1-78.4-12.1l-22.7-7.2-19.5 13.8c-14.3 10.1-33.9 21.4-57.5 29 7.3-12.1 14.4-25.7 19.9-40.2l10.6-28.1-20.6-21.8C69.7 314.1 48 282.2 48 240c0-88.2 93.3-160 208-160s208 71.8 208 160-93.3 160-208 160z</span><span>&quot;/&gt;
+</span><span>        &lt;/</span><span style="color:#bf616a;">svg</span><span>&gt;
+</span><span>    );
+</span><span>}
+</span></code></pre>
+<p>这个IconComment就是一个普通的React组件，编写完成后我们就可以在需要使用的地方引入了：</p>
+<p><img src="https://static-res.zhen.wang/images/post/2023-01-29/020-svg-react-component-usecase.png" alt="020-svg-react-component-usecase" /></p>
+<p>效果如下：</p>
+<p><img src="https://static-res.zhen.wang/images/post/2023-01-29/030-svg-react-component-display.png" alt="030-svg-react-component-display" /></p>
+<h1 id="svgwen-jian-zai-reactzhong-de-shi-yong-fang-shi">SVG文件在React中的使用方式</h1>
+<h2 id="zu-jian-mo-shi-shi-yong">组件模式使用</h2>
+<p>上面我们讲到了如何编写一个svg组件，但一般来说，我们都会让设计出svg资源，然后存放在项目某个目录下并进行使用。我们当然可以把设计出的svg的内容复制到我们的项目中，以组件的方式来使用：</p>
+<p><img src="https://static-res.zhen.wang/images/post/2023-01-29/040-copy-svg-content-to-react-component.png" alt="040-copy-svg-content-to-react-component" /></p>
+<p>但是每次都需要拷贝一个又一个的组件当然是一件很麻烦的事情，在webpack中我们使用svg资源的时候，其实更希望如同图片资源一样以模块的形式引入（import或者是require）并使用，就像下面一样：</p>
+<p><img src="https://static-res.zhen.wang/images/post/2023-01-29/050-import-svg-component-flow.png" alt="050-import-svg-component-flow" /></p>
+<p>如果要达到上面的目的，我们首先需要弄清楚一件事情，那就是咱们"import"的"<strong>IconAbc</strong>"到底是个什么？通过上面的代码<strong>反推</strong>，我们很容易回答，IconAbc肯定需要是一个React组件（函数组件或类组件）。</p>
+<p>了解webpack的同学都知道，webpack可以通过loader，来处理一个资源在导入的时候会变成什么。但现在在webpack配置中，我们先不添加任何关于svg模块的处理loader，不出意外肯定会报错：</p>
+<p><img src="https://static-res.zhen.wang/images/post/2023-01-29/060-import-svg-without-loader.png" alt="060-import-svg-without-loader" /></p>
+<blockquote>
+<p>ERROR in ./src/icon-comment.svg 1:0
+Module parse failed: Unexpected token (1:0)
+You may need an appropriate loader to handle this file type, currently no loaders are configured to process this file. See https://webpack.js.org/concepts#loaders</p>
+<p>译文：您可能需要适当的加载程序（loader）来处理此文件类型，目前没有配置加载程序来处理此文件。请参阅 https://webpack.js.org/concepts#loaders</p>
+</blockquote>
+<p>问题我们已经很清楚了webpack无法找到处理svg模块的loader，那么现在的解决方案是什么呢？我们可以使用<code>svgr</code>提供的配合webpack的loader（<a rel="noopener" target="_blank" href="https://react-svgr.com/docs/webpack/">Webpack - SVGR (react-svgr.com)</a>）就可以完成这个任务。</p>
+<p>首先安装必要的依赖：<code>yarn add -D @svgr/webpack</code>；</p>
+<p>然后，配置webpack处理svg文件：</p>
+<pre data-lang="diff" style="background-color:#2b303b;color:#c0c5ce;" class="language-diff "><code class="language-diff" data-lang="diff"><span>module.exports = {
+</span><span>    ... ...
+</span><span>    module: {
+</span><span>        rules: [
+</span><span>            {
+</span><span>                test: /\.tsx?/,
+</span><span>                use: [
+</span><span>                    &#39;babel-loader&#39;
+</span><span>                ],
+</span><span>                exclude: /node_moudles/
+</span><span>            },
+</span><span>            ... ...
+</span><span style="color:#a3be8c;">+           {
+</span><span style="color:#a3be8c;">+               test: /\.svg$/,
+</span><span style="color:#a3be8c;">+               use: [&#39;@svgr/webpack&#39;]
+</span><span style="color:#a3be8c;">+           }
+</span><span>        ]
+</span><span>    },
+</span><span>    ... ...
+</span><span>}
+</span></code></pre>
+<p>完成配置以后，重新经过webpack编译打包，运行后会看到控制台的输出：</p>
+<p><img src="https://static-res.zhen.wang/images/post/2023-01-29/070-import-svg-by-svgr.png" alt="070-import-svg-by-svgr" /></p>
+<ul>
+<li>效果1：我们通过console.log输出的IconComment是一个React组件纯函数。</li>
+<li>效果2：代码中我们使用<code>&lt;IconComment/&gt;</code>在屏幕上展示出来了。</li>
+</ul>
+<blockquote>
+<p>PS：上图中import报错暂时可以不用关心，是IDE类型检查的语法提示，webpack打包是没有问题的，想要深入了解，可以参考：<a rel="noopener" target="_blank" href="https://zhuanlan.zhihu.com/p/561186916">【长文详解】TypeScript与Babel、webpack的关系以及IDE对TS的类型检查 - 知乎 (zhihu.com)</a></p>
+</blockquote>
+<p>回顾整个过程，我们可以用下面的图来描述这个过程：</p>
+<p><img src="https://static-res.zhen.wang/images/post/2023-01-29/080-svgrwebpack-handle-flow.png" alt="080-svgrwebpack-handle-flow" /></p>
+<h2 id="zi-yuan-mo-shi-shi-yong">资源模式使用</h2>
+<p>当然，我们有的时候并不想按照React组件的使用。例如，svg同样可以作为一些元素的背景，这个时候我们需要把svg是为类似于图片一样的资源，就像下面的方式：</p>
+<p><img src="https://static-res.zhen.wang/images/post/2023-01-29/090-use-svg-by-url.png" alt="090-use-svg-by-url" /></p>
+<p>如果svg的loader配置保持不变，还是<code>@svgr/webpack</code>，我们会看到没有起效果，并且，查看对应生成css样式文件，我们可以看到对应的<code>url('./icon-comment.svg')</code>被编译为了<code>url(8ed4ed501566520a5cd0.svg)</code>：</p>
+<p><img src="https://static-res.zhen.wang/images/post/2023-01-29/100-svg-url-result.png" alt="100-svg-url-result" /></p>
+<p>这个<code>8ed4ed501566520a5cd0.svg</code>是什么呢？可能看起来还有点懵，我们尝试打包编译项目，看一下编译后的产物就知道了：</p>
+<p><img src="https://static-res.zhen.wang/images/post/2023-01-29/110-build-dist-svg.png" alt="110-build-dist-svg" /></p>
+<p>通过上图的结果可知，很明显svg在这种场景下依然被<code>@svgr/webpack</code>这个loader处理为了React组件，又因为咱们是在less/css中引用这个svg，loader内部将这种场景回退到了文件资源存放了。</p>
+<p>现在，我们希望webpack在处理这种场景的时候，还是以普通资源的方式进行；同时，在React代码中依然能够将svg资源以组件的形式被引入。好在webpack支持这样的配置：</p>
+<pre data-lang="js" style="background-color:#2b303b;color:#c0c5ce;" class="language-js "><code class="language-js" data-lang="js"><span>module.exports = {
+</span><span>    ... ...
+</span><span>    module: {
+</span><span>        rules: [
+</span><span>            ... ...
+</span><span>            {
+</span><span>                </span><span style="color:#65737e;">// 引用的资源如果是 &#39;${svg-path}/icon-comment.svg?abc&#39;
+</span><span>                test: /</span><span style="color:#96b5b4;">\.svg</span><span style="color:#b48ead;">$</span><span>/,
+</span><span>                resourceQuery: /</span><span style="color:#96b5b4;">abc</span><span>/,
+</span><span>                </span><span style="color:#65737e;">// 以webpack的资源形式加载（普通资源文件、base64等）
+</span><span>                type: &#39;</span><span style="color:#a3be8c;">asset</span><span>&#39;,
+</span><span>            },
+</span><span>            {
+</span><span>                </span><span style="color:#65737e;">// 除了上面的匹配规则，我们都按照React组件来使用
+</span><span>                test: /</span><span style="color:#96b5b4;">\.svg</span><span style="color:#b48ead;">$</span><span>/,
+</span><span>                resourceQuery: {not: [/</span><span style="color:#96b5b4;">abc</span><span>/]},
+</span><span>                use: [&#39;</span><span style="color:#a3be8c;">@svgr/webpack</span><span>&#39;]
+</span><span>            }
+</span><span>        ]
+</span><span>    },
+</span><span>    ... ...
+</span><span>}
+</span></code></pre>
+<blockquote>
+<p>webpack5中的 type: "assets" 是什么？可以看这篇文章：</p>
+<p><a rel="noopener" target="_blank" href="https://webpack.docschina.org/guides/asset-modules/">资源模块 | webpack 中文文档 (docschina.org)</a></p>
+</blockquote>
+<p>在上述配置中，我们都将匹配svg资源的引用，不同的是，如果这个引用路径带上url query，则使用webpack5的asset资源模块来处理；否则，调用@svgr/webpack来将其转换为React组件。</p>
+<p>完成上述的配置以后，我们适当的修改代码，如下所示：</p>
+<p><img src="https://static-res.zhen.wang/images/post/2023-01-29/120-code-show-svg-usecase.png" alt="120-code-show-svg-usecase" /></p>
+<p>关于关键代码的解释：</p>
+<ol>
+<li>index.tsx第三行和第四行我们均引入了<code>./icon-comment.svg</code>模块，不同的是第四行的引入路径我们还添加了与webpac配置中保持一致的url query = "abc"。同时，在下面我们分别打印了IconComment和IconCommentUrl。</li>
+<li>在index.module.less中，<code>.app</code>样式中，我们添加的背景也使用<code>./icon-comment.svg</code>，也添加了url query = "abc"。</li>
+</ol>
+<p>代码运行以后，我们首先从UI上能够看到效果：</p>
+<p><img src="https://static-res.zhen.wang/images/post/2023-01-29/130-svg-usecase-ui-display.png" alt="130-svg-usecase-ui-display" /></p>
+<p>其次，从控制台也能看到对应的IconComment就是React函数组件；IconComment是svg资源的base64 DataUrl：</p>
+<p><img src="https://static-res.zhen.wang/images/post/2023-01-29/140-svg-usecase-console-output.png" alt="140-svg-usecase-console-output" /></p>
+<h1 id="demodi-zhi">demo地址</h1>
+<p>本文相关demo已提交至webpack5-react-demo的svg_use_case分支，供读者参考：</p>
+<p><a rel="noopener" target="_blank" href="https://github.com/w4ngzhen/webpack5-react-demo/tree/svg_use_case">w4ngzhen/webpack5-react-demo at svg_use_case (github.com)</a></p>
+
+    </div>
+</div>
+<script src="https://zhen.wang/libs/viewerjs@1.11.7/viewer.min.js"></script>
+<link rel="stylesheet" href="https://zhen.wang/libs/viewerjs@1.11.7/viewer.min.css"/>
+<script>
+  if (window.Viewer) {
+    document.querySelectorAll('img').forEach(img => {
+      new Viewer(img, {
+        inline: false,
+        navbar: false,
+        toolbar: {
+          zoomIn: 1,
+          zoomOut: 1,
+          reset: 1,
+          rotateLeft: 1,
+          rotateRight: 1,
+        },
+      });
+    });
+  }
+</script>
+
+
+</body>
+</html>

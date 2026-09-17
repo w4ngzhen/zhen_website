@@ -1,0 +1,341 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="utf-8">
+    <meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover"
+          name="viewport">
+    
+    
+    <!-- umami web analysis -->
+    <script defer src="https://zhen.wang/libs/umami/umami.script.js"
+            data-website-id="d66cfe03-f6b3-4aa0-baf8-728700db1b09"></script>
+    
+    
+    
+    <link rel="icon" type="image/png" sizes="16x16" href="https://zhen.wang/images/blog-site-icon.svg">
+    <link rel="icon" type="image/png" sizes="32x32" href="https://zhen.wang/images/blog-site-icon.svg">
+    <title>zhen&#x27;s everything</title>
+    <link rel="stylesheet" href="https://zhen.wang/style.css">
+    
+<link rel="stylesheet" href="https://zhen.wang/article_content.css">
+<link rel="stylesheet" href="https://zhen.wang/article_markdown.css">
+
+</head>
+<body>
+
+<div id="article">
+    <header class="article-header">
+        
+<div class="base-title">
+    <a href="#" onclick="history.length > 1 ? history.back() : location.href = '/'; return false;">&LeftArrow; Back</a>
+    <h1>
+        从源码解析Electron的安装为什么这么慢
+    </h1>
+</div>
+
+    </header>
+    <p class="article-date">2021-02-01</p>
+    
+    <!-- toc -->
+    <div class="article-toc">
+        <label class="toc-title" for="toc-trigger">目录</label>
+        <input id="toc-trigger" type="checkbox" checked/>
+        <div class="toc-content">
+            <ol class="toc">
+                
+                <li class="toc-item toc-level-1">
+                    <a class="toc-link" href="https://zhen.wang/article/从源码解析Electron的安装为什么这么慢/#qian-yan">前言</a>
+                    
+                </li>
+                
+                <li class="toc-item toc-level-1">
+                    <a class="toc-link" href="https://zhen.wang/article/从源码解析Electron的安装为什么这么慢/#an-zhuang-electron">安装Electron</a>
+                    
+                </li>
+                
+                <li class="toc-item toc-level-1">
+                    <a class="toc-link" href="https://zhen.wang/article/从源码解析Electron的安装为什么这么慢/#shen-ru-xia-zai-xi-jie">深入下载细节</a>
+                    
+                    <ol class="toc-child">
+                        
+                        <li class="toc-item toc-level-2">
+                            <a href="https://zhen.wang/article/从源码解析Electron的安装为什么这么慢/#yuan-duan-xia-zai-de-url">远端下载的URL</a>
+                        </li>
+                        
+                        <li class="toc-item toc-level-2">
+                            <a href="https://zhen.wang/article/从源码解析Electron的安装为什么这么慢/#ben-di-huan-cun-ji-zhi">本地缓存机制</a>
+                        </li>
+                        
+                    </ol>
+                    
+                </li>
+                
+                <li class="toc-item toc-level-1">
+                    <a class="toc-link" href="https://zhen.wang/article/从源码解析Electron的安装为什么这么慢/#fu-lu-electron-get-guan-fang-wikifan-yi">附录：@electron&#x2F;get 官方Wiki翻译</a>
+                    
+                    <ol class="toc-child">
+                        
+                        <li class="toc-item toc-level-2">
+                            <a href="https://zhen.wang/article/从源码解析Electron的安装为什么这么慢/#shi-yong">使用</a>
+                        </li>
+                        
+                        <li class="toc-item toc-level-2">
+                            <a href="https://zhen.wang/article/从源码解析Electron的安装为什么这么慢/#ta-shi-ru-he-yun-xing-de">它是如何运行的</a>
+                        </li>
+                        
+                    </ol>
+                    
+                </li>
+                
+            </ol>
+        </div>
+    </div>
+    
+    <!-- real content -->
+    <div class="article-content markdown-content">
+        <h1 id="qian-yan">前言</h1>
+<p>Electron作为一款跨平台的桌面应用端解决方案已经风靡全球。作为开发者，我们几乎不用关心与操作系统的交互，直接通过Web前端技术与Electron提供的API就可以完成桌面应用端的开发。</p>
+<p>然而，为什么国内使用Electron的踩坑文章数不胜数，主要原因是Electron为了支持跨平台，为不同的操作系统平台进行了适配，将chromium内核与node集成到了一起，屏蔽了底层操作系统的细节，所以在不同的平台上有着不同的二进制基座。在开发的过程中，我们必须要下载对应的平台的基座，才能正常开发。也就是说，我们<code>npm install electron -D</code>的时候，一定是下载了Electron的二进制基座的。那么这个下载的过程在哪里？为什么速度这么慢呢？本文将通过Electron的安装源码一一说明。</p>
+<span id="continue-reading"></span><h1 id="an-zhuang-electron">安装Electron</h1>
+<p>在安装之前，我们先模拟一下没有配置任何关于Electron二进制镜像的npm配置文件，在<code>~/.npmrc</code>里面，只有一些默认的配置：</p>
+<pre style="background-color:#2b303b;color:#c0c5ce;"><code><span># ~/.npmrc文件
+</span><span>registry=https://registry.npm.taobao.org/
+</span><span>prefix=D:\Programs\nodejs\global_modules
+</span><span>cache=D:\Programs\nodejs\cache_modules
+</span><span>python=D:\Programs\Python39\python.exe
+</span></code></pre>
+<p>然后，创建一个名为<code>electron-install-example</code>的文件夹作为本此测试的Demo项目目录，并在<strong>进入</strong>该目录后执行<code>npm init</code>初始化node项目。</p>
+<p>最后，使用命令行安装Electron：<code>npm install electron -D</code>。在短暂的npm包安装后，我们会发现会卡在一个地方：</p>
+<p><img src="https://static-res.zhen.wang/images/post/2021-02-01-install-electron/electron-postinstall.jpg" alt="" /></p>
+<p>这时候，很多开发者就会开始在网络上搜索：'安装Electron卡住'，并且也很容易得到解决方案：</p>
+<blockquote>
+<p>在<code>~/.npmrc</code>文件中，单独设置Electron的镜像<code>electron_mirror="https://npm.taobao.org/mirrors/electron/"</code></p>
+</blockquote>
+<p>于是我们按照搜来的解决方案重新配置我们的<code>.npmrc</code>文件：</p>
+<pre style="background-color:#2b303b;color:#c0c5ce;"><code><span># ~/.npmrc文件
+</span><span>registry=https://registry.npm.taobao.org/
+</span><span>prefix=D:\Programs\nodejs\global_modules
+</span><span>cache=D:\Programs\nodejs\cache_modules
+</span><span>python=D:\Programs\Python39\python.exe
+</span><span># 单独设置Electron的镜像
+</span><span>electron_mirror=&quot;https://npm.taobao.org/mirrors/electron/&quot; 
+</span></code></pre>
+<p>设置完成后，重新进行<code>npm install</code>，发现能够很快完成下载并继续开发。通过本文，我们深入细节，看看为什么Electron设置了单独的镜像后，就能够正常且快速完成下载安装。</p>
+<h1 id="shen-ru-xia-zai-xi-jie">深入下载细节</h1>
+<p>进入<code>项目根目录下/node_modules/electron/</code>（后续除特殊情况外，提到的目录路径都是统一相对于项目根目录）目录中，查看package.json文件中的<strong>scripts</strong>脚本节点：</p>
+<p><img src="https://static-res.zhen.wang/images/post/2021-02-01-install-electron/electron-pkgjson.jpg" alt="" /></p>
+<p>了解npm的朋友们知道，<code>postinstall</code>中的脚本会在npm包完成安装后执行。</p>
+<p>也就是说，<code>npm install -D electron</code>完成以后，会在<code>node_modules/electron</code>目录中立刻执行<code>node install.js</code>。所以，我们进一步查看install.js文件，看看它到底执行了什么。核心代码如下：</p>
+<p><img src="https://static-res.zhen.wang/images/post/2021-02-01-install-electron/download-electron-code.jpg" alt="" /></p>
+<p>代码特别容易理解：在没有缓存文件的时候，会使用<code>@electron/get</code>提供的<code>downloadArtifact</code>函数，进行Electron二进制制品的下载。</p>
+<p>于是，我们又将目标转移到<code>@electron/get</code>。这是个什么东西呢？查询官方仓库：<a rel="noopener" target="_blank" href="https://github.com/electron/get">官方仓库</a>，就能够大概知道该工具的功能了：提供一定的参数来向远端下载文件。</p>
+<p>找到<code>@electron/get</code>的模块入口<code>node_modules/@electron/get/dist/cjs/index.js</code>，也很容易从中找到<code>downloadArtifact</code>的函数定义：</p>
+<p><img src="https://static-res.zhen.wang/images/post/2021-02-01-install-electron/where-is-downloadArtifact.jpg" alt="" /></p>
+<p>该函数的文档：下载Electron发行制品，并且返回下载后的制品的绝对路径。而函数内部主要流程如下：</p>
+<p><img src="https://static-res.zhen.wang/images/post/2021-02-01-install-electron/func-flow.jpg" alt="" /></p>
+<ul>
+<li>
+<p>解析要下载的制品对应的操作系统和平台。例如是Windows还是Linux，架构是x86还是AMD64。</p>
+</li>
+<li>
+<p>解析要下载的制品的版本。</p>
+</li>
+<li>
+<p>解析要下载的制品的具体文件名。例如要下载Windows下的64位的Electron制品，那么默认文件名称是：<code>electron-v11.0.2-win32-x64.zip</code></p>
+</li>
+<li>
+<p>解析要下载的制品所在的远端URL是多少（与本文相关的重点）。</p>
+</li>
+<li>
+<p>处理本地缓存。</p>
+</li>
+</ul>
+<p>本文主要解析下载以及从本地缓存制品两个环节。</p>
+<h2 id="yuan-duan-xia-zai-de-url">远端下载的URL</h2>
+<p>从上面的源码图中，我们会看到远端的URL来自于<code>artifact_utils_1.getArtifactRemoteURL(artifactDetails)</code>这个的返回，而该函数在<code>@electron/get/dist/cjs/artifact-utils.js</code>中进行定义：</p>
+<p><img src="https://static-res.zhen.wang/images/post/2021-02-01-install-electron/getArtifactRemoteURL.jpg" alt="" /></p>
+<p>该函数的定义也不难，主要流程如下：解析得到<code>base</code>变量，解析得到<code>path</code>变量，解析得到<code>file</code>变量，组合为<code>${base}${path}/${file}</code>。当然，你也可以在<code>mirrorOptions</code>中定义<code>resolveAssetURL</code>函数来返回自定义的地址。</p>
+<p>在上面的处理流程中，能够看到一个频繁出现的函数：<code>mirroVar</code>。该函数也在该文件中定义，其函数定义如下：</p>
+<pre data-lang="js" style="background-color:#2b303b;color:#c0c5ce;" class="language-js "><code class="language-js" data-lang="js"><span style="color:#b48ead;">function </span><span style="color:#8fa1b3;">mirrorVar</span><span>(</span><span style="color:#bf616a;">name</span><span>, </span><span style="color:#bf616a;">options</span><span>, </span><span style="color:#bf616a;">defaultValue</span><span>) {
+</span><span>    </span><span style="color:#65737e;">// Convert camelCase to camel_case for env var reading
+</span><span>    </span><span style="color:#b48ead;">const </span><span style="color:#bf616a;">lowerName </span><span>= </span><span style="color:#bf616a;">name</span><span>.</span><span style="color:#96b5b4;">replace</span><span>(/</span><span style="color:#96b5b4;">(</span><span style="color:#d08770;">[a-z]</span><span style="color:#96b5b4;">)(</span><span style="color:#d08770;">[A-Z]</span><span style="color:#96b5b4;">)</span><span>/</span><span style="color:#b48ead;">g</span><span>, (</span><span style="color:#bf616a;">_</span><span>, </span><span style="color:#bf616a;">a</span><span>, </span><span style="color:#bf616a;">b</span><span>) </span><span style="color:#b48ead;">=&gt; </span><span>`</span><span style="color:#a3be8c;">${</span><span style="color:#bf616a;">a</span><span style="color:#a3be8c;">}_${</span><span style="color:#bf616a;">b</span><span style="color:#a3be8c;">}</span><span>`).</span><span style="color:#96b5b4;">toLowerCase</span><span>();
+</span><span>    </span><span style="color:#b48ead;">return </span><span>(process.env[`</span><span style="color:#a3be8c;">NPM_CONFIG_ELECTRON_${</span><span style="color:#bf616a;">lowerName</span><span style="color:#a3be8c;">.</span><span style="color:#96b5b4;">toUpperCase</span><span style="color:#a3be8c;">()}</span><span>`] ||
+</span><span>        process.env[`</span><span style="color:#a3be8c;">npm_config_electron_${</span><span style="color:#bf616a;">lowerName</span><span style="color:#a3be8c;">}</span><span>`] ||
+</span><span>        process.env[`</span><span style="color:#a3be8c;">npm_package_config_electron_${</span><span style="color:#bf616a;">lowerName</span><span style="color:#a3be8c;">}</span><span>`] ||
+</span><span>        process.env[`</span><span style="color:#a3be8c;">ELECTRON_${</span><span style="color:#bf616a;">lowerName</span><span style="color:#a3be8c;">.</span><span style="color:#96b5b4;">toUpperCase</span><span style="color:#a3be8c;">()}</span><span>`] ||
+</span><span>        </span><span style="color:#bf616a;">options</span><span>[</span><span style="color:#bf616a;">name</span><span>] ||
+</span><span>        </span><span style="color:#bf616a;">defaultValue</span><span>);
+</span><span>}
+</span></code></pre>
+<p>该函数主要返回参数<code>name</code>相关的变量值，以<code>name = 'mirror'</code>为例，获取过程为：</p>
+<p><code>customDir</code>进行下划线分割转换，得到<code>const lowerName = 'mirror'</code>（name为'customDir'则转换为'custom_dir'）。</p>
+<p>依次检查如下环境变量值：</p>
+<ol>
+<li>NPM_CONFIG_ELECTRON_MIRROR</li>
+<li>npm_config_electron_mirror</li>
+<li>npm_package_config_electron_mirror</li>
+<li>ELECTRON_MIRROR</li>
+<li>options['mirror']</li>
+</ol>
+<p>上述任意变量存在值则直接使用，否则，使用默认值<code>defaultValue</code>。</p>
+<p>读到这里，也许有读者疑惑了，我明明是在<code>.npmrc</code>文件中配置的<code>ELECTRON_MIRROR</code>变量，而这里读取的明明是环境变量里面的值，怎么会有呢？如果直接使用node作为入口，那么确实不会有这些变量，但是通过npm运行就不一样了。这里用一个小例子来说明。</p>
+<p>首先在一个node项目中编写一个脚本env-test.js：</p>
+<pre data-lang="javascript" style="background-color:#2b303b;color:#c0c5ce;" class="language-javascript "><code class="language-javascript" data-lang="javascript"><span style="color:#ebcb8b;">console</span><span>.</span><span style="color:#96b5b4;">log</span><span>(process.env);
+</span></code></pre>
+<p>我们通过使用node运行该js脚本：</p>
+<pre style="background-color:#2b303b;color:#c0c5ce;"><code><span>node env-test.js
+</span></code></pre>
+<p>看到命令行的输出，只会有当前机器的环境变量：</p>
+<p><img src="https://static-res.zhen.wang/images/post/2021-02-01-install-electron/just-env.jpg" alt="" /></p>
+<p>但是一旦通过npm进行运行，又会不一样：</p>
+<p><img src="https://static-res.zhen.wang/images/post/2021-02-01-install-electron/run-with-npm.jpg" alt="" /></p>
+<p>运行命令<code>npm run dev</code>，会得到如下的结果，这里本人使用IDEA的断掉调试，会更加清晰的看到env的值：</p>
+<p><img src="https://static-res.zhen.wang/images/post/2021-02-01-install-electron/npm-env.jpg" alt="" /></p>
+<p>通过<code>npm run</code>的方式，我们发现我们在<code>~/.npmrc</code>文件中配置的一些参数，都能在这里得到，并且是以<code>npm_config_</code>作为开头的。可能还有读者有疑惑，上面读取的变量，都是同意大小写的，这里是<code>npm_config_ELECTRON_MIRROR</code>，能读取到吗？事实上，env的读取是忽略大小写的：</p>
+<p><img src="https://static-res.zhen.wang/images/post/2021-02-01-install-electron/proc-env-ignore-case.jpg" alt="" /></p>
+<p>综合目前的研究，相信读者已经清楚了为什么通过配置ELECTRON_MIRROR在<code>.npmrc</code>能够达到加快Electron二进制基座的下载速度的目的了，至于一些其他的配置变量，可以阅读附录的官方文档翻译。</p>
+<h2 id="ben-di-huan-cun-ji-zhi">本地缓存机制</h2>
+<p>有的读者看了上述的远端下载可能会说，我的机器就在内网环境，内网也没有镜像让我来写，我该怎么下载呢？实际上，<code>@electron/get</code>也不会完全从远端下载制品。它在下载的过程，会优先进行本地缓存文件的查找，如果已经存在了缓存好的制品，自然也就不会从远端下载了。那么这个查找缓存的过程是怎样的呢？或者说，<code>@electron/get</code>会从本地哪个目录去查找呢？让我们回到<code>@electron/get/dist/cjs/index.js</code>脚本的<code>downloadArtifact</code>函数中，看该部分：</p>
+<p><img src="https://static-res.zhen.wang/images/post/2021-02-01-install-electron/get-cache-path.jpg" alt="" /></p>
+<p>在<code>url</code>变量获取的下一行，构建了一个Cache缓存对象，继续往下，通过判断不进行强制从远端下载的标志，会进入<code>getPathForFileInCache</code>函数返回一个本地的缓存文件路径，如果路径不为空则使用它。所以，我们只需要让这个函数能够返回一个合法的缓存文件路径就能让<code>@electron/get</code>不进行远端下载，而是使用本地的缓存文件。所以我们跟到该函数中：</p>
+<p><img src="https://static-res.zhen.wang/images/post/2021-02-01-install-electron/getCachePath.jpg" alt="" /></p>
+<p>函数最终会使用上一节中的<code>url</code>变量形成一个本地的缓存路径，至于代码中的<code>url.format</code>以及<code>filenamify</code>的效果，读者可以自行编写Demo验证。</p>
+<p>最后，路径还使用到了<code>this.cacheRoot</code>，查看Cache的构造函数，发现如果没有传递<code>cacheRoot</code>，则使用<code>defaultCacheRoot</code>，该值在该脚本文件上面有定义：</p>
+<p><img src="https://static-res.zhen.wang/images/post/2021-02-01-install-electron/default-cache-root-def.jpg" alt="" /></p>
+<p>通过一段脚本输出该路径：</p>
+<pre data-lang="js" style="background-color:#2b303b;color:#c0c5ce;" class="language-js "><code class="language-js" data-lang="js"><span style="color:#b48ead;">const </span><span style="color:#bf616a;">env_paths_1 </span><span>= </span><span style="color:#96b5b4;">require</span><span>(&quot;</span><span style="color:#a3be8c;">env-paths</span><span>&quot;);
+</span><span>
+</span><span style="color:#b48ead;">const </span><span style="color:#bf616a;">defaultCacheRoot </span><span>= </span><span style="color:#bf616a;">env_paths_1</span><span>.</span><span style="color:#8fa1b3;">default</span><span>(&#39;</span><span style="color:#a3be8c;">electron</span><span>&#39;, {
+</span><span>  suffix: &#39;&#39;,
+</span><span>}).</span><span style="color:#bf616a;">cache</span><span>;
+</span><span>
+</span><span style="color:#ebcb8b;">console</span><span>.</span><span style="color:#96b5b4;">log</span><span>(</span><span style="color:#bf616a;">defaultCacheRoot</span><span>);
+</span><span style="color:#65737e;">// 在本人的机器上输出：
+</span><span style="color:#65737e;">// C:\Users\xxx\AppData\Local\electron\Cache
+</span></code></pre>
+<p>所以在Windows机器下，默认的缓存目录在<code>~/AppData/Local/electron/Cache/</code>，在本人的机器上，已经缓存的文件如下：</p>
+<p><img src="https://static-res.zhen.wang/images/post/2021-02-01-install-electron/cache-file-list.jpg" alt="" /></p>
+<p>源码个人认为也不用继续解析了，读者结合文件夹名称应该能够很容易分析。</p>
+<h1 id="fu-lu-electron-get-guan-fang-wikifan-yi">附录：@electron/get 官方Wiki翻译</h1>
+<blockquote>
+<p>下载Electron发行版制品</p>
+</blockquote>
+<h2 id="shi-yong">使用</h2>
+<h3 id="ji-chu-fang-shi-xia-zai-yi-ge-electroner-jin-zhi-zip">基础方式：下载一个Electron二进制ZIP</h3>
+<pre data-lang="typescript" style="background-color:#2b303b;color:#c0c5ce;" class="language-typescript "><code class="language-typescript" data-lang="typescript"><span style="color:#b48ead;">import </span><span>{ </span><span style="color:#bf616a;">download </span><span>} </span><span style="color:#b48ead;">from </span><span>&#39;</span><span style="color:#a3be8c;">@electron/get</span><span>&#39;;
+</span><span>
+</span><span style="color:#65737e;">// NB: Use this syntax within an async function, Node does not have support for
+</span><span style="color:#65737e;">//     top-level await as of Node 12.
+</span><span style="color:#b48ead;">const </span><span style="color:#bf616a;">zipFilePath </span><span>= </span><span style="color:#b48ead;">await </span><span style="color:#8fa1b3;">download</span><span>(&#39;</span><span style="color:#a3be8c;">4.0.4</span><span>&#39;);
+</span></code></pre>
+<h3 id="jin-jie-xia-zai-macosxia-dai-you-diao-shi-fu-hao-de-electronwen-jian">进阶：下载macOS下带有调试符号的Electron文件</h3>
+<pre data-lang="typescript" style="background-color:#2b303b;color:#c0c5ce;" class="language-typescript "><code class="language-typescript" data-lang="typescript"><span style="color:#b48ead;">import </span><span>{ </span><span style="color:#bf616a;">downloadArtifact </span><span>} </span><span style="color:#b48ead;">from </span><span>&#39;</span><span style="color:#a3be8c;">@electron/get</span><span>&#39;;
+</span><span>
+</span><span style="color:#65737e;">// NB: Use this syntax within an async function, Node does not have support for
+</span><span style="color:#65737e;">//     top-level await as of Node 12.
+</span><span style="color:#b48ead;">const </span><span style="color:#bf616a;">zipFilePath </span><span>= </span><span style="color:#b48ead;">await </span><span style="color:#8fa1b3;">downloadArtifact</span><span>({
+</span><span>  version: &#39;</span><span style="color:#a3be8c;">4.0.4</span><span>&#39;,
+</span><span>  platform: &#39;</span><span style="color:#a3be8c;">darwin</span><span>&#39;,
+</span><span>  artifactName: &#39;</span><span style="color:#a3be8c;">electron</span><span>&#39;,
+</span><span>  artifactSuffix: &#39;</span><span style="color:#a3be8c;">symbols</span><span>&#39;,
+</span><span>  arch: &#39;</span><span style="color:#a3be8c;">x64</span><span>&#39;,
+</span><span>});
+</span></code></pre>
+<h3 id="zhi-ding-jing-xiang">指定镜像</h3>
+<p>下列选项可以用来指定从其他的地方下载Electron资源：</p>
+<ul>
+<li><code>mirrorOptions</code> Object（JavaScript对象）
+<ul>
+<li><code>mirror</code> String (可选) - 下载资源的镜像地址的基础URL。</li>
+<li><code>nightlyMirror</code> String (可选) - Electron nightly-specific版本的镜像URL。</li>
+<li><code>customDir</code> String (可选) - 下载资源的目录名称，通常由版本号来设定。</li>
+<li><code>customFilename</code> String (可选) - 将要下载的资源的文件名称。</li>
+<li><code>resolveAssetURL</code> Function (可选) - 允许通过编程方式来进行资源下载的函数回调。</li>
+</ul>
+</li>
+</ul>
+<p>下载资源的URL进行如下的分解，每一项都来可以映射到<code>mirrorOptions</code>:</p>
+<p><img src="https://static-res.zhen.wang/images/post/2021-02-01-install-electron/url-resolve.jpg" alt="" /></p>
+<p>Example:</p>
+<pre data-lang="typescript" style="background-color:#2b303b;color:#c0c5ce;" class="language-typescript "><code class="language-typescript" data-lang="typescript"><span style="color:#b48ead;">import </span><span>{ </span><span style="color:#bf616a;">download </span><span>} </span><span style="color:#b48ead;">from </span><span>&#39;</span><span style="color:#a3be8c;">@electron/get</span><span>&#39;;
+</span><span>
+</span><span style="color:#b48ead;">const </span><span style="color:#bf616a;">zipFilePath </span><span>= </span><span style="color:#b48ead;">await </span><span style="color:#8fa1b3;">download</span><span>(&#39;</span><span style="color:#a3be8c;">4.0.4</span><span>&#39;, {
+</span><span>  mirrorOptions: {
+</span><span>    mirror: &#39;</span><span style="color:#a3be8c;">https://mirror.example.com/electron/</span><span>&#39;,
+</span><span>    customDir: &#39;</span><span style="color:#a3be8c;">custom</span><span>&#39;,
+</span><span>    customFilename: &#39;</span><span style="color:#a3be8c;">unofficial-electron-linux.zip</span><span>&#39;
+</span><span>  }
+</span><span>});
+</span><span style="color:#65737e;">// 上述将会从如下URL下载：
+</span><span style="color:#65737e;">// https://mirror.example.com/electron/custom/unofficial-electron-linux.zip
+</span><span>
+</span><span style="color:#b48ead;">const </span><span style="color:#bf616a;">nightlyZipFilePath </span><span>= </span><span style="color:#b48ead;">await </span><span style="color:#8fa1b3;">download</span><span>(&#39;</span><span style="color:#a3be8c;">8.0.0-nightly.20190901</span><span>&#39;, {
+</span><span>  mirrorOptions: {
+</span><span>    nightlyMirror: &#39;</span><span style="color:#a3be8c;">https://nightly.example.com/</span><span>&#39;,
+</span><span>    customDir: &#39;</span><span style="color:#a3be8c;">nightlies</span><span>&#39;,
+</span><span>    customFilename: &#39;</span><span style="color:#a3be8c;">nightly-linux.zip</span><span>&#39;
+</span><span>  }
+</span><span>});
+</span><span style="color:#65737e;">// 上述将会从如下URL下载：
+</span><span style="color:#65737e;">// https://nightly.example.com/nightlies/nightly-linux.zip
+</span></code></pre>
+<p><code>customDir</code>参数可以使用<code>{{ version }}</code>占位符来设置版本（务必注意：<code>{}</code>括号之间一定要有空格，否则会解析失败，即，<code>{{[空格]version{空格}}}</code>），这个占位符将会由所下载的资源的版本（没有首字符<code>v</code>）来动态替换。例如：</p>
+<pre data-lang="javascript" style="background-color:#2b303b;color:#c0c5ce;" class="language-javascript "><code class="language-javascript" data-lang="javascript"><span style="color:#b48ead;">const </span><span style="color:#bf616a;">zipFilePath </span><span>= </span><span style="color:#b48ead;">await </span><span style="color:#8fa1b3;">download</span><span>(&#39;</span><span style="color:#a3be8c;">4.0.4</span><span>&#39;, {
+</span><span>  mirrorOptions: {
+</span><span>    mirror: &#39;</span><span style="color:#a3be8c;">https://mirror.example.com/electron/</span><span>&#39;,
+</span><span>    customDir: &#39;</span><span style="color:#a3be8c;">version-{{ version }}</span><span>&#39;,
+</span><span>    platform: &#39;</span><span style="color:#a3be8c;">linux</span><span>&#39;,
+</span><span>    arch: &#39;</span><span style="color:#a3be8c;">x64</span><span>&#39;
+</span><span>  }
+</span><span>});
+</span><span style="color:#65737e;">// 将会从如下的URL下载：
+</span><span style="color:#65737e;">// https://mirror.example.com/electron/version-4.0.4/electron-v4.0.4-linux-x64.zip
+</span></code></pre>
+<h4 id="shi-yong-huan-jing-bian-liang-lai-zhi-ding-jing-xiang-xuan-xiang">使用环境变量来指定镜像选项</h4>
+<p>镜像配置选项也可以通过如下的环境变量来指定：</p>
+<ul>
+<li><code>ELECTRON_CUSTOM_DIR</code> - 指定资源下载的自定义目录。</li>
+<li><code>ELECTRON_CUSTOM_FILENAME</code> - 指定资源下载的自定义文件名。</li>
+<li><code>ELECTRON_MIRROR</code> - 指定如果版本没有使用nightly的时候，服务器的下载URL。</li>
+<li><code>ELECTRON_NIGHTLY_MIRROR</code> - 指定如果版本使用nightly的时候，服务器的下载URL。</li>
+</ul>
+<h3 id="zhong-xie-xia-zai-de-zi-yuan-ban-ben">重写下载的资源版本</h3>
+<p>所下载的资源的版本可以通过设置``ELECTRON_CUSTOM_VERSION<code> 环境变量来进行覆盖。设置该版本将会覆盖传入</code>download<code>或是</code>downloadArtifact`函数的version参数。</p>
+<h2 id="ta-shi-ru-he-yun-xing-de">它是如何运行的</h2>
+<p>下载Electron资源到操作系统中已知的位置，并且缓存该资源的模块，用于便于在将来请求同一个资源的时候能够立刻完成并返回。缓存路径如下：</p>
+<ul>
+<li>Linux: <code>$XDG_CACHE_HOME</code> or <code>~/.cache/electron/</code></li>
+<li>MacOS: <code>~/Library/Caches/electron/</code></li>
+<li>Windows: <code>%LOCALAPPDATA%/electron/Cache</code> or <code>~/AppData/Local/electron/Cache/</code></li>
+</ul>
+<p>默认情况下，该模块使用 <a rel="noopener" target="_blank" href="https://github.com/sindresorhus/got"><code>got</code></a>作为下载器。因此，您可以通过<code>downloadOptions</code>使用与<code>get</code>相同的选项（<a rel="noopener" target="_blank" href="https://github.com/sindresorhus/got#options">options</a>）来进行下载。</p>
+<h3 id="jin-du-tiao">进度条</h3>
+<p>默认情况下，下载工件超过30秒时会显示进度条。若要禁用，请将<code>ELECTRON_GET_NO_PROGRESS</code> 环境变量设置为任何非空值，或设置<code>downloadOptions</code>中的<code>quiet</code>为<code>true</code>。如果您需要通过API自己监视进度，请设置<code>downloadOptions</code>中的<code>getProgressCallback</code> 回调，其函数签名与<code>got</code>的<a rel="noopener" target="_blank" href="https://github.com/sindresorhus/got#ondownloadprogress-progress"><code>downloadProgress</code> event callback</a>相同。</p>
+<h3 id="dai-li">代理</h3>
+<p>下游软件包应利用 <code>initializeProxy</code>功能来添加HTTP(S)代理支持。如果设置了环境变量<code>ELECTRON_GET_USE_PROXY</code>，则会自动调用它。根据使用的Node版本，使用不同的代理模块.因此，设置代理环境变量的方式略有不同。对于Node 10及更高版本，使用<a rel="noopener" target="_blank" href="https://github.com/gajus/global-agent#environment-variables"><code>global-agent</code></a>。否则，将使用<a rel="noopener" target="_blank" href="https://github.com/np-maintain/global-tunnel#auto-config"><code>global-tunnel-ng</code></a>。请参阅相应的链接模块以确定如何配置代理支持。</p>
+
+    </div>
+</div>
+<script src="https://zhen.wang/libs/viewerjs@1.11.7/viewer.min.js"></script>
+<link rel="stylesheet" href="https://zhen.wang/libs/viewerjs@1.11.7/viewer.min.css"/>
+<script>
+  if (window.Viewer) {
+    document.querySelectorAll('img').forEach(img => {
+      new Viewer(img, {
+        inline: false,
+        navbar: false,
+        toolbar: {
+          zoomIn: 1,
+          zoomOut: 1,
+          reset: 1,
+          rotateLeft: 1,
+          rotateRight: 1,
+        },
+      });
+    });
+  }
+</script>
+
+
+</body>
+</html>

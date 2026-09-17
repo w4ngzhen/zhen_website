@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="utf-8">
+    <meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover"
+          name="viewport">
+    
+    
+    <!-- umami web analysis -->
+    <script defer src="https://zhen.wang/libs/umami/umami.script.js"
+            data-website-id="d66cfe03-f6b3-4aa0-baf8-728700db1b09"></script>
+    
+    
+    
+    <link rel="icon" type="image/png" sizes="16x16" href="https://zhen.wang/images/blog-site-icon.svg">
+    <link rel="icon" type="image/png" sizes="32x32" href="https://zhen.wang/images/blog-site-icon.svg">
+    <title>zhen&#x27;s everything</title>
+    <link rel="stylesheet" href="https://zhen.wang/style.css">
+    
+<link rel="stylesheet" href="https://zhen.wang/article_content.css">
+<link rel="stylesheet" href="https://zhen.wang/article_markdown.css">
+
+</head>
+<body>
+
+<div id="article">
+    <header class="article-header">
+        
+<div class="base-title">
+    <a href="#" onclick="history.length > 1 ? history.back() : location.href = '/'; return false;">&LeftArrow; Back</a>
+    <h1>
+        【个人笔记】基于VirtualBox7的Debian11基础环境搭建
+    </h1>
+</div>
+
+    </header>
+    <p class="article-date">2022-10-27</p>
+    
+    <!-- toc -->
+    <div class="article-toc">
+        <label class="toc-title" for="toc-trigger">目录</label>
+        <input id="toc-trigger" type="checkbox" checked/>
+        <div class="toc-content">
+            <ol class="toc">
+                
+                <li class="toc-item toc-level-1">
+                    <a class="toc-link" href="https://zhen.wang/article/【个人笔记】基于VirtualBox7的Debian11基础环境搭建/#sudoerspei-zhi">sudoers配置</a>
+                    
+                </li>
+                
+                <li class="toc-item toc-level-1">
+                    <a class="toc-link" href="https://zhen.wang/article/【个人笔记】基于VirtualBox7的Debian11基础环境搭建/#aptyuan-pei-zhi">APT源配置</a>
+                    
+                    <ol class="toc-child">
+                        
+                        <li class="toc-item toc-level-2">
+                            <a href="https://zhen.wang/article/【个人笔记】基于VirtualBox7的Debian11基础环境搭建/#pei-zhi-jie-xi">配置解析</a>
+                        </li>
+                        
+                    </ol>
+                    
+                </li>
+                
+                <li class="toc-item toc-level-1">
+                    <a class="toc-link" href="https://zhen.wang/article/【个人笔记】基于VirtualBox7的Debian11基础环境搭建/#ji-chu-ku">基础库</a>
+                    
+                    <ol class="toc-child">
+                        
+                        <li class="toc-item toc-level-2">
+                            <a href="https://zhen.wang/article/【个人笔记】基于VirtualBox7的Debian11基础环境搭建/#gcc-g">gcc&#x2F;g++</a>
+                        </li>
+                        
+                        <li class="toc-item toc-level-2">
+                            <a href="https://zhen.wang/article/【个人笔记】基于VirtualBox7的Debian11基础环境搭建/#git">git</a>
+                        </li>
+                        
+                        <li class="toc-item toc-level-2">
+                            <a href="https://zhen.wang/article/【个人笔记】基于VirtualBox7的Debian11基础环境搭建/#cmake">CMake</a>
+                        </li>
+                        
+                        <li class="toc-item toc-level-2">
+                            <a href="https://zhen.wang/article/【个人笔记】基于VirtualBox7的Debian11基础环境搭建/#x11">X11</a>
+                        </li>
+                        
+                        <li class="toc-item toc-level-2">
+                            <a href="https://zhen.wang/article/【个人笔记】基于VirtualBox7的Debian11基础环境搭建/#openssl">OpenSSL</a>
+                        </li>
+                        
+                        <li class="toc-item toc-level-2">
+                            <a href="https://zhen.wang/article/【个人笔记】基于VirtualBox7的Debian11基础环境搭建/#opengl-openglde-library-utilitiesyi-ji-toolkit">OpenGL（OpenGL的Library、Utilities以及ToolKit）</a>
+                        </li>
+                        
+                        <li class="toc-item toc-level-2">
+                            <a href="https://zhen.wang/article/【个人笔记】基于VirtualBox7的Debian11基础环境搭建/#dkms">dkms</a>
+                        </li>
+                        
+                        <li class="toc-item toc-level-2">
+                            <a href="https://zhen.wang/article/【个人笔记】基于VirtualBox7的Debian11基础环境搭建/#linuxnei-he-xiang-guan-bao">Linux内核相关包</a>
+                        </li>
+                        
+                    </ol>
+                    
+                </li>
+                
+                <li class="toc-item toc-level-1">
+                    <a class="toc-link" href="https://zhen.wang/article/【个人笔记】基于VirtualBox7的Debian11基础环境搭建/#an-zhuang-vboxzeng-qiang-gong-ju">安装VBox增强工具</a>
+                    
+                    <ol class="toc-child">
+                        
+                        <li class="toc-item toc-level-2">
+                            <a href="https://zhen.wang/article/【个人笔记】基于VirtualBox7的Debian11基础环境搭建/#fang-shi-yi-zhi-jie-li-yong-vboxde-insert-guest-additions-cd-image">方式一：直接利用VBox的Insert Guest Additions CD image</a>
+                        </li>
+                        
+                        <li class="toc-item toc-level-2">
+                            <a href="https://zhen.wang/article/【个人笔记】基于VirtualBox7的Debian11基础环境搭建/#fang-shi-er-ming-ling-xing-chu-li">方式二：命令行处理</a>
+                        </li>
+                        
+                    </ol>
+                    
+                </li>
+                
+            </ol>
+        </div>
+    </div>
+    
+    <!-- real content -->
+    <div class="article-content markdown-content">
+        <p>本文主要是对在最新的VirtualBox7上搭建Debian11的笔记记录，方便后续个人回顾，同时搭配对配置的浅析。</p>
+<span id="continue-reading"></span>
+<h1 id="sudoerspei-zhi">sudoers配置</h1>
+<p>非root用户想要使用sudo命令，需要两个条件：</p>
+<ol>
+<li>系统安装了sudo命令；</li>
+<li>将该用户添加到了<code>/etc/sudoers</code>中；</li>
+</ol>
+<p>对于第一点检查是否安装sudo命令，可以使用<code>su -</code>命令切换为root用户，尝试使用sudo命令，同时检查<code>/etc/sudoers</code>这个文件是否存在。如果root使用sudo命令都提示<code>command not found</code>，且<code>/etc/sudoers</code>这个文件也不存在，大概率系统就没有sudo命令，进而几乎所有非root用户都无法使用sudo命令。此时，我们就只能使用root用户来安装sudo命令了（<code>apt-get install sudo</code>），安装好以后会自动创建<code>/etc/sudoers</code>文件。</p>
+<blockquote>
+<p>PS：如果出现尝试安装sudo的时候，也提示无法找到sudo这个包，大概率你没有更新APT，所以先使用命令<code>apt-get update</code>更新下仓库信息。这个时候如果apt-get更新很慢，大概率你没有配置合适的镜像，导致网络很慢。此时，在root用户下，按照下面“APT源配置”方式去配置下APT源，配置好以后再重新尝试安装sudo命令。</p>
+</blockquote>
+<p>当安装好了sudo以及<code>/etc/sudoers</code>也创建好以后，就可以在root用户下去修改<code>/etc/sudoers</code>，把非root用户添加到sudoers里面。</p>
+<pre style="background-color:#2b303b;color:#c0c5ce;"><code><span># /etc/sudoers
+</span><span>... ...
+</span><span>root ALL=(ALL:ALL) ALL
+</span><span>用户名 ALL=(ALL:ALL) ALL # 权限含义自行了解
+</span><span>...
+</span></code></pre>
+<p>将非root用户添加到sudoers以后，如果此时你还在root用户下，则可以使用<code>exit</code>命令退出当前登陆的root用户，回到你一开始的自己用户会话中，然后使用<code>sudo 命令</code>来临时提权执行命令了。</p>
+<h1 id="aptyuan-pei-zhi">APT源配置</h1>
+<p>/etc/apt/sources.list</p>
+<pre style="background-color:#2b303b;color:#c0c5ce;"><code><span># 默认注释了源码镜像以提高 apt update 速度，如有需要可自行取消注释
+</span><span>deb https://mirrors.tuna.tsinghua.edu.cn/debian/ bullseye main contrib non-free
+</span><span># deb-src https://mirrors.tuna.tsinghua.edu.cn/debian/ bullseye main contrib non-free
+</span><span>deb https://mirrors.tuna.tsinghua.edu.cn/debian/ bullseye-updates main contrib non-free
+</span><span># deb-src https://mirrors.tuna.tsinghua.edu.cn/debian/ bullseye-updates main contrib non-free
+</span><span>
+</span><span>deb https://mirrors.tuna.tsinghua.edu.cn/debian/ bullseye-backports main contrib non-free
+</span><span># deb-src https://mirrors.tuna.tsinghua.edu.cn/debian/ bullseye-backports main contrib non-free
+</span><span>
+</span><span>deb https://mirrors.tuna.tsinghua.edu.cn/debian-security bullseye-security main contrib non-free
+</span><span># deb-src https://mirrors.tuna.tsinghua.edu.cn/debian-security bullseye-security main contrib non-free
+</span></code></pre>
+<h2 id="pei-zhi-jie-xi">配置解析</h2>
+<p><code>deb https://mirrors.tuna.tsinghua.edu.cn/debian/ bullseye main contrib non-free</code></p>
+<p>形如如下格式：</p>
+<p><code>deb http://site.example.com/debian/ distribution component1 component2 component3</code></p>
+<p><strong>Archive type</strong></p>
+<p>每行的第一个单词**，deb** 或 <strong>deb-src</strong>，表示存档的类型。<strong>Deb</strong> 表示存档包含二进制包 （<a rel="noopener" target="_blank" href="https://wiki.debian.org/deb">deb</a>），即我们通常使用的预编译包。<strong>Deb-src</strong> 表示<a rel="noopener" target="_blank" href="https://wiki.debian.org/SourcePackage">源码包</a>，它们是原始程序<a rel="noopener" target="_blank" href="https://wiki.debian.org/source">源</a>码加上 Debian 控制文件 （.<a rel="noopener" target="_blank" href="https://wiki.debian.org/dsc">dsc</a>） 和差异.gz包含打包程序所需的更改。</p>
+<p><strong>Repository URL</strong></p>
+<p>该行的下一个条目是指向要从中下载包的<a rel="noopener" target="_blank" href="https://wiki.debian.org/DebianRepository">存储库</a>的 URL。Debian 存储库镜像的主要列表位于<a rel="noopener" target="_blank" href="https://www.debian.org/mirror/list">此处</a>。例如，咱们使用的是清华的镜像，进入该页面会看到如下的FTP界面：</p>
+<p><strong>Distribution</strong></p>
+<p>发行版本代号 or 发行版代号加<code>-updates</code>、<code>-backports</code>或<code>-security</code>后缀。例如当前（2022-10-25）Debian最新发行版本为11，代号bullseye。</p>
+<p>在上述配置中，我们使用了：<code>bullseys</code>、<code>bullseye-updates</code>、<code>bullseye-backports</code>以及<code>bullseye-security</code>（注意，Distribution为<code>bullseye-security</code>时候，URL中的路径对应为<code>debian-security</code>，而不是<code>debian</code>）。</p>
+<p><strong>Component</strong></p>
+<ul>
+<li><a rel="noopener" target="_blank" href="http://www.debian.org/doc/debian-policy/ch-archive#s-main">main</a> 由<a rel="noopener" target="_blank" href="http://www.debian.org/social_contract#guidelines">符合 DFSG</a> 标准的软件包组成，这些软件包不依赖于该领域之外的软件来运行。这些软件包被认为是 Debian 发行版中唯一的一部分。</li>
+<li><a rel="noopener" target="_blank" href="http://www.debian.org/doc/debian-policy/ch-archive#s-contrib">contrib</a> 软件包包含 DFSG 兼容的软件，但具有不在 main 中的依赖关系（可能打包为非自由的 Debian）。</li>
+<li><a rel="noopener" target="_blank" href="http://www.debian.org/doc/debian-policy/ch-archive#s-non-free">非自由</a>软件包含不符合 DFSG 的软件。</li>
+</ul>
+<p><img src="https://static-res.zhen.wang/images/post/2022-10-27/010-sources-list-path.png" alt="010-sources-list-path" /></p>
+<p>当我们通过apt/apt-get进行软件安装的时候，如果出现某些软件找不到，一方面可能软件包名称不对；另一方面，可能是在配置sources.list的时候，main、contrib或者non-free遗漏了配置，导致不会进入这些目录下进行搜索。</p>
+<h1 id="ji-chu-ku">基础库</h1>
+<h2 id="gcc-g">gcc/g++</h2>
+<p>build-essential包包含了在Linux下开发C/C++基础开发工具与库：</p>
+<p>gcc/g++/make/libc6-dev/dpkg-dev等</p>
+<pre data-lang="shell" style="background-color:#2b303b;color:#c0c5ce;" class="language-shell "><code class="language-shell" data-lang="shell"><span>sudo apt-get install build-essential
+</span></code></pre>
+<h2 id="git">git</h2>
+<pre data-lang="shell" style="background-color:#2b303b;color:#c0c5ce;" class="language-shell "><code class="language-shell" data-lang="shell"><span>sudo apt-get install git
+</span></code></pre>
+<h2 id="cmake">CMake</h2>
+<p>1）apt安装</p>
+<pre data-lang="shell" style="background-color:#2b303b;color:#c0c5ce;" class="language-shell "><code class="language-shell" data-lang="shell"><span>sudo apt-get cmake
+</span></code></pre>
+<p>2）如果是源码方式安装，则还可以验证上述的安装gcc/g++等基础开发环境是否OK。</p>
+<p>下载源码文件：<a rel="noopener" target="_blank" href="https://cmake.org/download/">Download | CMake</a></p>
+<p>进入cmake源码目录，执行配置、构建以及安装（<a rel="noopener" target="_blank" href="https://cmake.org/install/">Installing | CMake</a>）：</p>
+<pre style="background-color:#2b303b;color:#c0c5ce;"><code><span>./bootstrap
+</span><span>make
+</span><span>make install
+</span></code></pre>
+<p>安装完成后，可以调用<code>cmake --version</code>查看版本，检查是否编译并安装成功。</p>
+<h2 id="x11">X11</h2>
+<pre style="background-color:#2b303b;color:#c0c5ce;"><code><span>sudo apt-get install libx11-dev
+</span></code></pre>
+<h2 id="openssl">OpenSSL</h2>
+<pre style="background-color:#2b303b;color:#c0c5ce;"><code><span>sudo apt-get install libssl-dev
+</span></code></pre>
+<h2 id="opengl-openglde-library-utilitiesyi-ji-toolkit">OpenGL（OpenGL的Library、Utilities以及ToolKit）</h2>
+<pre style="background-color:#2b303b;color:#c0c5ce;"><code><span>sudo apt-get install libgl1-mesa-dev
+</span><span>sudo apt-get install libglu1-mesa-dev
+</span><span>sudo apt-get install freeglut3-dev	
+</span></code></pre>
+<h2 id="dkms">dkms</h2>
+<p>DKMS全称是DynamicKernel ModuleSupport，它可以帮我们维护内核外的驱动程序，在内核版本变动之后可以自动重新生成新的模块。当需要开发Linux内核模块的时候，需要该包。同时，安装VBox增强工具时候，会编译内核文件，故也需要安装。</p>
+<pre style="background-color:#2b303b;color:#c0c5ce;"><code><span>sudo apt-get install dkms
+</span></code></pre>
+<h2 id="linuxnei-he-xiang-guan-bao">Linux内核相关包</h2>
+<p>当前版本Linux内核的头文件。当需要开发Linux内核模块的时候，需要该包。同时，安装VBox增强工具时候，会编译内核文件，故也需要安装。</p>
+<pre style="background-color:#2b303b;color:#c0c5ce;"><code><span>sudo apt-get install linux-headers-$(uname -r)
+</span></code></pre>
+<h1 id="an-zhuang-vboxzeng-qiang-gong-ju">安装VBox增强工具</h1>
+<h2 id="fang-shi-yi-zhi-jie-li-yong-vboxde-insert-guest-additions-cd-image">方式一：直接利用VBox的<code>Insert Guest Additions CD image</code></h2>
+<p><img src="https://static-res.zhen.wang/images/post/2022-10-27/020-addition-insert-iso.png" alt="020-addition-insert-iso" /></p>
+<p>使用该方式，VBox会自动查找对应的增强工具包CD镜像，并挂在到Debian系统。稍等片刻后，我们可以从桌面上看到一个名为：<code>VBOX_GAs_x.x.x</code>的CD镜像，双击打开后可以直接看到里面的内容：</p>
+<p><img src="https://static-res.zhen.wang/images/post/2022-10-27/030-VBox-GAs-cd-image-content.png" alt="030-VBox-GAs-cd-image-content" /></p>
+<p>我们首先把其中的<code>VBoxLinuxAdditions.sh</code>拷贝到桌面，或者任意路径。然后命令界面执行：</p>
+<pre data-lang="shell" style="background-color:#2b303b;color:#c0c5ce;" class="language-shell "><code class="language-shell" data-lang="shell"><span>sudo sh VBoxLinuxAdditions.run
+</span></code></pre>
+<h2 id="fang-shi-er-ming-ling-xing-chu-li">方式二：命令行处理</h2>
+<p>如果在纯命令行界面，依然是通过上述的<code>Insert Guest Additions CD image</code>操作。操作完成后，此时相当于我们插入一张包含有增强工具软件的CD光盘。此时，我们需要将“光驱”设备挂在到我们的一个目录上，譬如我们创建一个<code>/media/vbox-cd-content/</code>：</p>
+<pre data-lang="shell" style="background-color:#2b303b;color:#c0c5ce;" class="language-shell "><code class="language-shell" data-lang="shell"><span>sudo mkdir /media/vbox-cd-content/
+</span></code></pre>
+<p>将<code>/dev/cdrom</code>挂载到上述目录：</p>
+<pre data-lang="shell" style="background-color:#2b303b;color:#c0c5ce;" class="language-shell "><code class="language-shell" data-lang="shell"><span>sudo mount /dev/cdrom /media/vbox-cd-content
+</span></code></pre>
+<p>进入<code>/media/vbox-cd-content</code>，将里面的所有东西都复制到外部目录（譬如创建一个<code>~/VboxAdditions/</code>）：</p>
+<pre data-lang="shell" style="background-color:#2b303b;color:#c0c5ce;" class="language-shell "><code class="language-shell" data-lang="shell"><span>mkdir ~/VboxAdditions/
+</span><span>sudo cp -R /media/vbox-cd-content/* ~/VBoxAdditions/
+</span></code></pre>
+<p>复制完成后，我们可以先卸载CD挂载目录：</p>
+<pre data-lang="shell" style="background-color:#2b303b;color:#c0c5ce;" class="language-shell "><code class="language-shell" data-lang="shell"><span>sudo umount /media/vbox-cd-content/
+</span><span># 注意点1：umount 不是 unmount！
+</span><span># 注意点2：如果提示设备Busy，说明这个目录还占用着，比如你还在这个目录里面，可以先退到其他目录。
+</span></code></pre>
+<p>卸载目录后，我们在看里面是没有内容了。</p>
+<p>进入我们拷贝好内容的<code>~/VBoxAdditions/</code>，执行命令，等待完成即可：</p>
+<pre data-lang="shell" style="background-color:#2b303b;color:#c0c5ce;" class="language-shell "><code class="language-shell" data-lang="shell"><span>sudo sh VBoxLinuxAdditions.run
+</span></code></pre>
+<p>完成后，重启：</p>
+<pre data-lang="shell" style="background-color:#2b303b;color:#c0c5ce;" class="language-shell "><code class="language-shell" data-lang="shell"><span>sudo reboot
+</span></code></pre>
+<p>重启完成后，我们就可以配置一个共享目录来检查是否安装成功。共享目录的配置，网上有很多，这里不再赘述。</p>
+<p><img src="https://static-res.zhen.wang/images/post/2022-10-27/040-config-shared-dir.png" alt="040-config-shared-dir" /></p>
+<p><img src="https://static-res.zhen.wang/images/post/2022-10-27/050-set-shared-dir.png" alt="050-set-shared-dir" /></p>
+<p>这里没有选择Auto-mount自动挂载，那么需要手动挂载。这里点击OK以后，我们进入Linux，可以手动创建一个目录：<code>/media/shared-dir</code>目录，然后通过调用挂载的命令：</p>
+<pre data-lang="shell" style="background-color:#2b303b;color:#c0c5ce;" class="language-shell "><code class="language-shell" data-lang="shell"><span>sudo mkdir /media/shared-dif/
+</span><span>sudo mount -t vboxsf SharedDir /media/shared-dir
+</span></code></pre>
+<p>解读下这个命令。首先，<code>-t vboxsf</code>必须要有，该参数是在完成VBox的增强功能安装以后才能使用；其次，<code>SharedDir</code>需要和上述配置共享文件夹配置里面的<code>Folder Name</code>保持一致，代表我要将这个外部对应的目录挂到Linux系统中；最后的<code>/media/shared-dir/</code>就是要挂到当前Linux系统中的那个目录。</p>
+<p>完成挂载后，我们可以在宿主系统创建一个文件夹来验证：</p>
+<p><img src="https://static-res.zhen.wang/images/post/2022-10-27/060-host-os-new-file.png" alt="060-host-os-new-file" /></p>
+<p><img src="https://static-res.zhen.wang/images/post/2022-10-27/070-shared-file-in-linux.png" alt="070-shared-file-in-linux" /></p>
+<p>可以看到已经将宿主系统里面的hello.txt在Linux读取出来了。</p>
+
+    </div>
+</div>
+<script src="https://zhen.wang/libs/viewerjs@1.11.7/viewer.min.js"></script>
+<link rel="stylesheet" href="https://zhen.wang/libs/viewerjs@1.11.7/viewer.min.css"/>
+<script>
+  if (window.Viewer) {
+    document.querySelectorAll('img').forEach(img => {
+      new Viewer(img, {
+        inline: false,
+        navbar: false,
+        toolbar: {
+          zoomIn: 1,
+          zoomOut: 1,
+          reset: 1,
+          rotateLeft: 1,
+          rotateRight: 1,
+        },
+      });
+    });
+  }
+</script>
+
+
+</body>
+</html>

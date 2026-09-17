@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="utf-8">
+    <meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover"
+          name="viewport">
+    
+    
+    <!-- umami web analysis -->
+    <script defer src="https://zhen.wang/libs/umami/umami.script.js"
+            data-website-id="d66cfe03-f6b3-4aa0-baf8-728700db1b09"></script>
+    
+    
+    
+    <link rel="icon" type="image/png" sizes="16x16" href="https://zhen.wang/images/blog-site-icon.svg">
+    <link rel="icon" type="image/png" sizes="32x32" href="https://zhen.wang/images/blog-site-icon.svg">
+    <title>zhen&#x27;s everything</title>
+    <link rel="stylesheet" href="https://zhen.wang/style.css">
+    
+<link rel="stylesheet" href="https://zhen.wang/article_content.css">
+<link rel="stylesheet" href="https://zhen.wang/article_markdown.css">
+
+</head>
+<body>
+
+<div id="article">
+    <header class="article-header">
+        
+<div class="base-title">
+    <a href="#" onclick="history.length > 1 ? history.back() : location.href = '/'; return false;">&LeftArrow; Back</a>
+    <h1>
+        程序员微机课系列—我的nodejs多版本管理方法
+    </h1>
+</div>
+
+    </header>
+    <p class="article-date">2021-08-18</p>
+    
+    <!-- toc -->
+    <div class="article-toc">
+        <label class="toc-title" for="toc-trigger">目录</label>
+        <input id="toc-trigger" type="checkbox" checked/>
+        <div class="toc-content">
+            <ol class="toc">
+                
+                <li class="toc-item toc-level-1">
+                    <a class="toc-link" href="https://zhen.wang/article/程序员微机课系列-我的nodejs环境配置与使用/#fei-an-zhuang-er-jin-zhi-bao-xia-zai">非安装二进制包下载</a>
+                    
+                </li>
+                
+                <li class="toc-item toc-level-1">
+                    <a class="toc-link" href="https://zhen.wang/article/程序员微机课系列-我的nodejs环境配置与使用/#ben-di-mu-lu-pei-zhi">本地目录配置</a>
+                    
+                </li>
+                
+                <li class="toc-item toc-level-1">
+                    <a class="toc-link" href="https://zhen.wang/article/程序员微机课系列-我的nodejs环境配置与使用/#npmrc">npmrc</a>
+                    
+                </li>
+                
+                <li class="toc-item toc-level-1">
+                    <a class="toc-link" href="https://zhen.wang/article/程序员微机课系列-我的nodejs环境配置与使用/#huan-jing-bian-liang-she-zhi">环境变量设置</a>
+                    
+                </li>
+                
+                <li class="toc-item toc-level-1">
+                    <a class="toc-link" href="https://zhen.wang/article/程序员微机课系列-我的nodejs环境配置与使用/#qie-huan-huan-jing">切换环境</a>
+                    
+                    <ol class="toc-child">
+                        
+                        <li class="toc-item toc-level-2">
+                            <a href="https://zhen.wang/article/程序员微机课系列-我的nodejs环境配置与使用/#huan-jing-qie-huan-zhu-yi-dian">环境切换注意点</a>
+                        </li>
+                        
+                    </ol>
+                    
+                </li>
+                
+                <li class="toc-item toc-level-1">
+                    <a class="toc-link" href="https://zhen.wang/article/程序员微机课系列-我的nodejs环境配置与使用/#qi-ta-de-guan-li-fang-an">其他的管理方案</a>
+                    
+                </li>
+                
+            </ol>
+        </div>
+    </div>
+    
+    <!-- real content -->
+    <div class="article-content markdown-content">
+        <p>nodejs的多版本配置对于我来说一直都是一个较为头疼的事情。本人的开发工作会涉及electron以及前端，对于工作中使用的npm包（点名node-sqlite3和node-sass）在某些情况下，会使用node-gyp进行原生C/C++模块的编译，此时，nodejs的版本就尤为重要，但是本人又不太愿意使用nvm进行管理，所以总结了一套nodejs多版本管理的指南。</p>
+<span id="continue-reading"></span><h1 id="fei-an-zhuang-er-jin-zhi-bao-xia-zai">非安装二进制包下载</h1>
+<p>为了实现基本的多版本，nodejs二进制包我们都下载非安装版本，而不是安装版：</p>
+<p>下载地址：<a rel="noopener" target="_blank" href="https://nodejs.org/en/download/">Download | Node.js (nodejs.org)</a></p>
+<ul>
+<li>node-v12.22.5-win-x64.zip</li>
+<li>node-v14.17.5-win-x64.zip</li>
+</ul>
+<h1 id="ben-di-mu-lu-pei-zhi">本地目录配置</h1>
+<p>下载好后，我们选取一个我们经常安装软件的目录，譬如在本人的机器上，我使用<code>D:\Programes\</code>来存放我所有的软件。在软件存放目录下创建名为nodejs的文件夹，并且将上述的两个版本的nodejs都按照其版本名称解压：</p>
+<pre style="background-color:#2b303b;color:#c0c5ce;"><code><span>D:\Programs\nodejs
+</span><span>    |-- node-v12.22.5-win-x64
+</span><span>        |-- node.exe
+</span><span>        |-- ...
+</span><span>    |-- node-v14.17.5-win-x64
+</span><span>        |-- node.exe
+</span><span>        |-- ...
+</span></code></pre>
+<p>接下来，我们在nodejs文件夹中创建一个文件夹：<code>global_and_cache_files</code>，并在其中创建子目录：</p>
+<ul>
+<li>global_modules：存放node的全局包</li>
+<li>cache_modules：存放npm使用过程的缓存文件</li>
+</ul>
+<p>至此，我们有如下的目录结构</p>
+<pre style="background-color:#2b303b;color:#c0c5ce;"><code><span>D:\Programs\nodejs
+</span><span>    |-- node-v12.22.5-win-x64
+</span><span>        |-- ...
+</span><span>    |-- node-v14.17.5-win-x64
+</span><span>        |-- ..
+</span><span>    |-- global_and_cache_files
+</span><span>        |-- global_modules
+</span><span>        |-- cache_modules
+</span></code></pre>
+<h1 id="npmrc">npmrc</h1>
+<p>接下来是老生常谈的npmrc配置（用户目录/.npmrc文件）：</p>
+<pre style="background-color:#2b303b;color:#c0c5ce;"><code><span># 国内阿里镜像
+</span><span>registry=https://r.npm.taobao.org/
+</span><span># 设置全局包的存放路径（注意此处的路径和上面创建的路径一致）
+</span><span>prefix=D:\Programs\nodejs\global_and_cache_files\global_modules
+</span><span># 缓存路径（和上面创建的路径一致）
+</span><span>cache=D:\Programs\nodejs\global_and_cache_files\cache_modules
+</span></code></pre>
+<h1 id="huan-jing-bian-liang-she-zhi">环境变量设置</h1>
+<p>对于环境变量，最基本的就是将node.exe添加到环境变量中：</p>
+<p>这里我分了两步：</p>
+<ol>
+<li>设置<code>NODE_JS_HOME</code>环境变量为上面的某一版本nodejs的路径：<code>D:\Programs\nodejs\node-v14.17.5-win-x64</code></li>
+</ol>
+<p><img src="https://static-res.zhen.wang/images/post/2021-08-18-my-node-env/010-set_NODE_JS_HOME.jpg" alt="" /></p>
+<ol start="2">
+<li>将<code>NODE_JS_HOME</code>环境变量加到Path中。此外，为了之后能够在命令行中使用全局安装的npm包，我们也把对应的全局包安装路径设置到环境变量中：<code>D:\Programs\nodejs\node_global_modules</code></li>
+</ol>
+<p><img src="https://static-res.zhen.wang/images/post/2021-08-18-my-node-env/020-set_env_path.jpg" alt="" /></p>
+<h1 id="qie-huan-huan-jing">切换环境</h1>
+<p>在上述的配置下，环境的切换也比较方便。只需要修改对应的<code>NODE_JS_HOME</code>指向的不同版本nodejs的安装路径即可。</p>
+<h2 id="huan-jing-qie-huan-zhu-yi-dian">环境切换注意点</h2>
+<p>由于缓存和全局安装的npm包会和安装时候的nodejs版本关联，在切换环境后请对全局包进行重新的安装工作。</p>
+<h1 id="qi-ta-de-guan-li-fang-an">其他的管理方案</h1>
+<p>实际上，nodejs多版本管理方案还有，只不过这些都需要安装额外的东西，个人不是很喜欢。</p>
+<p><a rel="noopener" target="_blank" href="https://github.com/coreybutler/nvm-windows">NVM-Windows</a></p>
+<p><a rel="noopener" target="_blank" href="https://github.com/nullivex/nodist">nodist</a></p>
+
+    </div>
+</div>
+<script src="https://zhen.wang/libs/viewerjs@1.11.7/viewer.min.js"></script>
+<link rel="stylesheet" href="https://zhen.wang/libs/viewerjs@1.11.7/viewer.min.css"/>
+<script>
+  if (window.Viewer) {
+    document.querySelectorAll('img').forEach(img => {
+      new Viewer(img, {
+        inline: false,
+        navbar: false,
+        toolbar: {
+          zoomIn: 1,
+          zoomOut: 1,
+          reset: 1,
+          rotateLeft: 1,
+          rotateRight: 1,
+        },
+      });
+    });
+  }
+</script>
+
+
+</body>
+</html>

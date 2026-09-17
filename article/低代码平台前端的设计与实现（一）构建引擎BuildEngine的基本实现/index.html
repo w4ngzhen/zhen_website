@@ -1,0 +1,470 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="utf-8">
+    <meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover"
+          name="viewport">
+    
+    
+    <!-- umami web analysis -->
+    <script defer src="https://zhen.wang/libs/umami/umami.script.js"
+            data-website-id="d66cfe03-f6b3-4aa0-baf8-728700db1b09"></script>
+    
+    
+    
+    <link rel="icon" type="image/png" sizes="16x16" href="https://zhen.wang/images/blog-site-icon.svg">
+    <link rel="icon" type="image/png" sizes="32x32" href="https://zhen.wang/images/blog-site-icon.svg">
+    <title>zhen&#x27;s everything</title>
+    <link rel="stylesheet" href="https://zhen.wang/style.css">
+    
+<link rel="stylesheet" href="https://zhen.wang/article_content.css">
+<link rel="stylesheet" href="https://zhen.wang/article_markdown.css">
+
+</head>
+<body>
+
+<div id="article">
+    <header class="article-header">
+        
+<div class="base-title">
+    <a href="#" onclick="history.length > 1 ? history.back() : location.href = '/'; return false;">&LeftArrow; Back</a>
+    <h1>
+        低代码平台前端的设计与实现（一）构建引擎BuildEngine的基本实现
+    </h1>
+</div>
+
+    </header>
+    <p class="article-date">2022-09-18</p>
+    
+    <!-- toc -->
+    <div class="article-toc">
+        <label class="toc-title" for="toc-trigger">目录</label>
+        <input id="toc-trigger" type="checkbox" checked/>
+        <div class="toc-content">
+            <ol class="toc">
+                
+                <li class="toc-item toc-level-1">
+                    <a class="toc-link" href="https://zhen.wang/article/低代码平台前端的设计与实现（一）构建引擎BuildEngine的基本实现/#dsl">DSL</a>
+                    
+                </li>
+                
+                <li class="toc-item toc-level-1">
+                    <a class="toc-link" href="https://zhen.wang/article/低代码平台前端的设计与实现（一）构建引擎BuildEngine的基本实现/#gou-jian">构建</a>
+                    
+                    <ol class="toc-child">
+                        
+                        <li class="toc-item toc-level-2">
+                            <a href="https://zhen.wang/article/低代码平台前端的设计与实现（一）构建引擎BuildEngine的基本实现/#zu-jian-gou-zao-ying-she-biao">组件构造映射表</a>
+                        </li>
+                        
+                        <li class="toc-item toc-level-2">
+                            <a href="https://zhen.wang/article/低代码平台前端的设计与实现（一）构建引擎BuildEngine的基本实现/#gou-jian-yin-qing-buildengine">构建引擎（BuildEngine）</a>
+                        </li>
+                        
+                        <li class="toc-item toc-level-2">
+                            <a href="https://zhen.wang/article/低代码平台前端的设计与实现（一）构建引擎BuildEngine的基本实现/#xiao-guo-zhan-shi">效果展示</a>
+                        </li>
+                        
+                        <li class="toc-item toc-level-2">
+                            <a href="https://zhen.wang/article/低代码平台前端的设计与实现（一）构建引擎BuildEngine的基本实现/#she-ji-you-hua">设计优化</a>
+                        </li>
+                        
+                    </ol>
+                    
+                </li>
+                
+                <li class="toc-item toc-level-1">
+                    <a class="toc-link" href="https://zhen.wang/article/低代码平台前端的设计与实现（一）构建引擎BuildEngine的基本实现/#guan-yu-gou-jian-de-zong-jie">关于构建的总结</a>
+                    
+                </li>
+                
+                <li class="toc-item toc-level-1">
+                    <a class="toc-link" href="https://zhen.wang/article/低代码平台前端的设计与实现（一）构建引擎BuildEngine的基本实现/#fu-lu">附录</a>
+                    
+                </li>
+                
+            </ol>
+        </div>
+    </div>
+    
+    <!-- real content -->
+    <div class="article-content markdown-content">
+        <p>这两年低代码平台的话题愈来愈火，一眼望去全是关于低代码开发的概念，鲜有关于低代码平台的设计实现。本文将以实际的代码入手，逐步介绍如何打造一款低开的平台。</p>
+<span id="continue-reading"></span>
+<p>低开概念我们不再赘述，但对于低开的前端来说，至少要有以下3个要素：</p>
+<ol>
+<li>使用能被更多用户（甚至不是开发人员）容易接受的DSL（领域特定语言），用以描述页面结构以及相关UI上下文。</li>
+<li>内部具有构建引擎，能够将DSL  JSON构建为React组件树，交给React进行渲染。</li>
+<li>提供设计器（Designer）支持以拖拉拽方式来快速处理DSL，方便用户快速完成页面设计。</li>
+</ol>
+<p>本文我们首先着眼于如何进行构建，后面的文章我们再详细介绍设计器的实现思路。</p>
+<h1 id="dsl">DSL</h1>
+<p>对于页面UI来说，我们总是可以将界面通过树状结构进行描述：</p>
+<pre style="background-color:#2b303b;color:#c0c5ce;"><code><span>1. 页面
+</span><span>    1-1. 标题
+</span><span>       1-1-1. 文字
+</span><span>    1-2. 内容面板
+</span><span>       1-2-1. 一个输入框
+</span></code></pre>
+<p>如果采用xml来描述，可以是如下的形式：</p>
+<pre data-lang="xml" style="background-color:#2b303b;color:#c0c5ce;" class="language-xml "><code class="language-xml" data-lang="xml"><span>&lt;</span><span style="color:#bf616a;">page</span><span>&gt;
+</span><span>    &lt;</span><span style="color:#bf616a;">title</span><span>&gt;标题文字&lt;/</span><span style="color:#bf616a;">title</span><span>&gt;
+</span><span>    &lt;</span><span style="color:#bf616a;">content</span><span>&gt;
+</span><span>        &lt;</span><span style="color:#bf616a;">input</span><span>&gt;&lt;/</span><span style="color:#bf616a;">input</span><span>&gt;
+</span><span>    &lt;/</span><span style="color:#bf616a;">content</span><span>&gt;
+</span><span>&lt;/</span><span style="color:#bf616a;">page</span><span>&gt;
+</span></code></pre>
+<p>当然，xml作为DSL有以下的两个问题：</p>
+<ol>
+<li>内容存在<strong>较大的信息冗余</strong>（page标签、title标签，都有重复的字符）。</li>
+<li>前端需要<strong>引入单独处理xml的库</strong>。</li>
+</ol>
+<p>自然，我们很容易想到另一个数据描述方案：JSON。使用JSON来描述上述的页面，我们可以如下设计：</p>
+<pre data-lang="json" style="background-color:#2b303b;color:#c0c5ce;" class="language-json "><code class="language-json" data-lang="json"><span>{
+</span><span>    &quot;</span><span style="color:#a3be8c;">type</span><span>&quot;: &quot;</span><span style="color:#a3be8c;">page</span><span>&quot;,
+</span><span>    &quot;</span><span style="color:#a3be8c;">children</span><span>&quot;: [
+</span><span>        {
+</span><span>            &quot;</span><span style="color:#a3be8c;">type</span><span>&quot;: &quot;</span><span style="color:#a3be8c;">title</span><span>&quot;,
+</span><span>            &quot;</span><span style="color:#a3be8c;">props</span><span>&quot;: {
+</span><span>                &quot;</span><span style="color:#a3be8c;">value</span><span>&quot;: &quot;</span><span style="color:#a3be8c;">标题文字</span><span>&quot;
+</span><span>            }
+</span><span>        },
+</span><span>        {
+</span><span>            &quot;</span><span style="color:#a3be8c;">type</span><span>&quot;: &quot;</span><span style="color:#a3be8c;">content</span><span>&quot;,
+</span><span>            &quot;</span><span style="color:#a3be8c;">children</span><span>&quot;: [
+</span><span>                {
+</span><span>                    &quot;</span><span style="color:#a3be8c;">type</span><span>&quot;: &quot;</span><span style="color:#a3be8c;">input</span><span>&quot;
+</span><span>                }
+</span><span>            ]
+</span><span>        }
+</span><span>    ]
+</span><span>}
+</span></code></pre>
+<p>初看JSON可能觉得内容比起xml更多，但是在前端我们拥有原生处理JSON的能力，这一点就很体现优势。</p>
+<p>回顾一下JSON的方案，我们首先定义一个基本的数据结构：组件节点（<code>ComponentNode</code>），它至少有如下的内容：</p>
+<ol>
+<li><strong>componentName</strong>属性：表明当前组件节点的名称。</li>
+<li><strong>children</strong>属性：一个ComponentNode数组，存放所有的子节点。</li>
+<li><strong>props</strong>：该元素的属性列表，可以应用到当前的组件节点，产生作用。</li>
+</ol>
+<p>例如，对于一个页面（<code>page</code>），该页面有一个属性配置背景色（<code>backgroundColor</code>），该页面中有一个按钮（<code>button</code>），并且该按钮有一个属性配置按钮的尺寸（<code>size</code>），此外还有一个输入框（<code>input</code>）。</p>
+<pre data-lang="json" style="background-color:#2b303b;color:#c0c5ce;" class="language-json "><code class="language-json" data-lang="json"><span>{
+</span><span>    &quot;</span><span style="color:#a3be8c;">componentName</span><span>&quot;: &quot;</span><span style="color:#a3be8c;">page</span><span>&quot;,
+</span><span>    &quot;</span><span style="color:#a3be8c;">props</span><span>&quot;: {
+</span><span>        &quot;</span><span style="color:#a3be8c;">backgroundColor</span><span>&quot;: &quot;</span><span style="color:#a3be8c;">pink</span><span>&quot;, </span><span style="color:#65737e;">// page的 backgroundColor 配置
+</span><span>    },
+</span><span>    &quot;</span><span style="color:#a3be8c;">children</span><span>&quot;: [
+</span><span>        {
+</span><span>            &quot;</span><span style="color:#a3be8c;">componentName</span><span>&quot;: &quot;</span><span style="color:#a3be8c;">button</span><span>&quot;,
+</span><span>            &quot;</span><span style="color:#a3be8c;">props</span><span>&quot;: {
+</span><span>                &quot;</span><span style="color:#a3be8c;">size</span><span>&quot;: &quot;</span><span style="color:#a3be8c;">default</span><span>&quot; </span><span style="color:#65737e;">// button的size配置
+</span><span>            }
+</span><span>        },
+</span><span>        {
+</span><span>            &quot;</span><span style="color:#a3be8c;">componentName</span><span>&quot;: &quot;</span><span style="color:#a3be8c;">input</span><span>&quot;
+</span><span>        }
+</span><span>    ]
+</span><span>}
+</span></code></pre>
+<p>同时，我们需要设计一下组件节点属性props这个字段。考虑到DSL中的props最终将会送入到对应React组件的props，我们有必要进行一定的设计与处理来保证React接收到的正确性。首先，我们先假设，props里面的每一个prop属性对应的值目前只支持string、number<strong>字面量</strong>（后续我们会设计表达式或者事件等，这里先简单设计）。也就是说，props的类型定义为：</p>
+<pre data-lang="typescript" style="background-color:#2b303b;color:#c0c5ce;" class="language-typescript "><code class="language-typescript" data-lang="typescript"><span style="color:#65737e;">/**
+</span><span style="color:#65737e;"> * 组件节点每一个属性的类型
+</span><span style="color:#65737e;"> */
+</span><span style="color:#b48ead;">export type </span><span>ComponentNodePropType = string | number;
+</span><span>
+</span><span style="color:#b48ead;">export interface </span><span>ComponentNode {
+</span><span>  </span><span style="color:#65737e;">// ... ...
+</span><span>  </span><span style="color:#bf616a;">props</span><span>: {
+</span><span>    [</span><span style="color:#bf616a;">propName</span><span>: string]: ComponentNodePropType;
+</span><span>  }
+</span><span>  </span><span style="color:#65737e;">// ... ...
+</span><span>}
+</span></code></pre>
+<p>在我们的平台中，我们定义如下的结构：</p>
+<pre data-lang="typescript" style="background-color:#2b303b;color:#c0c5ce;" class="language-typescript "><code class="language-typescript" data-lang="typescript"><span style="color:#65737e;">/**
+</span><span style="color:#65737e;"> * 组件节点每一个属性的类型
+</span><span style="color:#65737e;"> */
+</span><span style="color:#b48ead;">export type </span><span>ComponentNodePropType = string | number;
+</span><span>
+</span><span style="color:#65737e;">/**
+</span><span style="color:#65737e;"> * 组件节点
+</span><span style="color:#65737e;"> */
+</span><span style="color:#b48ead;">export type </span><span>ComponentNode = {
+</span><span>    </span><span style="color:#65737e;">/**
+</span><span style="color:#65737e;">     * 组件节点唯一名称
+</span><span style="color:#65737e;">     */
+</span><span>    </span><span style="color:#bf616a;">componentName</span><span>: string;
+</span><span>    </span><span style="color:#65737e;">/**
+</span><span style="color:#65737e;">     * 组件各种属性集合
+</span><span style="color:#65737e;">     */
+</span><span>    </span><span style="color:#bf616a;">props</span><span>: {
+</span><span>        [</span><span style="color:#bf616a;">propName</span><span>: string]: ComponentNodePropType;
+</span><span>    };
+</span><span>    </span><span style="color:#65737e;">/**
+</span><span style="color:#65737e;">     * 组件节点子节点
+</span><span style="color:#65737e;">     */
+</span><span>    </span><span style="color:#bf616a;">children</span><span>?: Array&lt;ComponentNode&gt;;
+</span><span>}
+</span></code></pre>
+<h1 id="gou-jian">构建</h1>
+<p>上文讨论了我们低开平台的DSL中关于组件节点的定义，但是DSL组件节点数据如果没有转换构建为UI组件并渲染在界面上，是没有任何意义的。我们必须要有构建引擎支持将JSON转换为web页面的内容。接下来我们将继续分析讨论如何完成ComponentNode到UI的转换处理。</p>
+<h2 id="zu-jian-gou-zao-ying-she-biao">组件构造映射表</h2>
+<p>首先，我们会有一个容器，来专门存放componentName与对应组件的构造方法（类组件、函数组件，甚至是一般的html组件字符串），就像如下的一个表：</p>
+<pre data-lang="typescript" style="background-color:#2b303b;color:#c0c5ce;" class="language-typescript "><code class="language-typescript" data-lang="typescript"><span style="color:#b48ead;">import </span><span>{</span><span style="color:#bf616a;">Button</span><span>, </span><span style="color:#bf616a;">Input</span><span>} </span><span style="color:#b48ead;">from </span><span>&quot;</span><span style="color:#a3be8c;">antd</span><span>&quot;;
+</span><span style="color:#b48ead;">import </span><span style="color:#bf616a;">React </span><span style="color:#b48ead;">from </span><span>&quot;</span><span style="color:#a3be8c;">react</span><span>&quot;;
+</span><span>
+</span><span>
+</span><span style="color:#65737e;">/**
+</span><span style="color:#65737e;"> * lite-lc内置的文本字面量节点，支持string、number
+</span><span style="color:#65737e;"> */
+</span><span style="color:#b48ead;">const </span><span style="color:#8fa1b3;">Text </span><span>= ({</span><span style="color:#bf616a;">value</span><span>}: { </span><span style="color:#bf616a;">value</span><span>: string | number }) </span><span style="color:#b48ead;">=&gt; </span><span>{
+</span><span>    </span><span style="color:#b48ead;">return </span><span>&lt;&gt;{</span><span style="color:#bf616a;">value</span><span>}&lt;/&gt;;
+</span><span>}
+</span><span>
+</span><span style="color:#b48ead;">export const </span><span style="color:#bf616a;">COMPONENT_MAP </span><span>= {
+</span><span>    &#39;</span><span style="color:#a3be8c;">page</span><span>&#39;: &#39;</span><span style="color:#a3be8c;">div</span><span>&#39;, </span><span style="color:#65737e;">// page直接使用div
+</span><span>    &#39;</span><span style="color:#a3be8c;">button</span><span>&#39;: </span><span style="color:#bf616a;">Button</span><span>,
+</span><span>    &#39;</span><span style="color:#a3be8c;">input</span><span>&#39;: </span><span style="color:#bf616a;">Input</span><span>,
+</span><span>    &#39;</span><span style="color:#a3be8c;">text</span><span>&#39;: </span><span style="color:#ebcb8b;">Text
+</span><span>}
+</span><span>
+</span></code></pre>
+<p>当然，平台还设计了一个内置默认的组件名为<code>"text"</code>的文本节点。主要用于某些组件的子节点直接是一个文本内容的场景来进行映射：</p>
+<pre data-lang="json" style="background-color:#2b303b;color:#c0c5ce;" class="language-json "><code class="language-json" data-lang="json"><span>{
+</span><span>  &quot;</span><span style="color:#a3be8c;">componentName</span><span>&quot;: &quot;</span><span style="color:#a3be8c;">button</span><span>&quot;,
+</span><span>  &quot;</span><span style="color:#a3be8c;">children</span><span>&quot;: [{
+</span><span>    &quot;</span><span style="color:#a3be8c;">componentName</span><span>&quot;: &quot;</span><span style="color:#a3be8c;">text</span><span>&quot;,
+</span><span>    &quot;</span><span style="color:#a3be8c;">props</span><span>&quot;: {
+</span><span>      &quot;</span><span style="color:#a3be8c;">value</span><span>&quot;: &quot;</span><span style="color:#a3be8c;">hello, button</span><span>&quot;
+</span><span>    }
+</span><span>  }]
+</span><span>}
+</span></code></pre>
+<h2 id="gou-jian-yin-qing-buildengine">构建引擎（BuildEngine）</h2>
+<p>接下来是实现我们的构建引擎（<code>BuildEngine</code>，叫引擎高大上）。构建引擎的核心功能是读取由DSL转为的ComponentNode，然后以递归深度遍历的方式不断读取ComponentNode及其子节点，根据ComponentNode对应的数据（譬如）<code>componentName</code>，从前面我们编写的<code>COMPONENT_MAP</code>中获取对应组件构造方法来将ComponentNode构建为一个又一个ReactNode。</p>
+<p><img src="https://static-res.zhen.wang/images/post/2022-09-18/010-ComponentNode-build-flow.png" alt="010-ComponentNode-build-flow" /></p>
+<p>代码如下：</p>
+<pre data-lang="ts" style="background-color:#2b303b;color:#c0c5ce;" class="language-ts "><code class="language-ts" data-lang="ts"><span style="color:#b48ead;">import </span><span>{</span><span style="color:#bf616a;">ComponentNode</span><span>} </span><span style="color:#b48ead;">from </span><span>&quot;</span><span style="color:#a3be8c;">../meta/ComponentNode</span><span>&quot;;
+</span><span style="color:#b48ead;">import </span><span>{</span><span style="color:#bf616a;">COMPONENT_MAP</span><span>} </span><span style="color:#b48ead;">from </span><span>&quot;</span><span style="color:#a3be8c;">../component-map/ComponentMap</span><span>&quot;;
+</span><span style="color:#b48ead;">import </span><span style="color:#bf616a;">React </span><span style="color:#b48ead;">from </span><span>&quot;</span><span style="color:#a3be8c;">react</span><span>&quot;;
+</span><span>
+</span><span style="color:#b48ead;">export class </span><span style="color:#ebcb8b;">BuildEngine </span><span style="color:#eff1f5;">{
+</span><span style="color:#eff1f5;">
+</span><span style="color:#eff1f5;">    </span><span style="color:#65737e;">/**
+</span><span style="color:#65737e;">     * 构建：通过传入 ComponentNode 信息，得到该节点对应供React渲染的ReactNode
+</span><span style="color:#65737e;">     * </span><span style="color:#b48ead;">@param </span><span style="color:#bf616a;">componentNode
+</span><span style="color:#65737e;">     */
+</span><span style="color:#eff1f5;">    </span><span style="color:#8fa1b3;">build</span><span>(</span><span style="color:#bf616a;">componentNode</span><span>: </span><span style="color:#eff1f5;">ComponentNode</span><span>) </span><span style="color:#eff1f5;">{
+</span><span style="color:#eff1f5;">        </span><span style="color:#b48ead;">return </span><span style="color:#bf616a;">this</span><span style="color:#eff1f5;">.</span><span style="color:#8fa1b3;">innerBuild</span><span style="color:#eff1f5;">(</span><span style="color:#bf616a;">componentNode</span><span style="color:#eff1f5;">);
+</span><span style="color:#eff1f5;">    }
+</span><span style="color:#eff1f5;">
+</span><span style="color:#eff1f5;">    </span><span style="color:#65737e;">/**
+</span><span style="color:#65737e;">     * 构建：通过传入 ComponentNode 信息，得到该节点对应供React渲染的ReactNode
+</span><span style="color:#65737e;">     * </span><span style="color:#b48ead;">@param </span><span style="color:#bf616a;">componentNode
+</span><span style="color:#65737e;">     */
+</span><span style="color:#eff1f5;">    </span><span style="color:#b48ead;">private </span><span style="color:#8fa1b3;">innerBuild</span><span>(</span><span style="color:#bf616a;">componentNode</span><span>: </span><span style="color:#eff1f5;">ComponentNode</span><span>) </span><span style="color:#eff1f5;">{
+</span><span style="color:#eff1f5;">
+</span><span style="color:#eff1f5;">        </span><span style="color:#b48ead;">if </span><span style="color:#eff1f5;">(</span><span>!</span><span style="color:#bf616a;">componentNode</span><span style="color:#eff1f5;">) {
+</span><span style="color:#eff1f5;">            </span><span style="color:#b48ead;">return </span><span style="color:#d08770;">undefined</span><span style="color:#eff1f5;">;
+</span><span style="color:#eff1f5;">        }
+</span><span style="color:#eff1f5;">
+</span><span style="color:#eff1f5;">        </span><span style="color:#b48ead;">const </span><span style="color:#eff1f5;">{</span><span style="color:#bf616a;">componentName</span><span style="color:#eff1f5;">, </span><span style="color:#bf616a;">children</span><span style="color:#eff1f5;">, </span><span style="color:#bf616a;">props</span><span style="color:#eff1f5;">} </span><span>= </span><span style="color:#bf616a;">componentNode</span><span style="color:#eff1f5;">;
+</span><span style="color:#eff1f5;">
+</span><span style="color:#eff1f5;">        </span><span style="color:#65737e;">// 如果有子元素，则递归调用自身，获取子元素处理后的ReactNode
+</span><span style="color:#eff1f5;">        </span><span style="color:#b48ead;">const </span><span style="color:#bf616a;">childrenReactNode </span><span>=
+</span><span style="color:#eff1f5;">            (</span><span style="color:#bf616a;">children </span><span>|| </span><span style="color:#eff1f5;">[]).</span><span style="color:#8fa1b3;">map</span><span style="color:#eff1f5;">(</span><span>(</span><span style="color:#bf616a;">childNode</span><span>) </span><span style="color:#b48ead;">=&gt; </span><span style="color:#eff1f5;">{
+</span><span style="color:#eff1f5;">                </span><span style="color:#b48ead;">return </span><span style="color:#bf616a;">this</span><span style="color:#eff1f5;">.</span><span style="color:#8fa1b3;">innerBuild</span><span style="color:#eff1f5;">(</span><span style="color:#bf616a;">childNode</span><span style="color:#eff1f5;">);
+</span><span style="color:#eff1f5;">            });
+</span><span style="color:#eff1f5;">
+</span><span style="color:#eff1f5;">        </span><span style="color:#65737e;">// 通过 COMPONENT_MAP 来查找对应组件的构造器
+</span><span style="color:#eff1f5;">        </span><span style="color:#b48ead;">const </span><span style="color:#bf616a;">componentConstructor </span><span>= </span><span style="color:#bf616a;">COMPONENT_MAP</span><span style="color:#eff1f5;">[</span><span style="color:#bf616a;">componentName</span><span style="color:#eff1f5;">];
+</span><span style="color:#eff1f5;">
+</span><span style="color:#eff1f5;">        </span><span style="color:#b48ead;">return </span><span style="color:#bf616a;">React</span><span style="color:#eff1f5;">.</span><span style="color:#96b5b4;">createElement</span><span style="color:#eff1f5;">(
+</span><span style="color:#eff1f5;">            </span><span style="color:#bf616a;">componentConstructor</span><span style="color:#eff1f5;">,
+</span><span style="color:#eff1f5;">            {</span><span>...</span><span style="color:#bf616a;">props</span><span style="color:#eff1f5;">},
+</span><span style="color:#eff1f5;">            </span><span style="color:#bf616a;">childrenReactNode</span><span style="color:#eff1f5;">.length </span><span>&gt; </span><span style="color:#d08770;">0 </span><span>? </span><span style="color:#bf616a;">childrenReactNode </span><span>: </span><span style="color:#d08770;">undefined
+</span><span style="color:#eff1f5;">        )
+</span><span style="color:#eff1f5;">    }
+</span><span style="color:#eff1f5;">}
+</span></code></pre>
+<p>需要注意，这个Engine的公共API是build，由外部调用，仅需要传入根节点ComponentNode即可得到整个节点数的UI组件树（ReactNode）。为了后续我们优化内部的API结构，我们内部使用innerBuild作为内部处理的实际方法。</p>
+<h2 id="xiao-guo-zhan-shi">效果展示</h2>
+<p>建立一个样例项目，编写一个简单的样例：</p>
+<pre data-lang="tsx" style="background-color:#2b303b;color:#c0c5ce;" class="language-tsx "><code class="language-tsx" data-lang="tsx"><span style="color:#b48ead;">import </span><span>{</span><span style="color:#bf616a;">BuildEngine</span><span>} </span><span style="color:#b48ead;">from </span><span>&quot;</span><span style="color:#a3be8c;">@lite-lc/core</span><span>&quot;;
+</span><span style="color:#b48ead;">import </span><span>{</span><span style="color:#bf616a;">ChangeEvent</span><span>, </span><span style="color:#bf616a;">useState</span><span>} </span><span style="color:#b48ead;">from </span><span>&quot;</span><span style="color:#a3be8c;">react</span><span>&quot;;
+</span><span style="color:#b48ead;">import </span><span>{</span><span style="color:#bf616a;">Input</span><span>} </span><span style="color:#b48ead;">from </span><span>&#39;</span><span style="color:#a3be8c;">antd</span><span>&#39;;
+</span><span>
+</span><span style="color:#b48ead;">export function </span><span style="color:#8fa1b3;">SimpleExample</span><span>() {
+</span><span>
+</span><span>    </span><span style="color:#65737e;">// 使用构建引擎
+</span><span>    </span><span style="color:#b48ead;">const </span><span>[</span><span style="color:#bf616a;">buildEngine</span><span>] = </span><span style="color:#8fa1b3;">useState</span><span>(new BuildEngine());
+</span><span>
+</span><span>    </span><span style="color:#65737e;">// 使用state存储一个schema的字符串
+</span><span>    </span><span style="color:#b48ead;">const </span><span>[</span><span style="color:#bf616a;">componentNodeJson</span><span>, </span><span style="color:#bf616a;">setComponentNodeJson</span><span>] = </span><span style="color:#8fa1b3;">useState</span><span>(JSON.</span><span style="color:#96b5b4;">stringify</span><span>({
+</span><span>        &quot;</span><span style="color:#a3be8c;">componentName</span><span>&quot;: &quot;</span><span style="color:#a3be8c;">page</span><span>&quot;,
+</span><span>        &quot;</span><span style="color:#a3be8c;">children</span><span>&quot;: [
+</span><span>            {
+</span><span>                &quot;</span><span style="color:#a3be8c;">componentName</span><span>&quot;: &quot;</span><span style="color:#a3be8c;">button</span><span>&quot;,
+</span><span>                &quot;</span><span style="color:#a3be8c;">props</span><span>&quot;: {
+</span><span>                    &quot;</span><span style="color:#a3be8c;">size</span><span>&quot;: &quot;</span><span style="color:#a3be8c;">small</span><span>&quot;,
+</span><span>                    &quot;</span><span style="color:#a3be8c;">type</span><span>&quot;: &quot;</span><span style="color:#a3be8c;">primary</span><span>&quot;
+</span><span>                },
+</span><span>                &quot;</span><span style="color:#a3be8c;">children</span><span>&quot;: [
+</span><span>                    {
+</span><span>                        &quot;</span><span style="color:#a3be8c;">componentName</span><span>&quot;: &quot;</span><span style="color:#a3be8c;">text</span><span>&quot;,
+</span><span>                        &quot;</span><span style="color:#a3be8c;">props</span><span>&quot;: {
+</span><span>                            &quot;</span><span style="color:#a3be8c;">value</span><span>&quot;: &quot;</span><span style="color:#a3be8c;">hello, my button.</span><span>&quot;
+</span><span>                        }
+</span><span>                    }
+</span><span>                ]
+</span><span>            },
+</span><span>            {
+</span><span>                &quot;</span><span style="color:#a3be8c;">componentName</span><span>&quot;: &quot;</span><span style="color:#a3be8c;">input</span><span>&quot;
+</span><span>            }
+</span><span>        ]
+</span><span>    }, </span><span style="color:#d08770;">null</span><span>, </span><span style="color:#d08770;">2</span><span>))
+</span><span>
+</span><span>    </span><span style="color:#b48ead;">let </span><span style="color:#bf616a;">reactNode</span><span>;
+</span><span>    </span><span style="color:#b48ead;">try </span><span>{
+</span><span>        </span><span style="color:#b48ead;">const </span><span style="color:#bf616a;">eleNode </span><span>= JSON.</span><span style="color:#96b5b4;">parse</span><span>(</span><span style="color:#bf616a;">componentNodeJson</span><span>);
+</span><span>        </span><span style="color:#bf616a;">reactNode </span><span>= </span><span style="color:#bf616a;">buildEngine</span><span>.</span><span style="color:#8fa1b3;">build</span><span>(</span><span style="color:#bf616a;">eleNode</span><span>);
+</span><span>    } </span><span style="color:#b48ead;">catch </span><span>(</span><span style="color:#bf616a;">e</span><span>) {
+</span><span>        </span><span style="color:#65737e;">// 序列化出异常，返回JSON格式出错
+</span><span>        </span><span style="color:#bf616a;">reactNode </span><span>= &lt;</span><span style="color:#bf616a;">div</span><span>&gt;JSON格式出错&lt;/</span><span style="color:#bf616a;">div</span><span>&gt;
+</span><span>    }
+</span><span>
+</span><span>    </span><span style="color:#b48ead;">return </span><span>(
+</span><span>        &lt;</span><span style="color:#bf616a;">div </span><span style="color:#d08770;">style</span><span>=</span><span style="color:#ab7967;">{</span><span>{width: &#39;</span><span style="color:#a3be8c;">100%</span><span>&#39;, height: &#39;</span><span style="color:#a3be8c;">100%</span><span>&#39;, padding: &#39;</span><span style="color:#a3be8c;">10px</span><span>&#39;}</span><span style="color:#ab7967;">}</span><span>&gt;
+</span><span>            &lt;</span><span style="color:#bf616a;">div </span><span style="color:#d08770;">style</span><span>=</span><span style="color:#ab7967;">{</span><span>{width: &#39;</span><span style="color:#a3be8c;">100%</span><span>&#39;, height: &#39;</span><span style="color:#a3be8c;">calc(50%)</span><span>&#39;}</span><span style="color:#ab7967;">}</span><span>&gt;
+</span><span>                &lt;</span><span style="color:#ebcb8b;">Input.TextArea
+</span><span>                    </span><span style="color:#d08770;">rows</span><span>=</span><span style="color:#ab7967;">{</span><span style="color:#d08770;">4</span><span style="color:#ab7967;">}
+</span><span>                    </span><span style="color:#d08770;">value</span><span>=</span><span style="color:#ab7967;">{</span><span style="color:#bf616a;">componentNodeJson</span><span style="color:#ab7967;">}
+</span><span>                    </span><span style="color:#d08770;">onChange</span><span>=</span><span style="color:#ab7967;">{</span><span>(</span><span style="color:#bf616a;">e</span><span>: ChangeEvent&lt;HTMLTextAreaElement&gt;) </span><span style="color:#b48ead;">=&gt; </span><span>{
+</span><span>                        </span><span style="color:#b48ead;">const </span><span style="color:#bf616a;">value </span><span>= </span><span style="color:#bf616a;">e</span><span>.target.value;
+</span><span>                        </span><span style="color:#65737e;">// 编辑框发生修改，重新设置JSON
+</span><span>                        </span><span style="color:#8fa1b3;">setComponentNodeJson</span><span>(</span><span style="color:#bf616a;">value</span><span>);
+</span><span>                    }</span><span style="color:#ab7967;">}</span><span>/&gt;
+</span><span>            &lt;/</span><span style="color:#bf616a;">div</span><span>&gt;
+</span><span>            &lt;</span><span style="color:#bf616a;">div </span><span style="color:#d08770;">style</span><span>=</span><span style="color:#ab7967;">{</span><span>{width: &#39;</span><span style="color:#a3be8c;">100%</span><span>&#39;, height: &#39;</span><span style="color:#a3be8c;">calc(50%)</span><span>&#39;, border: &#39;</span><span style="color:#a3be8c;">1px solid gray</span><span>&#39;}</span><span style="color:#ab7967;">}</span><span>&gt;
+</span><span>                </span><span style="color:#ab7967;">{</span><span style="color:#bf616a;">reactNode</span><span style="color:#ab7967;">}
+</span><span>            &lt;/</span><span style="color:#bf616a;">div</span><span>&gt;
+</span><span>        &lt;/</span><span style="color:#bf616a;">div</span><span>&gt;
+</span><span>    );
+</span><span>}
+</span></code></pre>
+<p><img src="https://static-res.zhen.wang/images/post/2022-09-18/020-base-effect.gif" alt="020-base-effect" /></p>
+<h2 id="she-ji-you-hua">设计优化</h2>
+<h3 id="lu-jing-she-ji">路径设计</h3>
+<p>目前为止，我们已经设计了一个简单的构建引擎。但是还有两个需要解决的问题：</p>
+<ol>
+<li>循环创建的ReactNode数组没有添加key，会导致React渲染性能问题。</li>
+<li>构建的过程中，无法定位当前ComponentNode的所在位置。</li>
+</ol>
+<p>我们先讨论问题2。对于该问题具体是指：我们希望能够记录每一个节点在整个树状的定位。</p>
+<pre data-lang="json" style="background-color:#2b303b;color:#c0c5ce;" class="language-json "><code class="language-json" data-lang="json"><span>{
+</span><span>    &quot;</span><span style="color:#a3be8c;">componentName</span><span>&quot;: &quot;</span><span style="color:#a3be8c;">page</span><span>&quot;,
+</span><span>    &quot;</span><span style="color:#a3be8c;">children</span><span>&quot;: [
+</span><span>        {
+</span><span>            &quot;</span><span style="color:#a3be8c;">componentName</span><span>&quot;: &quot;</span><span style="color:#a3be8c;">panel</span><span>&quot;,
+</span><span>            &quot;</span><span style="color:#a3be8c;">children</span><span>&quot;: [
+</span><span>                {    
+</span><span>                    &quot;</span><span style="color:#a3be8c;">componentName</span><span>&quot;: &quot;</span><span style="color:#a3be8c;">input</span><span>&quot;
+</span><span>                },
+</span><span>                {
+</span><span>                    &quot;</span><span style="color:#a3be8c;">componentName</span><span>&quot;: &quot;</span><span style="color:#a3be8c;">button</span><span>&quot;,
+</span><span>                }
+</span><span>            ]
+</span><span>        },
+</span><span>        {    
+</span><span>            &quot;</span><span style="color:#a3be8c;">componentName</span><span>&quot;: &quot;</span><span style="color:#a3be8c;">input</span><span>&quot;
+</span><span>        }
+</span><span>    ]
+</span><span>}
+</span></code></pre>
+<p>对于上述的每一个type，都应当有其标志其唯一的一个key。可以知道，每一个元素的路径是唯一的：</p>
+<ul>
+<li>page：/page</li>
+<li>panel：/page/panel@0</li>
+<li>第一个input：/page/panel@0/input@0。page下面有个panel（面板）元素，位于page的子节点第0号位置（基于0作为起始）。panel下面有个input元素，位于panel的子节点第0号位置。</li>
+<li>button：/page/panel@0/button@1</li>
+<li>第二个input：/page/input@1</li>
+</ul>
+<p>也就是说，路径由<code>'/'</code>拼接，每一级路径由<code>'@'</code>分割组件名称componentName和index，index表明该节点处于上一级节点（也就是父级节点）的children数组的位置索引（基于0起始）。</p>
+<p>那么，如何生成这样一个路径信息呢？只需要在build的遍历ComponentNode过程中记录即可，基于之前构建引擎的innerBuild的递归调用，现在只需要进行简单的修改方法：</p>
+<pre data-lang="diff" style="background-color:#2b303b;color:#c0c5ce;" class="language-diff "><code class="language-diff" data-lang="diff"><span>// BuildEngine.ts代码
+</span><span style="color:#bf616a;">-    private innerBuild(componentNode: ComponentNode): ReactNode | undefined {
+</span><span style="color:#a3be8c;">+    private innerBuild(componentNode: ComponentNode, path: string): ReactNode | undefined {
+</span><span>         if (!componentNode) {
+</span><span>             return undefined;
+</span><span>         }
+</span><span>				 // ... ...
+</span><span>         // 递归调用自身，获取子元素处理后的ReactNode
+</span><span>         const childrenReactNode =
+</span><span style="color:#bf616a;">-            (children || []).map((childNode) =&gt; {
+</span><span style="color:#bf616a;">-               return this.innerBuild(childNode);
+</span><span style="color:#bf616a;">-            });
+</span><span style="color:#a3be8c;">+            (children || []).map((childNode, index) =&gt; {
+</span><span style="color:#a3be8c;">+                // 子元素路径：
+</span><span style="color:#a3be8c;">+                // 父级路径（也就是当前path）+ &#39;/&#39; + 子元素名称 + &#39;@&#39; + 子元素所在索引
+</span><span style="color:#a3be8c;">+                const childPath = `${path}/${childNode.componentName}@${index}`;
+</span><span style="color:#a3be8c;">+                return this.innerBuild(childNode, childPath);
+</span><span style="color:#a3be8c;">+            });
+</span></code></pre>
+<p>首先，我们修改了innerBuild方法入参，增加了参数<code>path</code>，用以表示当前节点所在的路径；其次，在生成子元素调用innertBuild的地方，将<code>path</code>作为基准，根据上述规则<code>"${componentName}@${index}"</code>，来生成子元素节点的路径，并传入到的递归调用的innerBuild中。</p>
+<p>当然，build内部调用innerBuild的时候，需要构造一个起始节点的path，传入innerBuild。</p>
+<pre data-lang="diff" style="background-color:#2b303b;color:#c0c5ce;" class="language-diff "><code class="language-diff" data-lang="diff"><span>// BuildEngine.ts代码
+</span><span>    build(componentNode: ComponentNode) {
+</span><span style="color:#bf616a;">-       return this.innerBuild(componentNode);
+</span><span style="color:#a3be8c;">+       // 起始节点，需要构造一个起始path传入innerBuild
+</span><span style="color:#a3be8c;">+       // 根节点由于不属于某一个父级的子元素，所以不存在&#39;@${index}&#39;
+</span><span style="color:#a3be8c;">+       return this.innerBuild(componentNode, &#39;/&#39; + componentNode.componentName);
+</span><span>    }
+</span></code></pre>
+<p>再回到innerBuild关于使用React.createElement的部分，考虑到现在已经有了path作为每一个组件唯一的路径标识。我们可以将该path作为每一个组件的key，让React创建元素的时候，将这个path作为key添加到组件实例上，进而解决<code>Warning: Each child in a list should have a unique "key" prop.</code>组件为一个key属性问题。相关改动代码如下：</p>
+<pre data-lang="diff" style="background-color:#2b303b;color:#c0c5ce;" class="language-diff "><code class="language-diff" data-lang="diff"><span>// innerBuild中最后的返回ReactNode部分
+</span><span>        return React.createElement(
+</span><span>            componentConstructor,
+</span><span style="color:#bf616a;">-           {...props},
+</span><span style="color:#a3be8c;">+           {...props, key: path}, // 将path作为key
+</span><span>            childrenReactNode.length &gt; 0 ? childrenReactNode : undefined
+</span><span>        )
+</span></code></pre>
+<h1 id="guan-yu-gou-jian-de-zong-jie">关于构建的总结</h1>
+<p>目前为止，我们设计了一套十分精简的根据DSL组件节点树转换为ReactNode的构建引擎，内部基于antd5组件的组件构建ReactNode，通过接收JSON遍历节点构建出ReactNode，再交给React渲染出对应结构的页面。该构建引擎需要考虑，React渲染时候元素的时候，需要一个唯一key来表示对应组件。本系列，我们由浅入深逐步建立整个低代码平台。下篇文章，笔者将开始介绍设计器Designer的实现。</p>
+<h1 id="fu-lu">附录</h1>
+<p>本章内容对应代码已经推送到github上</p>
+<p><a rel="noopener" target="_blank" href="https://github.com/w4ngzhen/lite-lc">w4ngzhen/lite-lc (github.com)</a></p>
+<p>main分支与最新文章同步，对应章节将会有对应的tag来标识。</p>
+<p>且按照文章里各段介绍顺序完成了提交：</p>
+<pre style="background-color:#2b303b;color:#c0c5ce;"><code><span>modify: BuildEngine递归增加path标识组件唯一性，并作为key交给react创建ReactNode。
+</span><span>add: 新增BuildEngine并导出相关类型；修改样例代码，验证BuildEngine流程。
+</span><span>add: 新增组件名称与组件构造器映射的数据容器，用于构建过程中根据对应组件名称构造对应的组件实例。
+</span><span>add: ComponentNode 映射 JSON DSL
+</span><span>init: 项目初始化，添加core and example 基础文件（使用antd5）。
+</span></code></pre>
+
+    </div>
+</div>
+<script src="https://zhen.wang/libs/viewerjs@1.11.7/viewer.min.js"></script>
+<link rel="stylesheet" href="https://zhen.wang/libs/viewerjs@1.11.7/viewer.min.css"/>
+<script>
+  if (window.Viewer) {
+    document.querySelectorAll('img').forEach(img => {
+      new Viewer(img, {
+        inline: false,
+        navbar: false,
+        toolbar: {
+          zoomIn: 1,
+          zoomOut: 1,
+          reset: 1,
+          rotateLeft: 1,
+          rotateRight: 1,
+        },
+      });
+    });
+  }
+</script>
+
+
+</body>
+</html>

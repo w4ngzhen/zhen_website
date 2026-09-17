@@ -1,0 +1,445 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="utf-8">
+    <meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover"
+          name="viewport">
+    
+    
+    <!-- umami web analysis -->
+    <script defer src="https://zhen.wang/libs/umami/umami.script.js"
+            data-website-id="d66cfe03-f6b3-4aa0-baf8-728700db1b09"></script>
+    
+    
+    
+    <link rel="icon" type="image/png" sizes="16x16" href="https://zhen.wang/images/blog-site-icon.svg">
+    <link rel="icon" type="image/png" sizes="32x32" href="https://zhen.wang/images/blog-site-icon.svg">
+    <title>zhen&#x27;s everything</title>
+    <link rel="stylesheet" href="https://zhen.wang/style.css">
+    
+<link rel="stylesheet" href="https://zhen.wang/article_content.css">
+<link rel="stylesheet" href="https://zhen.wang/article_markdown.css">
+
+</head>
+<body>
+
+<div id="article">
+    <header class="article-header">
+        
+<div class="base-title">
+    <a href="#" onclick="history.length > 1 ? history.back() : location.href = '/'; return false;">&LeftArrow; Back</a>
+    <h1>
+        基于webpack与TypeScript的SolidJS项目搭建
+    </h1>
+</div>
+
+    </header>
+    <p class="article-date">2023-03-22</p>
+    
+    <!-- toc -->
+    <div class="article-toc">
+        <label class="toc-title" for="toc-trigger">目录</label>
+        <input id="toc-trigger" type="checkbox" checked/>
+        <div class="toc-content">
+            <ol class="toc">
+                
+                <li class="toc-item toc-level-1">
+                    <a class="toc-link" href="https://zhen.wang/article/基于webpack与TypeScript的solidjs项目搭建/#qian-zhi">前置</a>
+                    
+                </li>
+                
+                <li class="toc-item toc-level-1">
+                    <a class="toc-link" href="https://zhen.wang/article/基于webpack与TypeScript的solidjs项目搭建/#yarnchu-shi-hua">yarn初始化</a>
+                    
+                </li>
+                
+                <li class="toc-item toc-level-1">
+                    <a class="toc-link" href="https://zhen.wang/article/基于webpack与TypeScript的solidjs项目搭建/#gitchu-shi-hua">git初始化</a>
+                    
+                </li>
+                
+                <li class="toc-item toc-level-1">
+                    <a class="toc-link" href="https://zhen.wang/article/基于webpack与TypeScript的solidjs项目搭建/#ku-an-zhuang">库安装</a>
+                    
+                    <ol class="toc-child">
+                        
+                        <li class="toc-item toc-level-2">
+                            <a href="https://zhen.wang/article/基于webpack与TypeScript的solidjs项目搭建/#webpack-4jian-tao">webpack 4件套</a>
+                        </li>
+                        
+                        <li class="toc-item toc-level-2">
+                            <a href="https://zhen.wang/article/基于webpack与TypeScript的solidjs项目搭建/#yang-shi-chu-li-4jian-tao">样式处理 4件套</a>
+                        </li>
+                        
+                        <li class="toc-item toc-level-2">
+                            <a href="https://zhen.wang/article/基于webpack与TypeScript的solidjs项目搭建/#babel-7jian-tao">babel 7件套</a>
+                        </li>
+                        
+                        <li class="toc-item toc-level-2">
+                            <a href="https://zhen.wang/article/基于webpack与TypeScript的solidjs项目搭建/#typescript-1jian-tao">TypeScript 1件套</a>
+                        </li>
+                        
+                        <li class="toc-item toc-level-2">
+                            <a href="https://zhen.wang/article/基于webpack与TypeScript的solidjs项目搭建/#solidjs-2jian-tao">SolidJS 2件套</a>
+                        </li>
+                        
+                    </ol>
+                    
+                </li>
+                
+                <li class="toc-item toc-level-1">
+                    <a class="toc-link" href="https://zhen.wang/article/基于webpack与TypeScript的solidjs项目搭建/#xiang-mu-pei-zhi">项目配置</a>
+                    
+                    <ol class="toc-child">
+                        
+                        <li class="toc-item toc-level-2">
+                            <a href="https://zhen.wang/article/基于webpack与TypeScript的solidjs项目搭建/#tsconfig-json">tsconfig.json</a>
+                        </li>
+                        
+                        <li class="toc-item toc-level-2">
+                            <a href="https://zhen.wang/article/基于webpack与TypeScript的solidjs项目搭建/#webpack-config-js">webpack.config.js</a>
+                        </li>
+                        
+                        <li class="toc-item toc-level-2">
+                            <a href="https://zhen.wang/article/基于webpack与TypeScript的solidjs项目搭建/#babelrc">.babelrc</a>
+                        </li>
+                        
+                        <li class="toc-item toc-level-2">
+                            <a href="https://zhen.wang/article/基于webpack与TypeScript的solidjs项目搭建/#package-json">package.json</a>
+                        </li>
+                        
+                    </ol>
+                    
+                </li>
+                
+                <li class="toc-item toc-level-1">
+                    <a class="toc-link" href="https://zhen.wang/article/基于webpack与TypeScript的solidjs项目搭建/#chu-shi-wen-jian-chuang-jian">初始文件创建</a>
+                    
+                    <ol class="toc-child">
+                        
+                        <li class="toc-item toc-level-2">
+                            <a href="https://zhen.wang/article/基于webpack与TypeScript的solidjs项目搭建/#app-d-ts">app.d.ts</a>
+                        </li>
+                        
+                        <li class="toc-item toc-level-2">
+                            <a href="https://zhen.wang/article/基于webpack与TypeScript的solidjs项目搭建/#index-html">index.html</a>
+                        </li>
+                        
+                        <li class="toc-item toc-level-2">
+                            <a href="https://zhen.wang/article/基于webpack与TypeScript的solidjs项目搭建/#index-tsx">index.tsx</a>
+                        </li>
+                        
+                        <li class="toc-item toc-level-2">
+                            <a href="https://zhen.wang/article/基于webpack与TypeScript的solidjs项目搭建/#index-module-less">index.module.less</a>
+                        </li>
+                        
+                    </ol>
+                    
+                </li>
+                
+                <li class="toc-item toc-level-1">
+                    <a class="toc-link" href="https://zhen.wang/article/基于webpack与TypeScript的solidjs项目搭建/#xiang-mu-yun-xing-xiao-guo">项目运行效果</a>
+                    
+                </li>
+                
+                <li class="toc-item toc-level-1">
+                    <a class="toc-link" href="https://zhen.wang/article/基于webpack与TypeScript的solidjs项目搭建/#fu-lu">附录</a>
+                    
+                </li>
+                
+            </ol>
+        </div>
+    </div>
+    
+    <!-- real content -->
+    <div class="article-content markdown-content">
+        <p>本文将讲述如何基于webpack与TypeScript搭建一个基础的支持less模块的solidjs项目。方便后续涉及到solidjs相关分析与讨论都可以基于本文的成果之上进行。</p>
+<span id="continue-reading"></span><h1 id="qian-zhi">前置</h1>
+<ol>
+<li>nodejs v14+</li>
+<li>全局yarn（npm亦可）</li>
+<li>稳定的网络环境</li>
+</ol>
+<p>创建根目录<code>solidjs-webpack-ts-example</code>：</p>
+<pre data-lang="shell" style="background-color:#2b303b;color:#c0c5ce;" class="language-shell "><code class="language-shell" data-lang="shell"><span>mkdir solidjs-webpack-ts-example
+</span><span>cd solidjs-webpack-ts-example
+</span></code></pre>
+<h1 id="yarnchu-shi-hua">yarn初始化</h1>
+<pre data-lang="shell" style="background-color:#2b303b;color:#c0c5ce;" class="language-shell "><code class="language-shell" data-lang="shell"><span>➜  solidjs-webpack-ts-example git:(main) yarn init                                                          
+</span><span>yarn init v1.22.19
+</span><span>question name (solidjs-webpack-ts-example): 
+</span><span>question version (1.0.0): 
+</span><span>question description: 
+</span><span>question entry point (index.js): 
+</span><span>question repository url: 
+</span><span>question author xxx
+</span><span>question license (MIT): 
+</span><span>question private: 
+</span><span>success Saved package.json
+</span><span>✨  Done in 3.68s.
+</span></code></pre>
+<h1 id="gitchu-shi-hua">git初始化</h1>
+<pre data-lang="shell" style="background-color:#2b303b;color:#c0c5ce;" class="language-shell "><code class="language-shell" data-lang="shell"><span># 前置：添加.gitignore文件
+</span><span>git init
+</span><span>git add .
+</span><span>git commit -m &quot;init&quot;
+</span></code></pre>
+<h1 id="ku-an-zhuang">库安装</h1>
+<h2 id="webpack-4jian-tao">webpack 4件套</h2>
+<pre data-lang="shell" style="background-color:#2b303b;color:#c0c5ce;" class="language-shell "><code class="language-shell" data-lang="shell"><span>yarn add -D webpack webpack-cli webpack-dev-server html-webpack-plugin
+</span></code></pre>
+<h2 id="yang-shi-chu-li-4jian-tao">样式处理 4件套</h2>
+<pre style="background-color:#2b303b;color:#c0c5ce;"><code><span>yarn add -D less less-loader css-loader mini-css-extract-plugin
+</span></code></pre>
+<ol>
+<li>
+<p>less：less核心编译解析库；</p>
+</li>
+<li>
+<p>less-loader：webpack与less的桥梁。当webpack处理less时，通过配置指定交给less-loader，less-loader调用安装的less，将less代码编译为css代码；</p>
+</li>
+<li>
+<p>css-loader：wepback处理css样式代码的loader。处理css，或处理来自less编译成的css；</p>
+</li>
+<li>
+<p>mini-css-extract-plugin：css样式处理最后一个环节，交给该插件的提供的loader、plugin完成独立样式文件打包生成。</p>
+</li>
+</ol>
+<h2 id="babel-7jian-tao">babel 7件套</h2>
+<pre style="background-color:#2b303b;color:#c0c5ce;"><code><span>yarn add -D @babel/core
+</span><span>yarn add -D @babel/preset-env @babel/preset-typescript babel-preset-solid
+</span><span>yarn add -D @babel/plugin-proposal-class-properties @babel/plugin-proposal-object-rest-spread
+</span><span>yarn add -D babel-loader
+</span></code></pre>
+<ol>
+<li>@babel/core：babel核心库；</li>
+<li>@babel/preset-env、@babel/preset-typescript、babel-preset-solid（这个preset名字目前没有符合babel规范）：babel扩展preset，整合当前主流浏览器支持语法、typescript语法支持以及solidjs相关语法支持；</li>
+<li>@babel/plugin-proposal-class-properties、@babel/plugin-proposal-object-rest-spread：babel扩展插件，支持类定义属性以及<code>...</code>剩余属性解构语法；</li>
+<li>babel-loader：webpack与babel的桥梁。当webpack处理相关代码的时候，通过配置指定交给babel-loader，babel-loader内部调用上述第1个babel核心库，并结合相关的preset、plugin完成代码编译。</li>
+</ol>
+<h2 id="typescript-1jian-tao">TypeScript 1件套</h2>
+<p>实际山，主流IDE（WebStorm、VSCode）等都内置了TypeScript库，可以不用安装TS，只需要配置<code>tsconfig.json</code>就可以完成代码编写过程中的类型检查（babel编译的时候，不会进行类型检查）。关于这一块，推荐大家阅读另一篇文章：<a rel="noopener" target="_blank" href="https://zhuanlan.zhihu.com/p/561186916">【长文详解】TypeScript与Babel、webpack的关系以及IDE对TS的类型检查 - 知乎 (zhihu.com)</a>。</p>
+<p>为了方便的进行类型检查，本样会安装项目级：</p>
+<pre data-lang="shell" style="background-color:#2b303b;color:#c0c5ce;" class="language-shell "><code class="language-shell" data-lang="shell"><span>yarn add -D typescript
+</span></code></pre>
+<p>至此，我们安装了目前基础项目所需要的开发依赖（devDependencies）。</p>
+<pre data-lang="json" style="background-color:#2b303b;color:#c0c5ce;" class="language-json "><code class="language-json" data-lang="json"><span>{
+</span><span>  &quot;</span><span style="color:#a3be8c;">name</span><span>&quot;: &quot;</span><span style="color:#a3be8c;">solidjs-webpack-ts-example</span><span>&quot;,
+</span><span>  &quot;</span><span style="color:#a3be8c;">version</span><span>&quot;: &quot;</span><span style="color:#a3be8c;">1.0.0</span><span>&quot;,
+</span><span>  &quot;</span><span style="color:#a3be8c;">main</span><span>&quot;: &quot;</span><span style="color:#a3be8c;">index.js</span><span>&quot;,
+</span><span>  &quot;</span><span style="color:#a3be8c;">author</span><span>&quot;: &quot;</span><span style="color:#a3be8c;">w4ngzhen</span><span>&quot;,
+</span><span>  &quot;</span><span style="color:#a3be8c;">license</span><span>&quot;: &quot;</span><span style="color:#a3be8c;">MIT</span><span>&quot;,
+</span><span>  &quot;</span><span style="color:#a3be8c;">devDependencies</span><span>&quot;: {
+</span><span>    &quot;</span><span style="color:#a3be8c;">@babel/core</span><span>&quot;: &quot;</span><span style="color:#a3be8c;">^7.21.3</span><span>&quot;,
+</span><span>    &quot;</span><span style="color:#a3be8c;">@babel/plugin-proposal-class-properties</span><span>&quot;: &quot;</span><span style="color:#a3be8c;">^7.18.6</span><span>&quot;,
+</span><span>    &quot;</span><span style="color:#a3be8c;">@babel/plugin-proposal-object-rest-spread</span><span>&quot;: &quot;</span><span style="color:#a3be8c;">^7.20.7</span><span>&quot;,
+</span><span>    &quot;</span><span style="color:#a3be8c;">@babel/preset-env</span><span>&quot;: &quot;</span><span style="color:#a3be8c;">^7.20.2</span><span>&quot;,
+</span><span>    &quot;</span><span style="color:#a3be8c;">@babel/preset-typescript</span><span>&quot;: &quot;</span><span style="color:#a3be8c;">^7.21.0</span><span>&quot;,
+</span><span>    &quot;</span><span style="color:#a3be8c;">babel-loader</span><span>&quot;: &quot;</span><span style="color:#a3be8c;">^9.1.2</span><span>&quot;,
+</span><span>    &quot;</span><span style="color:#a3be8c;">babel-preset-solid</span><span>&quot;: &quot;</span><span style="color:#a3be8c;">^1.6.13</span><span>&quot;,
+</span><span>    &quot;</span><span style="color:#a3be8c;">css-loader</span><span>&quot;: &quot;</span><span style="color:#a3be8c;">^6.7.3</span><span>&quot;,
+</span><span>    &quot;</span><span style="color:#a3be8c;">html-webpack-plugin</span><span>&quot;: &quot;</span><span style="color:#a3be8c;">^5.5.0</span><span>&quot;,
+</span><span>    &quot;</span><span style="color:#a3be8c;">less</span><span>&quot;: &quot;</span><span style="color:#a3be8c;">^4.1.3</span><span>&quot;,
+</span><span>    &quot;</span><span style="color:#a3be8c;">less-loader</span><span>&quot;: &quot;</span><span style="color:#a3be8c;">^11.1.0</span><span>&quot;,
+</span><span>    &quot;</span><span style="color:#a3be8c;">mini-css-extract-plugin</span><span>&quot;: &quot;</span><span style="color:#a3be8c;">^2.7.5</span><span>&quot;,
+</span><span>    &quot;</span><span style="color:#a3be8c;">typescript</span><span>&quot;: &quot;</span><span style="color:#a3be8c;">^5.0.2</span><span>&quot;,
+</span><span>    &quot;</span><span style="color:#a3be8c;">webpack</span><span>&quot;: &quot;</span><span style="color:#a3be8c;">^5.76.2</span><span>&quot;,
+</span><span>    &quot;</span><span style="color:#a3be8c;">webpack-cli</span><span>&quot;: &quot;</span><span style="color:#a3be8c;">^5.0.1</span><span>&quot;,
+</span><span>    &quot;</span><span style="color:#a3be8c;">webpack-dev-server</span><span>&quot;: &quot;</span><span style="color:#a3be8c;">^4.13.1</span><span>&quot;
+</span><span>  }
+</span><span>}
+</span></code></pre>
+<h2 id="solidjs-2jian-tao">SolidJS 2件套</h2>
+<pre style="background-color:#2b303b;color:#c0c5ce;"><code><span>yarn add solid-js @solidjs/router
+</span></code></pre>
+<ol>
+<li>solid-js：SolidJs核心库；</li>
+<li>@solidjs/router：solidjs官方SPA路由组件。</li>
+</ol>
+<h1 id="xiang-mu-pei-zhi">项目配置</h1>
+<h2 id="tsconfig-json">tsconfig.json</h2>
+<p>项目根目录</p>
+<pre data-lang="json" style="background-color:#2b303b;color:#c0c5ce;" class="language-json "><code class="language-json" data-lang="json"><span>{
+</span><span>  &quot;</span><span style="color:#a3be8c;">compilerOptions</span><span>&quot;: {
+</span><span>    &quot;</span><span style="color:#a3be8c;">target</span><span>&quot;: &quot;</span><span style="color:#a3be8c;">es2016</span><span>&quot;,
+</span><span>    &quot;</span><span style="color:#a3be8c;">module</span><span>&quot;: &quot;</span><span style="color:#a3be8c;">commonjs</span><span>&quot;,
+</span><span>    &quot;</span><span style="color:#a3be8c;">esModuleInterop</span><span>&quot;: </span><span style="color:#d08770;">true</span><span>,
+</span><span>    &quot;</span><span style="color:#a3be8c;">forceConsistentCasingInFileNames</span><span>&quot;: </span><span style="color:#d08770;">true</span><span>,
+</span><span>    &quot;</span><span style="color:#a3be8c;">strict</span><span>&quot;: </span><span style="color:#d08770;">true</span><span>,
+</span><span>    &quot;</span><span style="color:#a3be8c;">noEmit</span><span>&quot;: </span><span style="color:#d08770;">true</span><span>,
+</span><span>    &quot;</span><span style="color:#a3be8c;">skipLibCheck</span><span>&quot;: </span><span style="color:#d08770;">true</span><span>,
+</span><span>    &quot;</span><span style="color:#a3be8c;">jsx</span><span>&quot;: &quot;</span><span style="color:#a3be8c;">preserve</span><span>&quot;,
+</span><span>    &quot;</span><span style="color:#a3be8c;">jsxImportSource</span><span>&quot;: &quot;</span><span style="color:#a3be8c;">solid-js</span><span>&quot;
+</span><span>  },
+</span><span>  &quot;</span><span style="color:#a3be8c;">include</span><span>&quot;: [
+</span><span>    &quot;</span><span style="color:#a3be8c;">src</span><span>&quot;
+</span><span>  ]
+</span><span>}
+</span></code></pre>
+<h2 id="webpack-config-js">webpack.config.js</h2>
+<p>项目根目录</p>
+<pre data-lang="js" style="background-color:#2b303b;color:#c0c5ce;" class="language-js "><code class="language-js" data-lang="js"><span style="color:#b48ead;">const </span><span>{</span><span style="color:#bf616a;">resolve</span><span>} = </span><span style="color:#96b5b4;">require</span><span>(&#39;</span><span style="color:#a3be8c;">path</span><span>&#39;);
+</span><span style="color:#b48ead;">const </span><span style="color:#bf616a;">HtmlWebpackPlugin </span><span>= </span><span style="color:#96b5b4;">require</span><span>(&quot;</span><span style="color:#a3be8c;">html-webpack-plugin</span><span>&quot;);
+</span><span style="color:#b48ead;">const </span><span style="color:#bf616a;">MiniCssExtractPlugin </span><span>= </span><span style="color:#96b5b4;">require</span><span>(&quot;</span><span style="color:#a3be8c;">mini-css-extract-plugin</span><span>&quot;);
+</span><span>module.exports = {
+</span><span>    mode: &quot;</span><span style="color:#a3be8c;">development</span><span>&quot;,
+</span><span>    entry: {
+</span><span>        main: </span><span style="color:#8fa1b3;">resolve</span><span>(__dirname, &#39;</span><span style="color:#a3be8c;">src</span><span>&#39;, &#39;</span><span style="color:#a3be8c;">index.tsx</span><span>&#39;)
+</span><span>    },
+</span><span>    output: {
+</span><span>        filename: &quot;</span><span style="color:#a3be8c;">app.js</span><span>&quot;,
+</span><span>        path: </span><span style="color:#8fa1b3;">resolve</span><span>(__dirname, &#39;</span><span style="color:#a3be8c;">dist</span><span>&#39;)
+</span><span>    },
+</span><span>    resolve: {
+</span><span>        </span><span style="color:#65737e;">// webpack 默认只处理js、jsx等js代码
+</span><span>        </span><span style="color:#65737e;">// 为了防止在import其他ts代码的时候，出现
+</span><span>        </span><span style="color:#65737e;">// &quot; Can&#39;t resolve &#39;xxx&#39; &quot;的错误，需要特别配置
+</span><span>        extensions: [&#39;</span><span style="color:#a3be8c;">.js</span><span>&#39;, &#39;</span><span style="color:#a3be8c;">.jsx</span><span>&#39;, &#39;</span><span style="color:#a3be8c;">.ts</span><span>&#39;, &#39;</span><span style="color:#a3be8c;">.tsx</span><span>&#39;]
+</span><span>    },
+</span><span>    module: {
+</span><span>        rules: [
+</span><span>            {
+</span><span>                test: /</span><span style="color:#96b5b4;">\.tsx</span><span>?/,
+</span><span>                use: [
+</span><span>                    &#39;</span><span style="color:#a3be8c;">babel-loader</span><span>&#39;
+</span><span>                ],
+</span><span>                exclude: /</span><span style="color:#96b5b4;">node_moudles</span><span>/
+</span><span>            },
+</span><span>            {
+</span><span>                test: /</span><span style="color:#96b5b4;">\.css</span><span style="color:#b48ead;">$</span><span>/,
+</span><span>                use: [
+</span><span>                    </span><span style="color:#bf616a;">MiniCssExtractPlugin</span><span>.</span><span style="color:#bf616a;">loader</span><span>,
+</span><span>                    &#39;</span><span style="color:#a3be8c;">css-loader</span><span>&#39;
+</span><span>                ]
+</span><span>            },
+</span><span>            {
+</span><span>                test: /</span><span style="color:#96b5b4;">\.less</span><span style="color:#b48ead;">$</span><span>/,
+</span><span>                use: [
+</span><span>                    </span><span style="color:#bf616a;">MiniCssExtractPlugin</span><span>.</span><span style="color:#bf616a;">loader</span><span>,
+</span><span>                    &#39;</span><span style="color:#a3be8c;">css-loader</span><span>&#39;,
+</span><span>                    &#39;</span><span style="color:#a3be8c;">less-loader</span><span>&#39;
+</span><span>                ]
+</span><span>            }
+</span><span>        ]
+</span><span>    },
+</span><span>    plugins: [
+</span><span>        new HtmlWebpackPlugin({
+</span><span>            template: </span><span style="color:#8fa1b3;">resolve</span><span>(__dirname, &#39;</span><span style="color:#a3be8c;">public</span><span>&#39;, &#39;</span><span style="color:#a3be8c;">index.html</span><span>&#39;),
+</span><span>            inject: &#39;</span><span style="color:#a3be8c;">body</span><span>&#39;,
+</span><span>          	favicon: </span><span style="color:#8fa1b3;">resolve</span><span>(__dirname, &#39;</span><span style="color:#a3be8c;">public</span><span>&#39;, &#39;</span><span style="color:#a3be8c;">favicon-32x32.png</span><span>&#39;)
+</span><span>        }),
+</span><span>        new MiniCssExtractPlugin({
+</span><span>            filename: &#39;</span><span style="color:#a3be8c;">app.css</span><span>&#39;
+</span><span>        })
+</span><span>    ],
+</span><span>    devServer: {
+</span><span>        port: </span><span style="color:#d08770;">8080
+</span><span>    }
+</span><span>}
+</span></code></pre>
+<h2 id="babelrc">.babelrc</h2>
+<p>项目根目录</p>
+<pre data-lang="json" style="background-color:#2b303b;color:#c0c5ce;" class="language-json "><code class="language-json" data-lang="json"><span>{
+</span><span>  &quot;</span><span style="color:#a3be8c;">presets</span><span>&quot;: [
+</span><span>    &quot;</span><span style="color:#a3be8c;">@babel/preset-env</span><span>&quot;,
+</span><span>    &quot;</span><span style="color:#a3be8c;">@babel/preset-typescript</span><span>&quot;,
+</span><span>    &quot;</span><span style="color:#a3be8c;">babel-preset-solid</span><span>&quot;
+</span><span>  ],
+</span><span>  &quot;</span><span style="color:#a3be8c;">plugins</span><span>&quot;: [
+</span><span>    &quot;</span><span style="color:#a3be8c;">@babel/plugin-proposal-object-rest-spread</span><span>&quot;,
+</span><span>    &quot;</span><span style="color:#a3be8c;">@babel/plugin-proposal-class-properties</span><span>&quot;
+</span><span>  ]
+</span><span>}
+</span></code></pre>
+<h2 id="package-json">package.json</h2>
+<p>添加开发、构建以及类型检查脚本：</p>
+<pre data-lang="diff" style="background-color:#2b303b;color:#c0c5ce;" class="language-diff "><code class="language-diff" data-lang="diff"><span>{
+</span><span>   ... ...
+</span><span style="color:#a3be8c;">+  &quot;scripts&quot;: {
+</span><span style="color:#a3be8c;">+   &quot;typecheck&quot;: &quot;tsc&quot;,
+</span><span style="color:#a3be8c;">+   &quot;start&quot;: &quot;webpack-dev-server --config webpack.config.js&quot;,
+</span><span style="color:#a3be8c;">+   &quot;build&quot;: &quot;webpack --config webpack.config.js --mode=production&quot;
+</span><span style="color:#a3be8c;">+  },
+</span><span>   ... ...
+</span><span>}
+</span></code></pre>
+<h1 id="chu-shi-wen-jian-chuang-jian">初始文件创建</h1>
+<h2 id="app-d-ts">app.d.ts</h2>
+<p>路径：项目根目录/src/app.d.ts。涉及到譬如less模块在ts中使用的类型定义。</p>
+<pre data-lang="typescript" style="background-color:#2b303b;color:#c0c5ce;" class="language-typescript "><code class="language-typescript" data-lang="typescript"><span style="color:#b48ead;">declare module </span><span>&#39;</span><span style="color:#a3be8c;">*.module.less</span><span>&#39; {
+</span><span>    </span><span style="color:#b48ead;">const </span><span style="color:#bf616a;">content</span><span>: {
+</span><span>        [</span><span style="color:#bf616a;">className</span><span>: string]: any
+</span><span>    }
+</span><span>    </span><span style="color:#b48ead;">export default </span><span style="color:#bf616a;">content</span><span>;
+</span><span>}
+</span></code></pre>
+<h2 id="index-html">index.html</h2>
+<p>路径：项目根目录/public/index.html（主要是与webpack中的HtmlWebpackPlugin.template选项对应）。</p>
+<pre data-lang="html" style="background-color:#2b303b;color:#c0c5ce;" class="language-html "><code class="language-html" data-lang="html"><span>&lt;!</span><span style="color:#b48ead;">DOCTYPE </span><span style="color:#d08770;">html</span><span>&gt;
+</span><span>&lt;</span><span style="color:#bf616a;">html </span><span style="color:#d08770;">lang</span><span>=&quot;</span><span style="color:#a3be8c;">en</span><span>&quot;&gt;
+</span><span>&lt;</span><span style="color:#bf616a;">head</span><span>&gt;
+</span><span>    &lt;</span><span style="color:#bf616a;">meta </span><span style="color:#d08770;">charset</span><span>=&quot;</span><span style="color:#a3be8c;">UTF-8</span><span>&quot;&gt;
+</span><span>    &lt;</span><span style="color:#bf616a;">link </span><span style="color:#d08770;">rel</span><span>=&quot;</span><span style="color:#a3be8c;">icon</span><span>&quot; </span><span style="color:#d08770;">type</span><span>=&quot;</span><span style="color:#a3be8c;">image/png</span><span>&quot; </span><span style="color:#d08770;">sizes</span><span>=&quot;</span><span style="color:#a3be8c;">32x32</span><span>&quot; </span><span style="color:#d08770;">href</span><span>=&quot;</span><span style="color:#a3be8c;">/favicon-32x32.png</span><span>&quot;&gt;
+</span><span>    &lt;</span><span style="color:#bf616a;">title</span><span>&gt;SolidJS webpack ts example&lt;/</span><span style="color:#bf616a;">title</span><span>&gt;
+</span><span>&lt;/</span><span style="color:#bf616a;">head</span><span>&gt;
+</span><span>&lt;</span><span style="color:#bf616a;">body</span><span>&gt;
+</span><span>&lt;</span><span style="color:#bf616a;">div </span><span style="color:#8fa1b3;">id</span><span>=&quot;</span><span style="color:#a3be8c;">app</span><span>&quot;&gt;&lt;/</span><span style="color:#bf616a;">div</span><span>&gt;
+</span><span>&lt;/</span><span style="color:#bf616a;">body</span><span>&gt;
+</span><span>&lt;/</span><span style="color:#bf616a;">html</span><span>&gt;
+</span></code></pre>
+<p>PS：public目录还创建了一个icon，就不详细说明了。</p>
+<h2 id="index-tsx">index.tsx</h2>
+<p>路径：项目根目录/src/index.tsc</p>
+<pre data-lang="tsx" style="background-color:#2b303b;color:#c0c5ce;" class="language-tsx "><code class="language-tsx" data-lang="tsx"><span style="color:#b48ead;">import </span><span>{</span><span style="color:#bf616a;">render</span><span>} </span><span style="color:#b48ead;">from </span><span>&#39;</span><span style="color:#a3be8c;">solid-js/web</span><span>&#39;;
+</span><span style="color:#b48ead;">import </span><span style="color:#bf616a;">styles </span><span style="color:#b48ead;">from </span><span>&#39;</span><span style="color:#a3be8c;">./index.module.less</span><span>&#39;;
+</span><span>
+</span><span style="color:#b48ead;">function </span><span style="color:#8fa1b3;">HelloWorld</span><span>() {
+</span><span>    </span><span style="color:#b48ead;">return </span><span>(
+</span><span>        &lt;</span><span style="color:#bf616a;">div </span><span style="color:#d08770;">class</span><span>=</span><span style="color:#ab7967;">{</span><span style="color:#bf616a;">styles</span><span>.</span><span style="color:#bf616a;">hello</span><span style="color:#ab7967;">}</span><span>&gt;
+</span><span>            &lt;</span><span style="color:#bf616a;">p</span><span>&gt;Hello World!&lt;/</span><span style="color:#bf616a;">p</span><span>&gt;
+</span><span>        &lt;/</span><span style="color:#bf616a;">div</span><span>&gt;
+</span><span>    );
+</span><span>}
+</span><span>
+</span><span style="color:#8fa1b3;">render</span><span>(() </span><span style="color:#b48ead;">=&gt; </span><span>&lt;</span><span style="color:#ebcb8b;">HelloWorld</span><span>/&gt;, document.</span><span style="color:#96b5b4;">querySelector</span><span>(&#39;</span><span style="color:#a3be8c;">#app</span><span>&#39;)!)
+</span></code></pre>
+<h2 id="index-module-less">index.module.less</h2>
+<p>路径：项目根目录/src/index.module.less</p>
+<pre data-lang="less" style="background-color:#2b303b;color:#c0c5ce;" class="language-less "><code class="language-less" data-lang="less"><span style="color:#8fa1b3;">.</span><span style="color:#d08770;">hello </span><span>{
+</span><span style="color:#b48ead;">  </span><span style="color:#bf616a;">p </span><span>{
+</span><span>    font-size: </span><span style="color:#d08770;">16px</span><span>;
+</span><span>    color: </span><span style="color:#96b5b4;">#2c4f7c</span><span>;
+</span><span>  }
+</span><span>}
+</span></code></pre>
+<h1 id="xiang-mu-yun-xing-xiao-guo">项目运行效果</h1>
+<p><img src="https://static-res.zhen.wang/images/post/2023-03-22/010-example-show.png" alt="010-example-show" /></p>
+<h1 id="fu-lu">附录</h1>
+<p>项目代码地址：</p>
+<p><a rel="noopener" target="_blank" href="https://github.com/w4ngzhen/solidjs-webpack-ts-example">w4ngzhen/solidjs-webpack-ts-example (github.com)</a></p>
+
+    </div>
+</div>
+<script src="https://zhen.wang/libs/viewerjs@1.11.7/viewer.min.js"></script>
+<link rel="stylesheet" href="https://zhen.wang/libs/viewerjs@1.11.7/viewer.min.css"/>
+<script>
+  if (window.Viewer) {
+    document.querySelectorAll('img').forEach(img => {
+      new Viewer(img, {
+        inline: false,
+        navbar: false,
+        toolbar: {
+          zoomIn: 1,
+          zoomOut: 1,
+          reset: 1,
+          rotateLeft: 1,
+          rotateRight: 1,
+        },
+      });
+    });
+  }
+</script>
+
+
+</body>
+</html>

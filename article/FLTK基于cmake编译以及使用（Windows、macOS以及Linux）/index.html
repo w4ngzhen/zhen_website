@@ -1,0 +1,387 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="utf-8">
+    <meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover"
+          name="viewport">
+    
+    
+    <!-- umami web analysis -->
+    <script defer src="https://zhen.wang/libs/umami/umami.script.js"
+            data-website-id="d66cfe03-f6b3-4aa0-baf8-728700db1b09"></script>
+    
+    
+    
+    <link rel="icon" type="image/png" sizes="16x16" href="https://zhen.wang/images/blog-site-icon.svg">
+    <link rel="icon" type="image/png" sizes="32x32" href="https://zhen.wang/images/blog-site-icon.svg">
+    <title>zhen&#x27;s everything</title>
+    <link rel="stylesheet" href="https://zhen.wang/style.css">
+    
+<link rel="stylesheet" href="https://zhen.wang/article_content.css">
+<link rel="stylesheet" href="https://zhen.wang/article_markdown.css">
+
+</head>
+<body>
+
+<div id="article">
+    <header class="article-header">
+        
+<div class="base-title">
+    <a href="#" onclick="history.length > 1 ? history.back() : location.href = '/'; return false;">&LeftArrow; Back</a>
+    <h1>
+        FLTK基于cmake编译以及使用（Windows、macOS以及Linux）
+    </h1>
+</div>
+
+    </header>
+    <p class="article-date">2022-10-19</p>
+    
+    <!-- toc -->
+    <div class="article-toc">
+        <label class="toc-title" for="toc-trigger">目录</label>
+        <input id="toc-trigger" type="checkbox" checked/>
+        <div class="toc-content">
+            <ol class="toc">
+                
+                <li class="toc-item toc-level-1">
+                    <a class="toc-link" href="https://zhen.wang/article/FLTK基于cmake编译以及使用（Windows、macOS以及Linux）/#qian-qi-zhun-bei">前期准备</a>
+                    
+                </li>
+                
+                <li class="toc-item toc-level-1">
+                    <a class="toc-link" href="https://zhen.wang/article/FLTK基于cmake编译以及使用（Windows、macOS以及Linux）/#bian-yi-fltk">编译FLTK</a>
+                    
+                    <ol class="toc-child">
+                        
+                        <li class="toc-item toc-level-2">
+                            <a href="https://zhen.wang/article/FLTK基于cmake编译以及使用（Windows、macOS以及Linux）/#bian-yi-jing-tai-ku-wen-jian">编译静态库文件</a>
+                        </li>
+                        
+                        <li class="toc-item toc-level-2">
+                            <a href="https://zhen.wang/article/FLTK基于cmake编译以及使用（Windows、macOS以及Linux）/#zhun-bei-tou-wen-jian">准备头文件</a>
+                        </li>
+                        
+                        <li class="toc-item toc-level-2">
+                            <a href="https://zhen.wang/article/FLTK基于cmake编译以及使用（Windows、macOS以及Linux）/#ku-tou-wen-jian-zhun-bei-zong-jie">库、头文件准备总结</a>
+                        </li>
+                        
+                    </ol>
+                    
+                </li>
+                
+                <li class="toc-item toc-level-1">
+                    <a class="toc-link" href="https://zhen.wang/article/FLTK基于cmake编译以及使用（Windows、macOS以及Linux）/#ji-chu-xiang-mu-da-jian">基础项目搭建</a>
+                    
+                </li>
+                
+                <li class="toc-item toc-level-1">
+                    <a class="toc-link" href="https://zhen.wang/article/FLTK基于cmake编译以及使用（Windows、macOS以及Linux）/#xiao-guo-yan-shi">效果演示</a>
+                    
+                </li>
+                
+                <li class="toc-item toc-level-1">
+                    <a class="toc-link" href="https://zhen.wang/article/FLTK基于cmake编译以及使用（Windows、macOS以及Linux）/#fu-lu">附录</a>
+                    
+                </li>
+                
+            </ol>
+        </div>
+    </div>
+    
+    <!-- real content -->
+    <div class="article-content markdown-content">
+        <p>最近因为一些学习的原因，需要使用一款跨平台的轻量级的GUI+图像绘制 C/C++库。经过一番调研以后，最终从GTK+、FLTK中选出了FLTK，跨平台、够轻量。本文将在Windows、macOS以及Linux Debian三套操作系统环境，对FLTK进行编译，并搭建简单Demo。这其中也有少许的坑，也在此文进行记录。</p>
+<span id="continue-reading"></span>
+<h1 id="qian-qi-zhun-bei">前期准备</h1>
+<ul>
+<li>FLTK 1.3.8（最新稳定版）<a rel="noopener" target="_blank" href="https://www.fltk.org/doc-1.3/index.html">FLTK 1.3.8: FLTK Programming Manual</a></li>
+<li>CMake 3.5+</li>
+<li>Windows 11（VS2022）/ macOS 12.6 / Linux Debian 11</li>
+<li>CLion工具</li>
+</ul>
+<p>PS：后续操作系统差异带来的配置/代码差异我会特别指明</p>
+<h1 id="bian-yi-fltk">编译FLTK</h1>
+<h2 id="bian-yi-jing-tai-ku-wen-jian">编译静态库文件</h2>
+<p>首先从官方地址下载FLTK 1.3.8代码：<a rel="noopener" target="_blank" href="https://www.fltk.org/software.php?VERSION=1.3.8">Download - Fast Light Toolkit (FLTK)</a>。</p>
+<p>下载完成后，将文件内容解压至某个自定义目录，例如在macOS下，我存放在<code>"用户主目录/Projects/third-lib-projects/fltk-1.3.8"</code>目录。</p>
+<p>进入该目录后，我们创建一个build目录，并进入build目录，然后使用CMake进行<strong>配置</strong>。</p>
+<p>上述一些列命令操作整理如下：</p>
+<pre data-lang="shell" style="background-color:#2b303b;color:#c0c5ce;" class="language-shell "><code class="language-shell" data-lang="shell"><span># 进入fltk跟目录
+</span><span>cd &quot;用户主目录/Projects/third-lib-projects/fltk-1.3.8&quot;
+</span><span># 创建 build 文件夹
+</span><span>mkdir build
+</span><span># 进入 build 文件夹
+</span><span>cd build
+</span><span># 执行 cmake 配置操作（注意，cmake后面跟空格，再跟&quot;..&quot;，cmake中&quot;外部构建&quot;方式）
+</span><span># 执行该命令前，请先阅读下面的cmake前置条件
+</span><span>cmake ..
+</span><span>
+</span><span># Windows下建议使用PowerShell，上述的命令基本没有差别。
+</span></code></pre>
+<h3 id="cmakepei-zhi-qian-zhi-tiao-jian">cmake配置前置条件</h3>
+<p><strong>Windows</strong></p>
+<p>无</p>
+<p><strong>macOS</strong></p>
+<p>无</p>
+<p><strong>Linux</strong></p>
+<p>在Linux下，使用cmake进行项目生成前，务必确保一些基础库的安装：</p>
+<pre data-lang="shell" style="background-color:#2b303b;color:#c0c5ce;" class="language-shell "><code class="language-shell" data-lang="shell"><span># 安装gcc/g++等核心开发构建工具和库（必备）
+</span><span>sudo apt-get install build-essential
+</span><span># openGL库安装（可选，建议。OpenGL的Library、Utilities以及ToolKit）
+</span><span>sudo apt-get install libgl1-mesa-dev
+</span><span>sudo apt-get install libglu1-mesa-dev
+</span><span>sudo apt-get install freeglut3-dev
+</span><span># openSSL库（可选）
+</span><span>sudo apt-get install libssl-dev
+</span><span># x11库（必备）
+</span><span>sudo apt-get install libx11-dev
+</span></code></pre>
+<p>对于必备的X11库，安装完成后是以动态链接库（<code>.so</code>）的方式存放于<code>/usr/lib/x86_64-linux-gnu/libX11.so</code>。在上面的<code>cmake ..</code>命令执行后，你也会看到控制台输出的一些关键内容：</p>
+<pre style="background-color:#2b303b;color:#c0c5ce;"><code><span># cmake .. 执行后的输出内容
+</span><span>... ...
+</span><span>-- Looking for XOpenDisplay in /usr/lib/x86_64-linux-gnu/libX11.so; ... - found
+</span><span>... ...
+</span></code></pre>
+<h3 id="diao-yong-dui-ying-ping-tai-gong-ju-lian-wan-cheng-fltkbian-yi">调用对应平台工具链完成FLTK编译</h3>
+<p>cmake进行项目构建完成后，在我们当前的build目录中，对于macOS/Linux类操作系统，CMake会为我们生成了对应的makefile文件，所以我们直接使用make命令调用本地的clang或则gcc进行编译。</p>
+<pre data-lang="shell" style="background-color:#2b303b;color:#c0c5ce;" class="language-shell "><code class="language-shell" data-lang="shell"><span># 在build目录下，默认就是release版
+</span><span>make
+</span></code></pre>
+<p>在Windows操作系统，请直接使用vs打开build中的解决方案FLTK.sln，打开后对项目<code>ALL_BUILD</code>进行Release模式编译。</p>
+<p>编译完成后，build目录中会生成一个lib文件夹，这里面存放的就是fltk编译出来的静态链接库。</p>
+<p>在macOS/Linux中是<code>lib</code>前缀，<code>.a</code>结尾：</p>
+<pre style="background-color:#2b303b;color:#c0c5ce;"><code><span># macOS/Linux（Release模式）
+</span><span>build/lib
+</span><span>├── libfltk.a
+</span><span>└── ... ...
+</span></code></pre>
+<p>在windows中是<code>.lib</code>结尾：</p>
+<pre style="background-color:#2b303b;color:#c0c5ce;"><code><span># Windows（Release模式文件名结尾不会有&quot;d&quot;）
+</span><span>build/lib
+</span><span>└── Release
+</span><span>    ├── fltk.lib
+</span><span>    └── ... ...
+</span></code></pre>
+<h2 id="zhun-bei-tou-wen-jian">准备头文件</h2>
+<p>对于我的方式，在build文件夹中，我们创建一个inlude文件夹，并且将build上一层的fltk根目录中的FL文件夹复制到build/include中，形成如下结构：</p>
+<pre style="background-color:#2b303b;color:#c0c5ce;"><code><span>build/include
+</span><span>└── FL
+</span><span>    ├── Enumerations.H
+</span><span>    ├── FL.H
+</span><span>    └── ... ...
+</span></code></pre>
+<p><strong>注意</strong>，请同时务必将build目录下<code>FL/abi-version.h</code>复制到<code>include/FL/abi-version.h</code>。原因在于<code>FL.h -&gt; Enumerations.h</code>头文件会用到该头文件里面的一些定义，不添加则会报错：</p>
+<pre style="background-color:#2b303b;color:#c0c5ce;"><code><span>fatal error: &#39;FL/abi-version.h&#39; file not found
+</span><span>#include &lt;FL/abi-version.h&gt;
+</span><span>         ^~~~~~~~~~~~~~~~~~
+</span></code></pre>
+<h2 id="ku-tou-wen-jian-zhun-bei-zong-jie">库、头文件准备总结</h2>
+<p>至此，我们准备好了：</p>
+<ol>
+<li>
+<p>build/lib下的fltk相关静态库（<code>.a/.lib</code> ）；</p>
+</li>
+<li>
+<p>在build/include里面的头文件。</p>
+</li>
+</ol>
+<p>为了方便我们后续的使用，创建一个文件夹<code>fltk-dist-1.3.8</code>，并将lib、include复制到dist中：</p>
+<pre style="background-color:#2b303b;color:#c0c5ce;"><code><span>fltk-dist-1.3.8/
+</span><span>    include
+</span><span>    └── FL
+</span><span>        ├── Enumerations.H
+</span><span>        ├── FL.H
+</span><span>        └── ... ...
+</span><span>    lib
+</span><span>    └── macOS-release
+</span><span>        ├── libfltk.a
+</span><span>        └── ... ...
+</span><span>    └── linux-release
+</span><span>        ├── libfltk.a
+</span><span>        └── ... ...
+</span><span>    └── Windows-release
+</span><span>        ├── fltk.lib
+</span><span>        └── ... ... 
+</span></code></pre>
+<h1 id="ji-chu-xiang-mu-da-jian">基础项目搭建</h1>
+<p>创建一个名为fltk-demo目录</p>
+<ol>
+<li>将上一步中的fltk-dist-1.3.8文件夹整体复制到fltk-demo目录中</li>
+<li>项目根目录创建src文件夹，并在其中创建main.cpp：</li>
+</ol>
+<pre data-lang="c++" style="background-color:#2b303b;color:#c0c5ce;" class="language-c++ "><code class="language-c++" data-lang="c++"><span style="color:#b48ead;">#include </span><span>&lt;</span><span style="color:#a3be8c;">iostream</span><span>&gt;
+</span><span style="color:#b48ead;">#include </span><span>&lt;</span><span style="color:#a3be8c;">FL/Fl.H</span><span>&gt;
+</span><span style="color:#b48ead;">#include </span><span>&lt;</span><span style="color:#a3be8c;">FL/Fl_Window.H</span><span>&gt;
+</span><span style="color:#b48ead;">#include </span><span>&lt;</span><span style="color:#a3be8c;">FL/Fl_Box.H</span><span>&gt;
+</span><span>
+</span><span style="color:#b48ead;">int </span><span style="color:#8fa1b3;">main </span><span>(</span><span style="color:#b48ead;">int </span><span style="color:#bf616a;">argc</span><span>, </span><span style="color:#b48ead;">char </span><span>*</span><span style="color:#bf616a;">argv</span><span>[]) {
+</span><span>    Fl_Window *window;
+</span><span>    Fl_Box *box;
+</span><span>    window = </span><span style="color:#b48ead;">new </span><span style="color:#bf616a;">Fl_Window</span><span>(</span><span style="color:#d08770;">300</span><span>, </span><span style="color:#d08770;">180</span><span>);
+</span><span>    window-&gt;</span><span style="color:#bf616a;">label</span><span>(&quot;</span><span style="color:#a3be8c;">HelloWorld!</span><span>&quot;);
+</span><span>    box = </span><span style="color:#b48ead;">new </span><span style="color:#bf616a;">Fl_Box</span><span>(</span><span style="color:#d08770;">20</span><span>, </span><span style="color:#d08770;">40</span><span>, </span><span style="color:#d08770;">260</span><span>, </span><span style="color:#d08770;">100</span><span>, &quot;</span><span style="color:#a3be8c;">Hello World!</span><span>&quot;);
+</span><span>    box-&gt;</span><span style="color:#bf616a;">box</span><span>(FL_UP_BOX);
+</span><span>    box-&gt;</span><span style="color:#bf616a;">labelsize</span><span>(</span><span style="color:#d08770;">36</span><span>);
+</span><span>    box-&gt;</span><span style="color:#bf616a;">labelfont</span><span>(FL_BOLD + FL_ITALIC);
+</span><span>    (FL_SHADOW_LABEL);
+</span><span>    window-&gt;</span><span style="color:#bf616a;">end</span><span>();
+</span><span>    window-&gt;</span><span style="color:#bf616a;">show</span><span>(argc, argv);
+</span><span>    </span><span style="color:#b48ead;">return </span><span>Fl::</span><span style="color:#bf616a;">run</span><span>();
+</span><span>}
+</span></code></pre>
+<ol start="3">
+<li>创建一个CMakeLists.txt内容：</li>
+</ol>
+<pre data-lang="cmake" style="background-color:#2b303b;color:#c0c5ce;" class="language-cmake "><code class="language-cmake" data-lang="cmake"><span style="color:#96b5b4;">CMAKE_MINIMUM_REQUIRED</span><span>(</span><span style="color:#bf616a;">VERSION </span><span>3.23)
+</span><span style="color:#96b5b4;">PROJECT</span><span>(fltk_demo)
+</span><span>
+</span><span style="color:#96b5b4;">SET</span><span>(</span><span style="color:#bf616a;">CMAKE_CXX_STANDARD </span><span>11)
+</span><span>
+</span><span style="color:#65737e;"># 可执行程序名称，下面统一使用
+</span><span style="color:#96b5b4;">SET</span><span>(</span><span style="color:#bf616a;">my_app_name </span><span>fltk_demo)
+</span><span>
+</span><span style="color:#65737e;"># 指定头文件查找目录
+</span><span style="color:#96b5b4;">INCLUDE_DIRECTORIES</span><span>(&quot;$</span><span style="color:#a3be8c;">{</span><span style="color:#bf616a;">CMAKE_CURRENT_SOURCE_DIR</span><span style="color:#a3be8c;">}/fltk-dist-1.3.8/include</span><span>&quot;)
+</span><span>
+</span><span style="color:#65737e;"># 将src下面的所有头文件路径保存至 all_head_files 数组变量中
+</span><span style="color:#65737e;"># 将src下面的所有源文件路径保存至 all_source_files 数组变量中
+</span><span style="color:#96b5b4;">FILE</span><span>(</span><span style="color:#bf616a;">GLOB_RECURSE </span><span>all_source_files &quot;</span><span style="color:#a3be8c;">src/*.cpp</span><span>&quot; &quot;</span><span style="color:#a3be8c;">src/*.c</span><span>&quot;)
+</span><span style="color:#96b5b4;">FILE</span><span>(</span><span style="color:#bf616a;">GLOB_RECURSE </span><span>all_head_files &quot;</span><span style="color:#a3be8c;">src/*.hpp</span><span>&quot; &quot;</span><span style="color:#a3be8c;">src*.h</span><span>&quot;)
+</span><span>
+</span><span style="color:#65737e;"># 指定库文件查找路径，根据操作系统区分：
+</span><span style="color:#b48ead;">IF </span><span>(CMAKE_SYSTEM_NAME </span><span style="color:#bf616a;">MATCHES </span><span>&quot;</span><span style="color:#a3be8c;">Windows</span><span>&quot;)
+</span><span>    </span><span style="color:#65737e;"># Windows 操作系统，需要查找 Windows-release
+</span><span>    </span><span style="color:#96b5b4;">MESSAGE</span><span>(</span><span style="color:#bf616a;">STATUS </span><span>&quot;</span><span style="color:#a3be8c;">current platform: Windows</span><span>&quot;)
+</span><span>    </span><span style="color:#96b5b4;">LINK_DIRECTORIES</span><span>(&quot;$</span><span style="color:#a3be8c;">{</span><span style="color:#bf616a;">CMAKE_CURRENT_SOURCE_DIR</span><span style="color:#a3be8c;">}/fltk-dist-1.3.8/lib/Windows-release</span><span>&quot;)
+</span><span>    </span><span style="color:#96b5b4;">ADD_EXECUTABLE</span><span>(
+</span><span>            ${</span><span style="color:#bf616a;">my_app_name</span><span>}
+</span><span>            </span><span style="color:#bf616a;">WIN32 </span><span style="color:#65737e;"># Windows 非命令行程序
+</span><span>            ${</span><span style="color:#bf616a;">all_head_files</span><span>}
+</span><span>            ${</span><span style="color:#bf616a;">all_source_files</span><span>}
+</span><span>    )
+</span><span>    </span><span style="color:#96b5b4;">TARGET_LINK_LIBRARIES</span><span>(
+</span><span>            ${</span><span style="color:#bf616a;">my_app_name</span><span>}
+</span><span>            </span><span style="color:#bf616a;">PRIVATE
+</span><span>            fltk </span><span style="color:#65737e;"># 链接的静态库名称，这里只需要写fltk，在运行时自动查找.a/.lib
+</span><span>    )
+</span><span style="color:#b48ead;">ELSEIF </span><span>(CMAKE_SYSTEM_NAME </span><span style="color:#bf616a;">MATCHES </span><span>&quot;</span><span style="color:#a3be8c;">Darwin</span><span>&quot;)
+</span><span>    </span><span style="color:#65737e;"># macOS 操作系统，查找 macOS-release
+</span><span>    </span><span style="color:#96b5b4;">MESSAGE</span><span>(</span><span style="color:#bf616a;">STATUS </span><span>&quot;</span><span style="color:#a3be8c;">current platform: macOS</span><span>&quot;)
+</span><span>    </span><span style="color:#96b5b4;">LINK_DIRECTORIES</span><span>(&quot;$</span><span style="color:#a3be8c;">{</span><span style="color:#bf616a;">CMAKE_CURRENT_SOURCE_DIR</span><span style="color:#a3be8c;">}/fltk-dist-1.3.8/lib/macOS-release</span><span>&quot;)
+</span><span>    </span><span style="color:#96b5b4;">ADD_EXECUTABLE</span><span>(
+</span><span>            ${</span><span style="color:#bf616a;">my_app_name</span><span>}
+</span><span>            ${</span><span style="color:#bf616a;">all_head_files</span><span>}
+</span><span>            ${</span><span style="color:#bf616a;">all_source_files</span><span>}
+</span><span>    )
+</span><span>    </span><span style="color:#96b5b4;">TARGET_LINK_LIBRARIES</span><span>(
+</span><span>            ${</span><span style="color:#bf616a;">my_app_name</span><span>}
+</span><span>            </span><span style="color:#bf616a;">PRIVATE
+</span><span>            fltk </span><span style="color:#65737e;"># 链接的静态库名称，这里只需要写fltk，在运行时自动查找.a/.lib
+</span><span>            </span><span style="color:#65737e;"># macOS 该选项必填
+</span><span>            &quot;</span><span style="color:#a3be8c;">-framework Cocoa</span><span>&quot;
+</span><span>    )
+</span><span style="color:#b48ead;">ELSEIF </span><span>(CMAKE_SYSTEM_NAME </span><span style="color:#bf616a;">MATCHES </span><span>&quot;</span><span style="color:#a3be8c;">Linux</span><span>&quot;)
+</span><span>    </span><span style="color:#65737e;"># Linux 操作系统，查找 Linux-release
+</span><span>    </span><span style="color:#96b5b4;">MESSAGE</span><span>(</span><span style="color:#bf616a;">STATUS </span><span>&quot;</span><span style="color:#a3be8c;">current platform: Linux </span><span>&quot;)
+</span><span>
+</span><span>    </span><span style="color:#96b5b4;">LINK_DIRECTORIES</span><span>(&quot;$</span><span style="color:#a3be8c;">{</span><span style="color:#bf616a;">CMAKE_CURRENT_SOURCE_DIR</span><span style="color:#a3be8c;">}/fltk-dist-1.3.8/lib/Linux-release</span><span>&quot;)
+</span><span>    </span><span style="color:#96b5b4;">ADD_EXECUTABLE</span><span>(
+</span><span>            ${</span><span style="color:#bf616a;">my_app_name</span><span>}
+</span><span>            ${</span><span style="color:#bf616a;">all_head_files</span><span>}
+</span><span>            ${</span><span style="color:#bf616a;">all_source_files</span><span>}
+</span><span>    )
+</span><span>    </span><span style="color:#96b5b4;">TARGET_LINK_LIBRARIES</span><span>(
+</span><span>            ${</span><span style="color:#bf616a;">my_app_name</span><span>}
+</span><span>            </span><span style="color:#bf616a;">PRIVATE
+</span><span>            fltk </span><span style="color:#65737e;"># 链接的静态库名称，这里只需要写fltk，在运行时自动查找.a/.lib
+</span><span>            X11 </span><span style="color:#65737e;"># Linux环境需要指定X11以及dl两个库才能正常显示
+</span><span>            dl
+</span><span>    )
+</span><span style="color:#b48ead;">ELSE </span><span>()
+</span><span>    </span><span style="color:#65737e;"># 其他操作系统
+</span><span>    </span><span style="color:#96b5b4;">MESSAGE</span><span>(</span><span style="color:#bf616a;">STATUS </span><span>&quot;</span><span style="color:#a3be8c;">other platform: </span><span>$</span><span style="color:#a3be8c;">{</span><span style="color:#bf616a;">CMAKE_SYSTEM_NAME</span><span style="color:#a3be8c;">}</span><span>&quot;)
+</span><span style="color:#b48ead;">ENDIF </span><span>()
+</span></code></pre>
+<p>对于CMake的配置，我们针对不同的操作系统，我们从dist中指定的操作系统的目录查找静态库文件。此外，还有一些需要注意的：</p>
+<p><strong>Windows</strong></p>
+<p>Windows操作系统中，请在ADD_EXECUTABLE的应用名称后面添加WIN32，否则部分Windows操作系统窗口显示的时候，还会有一个命令行界面显示出来。</p>
+<p><strong>macOS</strong></p>
+<p>macOS操作系统中，请在TARGET_LINK_LIBRARIES最后添加参数：<code>"-framework Cocoa"</code>，否则fltk链接过程会有如下报错：</p>
+<pre style="background-color:#2b303b;color:#c0c5ce;"><code><span>[1/1] Linking CXX executable fltk_demo
+</span><span>FAILED: fltk_demo 
+</span><span>: &amp;&amp; 
+</span><span>... ...
+</span><span>Undefined symbols for architecture x86_64:
+</span><span>... ...
+</span><span>ld: symbol(s) not found for architecture x86_64
+</span><span>clang: error: linker command failed with exit code 1 (use -v to see invocation)
+</span><span>ninja: build stopped: subcommand failed.
+</span></code></pre>
+<p><strong>Linux</strong></p>
+<p>对于Linux操作系统，由于桌面窗体程序是基于X11进行的，所以实际运行的过程中是依赖X11库的。所以，我们还需要将X11的动态库也链接到咱们程序。我们的Demo中的CMakeLists.txt针对Linux系统，如果不进行特殊处理，会出现如下类似的错误：</p>
+<p><em>undefined reference to `XGetDefault'等类似问题</em></p>
+<pre style="background-color:#2b303b;color:#c0c5ce;"><code><span>[ 50%] Building CXX object CMakeFiles/fltk_demo.dir/src/main.cpp.o
+</span><span>[100%] Linking CXX executable fltk_demo
+</span><span>/usr/bin/ld: /home/w4ngzhen/Desktop/fltk-demo/fltk-dist-1.3.8/lib/Linux-release/libfltk.a(Fl_get_system_colors.o): in function `getsyscolor(char const*, char const*, char const*, char const*, void (*)(unsigned char, unsigned char, unsigned char))&#39;:
+</span><span>Fl_get_system_colors.cxx:(.text._ZL11getsyscolorPKcS0_S0_S0_PFvhhhE+0x24): undefined reference to `XGetDefault&#39;
+</span><span>/usr/bin/ld: Fl_get_system_colors.cxx:(.text._ZL11getsyscolorPKcS0_S0_S0_PFvhhhE+0x47): undefined reference to `XParseColor&#39;
+</span><span>... ...
+</span><span>Fl_Double_Window.cxx:(.text._ZN16Fl_Double_Window4hideEv+0x21): undefined reference to `XFreePixmap&#39;
+</span><span>collect2: error: ld returned 1 exit status
+</span><span>make[2]: *** [CMakeFiles/fltk_demo.dir/build.make:97: fltk_demo] Error 1
+</span><span>make[1]: *** [CMakeFiles/Makefile2:83: CMakeFiles/fltk_demo.dir/all] Error 2
+</span><span>make: *** [Makefile:91: all] Error 2
+</span></code></pre>
+<p>所以，我们需要进行配置，在链接阶段，链接X11动态链接库。</p>
+<p>此外，除了X11库以外，我们还需要一个<code>dl</code>库。不配置则会有如下类似错误：</p>
+<p><em>undefined reference to symbol 'dlsym@@GLIBC_2.2.5'</em></p>
+<pre style="background-color:#2b303b;color:#c0c5ce;"><code><span>[ 50%] Building CXX object CMakeFiles/fltk_demo.dir/src/main.cpp.o
+</span><span>[100%] Linking CXX executable fltk_demo
+</span><span>/usr/bin/ld: /home/w4ngzhen/Desktop/fltk-demo/fltk-dist-1.3.8/lib/Linux-release/libfltk.a(Fl_Window_shape.o): undefined reference to symbol &#39;dlsym@@GLIBC_2.2.5&#39;
+</span><span>/usr/bin/ld: /lib/x86_64-linux-gnu/libdl.so.2: error adding symbols: DSO missing from command line
+</span><span>collect2: error: ld returned 1 exit status
+</span><span>make[2]: *** [CMakeFiles/fltk_demo.dir/build.make:97: fltk_demo] Error 1
+</span><span>make[1]: *** [CMakeFiles/Makefile2:83: CMakeFiles/fltk_demo.dir/all] Error 2
+</span><span>make: *** [Makefile:91: all] Error 2
+</span></code></pre>
+<p>综合来说，基于Linux环境下的CMakeLists.txt基础配置，和其他平台的差异体现在要增加额外的两个库：</p>
+<pre data-lang="diff" style="background-color:#2b303b;color:#c0c5ce;" class="language-diff "><code class="language-diff" data-lang="diff"><span>    TARGET_LINK_LIBRARIES(
+</span><span>            ${my_app_name}
+</span><span>            PRIVATE
+</span><span>            fltk # 链接的静态库名称，这里只需要写fltk，在运行时自动查找.a/.lib
+</span><span style="color:#a3be8c;">+            X11 # Linux环境需要指定X11以及dl两个库才能正常显示
+</span><span style="color:#a3be8c;">+            dl
+</span><span>    )
+</span></code></pre>
+<h1 id="xiao-guo-yan-shi">效果演示</h1>
+<p>下图是本人分别在Windows、macOS以及Linux环境下的运行效果：</p>
+<p><img src="https://static-res.zhen.wang/images/post/2022-10-19/010-fltk-demo-in-all.png" alt="010-fltk-demo-in-all" /></p>
+<h1 id="fu-lu">附录</h1>
+<p>本文项目代码已经提交至Github</p>
+<p><a rel="noopener" target="_blank" href="https://github.com/w4ngzhen/fltk-demo">w4ngzhen/fltk-demo (github.com)</a></p>
+
+    </div>
+</div>
+<script src="https://zhen.wang/libs/viewerjs@1.11.7/viewer.min.js"></script>
+<link rel="stylesheet" href="https://zhen.wang/libs/viewerjs@1.11.7/viewer.min.css"/>
+<script>
+  if (window.Viewer) {
+    document.querySelectorAll('img').forEach(img => {
+      new Viewer(img, {
+        inline: false,
+        navbar: false,
+        toolbar: {
+          zoomIn: 1,
+          zoomOut: 1,
+          reset: 1,
+          rotateLeft: 1,
+          rotateRight: 1,
+        },
+      });
+    });
+  }
+</script>
+
+
+</body>
+</html>

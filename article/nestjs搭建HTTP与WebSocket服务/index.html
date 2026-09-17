@@ -1,0 +1,742 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="utf-8">
+    <meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover"
+          name="viewport">
+    
+    
+    <!-- umami web analysis -->
+    <script defer src="https://zhen.wang/libs/umami/umami.script.js"
+            data-website-id="d66cfe03-f6b3-4aa0-baf8-728700db1b09"></script>
+    
+    
+    
+    <link rel="icon" type="image/png" sizes="16x16" href="https://zhen.wang/images/blog-site-icon.svg">
+    <link rel="icon" type="image/png" sizes="32x32" href="https://zhen.wang/images/blog-site-icon.svg">
+    <title>zhen&#x27;s everything</title>
+    <link rel="stylesheet" href="https://zhen.wang/style.css">
+    
+<link rel="stylesheet" href="https://zhen.wang/article_content.css">
+<link rel="stylesheet" href="https://zhen.wang/article_markdown.css">
+
+</head>
+<body>
+
+<div id="article">
+    <header class="article-header">
+        
+<div class="base-title">
+    <a href="#" onclick="history.length > 1 ? history.back() : location.href = '/'; return false;">&LeftArrow; Back</a>
+    <h1>
+        nestjs搭建HTTP与WebSocket服务
+    </h1>
+</div>
+
+    </header>
+    <p class="article-date">2022-11-22</p>
+    
+    <!-- toc -->
+    <div class="article-toc">
+        <label class="toc-title" for="toc-trigger">目录</label>
+        <input id="toc-trigger" type="checkbox" checked/>
+        <div class="toc-content">
+            <ol class="toc">
+                
+                <li class="toc-item toc-level-1">
+                    <a class="toc-link" href="https://zhen.wang/article/nestjs搭建HTTP与WebSocket服务/#ji-ben-huan-jing-da-jian">基本环境搭建</a>
+                    
+                    <ol class="toc-child">
+                        
+                        <li class="toc-item toc-level-2">
+                            <a href="https://zhen.wang/article/nestjs搭建HTTP与WebSocket服务/#mu-lu-hua-fen-she-ji">目录划分设计</a>
+                        </li>
+                        
+                        <li class="toc-item toc-level-2">
+                            <a href="https://zhen.wang/article/nestjs搭建HTTP与WebSocket服务/#ji-chu-lei-xing-ding-yi">基础类型定义</a>
+                        </li>
+                        
+                    </ol>
+                    
+                </li>
+                
+                <li class="toc-item toc-level-1">
+                    <a class="toc-link" href="https://zhen.wang/article/nestjs搭建HTTP与WebSocket服务/#httpfu-wu-kai-fa">HTTP服务开发</a>
+                    
+                    <ol class="toc-child">
+                        
+                        <li class="toc-item toc-level-2">
+                            <a href="https://zhen.wang/article/nestjs搭建HTTP与WebSocket服务/#ji-chu-fu-wu">基础服务</a>
+                        </li>
+                        
+                        <li class="toc-item toc-level-2">
+                            <a href="https://zhen.wang/article/nestjs搭建HTTP与WebSocket服务/#cheng-gong-xiang-ying-lan-jie-qi">成功响应拦截器</a>
+                        </li>
+                        
+                        <li class="toc-item toc-level-2">
+                            <a href="https://zhen.wang/article/nestjs搭建HTTP与WebSocket服务/#yi-chang-guo-lu-qi">异常过滤器</a>
+                        </li>
+                        
+                    </ol>
+                    
+                </li>
+                
+                <li class="toc-item toc-level-1">
+                    <a class="toc-link" href="https://zhen.wang/article/nestjs搭建HTTP与WebSocket服务/#websocketfu-wu">WebSocket服务</a>
+                    
+                    <ol class="toc-child">
+                        
+                        <li class="toc-item toc-level-2">
+                            <a href="https://zhen.wang/article/nestjs搭建HTTP与WebSocket服务/#qian-zhi-zhun-bei">前置准备</a>
+                        </li>
+                        
+                        <li class="toc-item toc-level-2">
+                            <a href="https://zhen.wang/article/nestjs搭建HTTP与WebSocket服务/#ji-chu-fu-wu-1">基础服务</a>
+                        </li>
+                        
+                        <li class="toc-item toc-level-2">
+                            <a href="https://zhen.wang/article/nestjs搭建HTTP与WebSocket服务/#cheng-gong-xiang-ying-lan-jie-qi-1">成功响应拦截器</a>
+                        </li>
+                        
+                        <li class="toc-item toc-level-2">
+                            <a href="https://zhen.wang/article/nestjs搭建HTTP与WebSocket服务/#yi-chang-guo-lu-qi-1">异常过滤器</a>
+                        </li>
+                        
+                    </ol>
+                    
+                </li>
+                
+                <li class="toc-item toc-level-1">
+                    <a class="toc-link" href="https://zhen.wang/article/nestjs搭建HTTP与WebSocket服务/#fu-lu">附录</a>
+                    
+                </li>
+                
+            </ol>
+        </div>
+    </div>
+    
+    <!-- real content -->
+    <div class="article-content markdown-content">
+        <p>最近在做一款轻量级IM产品，后端技术栈框架使用了nodejs + nestjs作为服务端。同时，还需要满足一个服务同时支持HTTP服务调用以及WebSocket服务调用，此文主要记录本次搭建过程，以及基本的服务端设计。</p>
+<span id="continue-reading"></span>
+<h1 id="ji-ben-huan-jing-da-jian">基本环境搭建</h1>
+<p>node v14.17.5</p>
+<p>nestjs 全局命令行工具（<code>npm i -g @nestjs/cli</code>）</p>
+<p>本文不再详细介绍nestjs各种概念，请参考：<a rel="noopener" target="_blank" href="https://docs.nestjs.com/first-steps">First steps | NestJS - A progressive Node.js framework</a></p>
+<p>直接创建一个Demo项目：</p>
+<pre style="background-color:#2b303b;color:#c0c5ce;"><code><span>nest new nest-http-socket-demo
+</span></code></pre>
+<h2 id="mu-lu-hua-fen-she-ji">目录划分设计</h2>
+<p>等待项目完成以后（这个过程可能会持续比较久，因为创建好目录结构以后还会进行包安装），结构如下：</p>
+<pre style="background-color:#2b303b;color:#c0c5ce;"><code><span>nest-http-websocket-demo
+</span><span>├─ .eslintrc.js
+</span><span>├─ .gitignore
+</span><span>├─ .prettierrc
+</span><span>├─ README.md
+</span><span>├─ nest-cli.json
+</span><span>├─ node_modules
+</span><span>│    └─ ... ...
+</span><span>├─ package.json
+</span><span>├─ src
+</span><span>│    ├─ app.controller.spec.ts
+</span><span>│    ├─ app.controller.ts
+</span><span>│    ├─ app.module.ts
+</span><span>│    ├─ app.service.ts
+</span><span>│    └─ main.ts
+</span><span>├─ test
+</span><span>│    ├─ app.e2e-spec.ts
+</span><span>│    └─ jest-e2e.json
+</span><span>├─ tsconfig.build.json
+</span><span>├─ tsconfig.json
+</span><span>└─ yarn.lock
+</span></code></pre>
+<p>初始的目录结构可能不太符合我们的期望，我们对目录结构进行适当的调整。主要分为几个目录：</p>
+<ol>
+<li>src/common。该目录存放服务端和客户端公共涉及的内容。方便后续拆分出单独的npm包供服务端和客户端公用；</li>
+<li>src/base。该目录存放整个服务需要用到的一些基础内容，譬如拦截器、过滤器等；</li>
+<li>src/module。后续存放按照不同的业务领域拆分出的子目录；</li>
+<li>src/entity。存放数据定义等（本项目我们简化模型，认为数据传输的结构和服务中领域数据结构一致）。</li>
+</ol>
+<p>调整后的src目录结构如下：</p>
+<pre style="background-color:#2b303b;color:#c0c5ce;"><code><span>- src
+</span><span>  ├─ base
+</span><span>  ├─ common
+</span><span>  ├─ entity
+</span><span>  └─ module
+</span></code></pre>
+<h2 id="ji-chu-lei-xing-ding-yi">基础类型定义</h2>
+<p>在规划API之前，我们先设计定义一些服务端基本数据结构。</p>
+<h3 id="fu-wu-duan-xiang-ying-feng-zhuang-serverresponsewrapper">服务端响应封装（ServerResponseWrapper）</h3>
+<p>众所周知，一般的服务端都会对原始返回数据进行一定的包装，增加返回码、错误消息等来明确的指出具体的错误内容，在我们的服务也不例外。于是，我们设计如下的结构体：</p>
+<pre data-lang="typescript" style="background-color:#2b303b;color:#c0c5ce;" class="language-typescript "><code class="language-typescript" data-lang="typescript"><span style="color:#b48ead;">export interface </span><span>ServerResponseWrapper {
+</span><span>    </span><span style="color:#65737e;">/**
+</span><span style="color:#65737e;">     * 服务端返回码
+</span><span style="color:#65737e;">     */
+</span><span>    </span><span style="color:#bf616a;">returnCode</span><span>: string;
+</span><span>    </span><span style="color:#65737e;">/**
+</span><span style="color:#65737e;">     * 错误信息（如有，例如返回码非成功码）
+</span><span style="color:#65737e;">     */
+</span><span>    </span><span style="color:#bf616a;">errorMessage</span><span>?: string;
+</span><span>    </span><span style="color:#65737e;">/**
+</span><span style="color:#65737e;">     * 返回数据（如有）
+</span><span style="color:#65737e;">     */
+</span><span>    </span><span style="color:#bf616a;">data</span><span>?: any;
+</span><span>}
+</span></code></pre>
+<p>对于该结构来说，后续客户端也会使用相同的数据结构进行解析，所以我们可以考虑将该文件放在src/common中。</p>
+<p>下面是一些常见的返回数据（纯样例）：</p>
+<pre data-lang="json" style="background-color:#2b303b;color:#c0c5ce;" class="language-json "><code class="language-json" data-lang="json"><span style="color:#65737e;">// 获取用户基本信息成功
+</span><span>{
+</span><span>    &quot;</span><span style="color:#a3be8c;">returnCode</span><span>&quot;: &quot;</span><span style="color:#a3be8c;">SUC00000</span><span>&quot;,
+</span><span>    &quot;</span><span style="color:#a3be8c;">data</span><span>&quot;: {
+</span><span>        &quot;</span><span style="color:#a3be8c;">username</span><span>&quot;: &quot;</span><span style="color:#a3be8c;">w4ngzhen</span><span>&quot;,
+</span><span>        &quot;</span><span style="color:#a3be8c;">lastLoginTime</span><span>&quot;: &quot;</span><span style="color:#a3be8c;">2022-11-22 11:50:22.000</span><span>&quot;
+</span><span>    }
+</span><span>}
+</span><span style="color:#65737e;">// 获取用户名称出错（没有提供对应的userId）
+</span><span>{
+</span><span>    &quot;</span><span style="color:#a3be8c;">returnCode</span><span>&quot;: &quot;</span><span style="color:#a3be8c;">ERR40000</span><span>&quot;,
+</span><span>    &quot;</span><span style="color:#a3be8c;">errorMessage</span><span>&quot;: &quot;</span><span style="color:#a3be8c;">user id is empty.</span><span>&quot;,
+</span><span>}
+</span><span style="color:#65737e;">// 获取服务端时间
+</span><span>{
+</span><span>    &quot;</span><span style="color:#a3be8c;">returnCode</span><span>&quot;: &quot;</span><span style="color:#a3be8c;">SUC0000</span><span>&quot;,
+</span><span>    &quot;</span><span style="color:#a3be8c;">data</span><span>&quot;: &quot;</span><span style="color:#a3be8c;">2022-11-22 11:22:33.000</span><span>&quot;
+</span><span>}
+</span></code></pre>
+<h3 id="fan-hui-ma-ding-yi-returncode">返回码定义（ReturnCode）</h3>
+<p>为了统一返回码，我们在定义了一个ReturnCode实体类，由该类统一封装返回码。作为外部会涉及了解到的内容，我们也将该类放置于src/common中，且导出常用的错误码，代码如下：</p>
+<pre data-lang="typescript" style="background-color:#2b303b;color:#c0c5ce;" class="language-typescript "><code class="language-typescript" data-lang="typescript"><span style="color:#b48ead;">export class </span><span style="color:#ebcb8b;">ReturnCode </span><span style="color:#eff1f5;">{
+</span><span style="color:#eff1f5;">
+</span><span style="color:#eff1f5;">    </span><span style="color:#b48ead;">private readonly </span><span style="color:#bf616a;">_preCode</span><span>: &#39;</span><span style="color:#a3be8c;">SUC</span><span>&#39; | &#39;</span><span style="color:#a3be8c;">ERR</span><span>&#39;</span><span style="color:#eff1f5;">;
+</span><span style="color:#eff1f5;">    </span><span style="color:#b48ead;">private readonly </span><span style="color:#bf616a;">_subCode</span><span>: </span><span style="color:#eff1f5;">string;
+</span><span style="color:#eff1f5;">
+</span><span style="color:#eff1f5;">    </span><span style="color:#b48ead;">private readonly </span><span style="color:#bf616a;">_statusCode</span><span>: </span><span style="color:#eff1f5;">number;
+</span><span style="color:#eff1f5;">
+</span><span style="color:#eff1f5;">    </span><span style="color:#b48ead;">get </span><span style="color:#8fa1b3;">codeString</span><span>(): </span><span style="color:#eff1f5;">string {
+</span><span style="color:#eff1f5;">        </span><span style="color:#b48ead;">return </span><span>`</span><span style="color:#a3be8c;">${</span><span style="color:#bf616a;">this</span><span style="color:#a3be8c;">.</span><span style="color:#bf616a;">_preCode</span><span style="color:#a3be8c;">}${</span><span style="color:#bf616a;">this</span><span style="color:#a3be8c;">.</span><span style="color:#bf616a;">_subCode</span><span style="color:#a3be8c;">}</span><span>`</span><span style="color:#eff1f5;">;
+</span><span style="color:#eff1f5;">    }
+</span><span style="color:#eff1f5;">
+</span><span style="color:#eff1f5;">    </span><span style="color:#b48ead;">get </span><span style="color:#8fa1b3;">statusCode</span><span>(): </span><span style="color:#eff1f5;">number {
+</span><span style="color:#eff1f5;">        </span><span style="color:#b48ead;">return </span><span style="color:#bf616a;">this</span><span style="color:#eff1f5;">.</span><span style="color:#bf616a;">_statusCode</span><span style="color:#eff1f5;">;
+</span><span style="color:#eff1f5;">    }
+</span><span style="color:#eff1f5;">
+</span><span style="color:#eff1f5;">    </span><span style="color:#b48ead;">constructor</span><span>(</span><span style="color:#bf616a;">prefix</span><span>: &#39;</span><span style="color:#a3be8c;">SUC</span><span>&#39; | &#39;</span><span style="color:#a3be8c;">ERR</span><span>&#39;</span><span style="color:#eff1f5;">, </span><span style="color:#bf616a;">subCode</span><span>: </span><span style="color:#eff1f5;">string, </span><span style="color:#bf616a;">statusCode</span><span>: </span><span style="color:#eff1f5;">number</span><span>) </span><span style="color:#eff1f5;">{
+</span><span style="color:#eff1f5;">        </span><span style="color:#bf616a;">this</span><span style="color:#eff1f5;">.</span><span style="color:#bf616a;">_preCode </span><span>= </span><span style="color:#bf616a;">prefix</span><span style="color:#eff1f5;">;
+</span><span style="color:#eff1f5;">        </span><span style="color:#bf616a;">this</span><span style="color:#eff1f5;">.</span><span style="color:#bf616a;">_subCode </span><span>= </span><span style="color:#bf616a;">subCode</span><span style="color:#eff1f5;">;
+</span><span style="color:#eff1f5;">        </span><span style="color:#bf616a;">this</span><span style="color:#eff1f5;">.</span><span style="color:#bf616a;">_statusCode </span><span>= </span><span style="color:#bf616a;">statusCode</span><span style="color:#eff1f5;">;
+</span><span style="color:#eff1f5;">    }
+</span><span style="color:#eff1f5;">}
+</span><span>
+</span><span style="color:#b48ead;">export const </span><span style="color:#bf616a;">SUCCESS </span><span>= new ReturnCode(&#39;</span><span style="color:#a3be8c;">SUC</span><span>&#39;, &#39;</span><span style="color:#a3be8c;">00000</span><span>&#39;, </span><span style="color:#d08770;">200</span><span>);
+</span><span style="color:#b48ead;">export const </span><span style="color:#bf616a;">ERR_NOT_FOUND </span><span>= new ReturnCode(&#39;</span><span style="color:#a3be8c;">ERR</span><span>&#39;, &#39;</span><span style="color:#a3be8c;">40400</span><span>&#39;, </span><span style="color:#d08770;">404</span><span>);
+</span></code></pre>
+<h3 id="fu-wu-ye-wu-yi-chang-bizexception">服务业务异常（BizException）</h3>
+<p>为了便于在服务调用过程中，能够按照具体的业务层面进行异常抛出。我们定义一个名为BizException的类来封装业务异常。对于外部系统来说，该异常并不可见，所以我们把该类放置于src/base中：</p>
+<pre data-lang="typescript" style="background-color:#2b303b;color:#c0c5ce;" class="language-typescript "><code class="language-typescript" data-lang="typescript"><span style="color:#b48ead;">import </span><span>{</span><span style="color:#bf616a;">ReturnCode</span><span>} </span><span style="color:#b48ead;">from </span><span>&quot;</span><span style="color:#a3be8c;">../common/return-code</span><span>&quot;;
+</span><span>
+</span><span style="color:#b48ead;">export class </span><span style="color:#ebcb8b;">BizException </span><span style="color:#eff1f5;">{
+</span><span style="color:#eff1f5;">
+</span><span style="color:#eff1f5;">    </span><span style="color:#b48ead;">private readonly </span><span style="color:#bf616a;">_errorCode</span><span>: </span><span style="color:#eff1f5;">ReturnCode;
+</span><span style="color:#eff1f5;">    </span><span style="color:#b48ead;">private readonly </span><span style="color:#bf616a;">_errorMessage</span><span>: </span><span style="color:#eff1f5;">string;
+</span><span style="color:#eff1f5;">
+</span><span style="color:#eff1f5;">    </span><span style="color:#b48ead;">get </span><span style="color:#8fa1b3;">errorCode</span><span>(): </span><span style="color:#eff1f5;">ReturnCode {
+</span><span style="color:#eff1f5;">        </span><span style="color:#b48ead;">return </span><span style="color:#bf616a;">this</span><span style="color:#eff1f5;">.</span><span style="color:#bf616a;">_errorCode</span><span style="color:#eff1f5;">;
+</span><span style="color:#eff1f5;">    }
+</span><span style="color:#eff1f5;">
+</span><span style="color:#eff1f5;">    </span><span style="color:#b48ead;">get </span><span style="color:#8fa1b3;">errorMessage</span><span>(): </span><span style="color:#eff1f5;">string {
+</span><span style="color:#eff1f5;">        </span><span style="color:#b48ead;">return </span><span style="color:#bf616a;">this</span><span style="color:#eff1f5;">.</span><span style="color:#bf616a;">_errorMessage</span><span style="color:#eff1f5;">;
+</span><span style="color:#eff1f5;">    }
+</span><span style="color:#eff1f5;">
+</span><span style="color:#eff1f5;">    </span><span style="color:#b48ead;">protected constructor</span><span>(</span><span style="color:#bf616a;">errorEntity</span><span>: </span><span style="color:#eff1f5;">ReturnCode, </span><span style="color:#bf616a;">errorMessage</span><span>: </span><span style="color:#eff1f5;">string</span><span>) </span><span style="color:#eff1f5;">{
+</span><span style="color:#eff1f5;">        </span><span style="color:#bf616a;">this</span><span style="color:#eff1f5;">.</span><span style="color:#bf616a;">_errorMessage </span><span>= </span><span style="color:#bf616a;">errorMessage</span><span style="color:#eff1f5;">;
+</span><span style="color:#eff1f5;">        </span><span style="color:#bf616a;">this</span><span style="color:#eff1f5;">.</span><span style="color:#bf616a;">_errorCode </span><span>= </span><span style="color:#bf616a;">errorEntity</span><span style="color:#eff1f5;">;
+</span><span style="color:#eff1f5;">    }
+</span><span style="color:#eff1f5;">
+</span><span style="color:#eff1f5;">    </span><span style="color:#b48ead;">static </span><span style="color:#8fa1b3;">create</span><span>(</span><span style="color:#bf616a;">errEntity</span><span>: </span><span style="color:#eff1f5;">ReturnCode, </span><span style="color:#bf616a;">errMessage</span><span>?: </span><span style="color:#eff1f5;">string</span><span>): </span><span style="color:#eff1f5;">BizException {
+</span><span style="color:#eff1f5;">        </span><span style="color:#b48ead;">return </span><span>new </span><span style="color:#eff1f5;">BizException(</span><span style="color:#bf616a;">errEntity</span><span style="color:#eff1f5;">, </span><span style="color:#bf616a;">errMessage</span><span style="color:#eff1f5;">);
+</span><span style="color:#eff1f5;">    }
+</span><span style="color:#eff1f5;">}
+</span></code></pre>
+<p>接下来，我们为服务器规划两个API，分别体现HTTP服务和WebSocket服务。</p>
+<h1 id="httpfu-wu-kai-fa">HTTP服务开发</h1>
+<h2 id="ji-chu-fu-wu">基础服务</h2>
+<p>首先，我们设计一个简单用户信息查询服务接口。该接口可以根据传递而来的用户ID（userId）返回对应的用户信息：</p>
+<p><code>GET /users?userId=${userId}</code></p>
+<p>为了实现上述接口，我们按照如下流程进行API搭建：</p>
+<ol>
+<li>在src/entity目录中，我们创建一个user目录，并在其中创建user.dto.ts文件专门用于定义用户User这个数据传输结构，内容如下：</li>
+</ol>
+<pre data-lang="typescript" style="background-color:#2b303b;color:#c0c5ce;" class="language-typescript "><code class="language-typescript" data-lang="typescript"><span style="color:#65737e;">// src/entity/user/user.dto.ts
+</span><span style="color:#b48ead;">export interface </span><span>UserDto {
+</span><span>    </span><span style="color:#bf616a;">userId</span><span>: string;
+</span><span>    </span><span style="color:#bf616a;">username</span><span>: string;
+</span><span>    </span><span style="color:#bf616a;">age</span><span>: number;
+</span><span>}
+</span></code></pre>
+<ol start="2">
+<li>在src/module创建一个user目录，划分用户user相关业务领域内容。同时，在其中创建user.service.ts，存放处理用户的相关服务代码，内容如下：</li>
+</ol>
+<pre data-lang="typescript" style="background-color:#2b303b;color:#c0c5ce;" class="language-typescript "><code class="language-typescript" data-lang="typescript"><span style="color:#65737e;">// src/module/user/user.service.ts
+</span><span style="color:#b48ead;">import </span><span>{</span><span style="color:#bf616a;">Injectable</span><span>} </span><span style="color:#b48ead;">from </span><span>&#39;</span><span style="color:#a3be8c;">@nestjs/common</span><span>&#39;;
+</span><span style="color:#b48ead;">import </span><span>{</span><span style="color:#bf616a;">UserDto</span><span>} </span><span style="color:#b48ead;">from </span><span>&quot;</span><span style="color:#a3be8c;">../../entity/user/user.dto</span><span>&quot;;
+</span><span>
+</span><span>@</span><span style="color:#8fa1b3;">Injectable</span><span>()
+</span><span style="color:#b48ead;">export class </span><span style="color:#ebcb8b;">UserService </span><span style="color:#eff1f5;">{
+</span><span style="color:#eff1f5;">
+</span><span style="color:#eff1f5;">    </span><span style="color:#b48ead;">async </span><span style="color:#8fa1b3;">getUserById</span><span>(</span><span style="color:#bf616a;">userId</span><span>: </span><span style="color:#eff1f5;">string</span><span>): </span><span style="color:#eff1f5;">Promise&lt;UserDto&gt; {
+</span><span style="color:#eff1f5;">        </span><span style="color:#65737e;">// 测试数据
+</span><span style="color:#eff1f5;">        </span><span style="color:#b48ead;">const </span><span style="color:#bf616a;">demoData</span><span>: </span><span style="color:#eff1f5;">UserDto[] </span><span>= </span><span style="color:#eff1f5;">[
+</span><span style="color:#eff1f5;">            {
+</span><span style="color:#eff1f5;">                userId: </span><span>&#39;</span><span style="color:#a3be8c;">tom</span><span>&#39;</span><span style="color:#eff1f5;">,
+</span><span style="color:#eff1f5;">                username: </span><span>&#39;</span><span style="color:#a3be8c;">Tom</span><span>&#39;</span><span style="color:#eff1f5;">,
+</span><span style="color:#eff1f5;">                age: </span><span style="color:#d08770;">10
+</span><span style="color:#eff1f5;">            },
+</span><span style="color:#eff1f5;">            {
+</span><span style="color:#eff1f5;">                userId: </span><span>&#39;</span><span style="color:#a3be8c;">jerry</span><span>&#39;</span><span style="color:#eff1f5;">,
+</span><span style="color:#eff1f5;">                username: </span><span>&#39;</span><span style="color:#a3be8c;">Jerry</span><span>&#39;</span><span style="color:#eff1f5;">,
+</span><span style="color:#eff1f5;">                age: </span><span style="color:#d08770;">11
+</span><span style="color:#eff1f5;">            }
+</span><span style="color:#eff1f5;">        ];
+</span><span style="color:#eff1f5;">
+</span><span style="color:#eff1f5;">        </span><span style="color:#b48ead;">return </span><span style="color:#bf616a;">demoData</span><span style="color:#eff1f5;">.</span><span style="color:#96b5b4;">find</span><span style="color:#eff1f5;">(</span><span style="color:#bf616a;">u </span><span style="color:#b48ead;">=&gt; </span><span style="color:#bf616a;">u</span><span style="color:#eff1f5;">.</span><span style="color:#bf616a;">userId </span><span>=== </span><span style="color:#bf616a;">userId</span><span style="color:#eff1f5;">);
+</span><span style="color:#eff1f5;">    }
+</span><span style="color:#eff1f5;">}
+</span></code></pre>
+<ol start="3">
+<li>同样的，我们在src/module/user中创建User的Controller（<code>user.controller.ts</code>），增加<code>GET /users</code>接口，请求参数并调用服务：</li>
+</ol>
+<pre data-lang="typescript" style="background-color:#2b303b;color:#c0c5ce;" class="language-typescript "><code class="language-typescript" data-lang="typescript"><span style="color:#b48ead;">import </span><span>{</span><span style="color:#bf616a;">Controller</span><span>, </span><span style="color:#bf616a;">Get</span><span>, </span><span style="color:#bf616a;">Param</span><span>, </span><span style="color:#bf616a;">Query</span><span>} </span><span style="color:#b48ead;">from </span><span>&#39;</span><span style="color:#a3be8c;">@nestjs/common</span><span>&#39;;
+</span><span style="color:#b48ead;">import </span><span>{</span><span style="color:#bf616a;">UserService</span><span>} </span><span style="color:#b48ead;">from </span><span>&#39;</span><span style="color:#a3be8c;">./user.service</span><span>&#39;;
+</span><span style="color:#b48ead;">import </span><span>{</span><span style="color:#bf616a;">UserDto</span><span>} </span><span style="color:#b48ead;">from </span><span>&quot;</span><span style="color:#a3be8c;">../../entity/user/user.dto</span><span>&quot;;
+</span><span>
+</span><span>@</span><span style="color:#8fa1b3;">Controller</span><span>(&quot;</span><span style="color:#a3be8c;">users</span><span>&quot;)
+</span><span style="color:#b48ead;">export class </span><span style="color:#ebcb8b;">UserController </span><span style="color:#eff1f5;">{
+</span><span style="color:#eff1f5;">    </span><span style="color:#b48ead;">constructor</span><span>(</span><span style="color:#b48ead;">private readonly </span><span style="color:#bf616a;">userService</span><span>: </span><span style="color:#eff1f5;">UserService</span><span>) </span><span style="color:#eff1f5;">{
+</span><span style="color:#eff1f5;">    }
+</span><span style="color:#eff1f5;">
+</span><span style="color:#eff1f5;">    @</span><span style="color:#8fa1b3;">Get</span><span style="color:#eff1f5;">()
+</span><span style="color:#eff1f5;">    </span><span style="color:#b48ead;">async </span><span style="color:#8fa1b3;">getHello</span><span>(</span><span style="color:#eff1f5;">@</span><span style="color:#8fa1b3;">Query</span><span style="color:#eff1f5;">(</span><span>&#39;</span><span style="color:#a3be8c;">userId</span><span>&#39;</span><span style="color:#eff1f5;">) </span><span style="color:#bf616a;">userId</span><span>: </span><span style="color:#eff1f5;">string</span><span>): </span><span style="color:#eff1f5;">Promise&lt;UserDto&gt; {
+</span><span style="color:#eff1f5;">        </span><span style="color:#b48ead;">return </span><span style="color:#bf616a;">this</span><span style="color:#eff1f5;">.</span><span style="color:#bf616a;">userService</span><span style="color:#eff1f5;">.</span><span style="color:#8fa1b3;">getUserById</span><span style="color:#eff1f5;">(</span><span style="color:#bf616a;">userId</span><span style="color:#eff1f5;">);
+</span><span style="color:#eff1f5;">    }
+</span><span style="color:#eff1f5;">}
+</span></code></pre>
+<ol start="4">
+<li>创建用户模块，将controller、service注册到用户模块中（<code>src/module/user/user.module.ts</code>）：</li>
+</ol>
+<pre data-lang="typescript" style="background-color:#2b303b;color:#c0c5ce;" class="language-typescript "><code class="language-typescript" data-lang="typescript"><span style="color:#b48ead;">import </span><span>{ </span><span style="color:#bf616a;">Module </span><span>} </span><span style="color:#b48ead;">from </span><span>&#39;</span><span style="color:#a3be8c;">@nestjs/common</span><span>&#39;;
+</span><span style="color:#b48ead;">import </span><span>{ </span><span style="color:#bf616a;">UserController </span><span>} </span><span style="color:#b48ead;">from </span><span>&#39;</span><span style="color:#a3be8c;">./user.controller</span><span>&#39;;
+</span><span style="color:#b48ead;">import </span><span>{ </span><span style="color:#bf616a;">UserService </span><span>} </span><span style="color:#b48ead;">from </span><span>&#39;</span><span style="color:#a3be8c;">./user.service</span><span>&#39;;
+</span><span>
+</span><span>@</span><span style="color:#8fa1b3;">Module</span><span>({
+</span><span>  imports: [],
+</span><span>  controllers: [</span><span style="color:#bf616a;">UserController</span><span>],
+</span><span>  providers: [</span><span style="color:#bf616a;">UserService</span><span>],
+</span><span>})
+</span><span style="color:#b48ead;">export class </span><span style="color:#ebcb8b;">UserModule </span><span style="color:#eff1f5;">{}
+</span></code></pre>
+<ol start="5">
+<li>将用户模块注册给全局总模块app.module.ts中：</li>
+</ol>
+<pre data-lang="diff" style="background-color:#2b303b;color:#c0c5ce;" class="language-diff "><code class="language-diff" data-lang="diff"><span> import { AppService } from &#39;./app.service&#39;;
+</span><span style="color:#a3be8c;">+import {UserModule} from &quot;./module/user/user.module&quot;;
+</span><span>
+</span><span> @Module({
+</span><span style="color:#bf616a;">-  imports: [],
+</span><span style="color:#a3be8c;">+  imports: [UserModule],
+</span><span>   controllers: [AppController],
+</span><span>   providers: [AppService],
+</span><span> })
+</span></code></pre>
+<p>完成上述操作以后，我们就可以启动服务进行验证了：</p>
+<p><img src="https://static-res.zhen.wang/images/post/2022-11-22/010-http-api-origin-output.png" alt="010-http-api-origin-output" /></p>
+<h2 id="cheng-gong-xiang-ying-lan-jie-qi">成功响应拦截器</h2>
+<p>上面的接口返回可以看出，Controller返回是什么样的结构体，前端请求到的数据就是什么结构，但我们希望将数据按照ServerResponseWrapper结构进行封装。在nestjs中，可以通过实现来自<code>@nestjs/common</code>中的<code>NestInterceptor</code>接口来编写我们自己的响应拦截，统一处理响应来实现前面的需求。按照我们之前规划，我们首先在src/base中创建interceptor目录，然后在里面创建<code>http-service.response.interceptor.ts</code>，内容如下：</p>
+<pre data-lang="typescript" style="background-color:#2b303b;color:#c0c5ce;" class="language-typescript "><code class="language-typescript" data-lang="typescript"><span style="color:#65737e;">// src/base/interceptor/http-service.response.interceptor.ts
+</span><span style="color:#b48ead;">import </span><span>{</span><span style="color:#bf616a;">CallHandler</span><span>, </span><span style="color:#bf616a;">ExecutionContext</span><span>, </span><span style="color:#bf616a;">NestInterceptor</span><span>} </span><span style="color:#b48ead;">from </span><span>&quot;</span><span style="color:#a3be8c;">@nestjs/common</span><span>&quot;;
+</span><span style="color:#b48ead;">import </span><span>{</span><span style="color:#bf616a;">map</span><span>, </span><span style="color:#bf616a;">Observable</span><span>} </span><span style="color:#b48ead;">from </span><span>&quot;</span><span style="color:#a3be8c;">rxjs</span><span>&quot;;
+</span><span style="color:#b48ead;">import </span><span>{</span><span style="color:#bf616a;">ServerResponseWrapper</span><span>} </span><span style="color:#b48ead;">from </span><span>&quot;</span><span style="color:#a3be8c;">../../common/server-response-wrapper</span><span>&quot;;
+</span><span style="color:#b48ead;">import </span><span>{</span><span style="color:#bf616a;">SUCCESS</span><span>} </span><span style="color:#b48ead;">from </span><span>&quot;</span><span style="color:#a3be8c;">../../common/return-code</span><span>&quot;;
+</span><span>
+</span><span style="color:#65737e;">/**
+</span><span style="color:#65737e;"> * 全局Http服务响应拦截器
+</span><span style="color:#65737e;"> * 该Interceptor在main中通过
+</span><span style="color:#65737e;"> * app.useGlobalInterceptors 来全局引入，
+</span><span style="color:#65737e;"> * 仅处理HTTP服务成功响应拦截，异常是不会进入该拦截器
+</span><span style="color:#65737e;"> */
+</span><span style="color:#b48ead;">export class </span><span style="color:#ebcb8b;">HttpServiceResponseInterceptor </span><span style="color:#b48ead;">implements </span><span style="color:#a3be8c;">NestInterceptor </span><span style="color:#eff1f5;">{
+</span><span style="color:#eff1f5;">    </span><span style="color:#8fa1b3;">intercept</span><span>(</span><span style="color:#bf616a;">context</span><span>: </span><span style="color:#eff1f5;">ExecutionContext,
+</span><span style="color:#eff1f5;">              </span><span style="color:#bf616a;">next</span><span>: </span><span style="color:#eff1f5;">CallHandler</span><span>):
+</span><span style="color:#eff1f5;">        Observable&lt;any&gt; </span><span>| </span><span style="color:#eff1f5;">Promise&lt;Observable&lt;any&gt;&gt; {
+</span><span style="color:#eff1f5;">        </span><span style="color:#b48ead;">return </span><span style="color:#bf616a;">next</span><span style="color:#eff1f5;">.</span><span style="color:#8fa1b3;">handle</span><span style="color:#eff1f5;">().</span><span style="color:#8fa1b3;">pipe</span><span style="color:#eff1f5;">(</span><span style="color:#8fa1b3;">map</span><span style="color:#eff1f5;">(</span><span style="color:#bf616a;">data </span><span style="color:#b48ead;">=&gt; </span><span style="color:#eff1f5;">{
+</span><span style="color:#eff1f5;">            </span><span style="color:#65737e;">// 进入该拦截器，说明没有异常，使用成功返回
+</span><span style="color:#eff1f5;">            </span><span style="color:#b48ead;">const </span><span style="color:#bf616a;">resp</span><span>: </span><span style="color:#eff1f5;">ServerResponseWrapper </span><span>= </span><span style="color:#eff1f5;">{
+</span><span style="color:#eff1f5;">                returnCode: </span><span style="color:#bf616a;">SUCCESS</span><span style="color:#eff1f5;">.</span><span style="color:#bf616a;">codeString</span><span style="color:#eff1f5;">,
+</span><span style="color:#eff1f5;">                data: </span><span style="color:#bf616a;">data
+</span><span style="color:#eff1f5;">            };
+</span><span style="color:#eff1f5;">            </span><span style="color:#b48ead;">return </span><span style="color:#bf616a;">resp</span><span style="color:#eff1f5;">;
+</span><span style="color:#eff1f5;">        }))
+</span><span style="color:#eff1f5;">    }
+</span><span style="color:#eff1f5;">}
+</span></code></pre>
+<p>创建完成后，我们在main入口中，需要将该响应拦截器注册到全局中：</p>
+<pre data-lang="diff" style="background-color:#2b303b;color:#c0c5ce;" class="language-diff "><code class="language-diff" data-lang="diff"><span> // src/main.ts
+</span><span> async function bootstrap() {
+</span><span>   const app = await NestFactory.create(AppModule);
+</span><span style="color:#a3be8c;">+
+</span><span style="color:#a3be8c;">+  // 增加HTTP服务的成功响应拦截器
+</span><span style="color:#a3be8c;">+  app.useGlobalInterceptors(new HttpServiceResponseInterceptor());
+</span><span style="color:#a3be8c;">+
+</span><span>   await app.listen(3000);
+</span><span> }
+</span><span> bootstrap();
+</span></code></pre>
+<p>完成配置以后，我们可以再次调用API来查看结果：</p>
+<p><img src="https://static-res.zhen.wang/images/post/2022-11-22/020-http-api-success-wrapper-output.png" alt="020-http-api-success-wrapper-output" /></p>
+<p>可以看到，尽管我们的Controller返回的是一个实际数据结构（Promise也适用），但是经过响应拦截器的处理，我们完成了对响应体的包裹封装。</p>
+<h2 id="yi-chang-guo-lu-qi">异常过滤器</h2>
+<p>上述我们完成一个调用，并对响应成功的数据进行了包裹，但面对异常情况同样适用吗？如果不适用又需要如何处理呢？</p>
+<p>首先，我们增加一个专门处理字段错误的错误码ReturnCode：</p>
+<pre data-lang="diff" style="background-color:#2b303b;color:#c0c5ce;" class="language-diff "><code class="language-diff" data-lang="diff"><span>// src/common/return-code.ts
+</span><span> export const SUCCESS = new ReturnCode(&#39;SUC&#39;, &#39;00000&#39;, 200);
+</span><span style="color:#a3be8c;">+export const ERR_REQ_FIELD_ERROR = new ReturnCode(&#39;ERR&#39;, &#39;40000&#39;, 400);
+</span><span> export const ERR_NOT_FOUND = new ReturnCode(&#39;ERR&#39;, &#39;40400&#39;, 404);
+</span></code></pre>
+<p>然后，我们在UserService中适当修改一下getUserById的实现，加入userId判空判断，并在为空的时候，抛出业务异常（这个过程我们顺便安装了lodash）：</p>
+<pre data-lang="diff" style="background-color:#2b303b;color:#c0c5ce;" class="language-diff "><code class="language-diff" data-lang="diff"><span style="color:#a3be8c;">+import * as _ from &#39;lodash&#39;;
+</span><span style="color:#a3be8c;">+import {BizException} from &quot;../../common/biz-exception&quot;;
+</span><span style="color:#a3be8c;">+import {ERR_REQ_FIELD_ERROR} from &quot;../../common/return-code&quot;;
+</span><span>
+</span><span> @Injectable()
+</span><span> export class UserService {
+</span><span>
+</span><span>     async getUserById(userId: string): Promise&lt;UserDto&gt; {
+</span><span style="color:#a3be8c;">+        if (_.isEmpty(userId)) {
+</span><span style="color:#a3be8c;">+            throw BizException.create(ERR_REQ_FIELD_ERROR, &#39;user id is empty&#39;);
+</span><span style="color:#a3be8c;">+        }
+</span><span>         ... ...
+</span><span>     }
+</span><span>}
+</span></code></pre>
+<p>完成上述修改后，我们尝试发请求时候，故意不填写userId，得到如下的结果：</p>
+<p><img src="https://static-res.zhen.wang/images/post/2022-11-22/030-http-api-error-origin-output.png" alt="030-http-api-error-origin-output" /></p>
+<p>可以看到，尽管nestjs帮助我们进行一定的封装，但是结构体与我们一开始定义的ServerResponseWrapper是不一致的。为了保持一致，我们需要接管nestjs的异常处理，并转换为我们自己的wrapper结构，而接管的方式则是创建一个实现ExceptionFilter接口的类（按照路径划分，我们将这个类所在文件<code>http-service.exception.filter.ts</code>存放于src/base/filter目录下）：</p>
+<pre data-lang="typescript" style="background-color:#2b303b;color:#c0c5ce;" class="language-typescript "><code class="language-typescript" data-lang="typescript"><span style="color:#b48ead;">import </span><span>{</span><span style="color:#bf616a;">ArgumentsHost</span><span>, </span><span style="color:#bf616a;">Catch</span><span>, </span><span style="color:#bf616a;">ExceptionFilter</span><span>, </span><span style="color:#bf616a;">HttpException</span><span>} </span><span style="color:#b48ead;">from </span><span>&quot;</span><span style="color:#a3be8c;">@nestjs/common</span><span>&quot;;
+</span><span style="color:#b48ead;">import </span><span>{</span><span style="color:#bf616a;">ServerResponseWrapper</span><span>} </span><span style="color:#b48ead;">from </span><span>&quot;</span><span style="color:#a3be8c;">../../common/server-response-wrapper</span><span>&quot;;
+</span><span style="color:#b48ead;">import </span><span>{</span><span style="color:#bf616a;">BizException</span><span>} </span><span style="color:#b48ead;">from </span><span>&quot;</span><span style="color:#a3be8c;">../../common/biz-exception</span><span>&quot;;
+</span><span>
+</span><span style="color:#65737e;">/**
+</span><span style="color:#65737e;"> * 全局Http服务的异常处理，
+</span><span style="color:#65737e;"> * 该Filter在main中通过
+</span><span style="color:#65737e;"> * app.useGlobalExceptionFilter来全局引入，
+</span><span style="color:#65737e;"> * 仅处理HTTP服务
+</span><span style="color:#65737e;"> */
+</span><span>@</span><span style="color:#8fa1b3;">Catch</span><span>()
+</span><span style="color:#b48ead;">export class </span><span style="color:#ebcb8b;">HttpServiceExceptionFilter </span><span style="color:#b48ead;">implements </span><span style="color:#a3be8c;">ExceptionFilter </span><span style="color:#eff1f5;">{
+</span><span style="color:#eff1f5;">    </span><span style="color:#8fa1b3;">catch</span><span>(</span><span style="color:#bf616a;">exception</span><span>: </span><span style="color:#eff1f5;">any, </span><span style="color:#bf616a;">host</span><span>: </span><span style="color:#eff1f5;">ArgumentsHost</span><span>): </span><span style="color:#eff1f5;">any {
+</span><span style="color:#eff1f5;">        </span><span style="color:#65737e;">// 进入该拦截器，说明http调用中存在异常，需要解析异常，并返回统一处理
+</span><span style="color:#eff1f5;">        </span><span style="color:#b48ead;">let </span><span style="color:#bf616a;">responseWrapper</span><span>: </span><span style="color:#eff1f5;">ServerResponseWrapper;
+</span><span style="color:#eff1f5;">        </span><span style="color:#b48ead;">let </span><span style="color:#bf616a;">httpStatusCode</span><span>: </span><span style="color:#eff1f5;">number;
+</span><span style="color:#eff1f5;">        </span><span style="color:#b48ead;">if </span><span style="color:#eff1f5;">(</span><span style="color:#bf616a;">exception </span><span>instanceof </span><span style="color:#eff1f5;">BizException) {
+</span><span style="color:#eff1f5;">            </span><span style="color:#65737e;">// 业务层Exception
+</span><span style="color:#eff1f5;">            </span><span style="color:#bf616a;">responseWrapper </span><span>= </span><span style="color:#eff1f5;">{
+</span><span style="color:#eff1f5;">                returnCode: </span><span style="color:#bf616a;">exception</span><span style="color:#eff1f5;">.</span><span style="color:#bf616a;">errorCode</span><span style="color:#eff1f5;">.</span><span style="color:#bf616a;">codeString</span><span style="color:#eff1f5;">,
+</span><span style="color:#eff1f5;">                errorMessage: </span><span style="color:#bf616a;">exception</span><span style="color:#eff1f5;">.</span><span style="color:#bf616a;">errorMessage
+</span><span style="color:#eff1f5;">            }
+</span><span style="color:#eff1f5;">            </span><span style="color:#bf616a;">httpStatusCode </span><span>= </span><span style="color:#bf616a;">exception</span><span style="color:#eff1f5;">.</span><span style="color:#bf616a;">errorCode</span><span style="color:#eff1f5;">.</span><span style="color:#bf616a;">statusCode</span><span style="color:#eff1f5;">;
+</span><span style="color:#eff1f5;">        } </span><span style="color:#b48ead;">else if </span><span style="color:#eff1f5;">(</span><span style="color:#bf616a;">exception </span><span>instanceof </span><span style="color:#eff1f5;">HttpException) {
+</span><span style="color:#eff1f5;">            </span><span style="color:#65737e;">// 框架层的Http异常
+</span><span style="color:#eff1f5;">            </span><span style="color:#bf616a;">responseWrapper </span><span>= </span><span style="color:#eff1f5;">{
+</span><span style="color:#eff1f5;">                returnCode: </span><span>&#39;</span><span style="color:#a3be8c;">IM9009</span><span>&#39;</span><span style="color:#eff1f5;">,
+</span><span style="color:#eff1f5;">                errorMessage: </span><span style="color:#bf616a;">exception</span><span style="color:#eff1f5;">.</span><span style="color:#bf616a;">message</span><span style="color:#eff1f5;">,
+</span><span style="color:#eff1f5;">            }
+</span><span style="color:#eff1f5;">            </span><span style="color:#bf616a;">httpStatusCode </span><span>= </span><span style="color:#bf616a;">exception</span><span style="color:#eff1f5;">.</span><span style="color:#8fa1b3;">getStatus</span><span style="color:#eff1f5;">();
+</span><span style="color:#eff1f5;">        } </span><span style="color:#b48ead;">else </span><span style="color:#eff1f5;">{
+</span><span style="color:#eff1f5;">            </span><span style="color:#65737e;">// 其他错误
+</span><span style="color:#eff1f5;">            </span><span style="color:#bf616a;">responseWrapper </span><span>= </span><span style="color:#eff1f5;">{
+</span><span style="color:#eff1f5;">                returnCode: </span><span>&#39;</span><span style="color:#a3be8c;">IM9999</span><span>&#39;</span><span style="color:#eff1f5;">,
+</span><span style="color:#eff1f5;">                errorMessage: </span><span>&#39;</span><span style="color:#a3be8c;">server unknown error: </span><span>&#39; + </span><span style="color:#bf616a;">exception</span><span style="color:#eff1f5;">.</span><span style="color:#bf616a;">message</span><span style="color:#eff1f5;">,
+</span><span style="color:#eff1f5;">            };
+</span><span style="color:#eff1f5;">            </span><span style="color:#bf616a;">httpStatusCode </span><span>= </span><span style="color:#d08770;">500</span><span style="color:#eff1f5;">;
+</span><span style="color:#eff1f5;">
+</span><span style="color:#eff1f5;">        }
+</span><span style="color:#eff1f5;">
+</span><span style="color:#eff1f5;">        </span><span style="color:#65737e;">// 该拦截器处理HTTP服务的异常，所以手动切换到HTTP Host
+</span><span style="color:#eff1f5;">        </span><span style="color:#65737e;">// 并获取响应response，进行HTTP响应的写入
+</span><span style="color:#eff1f5;">        </span><span style="color:#b48ead;">const </span><span style="color:#bf616a;">httpHost </span><span>= </span><span style="color:#bf616a;">host</span><span style="color:#eff1f5;">.</span><span style="color:#8fa1b3;">switchToHttp</span><span style="color:#eff1f5;">();
+</span><span style="color:#eff1f5;">        </span><span style="color:#b48ead;">const </span><span style="color:#bf616a;">response </span><span>= </span><span style="color:#bf616a;">httpHost</span><span style="color:#eff1f5;">.</span><span style="color:#8fa1b3;">getResponse</span><span style="color:#eff1f5;">();
+</span><span style="color:#eff1f5;">        </span><span style="color:#bf616a;">response</span><span style="color:#eff1f5;">.</span><span style="color:#8fa1b3;">status</span><span style="color:#eff1f5;">(</span><span style="color:#bf616a;">httpStatusCode</span><span style="color:#eff1f5;">).</span><span style="color:#8fa1b3;">json</span><span style="color:#eff1f5;">(</span><span style="color:#bf616a;">responseWrapper</span><span style="color:#eff1f5;">);
+</span><span style="color:#eff1f5;">    }
+</span><span style="color:#eff1f5;">}
+</span></code></pre>
+<p>该类的核心点在于，对捕获到的异常进行解析后，我们会通过参数ArgumentsHost来获取实际的HTTP Host，并从中获取response对象，调用相关支持的方法来控制响应response的内容（http状态码以及响应体内容）。</p>
+<p>最后，我们依然在main里面进行注册配置：</p>
+<pre data-lang="diff" style="background-color:#2b303b;color:#c0c5ce;" class="language-diff "><code class="language-diff" data-lang="diff"><span style="color:#a3be8c;">+import {HttpServiceExceptionFilter} from &quot;./base/filter/http-service.exception.filter&quot;;
+</span><span>
+</span><span> async function bootstrap() {
+</span><span>   const app = await NestFactory.create(AppModule);
+</span><span>
+</span><span>   // 增加HTTP服务的成功响应拦截器
+</span><span>   app.useGlobalInterceptors(new HttpServiceResponseInterceptor());
+</span><span style="color:#a3be8c;">+  // 增加HTTP服务的异常过滤器，进行响应包裹
+</span><span style="color:#a3be8c;">+  app.useGlobalFilters(new HttpServiceExceptionFilter());
+</span><span>
+</span><span>   await app.listen(3000);
+</span><span> }
+</span></code></pre>
+<p>完成开发配置以后，我们重启服务，通过调用接口可以看到对应异常返回：</p>
+<p><img src="https://static-res.zhen.wang/images/post/2022-11-22/040-http-api-error-wrapper-output.png" alt="040-http-api-error-wrapper-output" /></p>
+<h1 id="websocketfu-wu">WebSocket服务</h1>
+<p>在nestjs中想要集成WebSocket服务也很容易。</p>
+<p>首先，我们使用一个装饰器<code>@WebSocketGateway()</code>来表明一个类是一个WebSocket的网关（Gateway），这个装饰器可以指定WebSocket服务的端口等信息。通常情况下，我们可以设置与HTTP服务不一样的端口，这样我们就可以在一个台服务上通过不同的端口暴露HTTP和WebSocket服务。当然，这不是必须，只是为了更好的区分服务。</p>
+<p>其次，我们需要明白在nestjs可以使用ws或者socket.io两种具体实现的websocket平台。什么是具体平台？简单来讲，nestjs只负责设置一个标准的WebSocket网关规范，提供通用的API、接口、装饰器等，各个平台则是根据nestjs提供的规范进行实现。<strong>在本例中，我们选择使用socket.io作为nestjs上WebSocket具体的实现，因为socket.io是一个比较著名websocket库，同时支持服务端和客户端，并且在客户端/服务端均内建支持了"请求 - 响应"一来一回机制。</strong></p>
+<h2 id="qian-zhi-zhun-bei">前置准备</h2>
+<p><strong>依赖安装</strong></p>
+<p>nestjs中的websocket是一个独立的模块，且我们选取了socket.io作为websocket的实现，所以我们需要首先安装一下的基础模块：</p>
+<pre data-lang="shell" style="background-color:#2b303b;color:#c0c5ce;" class="language-shell "><code class="language-shell" data-lang="shell"><span>yarn add @nestjs/websockets @nestjs/platform-socket.io
+</span></code></pre>
+<p><strong>网关创建</strong></p>
+<p>websocket的相关内容，我们同样作为一种模块进行编写。于是，我们在src/module/目录中创建websocket文件夹，并在里面创建一个文件：my-websocket.gateway.ts，编写WS网关MyWebSocketGateway类的内容：</p>
+<pre data-lang="typescript" style="background-color:#2b303b;color:#c0c5ce;" class="language-typescript "><code class="language-typescript" data-lang="typescript"><span style="color:#b48ead;">import </span><span>{</span><span style="color:#bf616a;">WebSocketGateway</span><span>} </span><span style="color:#b48ead;">from </span><span>&quot;</span><span style="color:#a3be8c;">@nestjs/websockets</span><span>&quot;;
+</span><span>
+</span><span>@</span><span style="color:#8fa1b3;">WebSocketGateway</span><span>(</span><span style="color:#d08770;">4000</span><span>, {
+</span><span>    transports: [&#39;</span><span style="color:#a3be8c;">websocket</span><span>&#39;]
+</span><span>})
+</span><span style="color:#b48ead;">export class </span><span style="color:#ebcb8b;">MyWebSocketGateway </span><span style="color:#eff1f5;">{
+</span><span style="color:#eff1f5;">
+</span><span style="color:#eff1f5;">}
+</span></code></pre>
+<p>一个简单的WebSocket网关就创建完成了。我们首先设定了WebSocket服务的端口号为4000（与HTTP服务的3000隔离开）；其次，需要特别提一下transports参数，可选择的transport有两种：</p>
+<blockquote>
+<p>polling（HTTP长连接轮询）</p>
+</blockquote>
+<p>该机制由连续的 HTTP 请求组成：</p>
+<ul>
+<li>长时间运行的请求，用于从服务器接收数据<code>GET</code></li>
+<li>短运行请求，用于将数据发送到服务器<code>POST</code></li>
+</ul>
+<p>由于传输的性质，连续的发出可以在同一 HTTP 请求中连接和发送。</p>
+<p>也就是说，polling本质上是利用HTTP请求+轮询来完成所谓的双工通讯，在某些古老的没有实现真正WebSocket协议的浏览器作为一种实现方案。</p>
+<blockquote>
+<p>websocket（网络套接字）</p>
+</blockquote>
+<p>WebSocket 传输由<a rel="noopener" target="_blank" href="https://developer.mozilla.org/en-US/docs/Web/API/WebSockets_API">WebSocket</a> 连接组成，该连接在服务器和客户端之间提供双向和低延迟的通信通道。这是真正的长连接双工通讯协议。</p>
+<p>所以，在通讯的过程中，服务端与客户端要保持相匹配的传输协议。</p>
+<p><strong>模块创建注册</strong></p>
+<p>同样的，我们在src/module/websocket中创建一个my-websocket.module.ts文件，内容如下：</p>
+<pre data-lang="typescript" style="background-color:#2b303b;color:#c0c5ce;" class="language-typescript "><code class="language-typescript" data-lang="typescript"><span style="color:#b48ead;">import </span><span>{</span><span style="color:#bf616a;">MyWebSocketGateway</span><span>} </span><span style="color:#b48ead;">from </span><span>&quot;</span><span style="color:#a3be8c;">./my-websocket.gateway</span><span>&quot;;
+</span><span style="color:#b48ead;">import </span><span>{</span><span style="color:#bf616a;">Module</span><span>} </span><span style="color:#b48ead;">from </span><span>&quot;</span><span style="color:#a3be8c;">@nestjs/common</span><span>&quot;;
+</span><span>
+</span><span>@</span><span style="color:#8fa1b3;">Module</span><span>({
+</span><span>    providers: [</span><span style="color:#bf616a;">MyWebSocketGateway</span><span>]
+</span><span>})
+</span><span style="color:#b48ead;">export class </span><span style="color:#ebcb8b;">MyWebSocketModule </span><span style="color:#eff1f5;">{
+</span><span style="color:#eff1f5;">
+</span><span style="color:#eff1f5;">}
+</span></code></pre>
+<p>主要内容是将MyWebSocketGateway注册到模块中。</p>
+<p>最后我们将MyWebSocket模块注册到根模块中：</p>
+<pre data-lang="diff" style="background-color:#2b303b;color:#c0c5ce;" class="language-diff "><code class="language-diff" data-lang="diff"><span style="color:#a3be8c;">+import {MyWebSocketModule} from &quot;./module/websocket/my-websocket.module&quot;;
+</span><span>
+</span><span> @Module({
+</span><span style="color:#bf616a;">-  imports: [UserModule],
+</span><span style="color:#a3be8c;">+  imports: [UserModule, MyWebSocketModule],
+</span><span>   controllers: [AppController],
+</span><span>   providers: [AppService],
+</span><span> })
+</span><span>export class AppModule {}
+</span></code></pre>
+<h2 id="ji-chu-fu-wu-1">基础服务</h2>
+<p>我们先设定这样一个场景：客户端连接上WebSocket服务后，可以给服务端发送一份JSON数据（内容加下方），服务端校验该数据后，在控制台打印数据。</p>
+<pre data-lang="json" style="background-color:#2b303b;color:#c0c5ce;" class="language-json "><code class="language-json" data-lang="json"><span>{
+</span><span>    &quot;</span><span style="color:#a3be8c;">name</span><span>&quot;: &quot;</span><span style="color:#a3be8c;">w4ngzhen</span><span>&quot;
+</span><span>}
+</span></code></pre>
+<p>对于服务端来说，我们首先需要订阅事件（subscribe），假设发送JSON数据的事件为<code>hello</code>，那么我们可以通过如下的方式来进行订阅：</p>
+<pre data-lang="typescript" style="background-color:#2b303b;color:#c0c5ce;" class="language-typescript "><code class="language-typescript" data-lang="typescript"><span style="color:#b48ead;">export class </span><span style="color:#ebcb8b;">MyWebSocketGateway </span><span style="color:#eff1f5;">{
+</span><span style="color:#eff1f5;">
+</span><span style="color:#eff1f5;">    @</span><span style="color:#8fa1b3;">SubscribeMessage</span><span style="color:#eff1f5;">(</span><span>&#39;</span><span style="color:#a3be8c;">hello</span><span>&#39;</span><span style="color:#eff1f5;">)
+</span><span style="color:#eff1f5;">    </span><span style="color:#8fa1b3;">hello</span><span>(</span><span style="color:#eff1f5;">@</span><span style="color:#8fa1b3;">MessageBody</span><span style="color:#eff1f5;">() </span><span style="color:#bf616a;">reqData</span><span>: </span><span style="color:#eff1f5;">{ </span><span style="color:#bf616a;">name</span><span>: </span><span style="color:#eff1f5;">string }</span><span>) </span><span style="color:#eff1f5;">{
+</span><span style="color:#eff1f5;">        </span><span style="color:#b48ead;">if </span><span style="color:#eff1f5;">(</span><span>!</span><span style="color:#bf616a;">reqData </span><span>|| !</span><span style="color:#bf616a;">reqData</span><span style="color:#eff1f5;">.name) {
+</span><span style="color:#eff1f5;">            </span><span style="color:#b48ead;">throw </span><span style="color:#bf616a;">BizException</span><span style="color:#eff1f5;">.</span><span style="color:#8fa1b3;">create</span><span style="color:#eff1f5;">(</span><span style="color:#bf616a;">ERR_REQ_FIELD_ERROR</span><span style="color:#eff1f5;">, </span><span>&#39;</span><span style="color:#a3be8c;">data is empty</span><span>&#39;</span><span style="color:#eff1f5;">);
+</span><span style="color:#eff1f5;">        }
+</span><span style="color:#eff1f5;">        </span><span style="color:#ebcb8b;">console</span><span style="color:#eff1f5;">.</span><span style="color:#96b5b4;">log</span><span style="color:#eff1f5;">(JSON.</span><span style="color:#96b5b4;">stringify</span><span style="color:#eff1f5;">(</span><span style="color:#bf616a;">reqData</span><span style="color:#eff1f5;">));
+</span><span style="color:#eff1f5;">    }
+</span><span style="color:#eff1f5;">    
+</span><span style="color:#eff1f5;">}
+</span></code></pre>
+<p>测试WebSocket，可以使用postman来进行，只需要创建个一WebSocket的请求，在postman中按下CTRL+N（macOS为command+N），可以选择WebSocket请求：</p>
+<p><img src="https://static-res.zhen.wang/images/post/2022-11-22/050-create-websocket.png" alt="050-create-websocket" /></p>
+<p>创建后，需要注意，由于我们nestjs集成的WebSocket实现使用的socket.io，所以客户端需要匹配对应的实现（这点主要是为了匹配”请求-响应“一来一回机制）</p>
+<p><img src="https://static-res.zhen.wang/images/post/2022-11-22/060-choose-socketio.png" alt="060-choose-socketio" /></p>
+<p>完成配置后，我们可以采用如下的步骤进行事件发送：</p>
+<p><img src="https://static-res.zhen.wang/images/post/2022-11-22/070-postman-websocket-send.png" alt="070-postman-websocket-send" /></p>
+<p>发送完成后，就会看到postman的打印和nodejs服务控制台的打印，符合我们的预期：</p>
+<p><img src="https://static-res.zhen.wang/images/post/2022-11-22/080-websocket-event-origin-output.png" alt="080-websocket-event-origin-output" /></p>
+<p>当然，我前面提到过socket.io支持事件一来一回的请求响应模式。在nestjs中的WebSocket网关，只需要在对应的请求返回值即可：</p>
+<pre data-lang="diff" style="background-color:#2b303b;color:#c0c5ce;" class="language-diff "><code class="language-diff" data-lang="diff"><span>     @SubscribeMessage(&#39;hello&#39;)
+</span><span>     hello(@MessageBody() reqData: { name: string }) {
+</span><span>         if (!reqData || !reqData.name) {
+</span><span>             throw BizException.create(ERR_REQ_FIELD_ERROR, &#39;data is empty&#39;);
+</span><span>         }
+</span><span>         console.log(JSON.stringify(reqData));
+</span><span style="color:#a3be8c;">+        return &#39;received reqData&#39;;
+</span><span>     }
+</span></code></pre>
+<p>在postman的地方，我们需要发送的时候勾选上<code>Acknowledgement</code>：</p>
+<p><img src="https://static-res.zhen.wang/images/post/2022-11-22/090-set-acknowledgement.png" alt="090-set-acknowledgement" /></p>
+<p>完成以后，我们重新连接服务并发送数据，就可以看到一条完整的事件处理链路了：</p>
+<p><img src="https://static-res.zhen.wang/images/post/2022-11-22/100-send-and-receive-origin.png" alt="100-send-and-receive-origin" /></p>
+<p>至此，我们就完成了在Nestjs集成一个基础的WebSocket服务了。</p>
+<p>当然，我们的工作还没有结束。在前面我们对HTTP服务编写了成功响应拦截器以及异常过滤器，接下来，我们按照同样的方式编写WebSocket的相关处理。</p>
+<h2 id="cheng-gong-xiang-ying-lan-jie-qi-1">成功响应拦截器</h2>
+<p>对于集成在nestjs中的WebSocket服务，想要编写并配置一个成功响应拦截器并不复杂，没有什么坑。</p>
+<p>首先，我们仿照着http-service.response.interceptor.ts，编写一个几乎完全一样的ws-service.response.interceptor.ts，与HTTP的成功响应拦截器放在相同目录src/base/interceptor中：</p>
+<pre data-lang="typescript" style="background-color:#2b303b;color:#c0c5ce;" class="language-typescript "><code class="language-typescript" data-lang="typescript"><span style="color:#65737e;">// src/base/interceptor/ws-service.response.interceptor.ts
+</span><span style="color:#b48ead;">import </span><span>{</span><span style="color:#bf616a;">CallHandler</span><span>, </span><span style="color:#bf616a;">ExecutionContext</span><span>, </span><span style="color:#bf616a;">NestInterceptor</span><span>} </span><span style="color:#b48ead;">from </span><span>&quot;</span><span style="color:#a3be8c;">@nestjs/common</span><span>&quot;;
+</span><span style="color:#b48ead;">import </span><span>{</span><span style="color:#bf616a;">map</span><span>, </span><span style="color:#bf616a;">Observable</span><span>} </span><span style="color:#b48ead;">from </span><span>&quot;</span><span style="color:#a3be8c;">rxjs</span><span>&quot;;
+</span><span style="color:#b48ead;">import </span><span>{</span><span style="color:#bf616a;">ServerResponseWrapper</span><span>} </span><span style="color:#b48ead;">from </span><span>&quot;</span><span style="color:#a3be8c;">../../common/server-response-wrapper</span><span>&quot;;
+</span><span style="color:#b48ead;">import </span><span>{</span><span style="color:#bf616a;">SUCCESS</span><span>} </span><span style="color:#b48ead;">from </span><span>&quot;</span><span style="color:#a3be8c;">../../common/return-code</span><span>&quot;;
+</span><span>
+</span><span style="color:#65737e;">/**
+</span><span style="color:#65737e;"> * 全局WebSocket服务响应拦截器
+</span><span style="color:#65737e;"> * 该Interceptor在网关中通过装饰器 </span><span style="color:#b48ead;">@UseInterceptors</span><span style="color:#65737e;"> 使用
+</span><span style="color:#65737e;"> * 仅处理WebSocket服务成功响应拦截，异常是不会进入该拦截器
+</span><span style="color:#65737e;"> */
+</span><span style="color:#b48ead;">export class </span><span style="color:#ebcb8b;">WsServiceResponseInterceptor </span><span style="color:#b48ead;">implements </span><span style="color:#a3be8c;">NestInterceptor </span><span style="color:#eff1f5;">{
+</span><span style="color:#eff1f5;">    </span><span style="color:#8fa1b3;">intercept</span><span>(</span><span style="color:#bf616a;">context</span><span>: </span><span style="color:#eff1f5;">ExecutionContext,
+</span><span style="color:#eff1f5;">              </span><span style="color:#bf616a;">next</span><span>: </span><span style="color:#eff1f5;">CallHandler</span><span>):
+</span><span style="color:#eff1f5;">        Observable&lt;any&gt; </span><span>| </span><span style="color:#eff1f5;">Promise&lt;Observable&lt;any&gt;&gt; {
+</span><span style="color:#eff1f5;">        </span><span style="color:#b48ead;">return </span><span style="color:#bf616a;">next</span><span style="color:#eff1f5;">.</span><span style="color:#8fa1b3;">handle</span><span style="color:#eff1f5;">().</span><span style="color:#8fa1b3;">pipe</span><span style="color:#eff1f5;">(</span><span style="color:#8fa1b3;">map</span><span style="color:#eff1f5;">(</span><span style="color:#bf616a;">data </span><span style="color:#b48ead;">=&gt; </span><span style="color:#eff1f5;">{
+</span><span style="color:#eff1f5;">            </span><span style="color:#65737e;">// 进入该拦截器，说明没有异常，使用成功返回
+</span><span style="color:#eff1f5;">            </span><span style="color:#b48ead;">const </span><span style="color:#bf616a;">resp</span><span>: </span><span style="color:#eff1f5;">ServerResponseWrapper </span><span>= </span><span style="color:#eff1f5;">{
+</span><span style="color:#eff1f5;">                returnCode: </span><span style="color:#bf616a;">SUCCESS</span><span style="color:#eff1f5;">.</span><span style="color:#bf616a;">codeString</span><span style="color:#eff1f5;">,
+</span><span style="color:#eff1f5;">                data: </span><span style="color:#bf616a;">data
+</span><span style="color:#eff1f5;">            };
+</span><span style="color:#eff1f5;">            </span><span style="color:#b48ead;">return </span><span style="color:#bf616a;">resp</span><span style="color:#eff1f5;">;
+</span><span style="color:#eff1f5;">        }))
+</span><span style="color:#eff1f5;">    }
+</span><span style="color:#eff1f5;">}
+</span><span>
+</span></code></pre>
+<p>其次，与HTTP注册拦截器不同的是，nestjs中注册WebSocket的拦截器，需要在网关类上使用装饰器进行：</p>
+<pre data-lang="diff" style="background-color:#2b303b;color:#c0c5ce;" class="language-diff "><code class="language-diff" data-lang="diff"><span style="color:#a3be8c;">+ // 安装WebSocket成功响应拦截器
+</span><span style="color:#a3be8c;">+ @UseInterceptors(new WsServiceResponseInterceptor())
+</span><span>  @WebSocketGateway(4000, {
+</span><span>      transports: [&#39;websocket&#39;]
+</span><span>  })
+</span><span>  export class MyWebSocketGateway {
+</span><span>  ... ...
+</span></code></pre>
+<p>配置完成以后，我们重启服务，再次使用postman进行WebSocket事件请求，则会看到经过包装后的响应体：</p>
+<p><img src="https://static-res.zhen.wang/images/post/2022-11-22/110-send-and-receive-success-wrapper.png" alt="110-send-and-receive-success-wrapper" /></p>
+<h2 id="yi-chang-guo-lu-qi-1">异常过滤器</h2>
+<p>当然，我们尝试不发送任何的数据。理论上，则会进入校验流程不通过的场景，抛出BizException。在实际的发送中，我们会看到，postman无法接受到异常：</p>
+<p><img src="https://static-res.zhen.wang/images/post/2022-11-22/120-send-and-receive-error-origin.png" alt="120-send-and-receive-error-origin" /></p>
+<p>在服务端会看到一个异常报错：</p>
+<p><img src="https://static-res.zhen.wang/images/post/2022-11-22/130-send-and-receive-error-server-output.png" alt="130-send-and-receive-error-server-output" /></p>
+<p>对于这个问题，我们的需求是无论是否有异常，都需要使用ServerResponseWrapper进行包裹。与HTTP不同的是，WebSocket的异常过滤器需要实现<code>WsExceptionFilter</code>接口，实现该接口的catch方法：</p>
+<pre data-lang="typescript" style="background-color:#2b303b;color:#c0c5ce;" class="language-typescript "><code class="language-typescript" data-lang="typescript"><span style="color:#b48ead;">import </span><span>{</span><span style="color:#bf616a;">ArgumentsHost</span><span>, </span><span style="color:#bf616a;">Catch</span><span>, </span><span style="color:#bf616a;">ExceptionFilter</span><span>, </span><span style="color:#bf616a;">HttpException</span><span>, </span><span style="color:#bf616a;">WsExceptionFilter</span><span>} </span><span style="color:#b48ead;">from </span><span>&quot;</span><span style="color:#a3be8c;">@nestjs/common</span><span>&quot;;
+</span><span style="color:#b48ead;">import </span><span>{</span><span style="color:#bf616a;">ServerResponseWrapper</span><span>} </span><span style="color:#b48ead;">from </span><span>&quot;</span><span style="color:#a3be8c;">../../common/server-response-wrapper</span><span>&quot;;
+</span><span style="color:#b48ead;">import </span><span>{</span><span style="color:#bf616a;">BizException</span><span>} </span><span style="color:#b48ead;">from </span><span>&quot;</span><span style="color:#a3be8c;">../../common/biz-exception</span><span>&quot;;
+</span><span>
+</span><span style="color:#65737e;">/**
+</span><span style="color:#65737e;"> * 全局WebSocket服务的异常处理，
+</span><span style="color:#65737e;"> * 该Filter在网关中通过 使用 </span><span style="color:#b48ead;">@UseFilters</span><span style="color:#65737e;"> 来进行注册
+</span><span style="color:#65737e;"> * 仅处理WebSocket网关服务
+</span><span style="color:#65737e;"> */
+</span><span>@</span><span style="color:#8fa1b3;">Catch</span><span>()
+</span><span style="color:#b48ead;">export class </span><span style="color:#ebcb8b;">WsServiceExceptionFilter </span><span style="color:#b48ead;">implements </span><span style="color:#a3be8c;">WsExceptionFilter </span><span style="color:#eff1f5;">{
+</span><span style="color:#eff1f5;">    </span><span style="color:#8fa1b3;">catch</span><span>(</span><span style="color:#bf616a;">exception</span><span>: </span><span style="color:#eff1f5;">any, </span><span style="color:#bf616a;">host</span><span>: </span><span style="color:#eff1f5;">ArgumentsHost</span><span>): </span><span style="color:#eff1f5;">any {
+</span><span style="color:#eff1f5;">        </span><span style="color:#65737e;">// 进入该拦截器，说明http调用中存在异常，需要解析异常，并返回统一处理
+</span><span style="color:#eff1f5;">        </span><span style="color:#b48ead;">let </span><span style="color:#bf616a;">responseWrapper</span><span>: </span><span style="color:#eff1f5;">ServerResponseWrapper;
+</span><span style="color:#eff1f5;">        </span><span style="color:#b48ead;">if </span><span style="color:#eff1f5;">(</span><span style="color:#bf616a;">exception </span><span>instanceof </span><span style="color:#eff1f5;">BizException) {
+</span><span style="color:#eff1f5;">            </span><span style="color:#65737e;">// 业务层Exception
+</span><span style="color:#eff1f5;">            </span><span style="color:#bf616a;">responseWrapper </span><span>= </span><span style="color:#eff1f5;">{
+</span><span style="color:#eff1f5;">                returnCode: </span><span style="color:#bf616a;">exception</span><span style="color:#eff1f5;">.</span><span style="color:#bf616a;">errorCode</span><span style="color:#eff1f5;">.</span><span style="color:#bf616a;">codeString</span><span style="color:#eff1f5;">,
+</span><span style="color:#eff1f5;">                errorMessage: </span><span style="color:#bf616a;">exception</span><span style="color:#eff1f5;">.</span><span style="color:#bf616a;">errorMessage
+</span><span style="color:#eff1f5;">            }
+</span><span style="color:#eff1f5;">        } </span><span style="color:#b48ead;">else </span><span style="color:#eff1f5;">{
+</span><span style="color:#eff1f5;">            </span><span style="color:#65737e;">// 其他错误
+</span><span style="color:#eff1f5;">            </span><span style="color:#bf616a;">responseWrapper </span><span>= </span><span style="color:#eff1f5;">{
+</span><span style="color:#eff1f5;">                returnCode: </span><span>&#39;</span><span style="color:#a3be8c;">IM9999</span><span>&#39;</span><span style="color:#eff1f5;">,
+</span><span style="color:#eff1f5;">                errorMessage: </span><span>&#39;</span><span style="color:#a3be8c;">server unknown error: </span><span>&#39; + </span><span style="color:#bf616a;">exception</span><span style="color:#eff1f5;">.</span><span style="color:#bf616a;">message</span><span style="color:#eff1f5;">,
+</span><span style="color:#eff1f5;">            };
+</span><span style="color:#eff1f5;">        }
+</span><span style="color:#eff1f5;">        </span><span style="color:#65737e;">// 对异常进行封装以后，需要让框架继续进行调用处理，才能正确的响应给客户端
+</span><span style="color:#eff1f5;">        </span><span style="color:#65737e;">// 此时，需要提取到callback这个函数
+</span><span style="color:#eff1f5;">        </span><span style="color:#65737e;">// 参考：https://stackoverflow.com/questions/61795299/nestjs-return-ack-in-exception-filter
+</span><span style="color:#eff1f5;">        </span><span style="color:#b48ead;">const </span><span style="color:#bf616a;">callback </span><span>= </span><span style="color:#bf616a;">host</span><span style="color:#eff1f5;">.</span><span style="color:#8fa1b3;">getArgByIndex</span><span style="color:#eff1f5;">(</span><span style="color:#d08770;">2</span><span style="color:#eff1f5;">);
+</span><span style="color:#eff1f5;">        </span><span style="color:#b48ead;">if </span><span style="color:#eff1f5;">(</span><span style="color:#bf616a;">callback </span><span>&amp;&amp; typeof </span><span style="color:#bf616a;">callback </span><span>=== &#39;</span><span style="color:#a3be8c;">function</span><span>&#39;</span><span style="color:#eff1f5;">) {
+</span><span style="color:#eff1f5;">            </span><span style="color:#8fa1b3;">callback</span><span style="color:#eff1f5;">(</span><span style="color:#bf616a;">responseWrapper</span><span style="color:#eff1f5;">);
+</span><span style="color:#eff1f5;">        }
+</span><span style="color:#eff1f5;">    }
+</span><span style="color:#eff1f5;">}
+</span></code></pre>
+<p>这个Filter与HTTP服务中的异常过滤器差异点主要三点：</p>
+<p>1）WebSocket中不存在HTTP状态码且不存在HTTP异常，所以我们只需要解析区分BizException与非BizException。</p>
+<p>2）<strong>WebSocket的异常过滤器中，想要继续后的数据处理，需要在方法返回前，从host中取到第三个参数对象（索引值为2），该值是一个回调函数，将处理后的数据作为参数，调用该callback方法，框架才能继续处理。—— WebSocket异常过滤器最终返回的关键点</strong>。</p>
+<pre data-lang="typescript" style="background-color:#2b303b;color:#c0c5ce;" class="language-typescript "><code class="language-typescript" data-lang="typescript"><span>        </span><span style="color:#65737e;">// 对异常进行封装以后，需要让框架继续进行调用处理，才能正确的响应给客户端
+</span><span>        </span><span style="color:#65737e;">// 此时，需要提取到callback这个函数
+</span><span>        </span><span style="color:#65737e;">// 参考：https://stackoverflow.com/questions/61795299/nestjs-return-ack-in-exception-filter
+</span><span>        </span><span style="color:#b48ead;">const </span><span style="color:#bf616a;">callback </span><span>= </span><span style="color:#bf616a;">host</span><span>.</span><span style="color:#8fa1b3;">getArgByIndex</span><span>(</span><span style="color:#d08770;">2</span><span>);
+</span><span>        </span><span style="color:#b48ead;">if </span><span>(</span><span style="color:#bf616a;">callback </span><span>&amp;&amp; typeof </span><span style="color:#bf616a;">callback </span><span>=== &#39;</span><span style="color:#a3be8c;">function</span><span>&#39;) {
+</span><span>            </span><span style="color:#8fa1b3;">callback</span><span>(</span><span style="color:#bf616a;">responseWrapper</span><span>);
+</span><span>        }
+</span></code></pre>
+<p>3）注册该异常过滤器同样和WebSocket的响应拦截器一样，需要在网关类上使用<code>@UseFilters</code>装饰器。</p>
+<pre data-lang="diff" style="background-color:#2b303b;color:#c0c5ce;" class="language-diff "><code class="language-diff" data-lang="diff"><span>// 安装WebSocket成功响应拦截器
+</span><span>@UseInterceptors(new WsServiceResponseInterceptor())
+</span><span style="color:#a3be8c;">+ // 安装WebSocket异常过滤器
+</span><span style="color:#a3be8c;">+ @UseFilters(new WsServiceExceptionFilter())
+</span><span>@WebSocketGateway(4000, {
+</span><span>    transports: [&#39;websocket&#39;]
+</span><span>})
+</span></code></pre>
+<p>完成该配置后，我们再次重启服务，使用postman，可以看到wrapper包装后的效果：</p>
+<p><img src="https://static-res.zhen.wang/images/post/2022-11-22/140-send-and-receive-error-wrapper.png" alt="140-send-and-receive-error-wrapper" /></p>
+<h1 id="fu-lu">附录</h1>
+<p>本次demo已经提交至github</p>
+<p><a rel="noopener" target="_blank" href="https://github.com/w4ngzhen/nest-http-websocket-demo">w4ngzhen/nest-http-websocket-demo (github.com)</a></p>
+<p>同时，按照每一阶段进行了适配提交：</p>
+<pre style="background-color:#2b303b;color:#c0c5ce;"><code><span>add: 添加WebSocket异常过滤器并注册到WebSocket网关中。
+</span><span>add: 添加WebSocket成功响应拦截器并注册到WebSocket网关中。
+</span><span>modify: 添加WebSocket的事件响应数据。
+</span><span>modify: 增减对事件”hello“的处理，并在控制台打印请求。
+</span><span>add: 创建一个基本的WebSocket网关以及将网关模块进行注册。
+</span><span>add: 增加nestjs websocket依赖、socket.io平台实现。
+</span><span>add: 添加HTTP服务异常过滤器，对异常进行解析并返回Wrapper包裹数据。
+</span><span>modify: 修改获取用户信息逻辑，加入userId判空检查。
+</span><span>add: 添加HTTP服务成功响应拦截器，对返回体进行统一Wrapper包裹。
+</span><span>modify: 注册user模块到app主模块。
+</span><span>add: 新增用户User模块相关的dto定义、service、controller以及module。
+</span><span>add: 添加ServerResponseWrapper作为服务端响应数据封装；添加返回码类，统一定义返回码；添加业务异常类，封装业务异常。
+</span><span>init: 初始化项目结构
+</span></code></pre>
+<p>我会逐步完善这个demo，接入各种常用的模块（数据库、Redis、S3-ECS等）。本文是本demo的初始阶段，已经发布于1.0版本tag。</p>
+
+    </div>
+</div>
+<script src="https://zhen.wang/libs/viewerjs@1.11.7/viewer.min.js"></script>
+<link rel="stylesheet" href="https://zhen.wang/libs/viewerjs@1.11.7/viewer.min.css"/>
+<script>
+  if (window.Viewer) {
+    document.querySelectorAll('img').forEach(img => {
+      new Viewer(img, {
+        inline: false,
+        navbar: false,
+        toolbar: {
+          zoomIn: 1,
+          zoomOut: 1,
+          reset: 1,
+          rotateLeft: 1,
+          rotateRight: 1,
+        },
+      });
+    });
+  }
+</script>
+
+
+</body>
+</html>

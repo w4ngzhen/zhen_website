@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="utf-8">
+    <meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover"
+          name="viewport">
+    
+    
+    <!-- umami web analysis -->
+    <script defer src="https://zhen.wang/libs/umami/umami.script.js"
+            data-website-id="d66cfe03-f6b3-4aa0-baf8-728700db1b09"></script>
+    
+    
+    
+    <link rel="icon" type="image/png" sizes="16x16" href="https://zhen.wang/images/blog-site-icon.svg">
+    <link rel="icon" type="image/png" sizes="32x32" href="https://zhen.wang/images/blog-site-icon.svg">
+    <title>zhen&#x27;s everything</title>
+    <link rel="stylesheet" href="https://zhen.wang/style.css">
+    
+<link rel="stylesheet" href="https://zhen.wang/article_content.css">
+<link rel="stylesheet" href="https://zhen.wang/article_markdown.css">
+
+</head>
+<body>
+
+<div id="article">
+    <header class="article-header">
+        
+<div class="base-title">
+    <a href="#" onclick="history.length > 1 ? history.back() : location.href = '/'; return false;">&LeftArrow; Back</a>
+    <h1>
+        node-gyp项目命名BUG
+    </h1>
+</div>
+
+    </header>
+    <p class="article-date">2021-06-25</p>
+    
+    <!-- toc -->
+    <div class="article-toc">
+        <label class="toc-title" for="toc-trigger">目录</label>
+        <input id="toc-trigger" type="checkbox" checked/>
+        <div class="toc-content">
+            <ol class="toc">
+                
+                <li class="toc-item toc-level-1">
+                    <a class="toc-link" href="https://zhen.wang/article/node-gyp项目命名BUG/#wen-ti-yu-jie-jue">问题与解决</a>
+                    
+                </li>
+                
+                <li class="toc-item toc-level-1">
+                    <a class="toc-link" href="https://zhen.wang/article/node-gyp项目命名BUG/#wen-ti-fen-xi">问题分析</a>
+                    
+                    <ol class="toc-child">
+                        
+                        <li class="toc-item toc-level-2">
+                            <a href="https://zhen.wang/article/node-gyp项目命名BUG/#bian-xie-yang-li">编写样例</a>
+                        </li>
+                        
+                        <li class="toc-item toc-level-2">
+                            <a href="https://zhen.wang/article/node-gyp项目命名BUG/#shi-yong-idefen-xi">使用IDE分析</a>
+                        </li>
+                        
+                    </ol>
+                    
+                </li>
+                
+            </ol>
+        </div>
+    </div>
+    
+    <!-- real content -->
+    <div class="article-content markdown-content">
+        <p>当我们编写node原生模块的时候，免不了对node-gyp项目进行命名，在node-gyp进行build的时候，会跟binding.gyp配置文件中的target_name生成对应的原生模块。但是，如果target_name填写不规范，会触发编译问题。</p>
+<span id="continue-reading"></span><h1 id="wen-ti-yu-jie-jue">问题与解决</h1>
+<p>本人发现，当target_name使用了短中线的时候（"-"），会导致编译过程中触发编译问题：</p>
+<pre style="background-color:#2b303b;color:#c0c5ce;"><code><span> error C2143: 语法错误: 缺少“;”(在“-”的前面) 
+</span></code></pre>
+<p>使用下划线命名以及各种驼峰命名不会出现此问题。出现问题的点为文件最后使用宏的时候：</p>
+<pre style="background-color:#2b303b;color:#c0c5ce;"><code><span>NODE_MODULE(NODE_GYP_MODULE_NAME, Initialize)
+</span></code></pre>
+<p>解决方案，target_name名称不使用中横线：</p>
+<pre style="background-color:#2b303b;color:#c0c5ce;"><code><span>target_name: &quot;the-demo&quot; =&gt; target_name: &quot;theDemo&quot;
+</span><span>或
+</span><span>target_name: &quot;the-demo&quot; =&gt; target_name: &quot;the_demo&quot;
+</span></code></pre>
+<h1 id="wen-ti-fen-xi">问题分析</h1>
+<p>接下来的问题分析，需要一定的C/C++知识。</p>
+<h2 id="bian-xie-yang-li">编写样例</h2>
+<p>这里不再赘述样例，直接使用这篇文章建立一个demo：<a rel="noopener" target="_blank" href="https://zhuanlan.zhihu.com/p/383948462">使用node-gyp编写简单的node原生模块 - 知乎 (zhihu.com)</a>。</p>
+<p>Demo编写完成后，我们修改其中的target_name，使其带有中横线（"-"）：</p>
+<pre style="background-color:#2b303b;color:#c0c5ce;"><code><span>{
+</span><span>  &quot;targets&quot;: [
+</span><span>    {
+</span><span>      &quot;target_name&quot;: &quot;hello-world&quot;,
+</span><span>      &quot;sources&quot;: [ &quot;hello_world.cc&quot; ]
+</span><span>    }
+</span><span>  ]
+</span><span>}
+</span></code></pre>
+<p>修改为该target_name后，我们进行<code>node-gyp configure &amp;&amp; node-gyp build</code>，会发现编译器报错：</p>
+<p><img src="https://static-res.zhen.wang/images/post/2021-06-25-node-gyp-target-name-bug/compile-error.jpg" alt="" /></p>
+<h2 id="shi-yong-idefen-xi">使用IDE分析</h2>
+<p>我们曾经讲过，node-gyp实际上只是构建工具，他会根据各个操作平台，生成对应平台的项目。在Windows上，它最终会帮你生成一个解决方案。查看项目目录下，我们就能看到一个build文件夹，这个文件夹下面会有解决方案：</p>
+<p><img src="https://static-res.zhen.wang/images/post/2021-06-25-node-gyp-target-name-bug/node-gyp-build-sln.jpg" alt="" /></p>
+<p>我们使用VS打开，开始进行分析：</p>
+<p><img src="https://static-res.zhen.wang/images/post/2021-06-25-node-gyp-target-name-bug/demo-sln-in-vs.jpg" alt="" /></p>
+<p>通过IDE的智能提示，我们看到在下面的宏使用报错了：</p>
+<p><img src="https://static-res.zhen.wang/images/post/2021-06-25-node-gyp-target-name-bug/compile-err-in-vs.jpg" alt="" /></p>
+<p>通常，对于宏报错，我们需要的第一步是进行宏展开，查看到底是什么导致了编译错误的。在VS中，我们进行进行如下的配置，让编译器首先生成宏展开的源码：</p>
+<p><img src="https://static-res.zhen.wang/images/post/2021-06-25-node-gyp-target-name-bug/gen-i-file.jpg" alt="" /></p>
+<p>然后，我们重新进行编译，可以看到在对应的生成目录下，产生了一个<code>.i</code>后缀的文件。</p>
+<p><img src="https://static-res.zhen.wang/images/post/2021-06-25-node-gyp-target-name-bug/i-file-generated.jpg" alt="" /></p>
+<p>这个宏展开后的源码文件，可以更见方便的便于我们分析。我们直接定位到这个文件的最下方，可以看到我们已经经过宏展开的代码：</p>
+<p><img src="https://static-res.zhen.wang/images/post/2021-06-25-node-gyp-target-name-bug/i-file-content.jpg" alt="" /></p>
+<p>我们67404这行宏展开的代码拷贝到VS对应宏使用的地方，通过IDE来更加智能的检查这段有何问题：</p>
+<p><img src="https://static-res.zhen.wang/images/post/2021-06-25-node-gyp-target-name-bug/replace-macro-to-code.jpg" alt="" /></p>
+<p>因为改行很长，这里我进行一下格式化代码的操作：</p>
+<p><img src="https://static-res.zhen.wang/images/post/2021-06-25-node-gyp-target-name-bug/macro-unfold-error-point.jpg" alt="" /></p>
+<p>可以看到，宏展开里面模块名为"hello-world"，在上图指出的部分，被分割为了"hello - world"，而分割开来后，导致了语法错误。如果target_name使用的"hello_world"，则不会有这个问题：</p>
+<p><img src="https://static-res.zhen.wang/images/post/2021-06-25-node-gyp-target-name-bug/macro-unfold-with-underline.jpg" alt="" /></p>
+<p>实际上被<code>"-"</code>分割，是因为在宏展开的时候，作为了函数名的一部分，而函数名标识符是不能有<code>"-"</code>的。这里举例：</p>
+<pre data-lang="c" style="background-color:#2b303b;color:#c0c5ce;" class="language-c "><code class="language-c" data-lang="c"><span style="color:#b48ead;">#define </span><span>NAME hello-world
+</span><span>
+</span><span style="color:#b48ead;">#define </span><span style="color:#8fa1b3;">TEST_MACRO</span><span>(</span><span style="color:#bf616a;">fn</span><span>) </span><span style="color:#b48ead;">static void </span><span style="color:#bf616a;">fn</span><span>(</span><span style="color:#b48ead;">void</span><span>);
+</span><span>
+</span><span style="color:#bf616a;">TEST_MACRO</span><span>(NAME) </span><span style="color:#65737e;">// 报错，因为最终展开后：static void hello-world(void);
+</span><span>
+</span><span style="color:#b48ead;">int </span><span style="color:#8fa1b3;">main</span><span>()
+</span><span>{
+</span><span>    </span><span style="color:#b48ead;">return </span><span style="color:#d08770;">0</span><span>;
+</span><span>}
+</span></code></pre>
+<blockquote>
+<p>C语言规定，标识符只能由字母（A~Z, a~z）、数字（0~9）和下划线（_）组成，并且第一个字符必须是字母或下划线，不能是数字。</p>
+</blockquote>
+<p>所以这就是为什么target_name使用有中横线的名称会报错了。</p>
+
+    </div>
+</div>
+<script src="https://zhen.wang/libs/viewerjs@1.11.7/viewer.min.js"></script>
+<link rel="stylesheet" href="https://zhen.wang/libs/viewerjs@1.11.7/viewer.min.css"/>
+<script>
+  if (window.Viewer) {
+    document.querySelectorAll('img').forEach(img => {
+      new Viewer(img, {
+        inline: false,
+        navbar: false,
+        toolbar: {
+          zoomIn: 1,
+          zoomOut: 1,
+          reset: 1,
+          rotateLeft: 1,
+          rotateRight: 1,
+        },
+      });
+    });
+  }
+</script>
+
+
+</body>
+</html>

@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="utf-8">
+    <meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover"
+          name="viewport">
+    
+    
+    <!-- umami web analysis -->
+    <script defer src="https://zhen.wang/libs/umami/umami.script.js"
+            data-website-id="d66cfe03-f6b3-4aa0-baf8-728700db1b09"></script>
+    
+    
+    
+    <link rel="icon" type="image/png" sizes="16x16" href="https://zhen.wang/images/blog-site-icon.svg">
+    <link rel="icon" type="image/png" sizes="32x32" href="https://zhen.wang/images/blog-site-icon.svg">
+    <title>zhen&#x27;s everything</title>
+    <link rel="stylesheet" href="https://zhen.wang/style.css">
+    
+<link rel="stylesheet" href="https://zhen.wang/article_content.css">
+<link rel="stylesheet" href="https://zhen.wang/article_markdown.css">
+
+</head>
+<body>
+
+<div id="article">
+    <header class="article-header">
+        
+<div class="base-title">
+    <a href="#" onclick="history.length > 1 ? history.back() : location.href = '/'; return false;">&LeftArrow; Back</a>
+    <h1>
+        WinForm事件与消息
+    </h1>
+</div>
+
+    </header>
+    <p class="article-date">2020-02-05</p>
+    
+    <!-- toc -->
+    <div class="article-toc">
+        <label class="toc-title" for="toc-trigger">目录</label>
+        <input id="toc-trigger" type="checkbox" checked/>
+        <div class="toc-content">
+            <ol class="toc">
+                
+                <li class="toc-item toc-level-1">
+                    <a class="toc-link" href="https://zhen.wang/article/WinForm事件与消息/#xiao-xi-gai-shu-yi-ji-zai-c-xia-de-feng-zhuang">消息概述以及在C#下的封装</a>
+                    
+                </li>
+                
+                <li class="toc-item toc-level-1">
+                    <a class="toc-link" href="https://zhen.wang/article/WinForm事件与消息/#system-windows-forms-application">System.Windows.Forms.Application</a>
+                    
+                </li>
+                
+                <li class="toc-item toc-level-1">
+                    <a class="toc-link" href="https://zhen.wang/article/WinForm事件与消息/#wndproc">WndProc</a>
+                    
+                </li>
+                
+                <li class="toc-item toc-level-1">
+                    <a class="toc-link" href="https://zhen.wang/article/WinForm事件与消息/#imessagefilter">IMessageFilter</a>
+                    
+                </li>
+                
+            </ol>
+        </div>
+    </div>
+    
+    <!-- real content -->
+    <div class="article-content markdown-content">
+        <h3 id="xiao-xi-gai-shu-yi-ji-zai-c-xia-de-feng-zhuang">消息概述以及在C#下的封装</h3>
+<p>Windows下应用程序的执行是通过消息驱动的。所有的外部事件，如键盘输入、鼠标移动、按动鼠标都由OS系统转换成相应的“消息”，进入到应用程序的消息队列中，由应用程序引擎轮询处理。在C#中，消息被应用程序的工作引擎通过轮询等方式遍历获取并按照消息的类型逐个分发到对应的组件（例如窗体、按钮等），最后调用对应组件所注册的事件进行处理。</p>
+<span id="continue-reading"></span>
+<p>在.NET框架类库中的System.Windows.Forms命名空间中微软采用面对对象的方式重新定义了Message。该消息主要有一下的几个公共属性：</p>
+<pre style="background-color:#2b303b;color:#c0c5ce;"><code><span>System.Windows.Forms.Message
+</span><span>HWnd     获取或设定消息的处理函数
+</span><span>Msg      获取或设定消息的ID号
+</span><span>Lparam   指定消息的LParam字段
+</span><span>Wparam   指定消息的WParam字段
+</span><span>Result   指定为响应消息处理函数而向OS系统返回的值
+</span></code></pre>
+<h3 id="system-windows-forms-application">System.Windows.Forms.Application</h3>
+<p>System.Windows.Forms.Application类具有用于启动和停止应用程序和线程以及处理Windows消息的方法。例如，调用Run以启动当前线程上的应用程序消息循环，并可以选择使其窗体可见；调用Exit或ExitThread来停止消息循环。所以我们经常使用vs初始化一个基本的WinForm程序，显示的下列模板代码：</p>
+<pre data-lang="C#" style="background-color:#2b303b;color:#c0c5ce;" class="language-C# "><code class="language-C#" data-lang="C#"><span style="color:#65737e;">/// &lt;</span><span style="color:#bf616a;">summary</span><span style="color:#65737e;">&gt;
+</span><span style="color:#65737e;">/// 应用程序的主入口点。
+</span><span style="color:#65737e;">/// &lt;/</span><span style="color:#bf616a;">summary</span><span style="color:#65737e;">&gt;
+</span><span>[</span><span style="color:#bf616a;">STAThread</span><span>]
+</span><span style="color:#b48ead;">static void </span><span style="color:#8fa1b3;">Main</span><span>()
+</span><span>{
+</span><span>    </span><span style="color:#bf616a;">Application</span><span>.</span><span style="color:#bf616a;">EnableVisualStyles</span><span>();
+</span><span>    </span><span style="color:#bf616a;">Application</span><span>.</span><span style="color:#bf616a;">SetCompatibleTextRenderingDefault</span><span>(</span><span style="color:#d08770;">false</span><span>);
+</span><span>    </span><span style="color:#bf616a;">Application</span><span>.</span><span style="color:#bf616a;">Run</span><span>(new Form1()); </span><span style="color:#65737e;">// 调用Run以启动当前线程上的应用程序消息循环
+</span><span>}
+</span></code></pre>
+<p>因为Application是在单线程中运行的，所以在Application.Run开始后，Application本身不断轮询检查消息队列，然后根据消息类型进行数据分发。例如，当我们为这个Form1增加一个鼠标的点击事件后，我们运行该打开Form1：</p>
+<pre data-lang="C#" style="background-color:#2b303b;color:#c0c5ce;" class="language-C# "><code class="language-C#" data-lang="C#"><span>Form1 </span><span style="color:#bf616a;">form1 </span><span>= new Form1();
+</span><span style="color:#bf616a;">form1</span><span>.</span><span style="color:#bf616a;">MouseClick </span><span>+= (</span><span style="color:#bf616a;">sender</span><span>, </span><span style="color:#bf616a;">e</span><span>) </span><span style="color:#b48ead;">=&gt; </span><span style="color:#bf616a;">MessageBox</span><span>.</span><span style="color:#bf616a;">Show</span><span>(&quot;</span><span style="color:#a3be8c;">1</span><span>&quot;);
+</span><span style="color:#bf616a;">form1</span><span>.</span><span style="color:#bf616a;">MouseClick </span><span>+= (</span><span style="color:#bf616a;">sender</span><span>, </span><span style="color:#bf616a;">e</span><span>) </span><span style="color:#b48ead;">=&gt; </span><span style="color:#bf616a;">MessageBox</span><span>.</span><span style="color:#bf616a;">Show</span><span>(&quot;</span><span style="color:#a3be8c;">2</span><span>&quot;);
+</span><span style="color:#bf616a;">Application</span><span>.</span><span style="color:#bf616a;">Run</span><span>(</span><span style="color:#bf616a;">form1</span><span>);
+</span></code></pre>
+<p>运行后点击Form，可以看到首先出现一个MessageBox，展示“1”，我们点击确定后，又会出现MessageBox，展示“2”。实际上整个过程应该如下：</p>
+<p>当我们按下鼠标左键后，消息形成并送往应用程序消息队列中，然后被Application类从应用程序消息队列中取出，然后分发到相应的窗体。窗体使用MouseClick事件中的函数指针调用已经添加的响应函数。所以C#中的事件字段实质上是一个函数指针列表，用来维护一些消息到达时的响应函数的地址。</p>
+<p>到目前为止我们可以看到，消息其实在我们进行事件调用的时候，已经被提取加工了，它已经由Application进行了预处理，形成了所谓的“事件调用”。那么，我们还能更加自定义的干预消息吗？答案是可以的。</p>
+<h3 id="wndproc">WndProc</h3>
+<pre style="background-color:#2b303b;color:#c0c5ce;"><code><span>//
+</span><span> // 摘要:
+</span><span>//     处理 Windows 消息。
+</span><span>//
+</span><span>// 参数:
+</span><span>//   m:
+</span><span>//     要处理的 Windows System.Windows.Forms.Message。
+</span><span>protected override void WndProc(ref System.Windows.Forms.Message e);
+</span></code></pre>
+<p>对于每个Form来说，我们都可以重写该方法，该方法的参数就是上面提到的Message类的实例，所有的消息在被获取后，正常情况下都会被封装为Message对象，然后由Application工作引擎调用对用的Form.WndProc传入该Messsage，由于Form子类重写了该方法，所以如果希望底层能处理相关的消息，需要通过base.WndProc传递到父类继续调用。下面就是一个代码示例来展示控制如果当前的消息是鼠标左键点击，则弹出MessageBox展示“WndProc MouseClick”：</p>
+<pre data-lang="c#" style="background-color:#2b303b;color:#c0c5ce;" class="language-c# "><code class="language-c#" data-lang="c#"><span>        </span><span style="color:#b48ead;">protected </span><span>override </span><span style="color:#bf616a;">void WndProc</span><span>(</span><span style="color:#bf616a;">ref Message m</span><span style="background-color:#bf616a;color:#2b303b;">)</span><span>
+</span><span>        {
+</span><span>            </span><span style="color:#b48ead;">const int </span><span style="color:#bf616a;">WM_LBUTTONDOWN </span><span>= </span><span style="color:#d08770;">0x0201</span><span>;</span><span style="color:#65737e;">// 鼠标左键点击
+</span><span>            </span><span style="color:#b48ead;">if </span><span>(</span><span style="color:#bf616a;">m</span><span>.</span><span style="color:#bf616a;">Msg </span><span>== </span><span style="color:#bf616a;">WM_LBUTTONDOWN</span><span>)
+</span><span>            {
+</span><span>                </span><span style="color:#bf616a;">MessageBox</span><span>.</span><span style="color:#bf616a;">Show</span><span>(&quot;</span><span style="color:#a3be8c;">WndProc MouseClick</span><span>&quot;);
+</span><span>                </span><span style="color:#b48ead;">return</span><span>;
+</span><span>            }
+</span><span>            </span><span style="color:#bf616a;">base</span><span>.</span><span style="color:#bf616a;">WndProc</span><span>(</span><span style="color:#b48ead;">ref </span><span style="color:#bf616a;">m</span><span>);
+</span><span>        }
+</span></code></pre>
+<h3 id="imessagefilter">IMessageFilter</h3>
+<p>除了上述的WndProc之外，其实更加便于处理应该的实现IMessageFilter接口，然后让Application将实现该接口的消息过滤器添加到Application中：</p>
+<pre data-lang="c#" style="background-color:#2b303b;color:#c0c5ce;" class="language-c# "><code class="language-c#" data-lang="c#"><span>   </span><span style="color:#b48ead;">public class </span><span style="color:#ebcb8b;">MyMessageFilter </span><span style="color:#eff1f5;">: </span><span style="color:#a3be8c;">IMessageFilter
+</span><span style="color:#eff1f5;">    {
+</span><span style="color:#eff1f5;">        </span><span style="color:#b48ead;">public bool </span><span style="color:#8fa1b3;">PreFilterMessage</span><span style="color:#eff1f5;">(</span><span style="color:#b48ead;">ref </span><span style="color:#eff1f5;">Message </span><span style="color:#bf616a;">m</span><span style="color:#eff1f5;">)
+</span><span style="color:#eff1f5;">        {
+</span><span style="color:#eff1f5;">            </span><span style="color:#65737e;">//返回值为true， 表示消息已被处理，不要再往后传递，因此消息被截获
+</span><span style="color:#eff1f5;">            </span><span style="color:#65737e;">//返回值为false，表示消息未被处理，需要再往后传递，因此消息未被截获
+</span><span style="color:#eff1f5;">            </span><span style="color:#b48ead;">const int </span><span style="color:#bf616a;">WM_LBUTTONDOWN </span><span>= </span><span style="color:#d08770;">0x0201</span><span style="color:#eff1f5;">;</span><span style="color:#65737e;">// 鼠标左键点击
+</span><span style="color:#eff1f5;">            </span><span style="color:#b48ead;">if </span><span style="color:#eff1f5;">(</span><span style="color:#bf616a;">m</span><span style="color:#eff1f5;">.</span><span style="color:#bf616a;">Msg </span><span>== </span><span style="color:#bf616a;">WM_LBUTTONDOWN</span><span style="color:#eff1f5;">)
+</span><span style="color:#eff1f5;">            {
+</span><span style="color:#eff1f5;">                </span><span style="color:#bf616a;">MessageBox</span><span style="color:#eff1f5;">.</span><span style="color:#bf616a;">Show</span><span style="color:#eff1f5;">(</span><span>&quot;</span><span style="color:#a3be8c;">MyMessageFilter MouseClick</span><span>&quot;</span><span style="color:#eff1f5;">);
+</span><span style="color:#eff1f5;">                </span><span style="color:#b48ead;">return </span><span style="color:#d08770;">true</span><span style="color:#eff1f5;">;
+</span><span style="color:#eff1f5;">            }
+</span><span style="color:#eff1f5;">            </span><span style="color:#b48ead;">return </span><span style="color:#d08770;">false</span><span style="color:#eff1f5;">;
+</span><span style="color:#eff1f5;">        }
+</span><span style="color:#eff1f5;">    }
+</span></code></pre>
+<p>编写完成后，在应用程序初始化的过程中，添加该过滤器：</p>
+<pre data-lang="C#" style="background-color:#2b303b;color:#c0c5ce;" class="language-C# "><code class="language-C#" data-lang="C#"><span style="color:#bf616a;">Application</span><span>.</span><span style="color:#bf616a;">AddMessageFilter</span><span>(new MyMessageFilter());
+</span></code></pre>
+<p>同样的，我们启动应用程序并点击实验，可以看到正常的MessageBox输出。</p>
+
+    </div>
+</div>
+<script src="https://zhen.wang/libs/viewerjs@1.11.7/viewer.min.js"></script>
+<link rel="stylesheet" href="https://zhen.wang/libs/viewerjs@1.11.7/viewer.min.css"/>
+<script>
+  if (window.Viewer) {
+    document.querySelectorAll('img').forEach(img => {
+      new Viewer(img, {
+        inline: false,
+        navbar: false,
+        toolbar: {
+          zoomIn: 1,
+          zoomOut: 1,
+          reset: 1,
+          rotateLeft: 1,
+          rotateRight: 1,
+        },
+      });
+    });
+  }
+</script>
+
+
+</body>
+</html>

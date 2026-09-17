@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="utf-8">
+    <meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover"
+          name="viewport">
+    
+    
+    <!-- umami web analysis -->
+    <script defer src="https://zhen.wang/libs/umami/umami.script.js"
+            data-website-id="d66cfe03-f6b3-4aa0-baf8-728700db1b09"></script>
+    
+    
+    
+    <link rel="icon" type="image/png" sizes="16x16" href="https://zhen.wang/images/blog-site-icon.svg">
+    <link rel="icon" type="image/png" sizes="32x32" href="https://zhen.wang/images/blog-site-icon.svg">
+    <title>zhen&#x27;s everything</title>
+    <link rel="stylesheet" href="https://zhen.wang/style.css">
+    
+<link rel="stylesheet" href="https://zhen.wang/article_content.css">
+<link rel="stylesheet" href="https://zhen.wang/article_markdown.css">
+
+</head>
+<body>
+
+<div id="article">
+    <header class="article-header">
+        
+<div class="base-title">
+    <a href="#" onclick="history.length > 1 ? history.back() : location.href = '/'; return false;">&LeftArrow; Back</a>
+    <h1>
+        NetHack 5：一个快四十岁的游戏，终于迎来真正的大更新
+    </h1>
+</div>
+
+    </header>
+    <p class="article-date">2026-06-26</p>
+    
+    <!-- toc -->
+    <div class="article-toc">
+        <label class="toc-title" for="toc-trigger">目录</label>
+        <input id="toc-trigger" type="checkbox" checked/>
+        <div class="toc-content">
+            <ol class="toc">
+                
+                <li class="toc-item toc-level-1">
+                    <a class="toc-link" href="https://zhen.wang/article/NetHack 5：一个快四十岁的游戏，终于迎来真正的大更新/#nethack-zhong-yu-kai-shi-jiao-wan-jia-zen-me-wan-liao">NetHack 终于开始教玩家怎么玩了</a>
+                    
+                </li>
+                
+                <li class="toc-item toc-level-1">
+                    <a class="toc-link" href="https://zhen.wang/article/NetHack 5：一个快四十岁的游戏，终于迎来真正的大更新/#jiao-hu-fang-shi-kai-shi-xiang-xian-dai-wan-jia-kao-long">交互方式开始向现代玩家靠拢</a>
+                    
+                </li>
+                
+                <li class="toc-item toc-level-1">
+                    <a class="toc-link" href="https://zhen.wang/article/NetHack 5：一个快四十岁的游戏，终于迎来真正的大更新/#te-shu-di-tu-bu-zai-na-me-rong-yi-bei-bei-xia-lai">特殊地图不再那么容易被背下来</a>
+                    
+                </li>
+                
+                <li class="toc-item toc-level-1">
+                    <a class="toc-link" href="https://zhen.wang/article/NetHack 5：一个快四十岁的游戏，终于迎来真正的大更新/#guai-wu-kai-shi-geng-xiang-di-xia-cheng-li-de-can-yu-zhe">怪物开始更像地下城里的参与者</a>
+                    
+                </li>
+                
+                <li class="toc-item toc-level-1">
+                    <a class="toc-link" href="https://zhen.wang/article/NetHack 5：一个快四十岁的游戏，终于迎来真正的大更新/#yi-xie-yan-yong-liao-hen-duo-nian-de-tao-lu-bei-diao-zheng-liao">一些沿用了很多年的套路被调整了</a>
+                    
+                </li>
+                
+                <li class="toc-item toc-level-1">
+                    <a class="toc-link" href="https://zhen.wang/article/NetHack 5：一个快四十岁的游戏，终于迎来真正的大更新/#jiang-li-bian-duo-liao-dan-zi-yuan-fen-pei-ye-geng-zhi-de-kao-lu">奖励变多了，但资源分配也更值得考虑</a>
+                    
+                </li>
+                
+                <li class="toc-item toc-level-1">
+                    <a class="toc-link" href="https://zhen.wang/article/NetHack 5：一个快四十岁的游戏，终于迎来真正的大更新/#zhen-zheng-zhong-yao-de-bian-hua-ye-xu-cang-zai-you-xi-xia-mian">真正重要的变化，也许藏在游戏下面</a>
+                    
+                </li>
+                
+                <li class="toc-item toc-level-1">
+                    <a class="toc-link" href="https://zhen.wang/article/NetHack 5：一个快四十岁的游戏，终于迎来真正的大更新/#ta-yi-ran-shi-nethack">它依然是 NetHack</a>
+                    
+                </li>
+                
+            </ol>
+        </div>
+    </div>
+    
+    <!-- real content -->
+    <div class="article-content markdown-content">
+        <p>NetHack 诞生于 1987 年。对于今天的玩家来说，它的第一印象往往不太友好：满屏 ASCII 字符，复杂的快捷键，几乎没有引导，还有大量必须依靠试错才能理解的机制。</p>
+<p>但 NetHack 又不是那种只剩下历史意义的老游戏。它至今仍然有人维护、有人开发，也仍然影响着后来的 Roguelike。很多现代作品里常见的随机生成、永久死亡、物品鉴定和环境交互，都能在 NetHack 身上找到非常早期、甚至更加复杂的实现。</p>
+<p>2026 年，NetHack 5.0 正式发布。这个版本并没有把游戏改造成现代商业 Roguelike，也没有给它换上一套华丽的画面。它做的事情更克制：在保留原有玩法的基础上，重新整理了新手体验、地图生成、怪物行为、职业平衡和底层代码。</p>
+<p>对于一个延续了近四十年的项目来说，这已经是一次相当少见的大动作。</p>
+<h2 id="nethack-zhong-yu-kai-shi-jiao-wan-jia-zen-me-wan-liao">NetHack 终于开始教玩家怎么玩了</h2>
+<p>NetHack 过去最出名的不只是难，而是很难弄清楚自己应该按什么键。</p>
+<p>第一次进入游戏，玩家看到的可能是这样的画面：</p>
+<pre data-lang="text" style="background-color:#2b303b;color:#c0c5ce;" class="language-text "><code class="language-text" data-lang="text"><span>----------------
+</span><span>|......@.......|
+</span><span>|..........d...|
+</span><span>|..............|
+</span><span>----------------
+</span></code></pre>
+<p><code>@</code> 代表玩家，<code>d</code> 可能是跟随你的宠物，<code>.</code> 是地面，<code>|</code> 和 <code>-</code> 是墙。再往后还有门、陷阱、祭坛、商店、怪物和各种未知物品，每一种交互又可能对应不同的命令。</p>
+<p>老玩家习惯了边玩边查 Guidebook 或 Wiki，但对于新玩家来说，连“怎么操作”都要依靠外部资料，本身就是一道很高的门槛。</p>
+<p>NetHack 5.0 加入了正式的游戏内教程。它不会直接告诉玩家怎么通关，也不会解释所有隐藏机制，但至少会介绍移动、拾取、打开背包和基础交互。这听起来不算什么革命性功能，但对于 NetHack 来说，愿意在游戏内部承担教学责任，已经是一个很明显的态度变化。</p>
+<p>官方并没有因此降低游戏本身的难度。该死的地方还是会死，只是玩家终于不必因为不知道按键而死。</p>
+<h2 id="jiao-hu-fang-shi-kai-shi-xiang-xian-dai-wan-jia-kao-long">交互方式开始向现代玩家靠拢</h2>
+<p>5.0 里还有不少体验层面的调整。例如，玩家走向关闭的门时可以自动尝试开门，不必每次都单独输入开门命令；生命值等状态信息也有了更明显的视觉提示，一些容易因为误操作触发的危险行为会得到额外确认。</p>
+<p>这些变化单独看都很小，却直接影响每一局游戏的操作节奏。</p>
+<p>NetHack 的复杂应该来自玩家对世界规则的理解，而不是来自重复输入命令。少按一次开门键不会破坏游戏深度，减少一次手滑也不等于降低挑战。5.0 显然开始更认真地区分“有意义的困难”和“历史遗留下来的操作负担”。</p>
+<p>当然，它依旧不是一款拿起手柄就能轻松游玩的游戏。大量命令、物品和特殊互动仍然需要学习，但至少最外层的阻力少了一些。</p>
+<h2 id="te-shu-di-tu-bu-zai-na-me-rong-yi-bei-bei-xia-lai">特殊地图不再那么容易被背下来</h2>
+<p>NetHack 虽然是 Roguelike，但并不是所有楼层都完全随机生成。游戏中存在不少特殊关卡和固定区域，老玩家玩得足够多以后，往往可以记住其中的结构、关键道具位置和最安全的处理方式。</p>
+<p>5.0 对地图系统进行了明显扩充，加入了更多主题房间、布局变化和镜像生成。部分特殊地图现在可能左右翻转、上下翻转，或者以不同形式出现。</p>
+<p>这类调整的意义不只是让地图“看起来不一样”。对于 Roguelike 来说，一旦玩家开始依靠记忆直接执行固定流程，探索感就会逐渐下降。地图变化能够迫使玩家重新观察周围环境，而不是一进入某个区域就按照背熟的路线行动。</p>
+<p>它并不能让所有老地图重新变得完全陌生，但至少打乱了一部分已经高度固定的解题过程。</p>
+<h2 id="guai-wu-kai-shi-geng-xiang-di-xia-cheng-li-de-can-yu-zhe">怪物开始更像地下城里的参与者</h2>
+<p>NetHack 一直以复杂的怪物和物品互动闻名，但旧版本中仍然存在不少可以被玩家稳定利用的行为模式。5.0 加强了怪物使用物品、处理容器和适应环境的能力。</p>
+<p>怪物可能打开箱子、拿走物品、使用钥匙或魔杖，也可能通过食用尸体获得某些抗性。这意味着地牢里的资源不再只是静静等待玩家领取，怪物也可能接触和改变它们。</p>
+<p>其中一个很有 NetHack 味道的变化，是怪物可能搬走装有重要物品的箱子。过去玩家知道某件关键道具应该在哪里，抵达之后基本只需要考虑如何拿到它；现在，道具所在的位置也可能因为怪物行为发生变化。</p>
+<p>这种设计并不是简单地给怪物增加攻击力，而是让整个地下城更加动态。玩家面对的不再只是沿固定逻辑移动的敌人，而是会使用环境和资源的其他行动者。</p>
+<h2 id="yi-xie-yan-yong-liao-hen-duo-nian-de-tao-lu-bei-diao-zheng-liao">一些沿用了很多年的套路被调整了</h2>
+<p>大版本更新自然少不了平衡改动。NetHack 5.0 对职业、神器、许愿和部分常用物品都进行了调整，其中一些变化会直接影响老玩家长期使用的流程。</p>
+<p>例如，Unicorn Horn 过去几乎可以被当作通用的异常状态处理工具，但现在已经不能解决所有属性损失问题。曾经非常适合新手的 Valkyrie 也有所削弱，部分职业获取特定神器的方式变得更严格。</p>
+<p>这些改动未必会让所有玩家满意。NetHack 的很多传统策略已经被社区使用了十几年甚至更久，任何调整都会影响现有攻略和习惯。但从另一个角度看，如果所有稳定套路都永久保留，大版本更新也很难真正改变游戏过程。</p>
+<p>5.0 并没有彻底否定旧经验。玩家对物品、怪物和地下城规则的理解依然有价值，只是不能再完全按照过去的流程机械执行。</p>
+<h2 id="jiang-li-bian-duo-liao-dan-zi-yuan-fen-pei-ye-geng-zhi-de-kao-lu">奖励变多了，但资源分配也更值得考虑</h2>
+<p>5.0 重新安排了一部分固定奖励和高级资源。某些区域提供了新的保证奖励，玩家获得 Wish 的机会也有所变化。</p>
+<p>不过，这并不等于游戏开始大量赠送强力物品。整体方向更像是让玩家有更多机会接触高价值资源，同时降低单个资源对整局游戏的绝对统治力。</p>
+<p>过去一些路线会高度围绕少数关键物品展开，一旦拿到，后续流程就相对稳定。新的平衡方式希望玩家更关注当前角色、职业、装备和地图状况，而不是永远追求同一个标准答案。</p>
+<p>对于 NetHack 这种系统高度复杂的游戏来说，最有趣的部分本来就不是凑齐一套固定装备，而是在不完整的信息和有限资源下想办法活下去。</p>
+<h2 id="zhen-zheng-zhong-yao-de-bian-hua-ye-xu-cang-zai-you-xi-xia-mian">真正重要的变化，也许藏在游戏下面</h2>
+<p>除了玩家能直接看到的内容，NetHack 5.0 还进行了大量底层工程调整，包括代码现代化、构建系统改进、Lua 的引入，以及关卡相关工具的重构。</p>
+<p>这些内容不会让某一局游戏立刻变得更好玩，却可能决定 NetHack 未来还能不能继续发展。</p>
+<p>一个维护了近四十年的项目，往往会积累大量历史代码和兼容性负担。开发者不仅要增加功能，还要避免破坏旧平台、旧配置和原有行为。随着时间推移，每一次修改的成本都会越来越高。</p>
+<p>因此，5.0 的意义不只是增加了几只怪物、几种地图和一些便利功能。它也在尝试整理那些长期限制开发的基础设施，为后续版本留出空间。</p>
+<h2 id="ta-yi-ran-shi-nethack">它依然是 NetHack</h2>
+<p>NetHack 5.0 没有重新定义这个系列。它仍然复杂，仍然残酷，也仍然可能因为一个看似普通的操作引发一连串意外。</p>
+<p>玩家可能因为错误鉴定物品而浪费资源，因为低估怪物能力而被围攻，也可能因为一次过于贪心的探索失去已经经营数小时的角色。这些部分没有被现代化体验抹掉，因为它们正是 NetHack 的核心。</p>
+<p>5.0 真正有价值的地方，在于开发团队没有把“保留传统”理解成“拒绝修改”。教程、自动开门、状态提示和危险操作确认，并不会让 NetHack 失去原来的味道；更丰富的地图、更加主动的怪物和重新调整的资源体系，反而让那些已经被熟悉多年的系统重新产生了一点不确定性。</p>
+<p>对于一个诞生于 1987 年的游戏来说，最难得的并不是仍然可以运行，而是它至今仍然有人认真讨论应该怎样改得更好。</p>
+<p>NetHack 5.0 证明了它不是一件被封存在开源仓库里的游戏文物。它可能走得很慢，但它还在继续往前走。</p>
+
+    </div>
+</div>
+<script src="https://zhen.wang/libs/viewerjs@1.11.7/viewer.min.js"></script>
+<link rel="stylesheet" href="https://zhen.wang/libs/viewerjs@1.11.7/viewer.min.css"/>
+<script>
+  if (window.Viewer) {
+    document.querySelectorAll('img').forEach(img => {
+      new Viewer(img, {
+        inline: false,
+        navbar: false,
+        toolbar: {
+          zoomIn: 1,
+          zoomOut: 1,
+          reset: 1,
+          rotateLeft: 1,
+          rotateRight: 1,
+        },
+      });
+    });
+  }
+</script>
+
+
+</body>
+</html>

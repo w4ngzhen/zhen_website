@@ -1,0 +1,444 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="utf-8">
+    <meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover"
+          name="viewport">
+    
+    
+    <!-- umami web analysis -->
+    <script defer src="https://zhen.wang/libs/umami/umami.script.js"
+            data-website-id="d66cfe03-f6b3-4aa0-baf8-728700db1b09"></script>
+    
+    
+    
+    <link rel="icon" type="image/png" sizes="16x16" href="https://zhen.wang/images/blog-site-icon.svg">
+    <link rel="icon" type="image/png" sizes="32x32" href="https://zhen.wang/images/blog-site-icon.svg">
+    <title>zhen&#x27;s everything</title>
+    <link rel="stylesheet" href="https://zhen.wang/style.css">
+    
+<link rel="stylesheet" href="https://zhen.wang/article_content.css">
+<link rel="stylesheet" href="https://zhen.wang/article_markdown.css">
+
+</head>
+<body>
+
+<div id="article">
+    <header class="article-header">
+        
+<div class="base-title">
+    <a href="#" onclick="history.length > 1 ? history.back() : location.href = '/'; return false;">&LeftArrow; Back</a>
+    <h1>
+        使用CEF（三）— 从CEF官方Demo源码入手解析CEF架构与CefApp、CefClient对象
+    </h1>
+</div>
+
+    </header>
+    <p class="article-date">2021-03-31</p>
+    
+    <!-- toc -->
+    <div class="article-toc">
+        <label class="toc-title" for="toc-trigger">目录</label>
+        <input id="toc-trigger" type="checkbox" checked/>
+        <div class="toc-content">
+            <ol class="toc">
+                
+                <li class="toc-item toc-level-1">
+                    <a class="toc-link" href="https://zhen.wang/article/使用CEF（三）— 从CEF官方Demo源码入手解析CEF架构与CefApp、CefClient对象/#cefde-jin-cheng-jia-gou">CEF的进程架构</a>
+                    
+                    <ol class="toc-child">
+                        
+                        <li class="toc-item toc-level-2">
+                            <a href="https://zhen.wang/article/使用CEF（三）— 从CEF官方Demo源码入手解析CEF架构与CefApp、CefClient对象/#cefsimple-win-cc">cefsimple_win.cc</a>
+                        </li>
+                        
+                        <li class="toc-item toc-level-2">
+                            <a href="https://zhen.wang/article/使用CEF（三）— 从CEF官方Demo源码入手解析CEF架构与CefApp、CefClient对象/#cefapp">CefApp</a>
+                        </li>
+                        
+                        <li class="toc-item toc-level-2">
+                            <a href="https://zhen.wang/article/使用CEF（三）— 从CEF官方Demo源码入手解析CEF架构与CefApp、CefClient对象/#cefclient">CefClient</a>
+                        </li>
+                        
+                    </ol>
+                    
+                </li>
+                
+            </ol>
+        </div>
+    </div>
+    
+    <!-- real content -->
+    <div class="article-content markdown-content">
+        <p>在上文《使用CEF（2）— 基于VS2019编写一个简单CEF样例》中，我们介绍了如何编写一个CEF的样例，在文章中提供了一些代码清单，在这些代码清单中提到了一些CEF的定义的类，例如<code>CefApp</code>、<code>CefClient</code>等等。它们具体有什么作用，和CEF的进程架构有什么关系呢？本文将逐一进行介绍。</p>
+<span id="continue-reading"></span><h1 id="cefde-jin-cheng-jia-gou">CEF的进程架构</h1>
+<blockquote>
+<p>CEF3 runs using multiple processes. The main process which handles window creation, painting and network access is called the “browser” process. This is generally the same process as the host application and the majority of the application logic will run in the browser process. Blink rendering and JavaScript execution occur in a separate “render” process. Some application logic, such as JavaScript bindings and DOM access, will also run in the render process. The default <a rel="noopener" target="_blank" href="http://www.chromium.org/developers/design-documents/process-models">process model</a> will spawn a new render process for each unique origin (scheme + domain). Other processes will be spawned as needed, such as “plugin” processes to handle <a rel="noopener" target="_blank" href="http://www.chromium.org/developers/design-documents/plugin-architecture">plugins</a> like Flash and “gpu” processes to handle <a rel="noopener" target="_blank" href="http://www.chromium.org/developers/design-documents/gpu-accelerated-compositing-in-chrome">accelerated compositing</a>.</p>
+</blockquote>
+<p>CEF3使用多个进程运行。处理窗口创建、绘制和网络访问的主要进程称为<strong>浏览器进程</strong>。这通常与宿主应用程序的进程相同，大多数应用程序的逻辑将在浏览器进程中运行。使用Blink引擎渲染HTML和JavaScript执行在单独的<strong>渲染进程</strong>中发生。一些应用程序逻辑（如JavaScript绑定和DOM访问）也将在渲染进程中运行。默认进程模型将为每个唯一源地址（scheme+domain）运行一个新的渲染进程。其他进程将根据需要生成，例如处理Flash等插件的<strong>插件进程</strong>和处理加速合成的<strong>GPU进程</strong>。综合上述文档，我们整理一下：</p>
+<p>浏览器进程（Browser Process）：</p>
+<ul>
+<li>窗口创建、绘制</li>
+<li>网络访问</li>
+<li>......</li>
+</ul>
+<p>渲染进程（Renderer Process）：</p>
+<ul>
+<li>
+<p>通过Blink引擎渲染HTML</p>
+</li>
+<li>
+<p>JavaScript执行（V8引擎）</p>
+</li>
+<li>
+<p>......</p>
+</li>
+</ul>
+<p>需要注意的是，<strong>浏览器进程</strong>中会进行窗口绘制，并不是指绘制HTML内容，而是承载网页内容的那个窗体壳，同样<strong>渲染进程</strong>也不是用来创建窗体的进程。接下来，本人将以官方CefSimple Demo源码入手，逐步介绍Cef的概念。</p>
+<p>本来本人想要使用上一文中的编写的simple-cef进行源码解析，但是为了让本文相对的独立，所以还是决定使用官方的Demo：cefsimple进行源码解析。尽管和simple-cef项目的内容差别不大。需要注意的是一下的源码在解析的时候，会进行适当的删改，读者最好对照源码进行阅读更佳。<strong>PS：源码中显示<code>......</code>表明示例代码有所删除。</strong></p>
+<h2 id="cefsimple-win-cc">cefsimple_win.cc</h2>
+<pre data-lang="c++" style="background-color:#2b303b;color:#c0c5ce;" class="language-c++ "><code class="language-c++" data-lang="c++"><span style="color:#65737e;">// ......
+</span><span style="color:#65737e;">// Entry point function for all processes.
+</span><span style="color:#b48ead;">int </span><span>APIENTRY </span><span style="color:#8fa1b3;">wWinMain</span><span>(HINSTANCE </span><span style="color:#bf616a;">hInstance</span><span>,
+</span><span>                      HINSTANCE </span><span style="color:#bf616a;">hPrevInstance</span><span>,
+</span><span>                      LPTSTR </span><span style="color:#bf616a;">lpCmdLine</span><span>,
+</span><span>                      </span><span style="color:#b48ead;">int </span><span style="color:#bf616a;">nCmdShow</span><span>) {
+</span><span style="color:#65737e;">// ......
+</span><span>
+</span><span>  </span><span style="color:#65737e;">// CEF applications have multiple sub-processes (render, plugin, GPU, etc)
+</span><span>  </span><span style="color:#65737e;">// that share the same executable. This function checks the command-line and,
+</span><span>  </span><span style="color:#65737e;">// if this is a sub-process, executes the appropriate logic.
+</span><span>  </span><span style="color:#b48ead;">int</span><span> exit_code = </span><span style="color:#bf616a;">CefExecuteProcess</span><span>(main_args, </span><span style="color:#d08770;">nullptr</span><span>, sandbox_info);
+</span><span>  </span><span style="color:#b48ead;">if </span><span>(exit_code &gt;= </span><span style="color:#d08770;">0</span><span>) {
+</span><span>    </span><span style="color:#65737e;">// The sub-process has completed so return here.
+</span><span>    </span><span style="color:#b48ead;">return</span><span> exit_code;
+</span><span>  }
+</span><span>
+</span><span style="color:#65737e;">// ......
+</span><span>
+</span><span>  </span><span style="color:#65737e;">// SimpleApp implements application-level callbacks for the browser process.
+</span><span>  </span><span style="color:#65737e;">// It will create the first browser instance in OnContextInitialized() after
+</span><span>  </span><span style="color:#65737e;">// CEF has initialized.
+</span><span>  CefRefPtr&lt;SimpleApp&gt; </span><span style="color:#bf616a;">app</span><span>(</span><span style="color:#b48ead;">new</span><span> SimpleApp);
+</span><span>
+</span><span>  </span><span style="color:#65737e;">// Initialize CEF.
+</span><span>  </span><span style="color:#bf616a;">CefInitialize</span><span>(main_args, settings, app.</span><span style="color:#bf616a;">get</span><span>(), sandbox_info);
+</span><span>
+</span><span>  </span><span style="color:#65737e;">// Run the CEF message loop. This will block until CefQuitMessageLoop() is
+</span><span>  </span><span style="color:#65737e;">// called.
+</span><span>  </span><span style="color:#bf616a;">CefRunMessageLoop</span><span>();
+</span><span>
+</span><span>  </span><span style="color:#65737e;">// Shut down CEF.
+</span><span>  </span><span style="color:#bf616a;">CefShutdown</span><span>();
+</span><span>
+</span><span>  </span><span style="color:#b48ead;">return </span><span style="color:#d08770;">0</span><span>;
+</span><span>}
+</span><span>
+</span></code></pre>
+<p>首先第一个重要点是：</p>
+<pre data-lang="c++" style="background-color:#2b303b;color:#c0c5ce;" class="language-c++ "><code class="language-c++" data-lang="c++"><span>    </span><span style="color:#65737e;">// CEF applications have multiple sub-processes (render, plugin, GPU, etc)
+</span><span>    </span><span style="color:#65737e;">// that share the same executable. This function checks the command-line and,
+</span><span>    </span><span style="color:#65737e;">// if this is a sub-process, executes the appropriate logic.    
+</span><span>	</span><span style="color:#b48ead;">int</span><span> exit_code = </span><span style="color:#bf616a;">CefExecuteProcess</span><span>(main_args, </span><span style="color:#d08770;">nullptr</span><span>, sandbox_info);
+</span><span>    </span><span style="color:#b48ead;">if </span><span>(exit_code &gt;= </span><span style="color:#d08770;">0</span><span>) {
+</span><span>        </span><span style="color:#65737e;">// The sub-process has completed so return here.
+</span><span>        </span><span style="color:#b48ead;">return</span><span> exit_code;
+</span><span>    }
+</span></code></pre>
+<p>这段代码看起来有点奇怪，对于英文的翻译如下：</p>
+<blockquote>
+<p>CEF应用程序会创建多个子进程（渲染render，插件plugin，GPU处理，等等）但是会共用一个可执行程序。以下的函数会检查命令行并且，如果确认是一个子进程，那么会执行相关的逻辑。</p>
+</blockquote>
+<p>然后，我们查看该函数：<code>CefExecuteProcess</code>：</p>
+<pre data-lang="c++" style="background-color:#2b303b;color:#c0c5ce;" class="language-c++ "><code class="language-c++" data-lang="c++"><span style="color:#65737e;">///
+</span><span style="color:#65737e;">// This function should be called from the application entry point function to
+</span><span style="color:#65737e;">// execute a secondary process. It can be used to run secondary processes from
+</span><span style="color:#65737e;">// the browser client executable (default behavior) or from a separate
+</span><span style="color:#65737e;">// executable specified by the CefSettings.browser_subprocess_path value. If
+</span><span style="color:#65737e;">// called for the browser process (identified by no &quot;type&quot; command-line value)
+</span><span style="color:#65737e;">// it will return immediately with a value of -1. If called for a recognized
+</span><span style="color:#65737e;">// secondary process it will block until the process should exit and then return
+</span><span style="color:#65737e;">// the process exit code. The |application| parameter may be empty. The
+</span><span style="color:#65737e;">// |windows_sandbox_info| parameter is only used on Windows and may be NULL (see
+</span><span style="color:#65737e;">// cef_sandbox_win.h for details).
+</span><span style="color:#65737e;">///
+</span><span style="color:#65737e;">/*--cef(api_hash_check,optional_param=application,
+</span><span style="color:#65737e;">        optional_param=windows_sandbox_info)--*/
+</span><span style="color:#b48ead;">int </span><span style="color:#8fa1b3;">CefExecuteProcess</span><span>(</span><span style="color:#b48ead;">const</span><span> CefMainArgs&amp; </span><span style="color:#bf616a;">args</span><span>,
+</span><span>                      CefRefPtr&lt;CefApp&gt; </span><span style="color:#bf616a;">application</span><span>,
+</span><span>                      </span><span style="color:#b48ead;">void</span><span>* </span><span style="color:#bf616a;">windows_sandbox_info</span><span>);
+</span></code></pre>
+<p>翻译：</p>
+<blockquote>
+<p>该函数应当在应用程序的入口函数处被调用，用以执行一个子进程。它可以用于执行一个可执行程序来启动一个子进程，该可执行程序可以是当前的浏览器客户端可执行程序（默认行为）或是通过设置CefSettings.browser_subprocess_path指定路径的可执行程序。如果被调用用于浏览器进程（在启动命令行中没有"type"参数），该函数会立刻返回<code>-1</code>。如果被调用时识别为子进程，该函数将会阻塞直到子进程退出并且返回子进程退出的返回码。<code>application</code>参数可以为空（null）。<code>windows_sandbox_info</code>参数只能在Windows上使用或设置为NULL（详见cef_sandbox_win.h）</p>
+</blockquote>
+<p>从这段话我们不难推断出，CEF在以多进程架构下启动的时候，会多次启动自身可执行程序。启动的时候，会通过命令行参数传入某些标识，由<code>CefExecuteProcess</code>内部进行判断。如果是主进程，则该函数立刻返回-1，程序会继续执行下去，那么后续继续运行的代码全部都运行在主进程中；如果是子进程（渲染进程等），那么该函数会阻塞住，直到子进程结束后，该函数会返回一个大于等于0的值，并在main函数直接返回，进而退出。</p>
+<p><img src="https://static-res.zhen.wang/images/post/2021-03-31-use-cef-3/CefExecuteProcess-flow.jpg" alt="" /></p>
+<p>对CefExecuteProcess分析就到这里，细节可以阅读<a rel="noopener" target="_blank" href="https://bitbucket.org/chromiumembedded/cef/wiki/GeneralUsage.md#markdown-header-entry-point-function">官方文档</a>，我们继续后续的代码分析：</p>
+<pre data-lang="c++" style="background-color:#2b303b;color:#c0c5ce;" class="language-c++ "><code class="language-c++" data-lang="c++"><span>  </span><span style="color:#65737e;">// SimpleApp implements application-level callbacks for the browser process.
+</span><span>  </span><span style="color:#65737e;">// It will create the first browser instance in OnContextInitialized() after
+</span><span>  </span><span style="color:#65737e;">// CEF has initialized.
+</span><span>  CefRefPtr&lt;SimpleApp&gt; </span><span style="color:#8fa1b3;">app</span><span>(</span><span style="color:#b48ead;">new </span><span style="color:#bf616a;">SimpleApp</span><span>);
+</span></code></pre>
+<p>注释翻译如下</p>
+<blockquote>
+<p>SimpleApp实现了对于浏览器进程在应用级别的回调。该实例CEF初始化后（initialized），在OnContextInitialized中会创建第一个browser实例</p>
+</blockquote>
+<p>查看SimpleApp的声明，发现该类继承了CefApp：</p>
+<pre style="background-color:#2b303b;color:#c0c5ce;"><code><span>class SimpleApp : public CefApp, public CefBrowserProcessHandler {
+</span><span> public:
+</span><span>  SimpleApp();
+</span><span>  ......
+</span><span>}
+</span></code></pre>
+<p>于是，我们迎来了第一个重要的类：CefApp。</p>
+<h2 id="cefapp">CefApp</h2>
+<p>CefApp在官方文档中，就写了一句话介绍：</p>
+<blockquote>
+<p>The <a rel="noopener" target="_blank" href="http://magpcss.org/ceforum/apidocs3/projects/(default)/CefApp.html">CefApp</a> interface provides access to process-specific callbacks.</p>
+<p>CefApp接口提供了指定进程的回调访问。</p>
+</blockquote>
+<p>本人一开始看到CefApp时，想到上面提到的CEF的多进程架构，结合后文还会提到的CefClient，以为所谓CefApp就是指浏览器进程，CefClient就对应其他的进程（一个App对应多个Client，多么的自然的理解），<strong>然而这样错误的理解</strong>，让本人在阅读代码的时候走了很大的弯路。</p>
+<p>首先，我们看一下CefApp的头文件声明：</p>
+<pre data-lang="c++" style="background-color:#2b303b;color:#c0c5ce;" class="language-c++ "><code class="language-c++" data-lang="c++"><span style="color:#b48ead;">class </span><span style="color:#ebcb8b;">CefApp </span><span style="color:#eff1f5;">: </span><span style="color:#b48ead;">public virtual </span><span style="color:#a3be8c;">CefBaseRefCounted </span><span style="color:#eff1f5;">{
+</span><span style="color:#eff1f5;"> </span><span style="color:#b48ead;">public</span><span style="color:#eff1f5;">:
+</span><span style="color:#eff1f5;">  </span><span style="color:#b48ead;">virtual void </span><span style="color:#8fa1b3;">OnBeforeCommandLineProcessing</span><span style="color:#eff1f5;">(
+</span><span style="color:#eff1f5;">      </span><span style="color:#b48ead;">const</span><span style="color:#eff1f5;"> CefString</span><span>&amp; </span><span style="color:#bf616a;">process_type</span><span style="color:#eff1f5;">,
+</span><span style="color:#eff1f5;">      CefRefPtr&lt;CefCommandLine&gt; </span><span style="color:#bf616a;">command_line</span><span style="color:#eff1f5;">) {}
+</span><span style="color:#eff1f5;">    
+</span><span style="color:#eff1f5;">  </span><span style="color:#b48ead;">virtual void </span><span style="color:#8fa1b3;">OnRegisterCustomSchemes</span><span style="color:#eff1f5;">(
+</span><span style="color:#eff1f5;">      CefRawPtr&lt;CefSchemeRegistrar&gt; </span><span style="color:#bf616a;">registrar</span><span style="color:#eff1f5;">) {}
+</span><span style="color:#eff1f5;">    
+</span><span style="color:#eff1f5;">  </span><span style="color:#b48ead;">virtual</span><span style="color:#eff1f5;"> CefRefPtr&lt;CefResourceBundleHandler&gt; </span><span style="color:#8fa1b3;">GetResourceBundleHandler</span><span style="color:#eff1f5;">() {
+</span><span style="color:#eff1f5;">    </span><span style="color:#b48ead;">return </span><span style="color:#d08770;">nullptr</span><span style="color:#eff1f5;">;
+</span><span style="color:#eff1f5;">  }
+</span><span style="color:#eff1f5;">    
+</span><span style="color:#eff1f5;">  </span><span style="color:#b48ead;">virtual</span><span style="color:#eff1f5;"> CefRefPtr&lt;CefBrowserProcessHandler&gt; </span><span style="color:#8fa1b3;">GetBrowserProcessHandler</span><span style="color:#eff1f5;">() {
+</span><span style="color:#eff1f5;">    </span><span style="color:#b48ead;">return </span><span style="color:#d08770;">nullptr</span><span style="color:#eff1f5;">;
+</span><span style="color:#eff1f5;">  }
+</span><span style="color:#eff1f5;">    
+</span><span style="color:#eff1f5;">  </span><span style="color:#b48ead;">virtual</span><span style="color:#eff1f5;"> CefRefPtr&lt;CefRenderProcessHandler&gt; </span><span style="color:#8fa1b3;">GetRenderProcessHandler</span><span style="color:#eff1f5;">() {
+</span><span style="color:#eff1f5;">    </span><span style="color:#b48ead;">return </span><span style="color:#d08770;">nullptr</span><span style="color:#eff1f5;">;
+</span><span style="color:#eff1f5;">  }
+</span><span style="color:#eff1f5;">}</span><span>;
+</span></code></pre>
+<p>先看其中有两个本文讨论的重点方法：<code>GetBrowserProcessHandler</code>、<code>GetRenderProcessHandler</code>。它们的文档注释如下：</p>
+<pre data-lang="c++" style="background-color:#2b303b;color:#c0c5ce;" class="language-c++ "><code class="language-c++" data-lang="c++"><span style="color:#65737e;">///
+</span><span style="color:#65737e;">// Return the handler for functionality specific to the browser process. This
+</span><span style="color:#65737e;">// method is called on multiple threads in the browser process.
+</span><span style="color:#65737e;">// 返回浏览器进程特定功能的处理程序。在浏览器进程中的多个线程上调用此方法。
+</span><span style="color:#65737e;">///
+</span><span style="color:#b48ead;">virtual</span><span> CefRefPtr&lt;CefBrowserProcessHandler&gt; </span><span style="color:#8fa1b3;">GetBrowserProcessHandler</span><span>()
+</span><span style="color:#65737e;">///
+</span><span style="color:#65737e;">// Return the handler for functionality specific to the render process. This
+</span><span style="color:#65737e;">// method is called on the render process main thread.
+</span><span style="color:#65737e;">// 返回渲染进程特定功能的处理程序。在渲染进程中的主线程上调用此方法。
+</span><span style="color:#65737e;">///
+</span><span style="color:#b48ead;">virtual</span><span> CefRefPtr&lt;CefRenderProcessHandler&gt; </span><span style="color:#8fa1b3;">GetRenderProcessHandler</span><span>()
+</span></code></pre>
+<p>读者看到这些注释可能会疑问：为什么注释中一会儿说在浏览器进程中一会儿又说在渲染进程中？难道这个类的实例还会在多个进程中使用吗？对也不对。这个类的实例确实会在浏览器进程和渲染进程中使用，但是我们又知道，两个进程之间的资源是不共享的，包括类实例，所以在浏览器进程运行的过程中，会使用到CefApp的某个实例化对象，而在渲染进程的运行过程中，又会使用到CefApp另一个实例化对象，它们都是CefApp子类的实例，但一定不是同一个实例对象。</p>
+<p>我们可以这样理解：一个CefApp对应了一个进程，而一个进程可以是浏览器进程（Browser Process），可以是渲染进程（Renderer Process）。因此，CefApp提供了GetBrowserProcessHandler和GetRendererProcessHandler来分别在相关进程中获取对应的handler。</p>
+<p>这两个方法的实现由我们来决定，即我们可以通过编程方式来返回handler，<strong>但这两个方法不会由我们客户端代码进行调用</strong>，而是CEF在运行过程中，由CEF在某个时刻来回调这两个方法。所以，这里虽然写了两个GetXXXProcessHandler，但在<strong>浏览器进程</strong>和<strong>渲染进程</strong>中只会<strong>分别</strong>调用GetBrowserProcessHandler和GetRendererProcessHandler。</p>
+<p>按照程序运行的角度讲，当浏览器进程运行的时候，CEF框架就会在某个时候调用CefApp::GetBrowserProcessHandler获得由我们定义的BrowserProcessHandler实例，这个实例会在适当的时候调用它提供的一些方法（后文介绍有哪些方法）；当渲染进程运行的时候，CEF框架就会在某个时候调用CefApp::GetRendererProcessHandler得到我们定义的RendererProcessHandler实例，然后在适当的时候调用RenererProcessHandler中的一些方法（后文介绍有哪些方法）。</p>
+<p>在cefsimple的示例代码中只有一个SimpleApp是继承的CefApp，这个类还继承了CefBrowserHandler，表明自身是同时也是CefBrowserHandler，这样实现的<code>GetBrowserProcessHandler</code>就返回自身。那么CEF是如何将我们的CefApp实例关联到CEF运行中的呢？</p>
+<pre data-lang="c++" style="background-color:#2b303b;color:#c0c5ce;" class="language-c++ "><code class="language-c++" data-lang="c++"><span>  </span><span style="color:#65737e;">// SimpleApp implements application-level callbacks for the browser process.
+</span><span>  </span><span style="color:#65737e;">// It will create the first browser instance in OnContextInitialized() after
+</span><span>  </span><span style="color:#65737e;">// CEF has initialized.
+</span><span>  CefRefPtr&lt;SimpleApp&gt; </span><span style="color:#8fa1b3;">app</span><span>(</span><span style="color:#b48ead;">new </span><span style="color:#bf616a;">SimpleApp</span><span>);
+</span><span>
+</span><span>  </span><span style="color:#65737e;">// Initialize CEF.
+</span><span>  </span><span style="color:#bf616a;">CefInitialize</span><span>(main_args, settings, app.</span><span style="color:#bf616a;">get</span><span>(), sandbox_info);
+</span></code></pre>
+<p>注意CefInitialize中的<code>app.get()</code>参数，就是将我们的CefApp关联到CEF的运行中的。那么，有些读者会有疑问，在示例代码中，只看到我们创建的SimpleApp类继承了CefApp，并通过<code>GetBrowserProcessHandler</code>返回自身来表明是一个浏览器进程的回调实例，并没有看到体现渲染进程的代码呢？确实，cefsimple作为helloworld级别的代码，没有体现这一点。在cefclient示例代码中（更高阶的CEF示例，也更复杂），你会看到：</p>
+<p><img src="https://static-res.zhen.wang/images/post/2021-03-31-use-cef-3/cefclient-app-browser.jpg" alt="" /></p>
+<p>上图是浏览器进程CefApp子类ClientAppBrowser（这里的”Client“是cefclient示例代码的“client”，请勿和下文的CefClient类混淆）。</p>
+<p>同时你还能找到一个CefApp子类ClientAppRenderer：</p>
+<p><img src="https://static-res.zhen.wang/images/post/2021-03-31-use-cef-3/cefclient-app-renderer.jpg" alt="" /></p>
+<p>你甚至还能找到一个名为ClientAppOther的CefApp子类：</p>
+<p><img src="https://static-res.zhen.wang/images/post/2021-03-31-use-cef-3/cefclient-app-other.jpg" alt="" /></p>
+<p>那么它们在哪儿被使用到呢？</p>
+<p><img src="https://static-res.zhen.wang/images/post/2021-03-31-use-cef-3/where-use-CefApp.jpg" alt="" /></p>
+<p>看到这里，我相信绝大多数的读者应该能够理解我所说的CefApp代表的是一个进程的抽象了。这块的大体流程是，通过一个工具函数<code>GetProcessType</code>从命令行中解析<code>--type=xxx</code>（浏览器进程没有这个命令参数）来判断进程的类型，然后实例化对应的CefApp子类，最后通过<code>CefExecuteProcess</code>来运行进程。</p>
+<p>在介绍了CefApp的基本概念以后，我们可以继续分析<code>SimpleApp</code>。</p>
+<p>通过上文，我们知道SimpleApp是CefApp子类，并且通过只会在浏览器进程中，会使用到该类的实例，因为实现了接口<code>CefBrowserProcessHandler</code>，并且有如下代码：</p>
+<pre data-lang="c++" style="background-color:#2b303b;color:#c0c5ce;" class="language-c++ "><code class="language-c++" data-lang="c++"><span>  </span><span style="color:#65737e;">// CefApp methods:
+</span><span>  </span><span style="color:#b48ead;">virtual</span><span> CefRefPtr&lt;CefBrowserProcessHandler&gt; </span><span style="color:#8fa1b3;">GetBrowserProcessHandler</span><span>()
+</span><span>      </span><span style="color:#bf616a;">OVERRIDE </span><span>{
+</span><span>    </span><span style="color:#b48ead;">return </span><span style="color:#bf616a;">this</span><span>;
+</span><span>  }
+</span></code></pre>
+<p>那么在CEF中，作为<code>CefBrowserProcessHandler</code>，有哪些回调可以供我们定制呢？下面是头文件声明，并且我也写了下概要注释：</p>
+<pre data-lang="c++" style="background-color:#2b303b;color:#c0c5ce;" class="language-c++ "><code class="language-c++" data-lang="c++"><span style="color:#b48ead;">class </span><span style="color:#ebcb8b;">CefBrowserProcessHandler </span><span style="color:#eff1f5;">: </span><span style="color:#b48ead;">public virtual </span><span style="color:#a3be8c;">CefBaseRefCounted </span><span style="color:#eff1f5;">{
+</span><span style="color:#eff1f5;"> </span><span style="color:#b48ead;">public</span><span style="color:#eff1f5;">:
+</span><span style="color:#eff1f5;">    </span><span style="color:#65737e;">// Cookie处理定制化
+</span><span style="color:#eff1f5;">  </span><span style="color:#b48ead;">virtual void </span><span style="color:#8fa1b3;">GetCookieableSchemes</span><span style="color:#eff1f5;">(std::vector&lt;CefString&gt;</span><span>&amp; </span><span style="color:#bf616a;">schemes</span><span style="color:#eff1f5;">,
+</span><span style="color:#eff1f5;">                                    </span><span style="color:#b48ead;">bool</span><span>&amp; </span><span style="color:#bf616a;">include_defaults</span><span style="color:#eff1f5;">) {}
+</span><span style="color:#eff1f5;">    </span><span style="color:#65737e;">// 在CEF上下文初始化后，在浏览器进程UI线程中进行调用。
+</span><span style="color:#eff1f5;">  </span><span style="color:#b48ead;">virtual void </span><span style="color:#8fa1b3;">OnContextInitialized</span><span style="color:#eff1f5;">() {}
+</span><span style="color:#eff1f5;">    </span><span style="color:#65737e;">// 可定制化处理子进程启动时的命令行参数
+</span><span style="color:#eff1f5;">  </span><span style="color:#b48ead;">virtual void </span><span style="color:#8fa1b3;">OnBeforeChildProcessLaunch</span><span style="color:#eff1f5;">(
+</span><span style="color:#eff1f5;">      CefRefPtr&lt;CefCommandLine&gt; </span><span style="color:#bf616a;">command_line</span><span style="color:#eff1f5;">) {}
+</span><span style="color:#eff1f5;">    </span><span style="color:#65737e;">// 打印处理
+</span><span style="color:#eff1f5;">  </span><span style="color:#b48ead;">virtual</span><span style="color:#eff1f5;"> CefRefPtr&lt;CefPrintHandler&gt; </span><span style="color:#8fa1b3;">GetPrintHandler</span><span style="color:#eff1f5;">() { </span><span style="color:#b48ead;">return </span><span style="color:#d08770;">nullptr</span><span style="color:#eff1f5;">; }
+</span><span style="color:#eff1f5;">    </span><span style="color:#65737e;">// 自定义消息循环的时候，消息循环的频率
+</span><span style="color:#eff1f5;">  </span><span style="color:#b48ead;">virtual void </span><span style="color:#8fa1b3;">OnScheduleMessagePumpWork</span><span style="color:#eff1f5;">(int64 </span><span style="color:#bf616a;">delay_ms</span><span style="color:#eff1f5;">) {}
+</span><span style="color:#eff1f5;">    </span><span style="color:#65737e;">// 获取默认的CefClient
+</span><span style="color:#eff1f5;">  </span><span style="color:#b48ead;">virtual</span><span style="color:#eff1f5;"> CefRefPtr&lt;CefClient&gt; </span><span style="color:#8fa1b3;">GetDefaultClient</span><span style="color:#eff1f5;">() { </span><span style="color:#b48ead;">return </span><span style="color:#d08770;">nullptr</span><span style="color:#eff1f5;">; }
+</span><span style="color:#eff1f5;">}</span><span>;
+</span></code></pre>
+<p>通过阅读该Handler的头文件以及每个函数的调用说明，我们继续阅读在<code>SimpleApp::OnContextInitialized</code>这个函数：</p>
+<pre data-lang="c++" style="background-color:#2b303b;color:#c0c5ce;" class="language-c++ "><code class="language-c++" data-lang="c++"><span style="color:#b48ead;">void </span><span>SimpleApp::</span><span style="color:#8fa1b3;">OnContextInitialized</span><span>() {
+</span><span>  </span><span style="color:#bf616a;">CEF_REQUIRE_UI_THREAD</span><span>();
+</span><span>
+</span><span>  CefRefPtr&lt;CefCommandLine&gt; command_line =
+</span><span>      CefCommandLine::</span><span style="color:#bf616a;">GetGlobalCommandLine</span><span>();
+</span><span>
+</span><span>  </span><span style="color:#b48ead;">const bool</span><span> enable_chrome_runtime =
+</span><span>      command_line-&gt;</span><span style="color:#bf616a;">HasSwitch</span><span>(&quot;</span><span style="color:#a3be8c;">enable-chrome-runtime</span><span>&quot;); </span><span style="color:#65737e;">// 是否启用chrome运行时
+</span><span>
+</span><span style="color:#b48ead;">#if defined</span><span>(OS_WIN) || </span><span style="color:#b48ead;">defined</span><span>(OS_LINUX)
+</span><span>    </span><span style="color:#65737e;">// Create the browser using the Views framework if &quot;--use-views&quot; is specified
+</span><span>    </span><span style="color:#65737e;">// via the command-line. Otherwise, create the browser using the native
+</span><span>    </span><span style="color:#65737e;">// platform framework. The Views framework is currently only supported on
+</span><span>    </span><span style="color:#65737e;">// Windows and Linux.
+</span><span>    </span><span style="color:#65737e;">// 如果命令行中指定了&quot;--use-views&quot;，那么使用CEF自己的视图框架（Views framework）
+</span><span>    </span><span style="color:#65737e;">// 否则使用操作系统原生API。视图框架目前只支持Windows和Linux。
+</span><span>  </span><span style="color:#b48ead;">const bool</span><span> use_views = command_line-&gt;</span><span style="color:#bf616a;">HasSwitch</span><span>(&quot;</span><span style="color:#a3be8c;">use-views</span><span>&quot;);
+</span><span style="color:#b48ead;">#else
+</span><span>  </span><span style="color:#b48ead;">const bool</span><span> use_views = </span><span style="color:#d08770;">false</span><span>;
+</span><span style="color:#b48ead;">#endif
+</span><span>
+</span><span>  </span><span style="color:#65737e;">// SimpleHandler implements browser-level callbacks.
+</span><span>  CefRefPtr&lt;SimpleHandler&gt; </span><span style="color:#bf616a;">handler</span><span>(</span><span style="color:#b48ead;">new </span><span style="color:#bf616a;">SimpleHandler</span><span>(use_views));
+</span><span>
+</span><span>  </span><span style="color:#65737e;">// Specify CEF browser settings here.
+</span><span>  CefBrowserSettings browser_settings;
+</span><span>
+</span><span>  std::string url;
+</span><span>
+</span><span>  </span><span style="color:#65737e;">// Check if a &quot;--url=&quot; value was provided via the command-line. If so, use
+</span><span>  </span><span style="color:#65737e;">// that instead of the default URL.
+</span><span>  url = command_line-&gt;</span><span style="color:#bf616a;">GetSwitchValue</span><span>(&quot;</span><span style="color:#a3be8c;">url</span><span>&quot;);
+</span><span>  </span><span style="color:#b48ead;">if </span><span>(url.</span><span style="color:#bf616a;">empty</span><span>())
+</span><span>    url = &quot;</span><span style="color:#a3be8c;">http://www.google.com</span><span>&quot;;
+</span><span>
+</span><span>  </span><span style="color:#b48ead;">if </span><span>(use_views &amp;&amp; !enable_chrome_runtime) {
+</span><span>    </span><span style="color:#65737e;">// Create the BrowserView.
+</span><span>    CefRefPtr&lt;CefBrowserView&gt; browser_view = CefBrowserView::</span><span style="color:#bf616a;">CreateBrowserView</span><span>(
+</span><span>        handler, url, browser_settings, </span><span style="color:#d08770;">nullptr</span><span>, </span><span style="color:#d08770;">nullptr</span><span>,
+</span><span>        </span><span style="color:#b48ead;">new </span><span style="color:#bf616a;">SimpleBrowserViewDelegate</span><span>());
+</span><span>
+</span><span>    </span><span style="color:#65737e;">// Create the Window. It will show itself after creation.
+</span><span>    CefWindow::</span><span style="color:#bf616a;">CreateTopLevelWindow</span><span>(</span><span style="color:#b48ead;">new </span><span style="color:#bf616a;">SimpleWindowDelegate</span><span>(browser_view));
+</span><span>  } </span><span style="color:#b48ead;">else </span><span>{
+</span><span>    </span><span style="color:#65737e;">// Information used when creating the native window.
+</span><span>    CefWindowInfo window_info;
+</span><span>
+</span><span style="color:#b48ead;">#if defined</span><span>(OS_WIN)
+</span><span>    </span><span style="color:#65737e;">// On Windows we need to specify certain flags that will be passed to
+</span><span>    </span><span style="color:#65737e;">// CreateWindowEx().
+</span><span>    window_info.</span><span style="color:#bf616a;">SetAsPopup</span><span>(</span><span style="color:#d08770;">NULL</span><span>, &quot;</span><span style="color:#a3be8c;">cefsimple</span><span>&quot;);
+</span><span style="color:#b48ead;">#endif
+</span><span>
+</span><span>    </span><span style="color:#65737e;">// Create the first browser window.
+</span><span>    CefBrowserHost::</span><span style="color:#bf616a;">CreateBrowser</span><span>(window_info, handler, url, browser_settings,
+</span><span>                                  </span><span style="color:#d08770;">nullptr</span><span>, </span><span style="color:#d08770;">nullptr</span><span>);
+</span><span>  }
+</span><span>}
+</span></code></pre>
+<p>对于这段代码，我整理了如下流程，方便读者对照阅读：</p>
+<p><img src="https://static-res.zhen.wang/images/post/2021-03-31-use-cef-3/cef-SimpleApp-OnContextInitialized.jpg" alt="" /></p>
+<p>在这个流程中，最关键的3个部分被我用红色标记出来：</p>
+<ol>
+<li>SimpleHandler（CefClient子类）；</li>
+<li>使用CEF的窗体视图框架创建CefBrowserView和CefWindow；</li>
+<li>使用操作系统原生API构建窗体。</li>
+</ol>
+<p>整个过程中会创建CefClient的子类实例，然后通过CEF提供的API来将CefClient和窗体结合在一起。</p>
+<p><strong>对于使用CEF自己的视图框架，有如下的步骤：</strong></p>
+<ol>
+<li>首先是调用CefBrowserView::CreateBrowserView得到CefBrowserView实例，这个过程会把CefClient实例和View对象通过API绑定。</li>
+<li>调用CefWindow::CreateTopLevelWindow，传入CefBrowserView实例来创建窗体。</li>
+</ol>
+<p><img src="https://static-res.zhen.wang/images/post/2021-03-31-use-cef-3/cef-use-CEF-Views.jpg" alt="" /></p>
+<p><strong>对于使用操作系统原生API创建浏览器窗体，主要是如下步骤：</strong></p>
+<ol>
+<li>使用CefWindowInfo设置窗体句柄</li>
+<li>调用CefBrowserHost::CreateBrowser将对应窗体句柄的窗体和CefClient绑定起来</li>
+</ol>
+<p><img src="https://static-res.zhen.wang/images/post/2021-03-31-use-cef-3/cef-use-OS-native-Views.jpg" alt="" /></p>
+<p>当然，上述两个窗体的创建过程涉及到CEF的窗体模块，我们不在这里细说，但是两个流程都离不开一个重要的类：CefClient，它具体是什么呢？接下来，我们将对CefClient进行介绍，并对SimpleHandler这个类（CefClient子类）进行一定的源码分析。</p>
+<h2 id="cefclient">CefClient</h2>
+<p>在官方的文档，描述了CefClien的概念：</p>
+<blockquote>
+<p>The <a rel="noopener" target="_blank" href="http://magpcss.org/ceforum/apidocs3/projects/(default)/CefClient.html">CefClient</a> interface provides access to browser-instance-specific callbacks. A single CefClient instance can be shared among any number of browsers. Important callbacks include:</p>
+<p>CefClient接口提供对特定于浏览器实例的回调的访问。一个CefClient实例可以在任意数量的浏览器之间共享。重要的回调包括：</p>
+<ul>
+<li>Handlers for things like browser life span, context menus, dialogs, display notifications, drag events, focus events, keyboard events and more. The majority of handlers are optional. See the documentation in cef_client.h for the side effects, if any, of not implementing a specific handler.</li>
+<li>所有的Handler，例如浏览器的生命周期，上下文菜单，对话框，显示通知，拖动事件，焦点事件，键盘事件等。大多数处理程序是可选的。请参阅cef_client.h中的文档，以了解不实施特定处理程序的副作用（如果有）。</li>
+<li><strong>OnProcessMessageReceived</strong> which is called when an IPC message is received from the render process. See the “Inter-Process Communication” section for more information.</li>
+<li>从渲染过程中接收到IPC消息时调用的OnProcessMessageReceived。有关更多信息，请参见“进程间通信”部分。</li>
+</ul>
+</blockquote>
+<p>首先需要解释一下什么什么是特定浏览器实例，实际上，指的是以下过程产生的浏览器实例：</p>
+<pre data-lang="c++" style="background-color:#2b303b;color:#c0c5ce;" class="language-c++ "><code class="language-c++" data-lang="c++"><span>    CefRefPtr&lt;CefBrowserView&gt; browser_view = CefBrowserView::</span><span style="color:#bf616a;">CreateBrowserView</span><span>(
+</span><span>        handler, url, browser_settings, </span><span style="color:#d08770;">nullptr</span><span>, </span><span style="color:#d08770;">nullptr</span><span>,
+</span><span>        </span><span style="color:#b48ead;">new </span><span style="color:#bf616a;">SimpleBrowserViewDelegate</span><span>());
+</span><span style="color:#65737e;">// 或
+</span><span>    CefBrowserHost::</span><span style="color:#8fa1b3;">CreateBrowser</span><span>(</span><span style="color:#bf616a;">window_info</span><span>, </span><span style="color:#bf616a;">handler</span><span>, </span><span style="color:#bf616a;">url</span><span>, </span><span style="color:#bf616a;">browser_settings</span><span>,
+</span><span>                                  </span><span style="color:#bf616a;">nullptr</span><span>, </span><span style="color:#bf616a;">nullptr</span><span>);
+</span></code></pre>
+<p>通过上述两种方式创建的浏览器实例，是一个概念上的实例，并不是指你能看得到的浏览器的窗口，窗口只是浏览器实例的宿主而已。而浏览器中发生的事件，例如：生命周期的变化，对话框等，都只会通过CefClient中返回的各种类型Handler以及这些Handler接口实例提供的方法回调。</p>
+<p>下面时CefClient的声明：</p>
+<pre data-lang="c++" style="background-color:#2b303b;color:#c0c5ce;" class="language-c++ "><code class="language-c++" data-lang="c++"><span style="color:#b48ead;">class </span><span style="color:#ebcb8b;">CefClient </span><span style="color:#eff1f5;">: </span><span style="color:#b48ead;">public virtual </span><span style="color:#a3be8c;">CefBaseRefCounted </span><span style="color:#eff1f5;">{
+</span><span style="color:#eff1f5;"> </span><span style="color:#b48ead;">public</span><span style="color:#eff1f5;">:
+</span><span style="color:#eff1f5;">  </span><span style="color:#b48ead;">virtual</span><span style="color:#eff1f5;"> CefRefPtr&lt;CefAudioHandler&gt; </span><span style="color:#8fa1b3;">GetAudioHandler</span><span style="color:#eff1f5;">() { </span><span style="color:#b48ead;">return </span><span style="color:#d08770;">nullptr</span><span style="color:#eff1f5;">; }
+</span><span style="color:#eff1f5;">
+</span><span style="color:#eff1f5;">  </span><span style="color:#b48ead;">virtual</span><span style="color:#eff1f5;"> CefRefPtr&lt;CefContextMenuHandler&gt; </span><span style="color:#8fa1b3;">GetContextMenuHandler</span><span style="color:#eff1f5;">() {
+</span><span style="color:#eff1f5;">    </span><span style="color:#b48ead;">return </span><span style="color:#d08770;">nullptr</span><span style="color:#eff1f5;">;
+</span><span style="color:#eff1f5;">  }
+</span><span style="color:#eff1f5;">
+</span><span style="color:#eff1f5;">  </span><span style="color:#b48ead;">virtual</span><span style="color:#eff1f5;"> CefRefPtr&lt;CefDialogHandler&gt; </span><span style="color:#8fa1b3;">GetDialogHandler</span><span style="color:#eff1f5;">() { </span><span style="color:#b48ead;">return </span><span style="color:#d08770;">nullptr</span><span style="color:#eff1f5;">; }
+</span><span style="color:#eff1f5;">
+</span><span style="color:#eff1f5;">  </span><span style="color:#b48ead;">virtual</span><span style="color:#eff1f5;"> CefRefPtr&lt;CefDisplayHandler&gt; </span><span style="color:#8fa1b3;">GetDisplayHandler</span><span style="color:#eff1f5;">() { </span><span style="color:#b48ead;">return </span><span style="color:#d08770;">nullptr</span><span style="color:#eff1f5;">; }
+</span><span style="color:#eff1f5;">
+</span><span style="color:#eff1f5;">  </span><span style="color:#b48ead;">virtual</span><span style="color:#eff1f5;"> CefRefPtr&lt;CefDownloadHandler&gt; </span><span style="color:#8fa1b3;">GetDownloadHandler</span><span style="color:#eff1f5;">() { </span><span style="color:#b48ead;">return </span><span style="color:#d08770;">nullptr</span><span style="color:#eff1f5;">; }
+</span><span style="color:#eff1f5;">
+</span><span style="color:#eff1f5;">  </span><span style="color:#b48ead;">virtual</span><span style="color:#eff1f5;"> CefRefPtr&lt;CefDragHandler&gt; </span><span style="color:#8fa1b3;">GetDragHandler</span><span style="color:#eff1f5;">() { </span><span style="color:#b48ead;">return </span><span style="color:#d08770;">nullptr</span><span style="color:#eff1f5;">; }
+</span><span style="color:#eff1f5;">    </span><span style="color:#65737e;">// ...... 还有很多的Handler
+</span><span style="color:#eff1f5;">        
+</span><span style="color:#eff1f5;">}
+</span></code></pre>
+<p>在这个CefClient提供了很多<code>GetXXXHandler</code>方法，这些方法会在合适的时候，被CEF调用以得到对应的Handler，然后再调用返回的Handler中的方法。例如，HTML页面中的Title发生变化的时候，就会调用<code>CefClient::CefDisplayHandler()</code>得到一个CefDisplayHandler实例，然后再调用其中的<code>CefDisplayHandler::OnTitleChange</code>，而这些过程不是我们调用的，而是CEF框架完成的。只是具体的实现有我们客户端代码编写。</p>
+<p>那么现在思考一下，为什么会有这个CefClient呢？在本人看来主要是如下的理由：</p>
+<p>在CefClient中各种回调的事件，本质上发生的地方是渲染进程。因为每当一个浏览器实例（不是浏览器进程）创建的时候，会有一个对应的渲染进程创建（也可能由于配置，而共用一个，这里先认为默认多个一对一）。渲染进程中发生的各种V8事件、下载事件，显示事件等触发后，会通过<strong>进程间通讯</strong>给到浏览器进程，然后在浏览器进程中找到与之相关的CefClient，然后从CefClient中找到对应的Handler，回调Handler对应的方法。</p>
+<p>也就是说，将在渲染进程发生的事件，用在浏览器进程中的CefClient一定的抽象映射，而不是直接在浏览器进程处理器中进行，因为一个浏览器进程可能会创建多个渲染进程，让CefClient作为中间层避免耦合。</p>
+<p><img src="https://static-res.zhen.wang/images/post/2021-03-31-use-cef-3/CefClientAndRenderer.jpg" alt="" /></p>
+<p>当然，文档也为我们指出，CefClient实例与浏览器实例可以不是一一对应的，多个浏览器实例可以共享一个CefClient，如此一来我们也可以总结关于CefClient的一点：<strong>非必要情况，不要编写具有状态的CefClient</strong>。</p>
+<p>至此，我们通过对Demo源码入手，对CefApp和CefClient已经有了一个整体的认识，读者可以阅读官方文档来更加深入的了解：<a rel="noopener" target="_blank" href="https://bitbucket.org/chromiumembedded/cef/wiki/GeneralUsage.md#markdown-header-application-structure">官方文档</a>。</p>
+
+    </div>
+</div>
+<script src="https://zhen.wang/libs/viewerjs@1.11.7/viewer.min.js"></script>
+<link rel="stylesheet" href="https://zhen.wang/libs/viewerjs@1.11.7/viewer.min.css"/>
+<script>
+  if (window.Viewer) {
+    document.querySelectorAll('img').forEach(img => {
+      new Viewer(img, {
+        inline: false,
+        navbar: false,
+        toolbar: {
+          zoomIn: 1,
+          zoomOut: 1,
+          reset: 1,
+          rotateLeft: 1,
+          rotateRight: 1,
+        },
+      });
+    });
+  }
+</script>
+
+
+</body>
+</html>

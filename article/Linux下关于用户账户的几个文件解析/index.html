@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="utf-8">
+    <meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover"
+          name="viewport">
+    
+    
+    <!-- umami web analysis -->
+    <script defer src="https://zhen.wang/libs/umami/umami.script.js"
+            data-website-id="d66cfe03-f6b3-4aa0-baf8-728700db1b09"></script>
+    
+    
+    
+    <link rel="icon" type="image/png" sizes="16x16" href="https://zhen.wang/images/blog-site-icon.svg">
+    <link rel="icon" type="image/png" sizes="32x32" href="https://zhen.wang/images/blog-site-icon.svg">
+    <title>zhen&#x27;s everything</title>
+    <link rel="stylesheet" href="https://zhen.wang/style.css">
+    
+<link rel="stylesheet" href="https://zhen.wang/article_content.css">
+<link rel="stylesheet" href="https://zhen.wang/article_markdown.css">
+
+</head>
+<body>
+
+<div id="article">
+    <header class="article-header">
+        
+<div class="base-title">
+    <a href="#" onclick="history.length > 1 ? history.back() : location.href = '/'; return false;">&LeftArrow; Back</a>
+    <h1>
+        Linux下关于用户账户的几个文件解析
+    </h1>
+</div>
+
+    </header>
+    <p class="article-date">2018-03-09</p>
+    
+    <!-- real content -->
+    <div class="article-content markdown-content">
+        <p>Linux是一个多用户系统，但是对于一个多用户共存的系统中，当然不能够出现用户相互越权等一系列的安全问题，所以如何正确的管理账户成为了Linux系统中至关重要的一环。</p>
+<span id="continue-reading"></span>
+<p>在Linux下，与用户账户有着紧密联系的文件又如下的几个：</p>
+<pre data-lang="shell" style="background-color:#2b303b;color:#c0c5ce;" class="language-shell "><code class="language-shell" data-lang="shell"><span>/etc/passwd   #管理用户的UID、GID等重要用户信息
+</span><span>/etc/shadow   #管理用户密码的等重要信息
+</span><span>/etc/group    #管理用户组
+</span><span>/etc/gpasswd  #管理用户组密码
+</span></code></pre>
+<p><strong>1./etc/passwd</strong></p>
+<p>虽说这个文件的文件名写着passwd，但是里面并没有存放密码（早起存放，后来为了安全将密码分离出来）</p>
+<p>打开该文件，里面的内容大致如下：</p>
+<pre data-lang="shell" style="background-color:#2b303b;color:#c0c5ce;" class="language-shell "><code class="language-shell" data-lang="shell"><span>root:x:0:0:root:/root:/bin/bash
+</span><span>bin:x:1:1:bin:/bin:/sbin/nologin
+</span><span>daemon:x:2:2:daemon:/sbin:/sbin/nologin
+</span><span>adm:x:3:4:adm:/var/adm:/sbin/nologin
+</span><span>...
+</span></code></pre>
+<p>上面的每一行代表了存在你系统中的一个用户。按照“:”来进行字段的划分，可以划分为7个字段，从左到右依次如下意义：</p>
+<ul>
+<li><strong>账号名称（1）</strong>。用以来对应UID，例如上面的第一行root。</li>
+<li><strong>密码位（2）</strong>。早期的该字段的确用来存放密码，但是这个文件特性是所有程序都能读取，为了安全起见，后来将密码放置在了/etc/shadow中了，所以这里只有一个“x”。</li>
+<li><strong>UID（3）</strong>。用户标识，在Linux中，该UID是整数。且多个账号可以对应一个UID，因为Linux系统内核只认UID的。不同的区间有不同的意义：
+0（系统管理员）。如果你希望其他的某些账号也是系统管理员，可以讲其UID修改为0。（极度不推荐，一是安全性，二是UID还与多处文件及系统有关联，单一修改往往设置不全会出问题）
+1～499。保留给系统账户使用的ID，不强制，只是一个习惯。
+500～2^32-1。给一般用户使用的。</li>
+<li><strong>GID（4）</strong>。这个与/etc/group有关，即与用户组相关，后续会提到。</li>
+<li><strong>用户信息说明（5）</strong>。没有重要用途，单纯作简单描述。</li>
+<li><strong>主文件夹（6）</strong>。例如上面的/root目录，当root登陆以后，直接进入root的主目录中。当然你可以进行个性化配置。</li>
+<li><strong>Shell（7）</strong>。当用户root登陆以后，会查找该字段并使用该字段指定的shell（这里是/bin/bash）。但这是里有一个特殊的shell（nologin）可以用来替代成让账号无法取得shell环境的登陆操作。譬如，你当然不希望一个在你Linux上的邮件账户来通过shell操作你的电脑。</li>
+</ul>
+<p>当然，如果记不住的话，可以使用finger命令与id命令，例如：</p>
+<pre data-lang="shell" style="background-color:#2b303b;color:#c0c5ce;" class="language-shell "><code class="language-shell" data-lang="shell"><span>finger root
+</span><span># 输出如下：
+</span><span>Login: root           			Name: root
+</span><span>Directory: /root                    	Shell: /bin/bash
+</span><span>On since Fri Mar  9 19:10 (CST) on tty1   7 seconds idle
+</span><span>Mail last read Sat Mar  3 15:58 2018 (CST)
+</span><span>No Plan.
+</span><span>
+</span><span>id root
+</span><span># 输出如下：
+</span><span>uid=0(root) gid=0(root) groups=0(root)
+</span></code></pre>
+<p>输出内容不在解释，十分 -h 了。</p>
+<p><strong>2./etc/shadow</strong></p>
+<p>打开该文件，内容大致如下：</p>
+<pre data-lang="shell" style="background-color:#2b303b;color:#c0c5ce;" class="language-shell "><code class="language-shell" data-lang="shell"><span>root:$6$tVBKdRxY$myJhWrhIwlXh42zNYLz1fmwu4ONQWP03O/5ccx1/34koU8GTn0M0ACx3xI4Bl.wPN3DPrrGbQX7vbPqqR//xv0:17593:0:99999:7:::
+</span><span>bin:*:17110:0:99999:7:::
+</span><span>daemon:*:17110:0:99999:7:::
+</span><span>adm:*:17110:0:99999:7:::
+</span></code></pre>
+<p>shadow文件夹自然也以“:”作为分隔符，这里一共有9个字段，从左到右依次具有如下意义：</p>
+<ul>
+<li><strong>账号名称（1）</strong>。</li>
+<li><strong>密码（2）</strong>。该处使用了摘要加密技术，即不容易逆向破译，只可做验证。</li>
+<li><strong>最近改动密码的日期（3）</strong>。自1970年1月1日以来累加的天数。</li>
+<li><strong>密码不可被改动的天数（4）</strong>。相当于改密码的冻结天数。root中为0代表你随时可以更改，如果修改为20就代表了20天内不可修改。</li>
+<li><strong>密码需要重新更改的天数（5）</strong>。这里root行填写的99999代表了root的密码在99999天以内需要修改，可以理解为允许你永不更改。</li>
+<li><strong>密码需要更改前的警告天数（6）</strong>。这一字段与上一字段配合。例如，上一字段设置为了20，即希望你在20天要重新修改密码，这里设置为5，就代表了第15天到第20天之前你登录的时候会提示你洗修改密码。</li>
+<li><strong>密码过期后的账号宽限天数（7）</strong>。例如，在字段（5）设置为了20，即希望你在20天内要修改密码，但是你在20天以后都还没有修改，那么该密码就过期了（密码过期你的账户依然可以使用bash等，但是重新登录时系统会提醒你修改密码），在过期期间你还没有修改密码，那么这个账户就失效了，该账号再也无法使用该密码登录了。</li>
+<li><strong>账号失效日期（8）</strong>。同样基于1970年1月1号以来的天数，日期到了以后，该账号会直接失效，与账号是否过期无关。</li>
+<li><strong>保留（9）。</strong></li>
+</ul>
+<p><strong>3./etc/group</strong></p>
+<p>/etc/group文件中存放的是用户组的相关的信息，打开大致如下：</p>
+<pre data-lang="shell" style="background-color:#2b303b;color:#c0c5ce;" class="language-shell "><code class="language-shell" data-lang="shell"><span>root:x:0:root
+</span></code></pre>
+<p>一共有四个字段：</p>
+<ul>
+<li><strong>用户组名称(1)</strong>。</li>
+<li><strong>用户组密码(2)</strong>。通常不需要设置，是给“用户组管理员”来使用的。</li>
+<li><strong>GID(3)</strong>。/etc/passwd中第四个字段使用GID就是对应于此的。</li>
+<li><strong>此用户组支持的账户名(4)</strong>。当我们想要将一个用户添加到该用户组时，就可以将其写在该字段中，使用“,“无空格连接。</li>
+</ul>
+<p><strong>4./etc/gpasswd</strong></p>
+<p>/etc/gpasswd文件中存放的是用户组没密码的相关信息，大致如下：</p>
+<pre data-lang="shell" style="background-color:#2b303b;color:#c0c5ce;" class="language-shell "><code class="language-shell" data-lang="shell"><span>root:::root
+</span></code></pre>
+<p>同样有四个字段：</p>
+<ul>
+<li><strong>用户组名(1)</strong>。</li>
+<li><strong>密码(2)</strong>。</li>
+<li><strong>用户组管理员账号(3)</strong>。</li>
+<li><strong>该用户组所属账号(4)</strong>。</li>
+</ul>
+<p>当然，对于一个用户来说，当然可以在多个组当中。但是，当我们使用一个账户进行某些操作时，系统如何判断我们当前属于哪个组呢？例如，当前有个文件属性如下：</p>
+<pre data-lang="shell" style="background-color:#2b303b;color:#c0c5ce;" class="language-shell "><code class="language-shell" data-lang="shell"><span>----r----- root group1  x.txt
+</span></code></pre>
+<p>有一个用户名为user既属于group1又属于group2。那该用户到底能不能读取这个txt呢？</p>
+<p>其实这就涉及到了一个有效用户组与初始用户组两个概念了。使用groups命令，可以看到类似如下的输出（这里模拟有groups1、2两个组）：</p>
+<pre data-lang="shell" style="background-color:#2b303b;color:#c0c5ce;" class="language-shell "><code class="language-shell" data-lang="shell"><span>groups
+</span><span># 输出
+</span><span>groups1 groups2
+</span></code></pre>
+<p>第一个就是有效用户。有效用户组意味着目前你身份是user，现在属于group1。所以你是可以读取那个txt的。如何进行切换呢？使用newgrp命令</p>
+<pre data-lang="shell" style="background-color:#2b303b;color:#c0c5ce;" class="language-shell "><code class="language-shell" data-lang="shell"><span>newgrp group2
+</span><span>groups
+</span><span># 输出
+</span><span>group2 group1
+</span></code></pre>
+<p>此时尝试读取x.txt会提示权限不足。</p>
+<p>那么初始用户组是什么呢？其实就是/etc/passwd中的GID对应的用户组，也是我们在登陆是的第一个用户组。</p>
+
+    </div>
+</div>
+<script src="https://zhen.wang/libs/viewerjs@1.11.7/viewer.min.js"></script>
+<link rel="stylesheet" href="https://zhen.wang/libs/viewerjs@1.11.7/viewer.min.css"/>
+<script>
+  if (window.Viewer) {
+    document.querySelectorAll('img').forEach(img => {
+      new Viewer(img, {
+        inline: false,
+        navbar: false,
+        toolbar: {
+          zoomIn: 1,
+          zoomOut: 1,
+          reset: 1,
+          rotateLeft: 1,
+          rotateRight: 1,
+        },
+      });
+    });
+  }
+</script>
+
+
+</body>
+</html>

@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="utf-8">
+    <meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover"
+          name="viewport">
+    
+    
+    <!-- umami web analysis -->
+    <script defer src="https://zhen.wang/libs/umami/umami.script.js"
+            data-website-id="d66cfe03-f6b3-4aa0-baf8-728700db1b09"></script>
+    
+    
+    
+    <link rel="icon" type="image/png" sizes="16x16" href="https://zhen.wang/images/blog-site-icon.svg">
+    <link rel="icon" type="image/png" sizes="32x32" href="https://zhen.wang/images/blog-site-icon.svg">
+    <title>zhen&#x27;s everything</title>
+    <link rel="stylesheet" href="https://zhen.wang/style.css">
+    
+<link rel="stylesheet" href="https://zhen.wang/article_content.css">
+<link rel="stylesheet" href="https://zhen.wang/article_markdown.css">
+
+</head>
+<body>
+
+<div id="article">
+    <header class="article-header">
+        
+<div class="base-title">
+    <a href="#" onclick="history.length > 1 ? history.back() : location.href = '/'; return false;">&LeftArrow; Back</a>
+    <h1>
+        Rust winit 0.30.0版本简介
+    </h1>
+</div>
+
+    </header>
+    <p class="article-date">2024-05-14</p>
+    
+    <!-- toc -->
+    <div class="article-toc">
+        <label class="toc-title" for="toc-trigger">目录</label>
+        <input id="toc-trigger" type="checkbox" checked/>
+        <div class="toc-content">
+            <ol class="toc">
+                
+                <li class="toc-item toc-level-1">
+                    <a class="toc-link" href="https://zhen.wang/article/Rust winit 0.30.0版本简介/#guan-yu-0-2xban-ben-winit">关于0.2x版本winit</a>
+                    
+                </li>
+                
+                <li class="toc-item toc-level-1">
+                    <a class="toc-link" href="https://zhen.wang/article/Rust winit 0.30.0版本简介/#guan-yu-0-30-0ban-winit">关于0.30.0版winit</a>
+                    
+                </li>
+                
+                <li class="toc-item toc-level-1">
+                    <a class="toc-link" href="https://zhen.wang/article/Rust winit 0.30.0版本简介/#xie-zai-zui-hou">写在最后</a>
+                    
+                </li>
+                
+            </ol>
+        </div>
+    </div>
+    
+    <!-- real content -->
+    <div class="article-content markdown-content">
+        <p>不久前，Rust著名的跨平台窗体管理库winit发布了它的<a rel="noopener" target="_blank" href="https://github.com/rust-windowing/winit/releases/tag/v0.30.0">0.30.0</a>版本，较之前的0.2x.x版本，<strong>新增</strong>了19个的模块API，<strong>改动</strong>大约19个模块API，<strong>移除</strong>了大约8个模块API。可见本次升级改动之大，主要是对事件循环、窗口管理的重构。鉴于目前网上较多的文章都是基于0.2x版本的winit的代码，存在时效性问题，所以我决定写一篇文章，对winit的0.30.0版本做一个简单的介绍，同时也为后面的Rust Wgpu系列文章做铺垫。</p>
+<span id="continue-reading"></span><h1 id="guan-yu-0-2xban-ben-winit">关于0.2x版本winit</h1>
+<p>为了呈现清晰的对比，我们先给一关于0.2x版本的winit编写一个应用程序，运行并展示一个窗口：</p>
+<p><img src="https://static-res.zhen.wang/images/post/2024-05-14/010-v0_2x_winit.png" alt="010-v0_2x_winit" /></p>
+<p>0.2x版本的winit的运行模型主要基于过程式：</p>
+<ol>
+<li>创建事件循环</li>
+<li>创建该事件循环关联的窗体</li>
+<li>启动事件循环</li>
+</ol>
+<p>尽管使用起来比较简单，但是实际的应用场景会比较复杂，考虑到多窗体情况，这块的代码会愈发的复杂，需要用户做出适当的封装，才能让代码更加的清晰。</p>
+<h1 id="guan-yu-0-30-0ban-winit">关于0.30.0版winit</h1>
+<p>关于0.30.0版本的winit，则新增<a rel="noopener" target="_blank" href="https://docs.rs/winit/latest/winit/application/trait.ApplicationHandler.html">ApplicationHandler</a>，来对整个应用程序进行抽象，并把窗体创建、事件处理，收敛到了应用程序这个抽象中，提供更加直观的API。具体是怎样呢？话不多说，让我们通过代码实践来理解。首先初始化一个项目（这里不再赘述，请读者自行创建基础空项目），添加0.30.0版本winit依赖：</p>
+<pre data-lang="toml" style="background-color:#2b303b;color:#c0c5ce;" class="language-toml "><code class="language-toml" data-lang="toml"><span>[dependencies]
+</span><span style="color:#bf616a;">winit </span><span>= { </span><span style="color:#bf616a;">version </span><span>= &quot;</span><span style="color:#a3be8c;">0.30.0</span><span>&quot; }
+</span></code></pre>
+<p>接着，为了后续项目结构的划分，我们在<code>main.rs</code>同级目录下创建一个名为<code>app.rs</code>，内容如下：</p>
+<pre data-lang="rust" style="background-color:#2b303b;color:#c0c5ce;" class="language-rust "><code class="language-rust" data-lang="rust"><span style="color:#b48ead;">use </span><span>winit::application::ApplicationHandler;
+</span><span style="color:#b48ead;">use </span><span>winit::event::WindowEvent;
+</span><span style="color:#b48ead;">use </span><span>winit::event_loop::ActiveEventLoop;
+</span><span style="color:#b48ead;">use </span><span>winit::window::WindowId;
+</span><span>
+</span><span style="color:#b48ead;">pub struct </span><span>App {}
+</span><span>
+</span><span style="color:#b48ead;">impl </span><span>ApplicationHandler </span><span style="color:#b48ead;">for </span><span>App {
+</span><span>    </span><span style="color:#b48ead;">fn </span><span style="color:#8fa1b3;">resumed</span><span>(&amp;</span><span style="color:#b48ead;">mut </span><span style="color:#bf616a;">self</span><span>, </span><span style="color:#bf616a;">event_loop</span><span>: &amp;ActiveEventLoop) {}
+</span><span>
+</span><span>    </span><span style="color:#b48ead;">fn </span><span style="color:#8fa1b3;">window_event</span><span>(&amp;</span><span style="color:#b48ead;">mut </span><span style="color:#bf616a;">self</span><span>, </span><span style="color:#bf616a;">event_loop</span><span>: &amp;ActiveEventLoop, </span><span style="color:#bf616a;">window_id</span><span>: WindowId, </span><span style="color:#bf616a;">event</span><span>: WindowEvent) {}
+</span><span>}
+</span></code></pre>
+<p>在新版的winit中，我们首先定义一个自定义结构体：<code>App</code>，它代表了我们运行的应用程序；接着，我们为<code>App</code>实现来自winit 0.30.0中的新trait：<code>ApplicationHandler</code>。该trait有两个必须实现的方法：<code>resumed</code>和<code>window_event</code>方法。</p>
+<p>先看<code>window_event</code>方法。该在窗口事件发生时被调用，这块其实就是0.2x版本中事件循环中的触发事件的封装。但值得注意的是，在该方法的2个入参：</p>
+<ol>
+<li><code>event_loop: &amp;ActiveEventLoop</code></li>
+<li><code>window_id: WindowId</code></li>
+</ol>
+<p>这两个参数从含义上讲，代表了当前正激活的事件循环以及与之匹配的窗口。这里就不难理解，winit的0.30.0的新模型，主要是为了以友好的接口方式来支持多窗体、多事件循环。我们可以通过该事件回调，来得到当前是哪个窗体触发，在哪个激活的事件循环中触发的窗体事件。</p>
+<p>再看<code>resumed</code>方法。官方文档：<a rel="noopener" target="_blank" href="https://docs.rs/winit/0.30.0/winit/application/trait.ApplicationHandler.html#tymethod.resumed">ApplicationHandler#resumed</a>，笔者简单总结下：</p>
+<ol>
+<li>所有的平台（桌面端、Android、iOS以及Web）都会 Resumed 事件，各个平台触发该事件是对应了相关平台应用生命周期的某个阶段（例如，iOS中对应<code>applicationDidBecomeActive</code>）。</li>
+<li>考虑多平台可以移植性，推荐<strong>建议应用程序在收到第一个 Resumed 事件后仅初始化其图形上下文并创建窗口</strong>。由于系统平台的事件驱动具体实现的差异，可能会调用多次，要做“幂等”处理，确保在收到 Resumed 事件后仅初始化一次图形上下文和窗口（比如，iOS上只要激活了就会触发一次，如果没做幂等处理，就会在每次激活时都初始化一次图形上下文和窗口）。</li>
+</ol>
+<p>鉴于上述说明，我们在App结构体中增加一个字段：<code>window: Option&lt;winit::window::Window&gt;</code>，稍后我们会在<code>resumed</code>方法中创建窗口，并把它存储在这个字段中，同时给App加上<a rel="noopener" target="_blank" href="https://doc.rust-lang.org/std/default/trait.Default.html">Default特性</a>以便于快速创建App实例：</p>
+<pre data-lang="diff" style="background-color:#2b303b;color:#c0c5ce;" class="language-diff "><code class="language-diff" data-lang="diff"><span style="color:#a3be8c;">+ // 添加 Default 以便App::default()来快速创建App实例
+</span><span style="color:#a3be8c;">+ #[derive(Default)]
+</span><span>pub struct App {
+</span><span style="color:#a3be8c;">+   window: Option&lt;winit::window::Window&gt;,
+</span><span>}
+</span></code></pre>
+<p>接着，我们在<code>resumed</code>方法中创建窗口，并把它存储在<code>window</code>字段中：</p>
+<pre data-lang="rust" style="background-color:#2b303b;color:#c0c5ce;" class="language-rust "><code class="language-rust" data-lang="rust"><span style="color:#b48ead;">impl </span><span>ApplicationHandler </span><span style="color:#b48ead;">for </span><span>App {
+</span><span>    </span><span style="color:#b48ead;">fn </span><span style="color:#8fa1b3;">resumed</span><span>(&amp;</span><span style="color:#b48ead;">mut </span><span style="color:#bf616a;">self</span><span>, </span><span style="color:#bf616a;">event_loop</span><span>: &amp;ActiveEventLoop) {
+</span><span>        </span><span style="color:#65737e;">// 如果窗口为创建，我们就创建一个窗口
+</span><span>        </span><span style="color:#b48ead;">if </span><span style="color:#bf616a;">self</span><span>.window.</span><span style="color:#96b5b4;">is_none</span><span>() {
+</span><span>            </span><span style="color:#b48ead;">let</span><span> win_attr = Window::default_attributes().</span><span style="color:#96b5b4;">with_title</span><span>(&quot;</span><span style="color:#a3be8c;">demo</span><span>&quot;);
+</span><span>            </span><span style="color:#b48ead;">let</span><span> window = event_loop.</span><span style="color:#96b5b4;">create_window</span><span>(win_attr).</span><span style="color:#96b5b4;">unwrap</span><span>();
+</span><span>            </span><span style="color:#bf616a;">self</span><span>.window = Some(window);
+</span><span>        }
+</span><span>    }
+</span><span>    </span><span style="color:#b48ead;">fn </span><span style="color:#8fa1b3;">window_event</span><span>(&amp;</span><span style="color:#b48ead;">mut </span><span style="color:#bf616a;">self</span><span>, </span><span style="color:#bf616a;">event_loop</span><span>: &amp;ActiveEventLoop, </span><span style="color:#bf616a;">window_id</span><span>: WindowId, </span><span style="color:#bf616a;">event</span><span>: WindowEvent) {}
+</span><span>}
+</span></code></pre>
+<p>上述的代码，通过判断<code>self.window.is_none()</code>，我们可以避免重复创建窗口。</p>
+<p>至此，我们的<code>app.rs</code>中的代码就编写完毕了。接下来，我们需要在<code>main.rs</code>中增加创建App以及运行该应用的代码：</p>
+<pre data-lang="rust" style="background-color:#2b303b;color:#c0c5ce;" class="language-rust "><code class="language-rust" data-lang="rust"><span style="color:#b48ead;">use </span><span>winit::event_loop::EventLoop;
+</span><span style="color:#b48ead;">use crate</span><span>::app::App;
+</span><span>
+</span><span style="color:#b48ead;">mod </span><span>app;
+</span><span>
+</span><span style="color:#b48ead;">fn </span><span style="color:#8fa1b3;">main</span><span>() {
+</span><span>    </span><span style="color:#b48ead;">let</span><span> event_loop = EventLoop::new().</span><span style="color:#96b5b4;">unwrap</span><span>();
+</span><span>    </span><span style="color:#b48ead;">let mut</span><span> app = App::default();
+</span><span>    event_loop.</span><span style="color:#96b5b4;">run_app</span><span>(&amp;</span><span style="color:#b48ead;">mut</span><span> app).</span><span style="color:#96b5b4;">expect</span><span>(&quot;</span><span style="color:#a3be8c;">run app error.</span><span>&quot;);
+</span><span>}
+</span><span>
+</span></code></pre>
+<p>其实，读者可以感受到，新版本的winit下的应用程序运行模型，更加好进行模块的划分了。通过ApplicationHandler，我们将整个应用程序的生命周期抽象出来，并通过事件回调的方式，来处理窗体事件。</p>
+<p>上述代码运行以后，会在桌面出现一个窗体，不过此时你还无法点击窗体关闭按钮关闭它。因为我们没有实现对应的窗体退出逻辑，让我们在前面的<code>ApplicationHandler</code>的<code>window_event</code>方法中，处理下退出事件：</p>
+<pre data-lang="rust" style="background-color:#2b303b;color:#c0c5ce;" class="language-rust "><code class="language-rust" data-lang="rust"><span style="color:#b48ead;">impl </span><span>ApplicationHandler </span><span style="color:#b48ead;">for </span><span>App {
+</span><span>    </span><span style="color:#b48ead;">fn </span><span style="color:#8fa1b3;">resumed</span><span>(&amp;</span><span style="color:#b48ead;">mut </span><span style="color:#bf616a;">self</span><span>, </span><span style="color:#bf616a;">event_loop</span><span>: &amp;ActiveEventLoop) {
+</span><span>        </span><span style="color:#65737e;">// ...
+</span><span>    }
+</span><span>
+</span><span>    </span><span style="color:#b48ead;">fn </span><span style="color:#8fa1b3;">window_event</span><span>(&amp;</span><span style="color:#b48ead;">mut </span><span style="color:#bf616a;">self</span><span>, </span><span style="color:#bf616a;">event_loop</span><span>: &amp;ActiveEventLoop, </span><span style="color:#bf616a;">window_id</span><span>: WindowId, </span><span style="color:#bf616a;">event</span><span>: WindowEvent) {
+</span><span>        </span><span style="color:#b48ead;">match</span><span> event {
+</span><span>            </span><span style="color:#65737e;">// 处理退出
+</span><span>            WindowEvent::CloseRequested =&gt; {
+</span><span>                event_loop.</span><span style="color:#96b5b4;">exit</span><span>();
+</span><span>            }
+</span><span>            _ =&gt; ()
+</span><span>        }
+</span><span>    }
+</span><span>}
+</span></code></pre>
+<p>至此，我们就能显示一个空白的窗体，并能通过点击关闭按钮关闭它。当然，有读者在macOS关闭窗体时，会出现如下panic：</p>
+<pre style="background-color:#2b303b;color:#c0c5ce;"><code><span>a delegate was not configured on the application
+</span><span>stack backtrace:
+</span><span>   0: rust_begin_unwind
+</span><span>   ... ...
+</span></code></pre>
+<p>这是0.30.0的BUG，具体可以参考<a rel="noopener" target="_blank" href="https://github.com/rust-windowing/winit/issues/1699">issue</a>，该问题会在0.30.1版本修复。</p>
+<h1 id="xie-zai-zui-hou">写在最后</h1>
+<p>在本文中，笔者对winit的0.30.0版本的主要变动进行简单的介绍，更多的内容还需要读者自行阅读官方文档以及<a rel="noopener" target="_blank" href="https://github.com/rust-windowing/winit/tree/master/examples">examples</a>。当然，相信通过本篇文章，不难看出，新版的winit，对其运行模型架构进行了重构，使得其更加易于使用，更符合现代GUI框架的运行模型思路。</p>
+<p>但是，由于其架构升级，导致一些现阶段网络上一些经典的文章，可能无法在新版的winit下正确运行，例如《学习 Wgpu》就还是使用的0.29版本。笔者后续会开启关于Rust Wgpu系列文章，会使用新版winit来进行项目的搭建，并且讲解其中一些在新版winit下的Wgpu构建的注意点，敬请期待。</p>
+<blockquote>
+<p>本文完整代码就不单独放库了，主要是概念讲解。读者可以直接参考官方文档的<a rel="noopener" target="_blank" href="https://docs.rs/winit/latest/winit/index.html#event-handling">简单例子</a>。</p>
+</blockquote>
+<p>PS：笔者虽然还没有编写Rust Wgpu系列文章，但其基于winit 0.30.0版本的example已经在开发编写中了，笔者可以在这个仓库中checkout代码：<a rel="noopener" target="_blank" href="https://github.com/w4ngzhen/wgpu_winit_example">w4ngzhen/wgpu_winit_example</a>，也欢迎读者给个star，十分感谢。</p>
+
+    </div>
+</div>
+<script src="https://zhen.wang/libs/viewerjs@1.11.7/viewer.min.js"></script>
+<link rel="stylesheet" href="https://zhen.wang/libs/viewerjs@1.11.7/viewer.min.css"/>
+<script>
+  if (window.Viewer) {
+    document.querySelectorAll('img').forEach(img => {
+      new Viewer(img, {
+        inline: false,
+        navbar: false,
+        toolbar: {
+          zoomIn: 1,
+          zoomOut: 1,
+          reset: 1,
+          rotateLeft: 1,
+          rotateRight: 1,
+        },
+      });
+    });
+  }
+</script>
+
+
+</body>
+</html>

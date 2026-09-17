@@ -1,0 +1,389 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="utf-8">
+    <meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover"
+          name="viewport">
+    
+    
+    <!-- umami web analysis -->
+    <script defer src="https://zhen.wang/libs/umami/umami.script.js"
+            data-website-id="d66cfe03-f6b3-4aa0-baf8-728700db1b09"></script>
+    
+    
+    
+    <link rel="icon" type="image/png" sizes="16x16" href="https://zhen.wang/images/blog-site-icon.svg">
+    <link rel="icon" type="image/png" sizes="32x32" href="https://zhen.wang/images/blog-site-icon.svg">
+    <title>zhen&#x27;s everything</title>
+    <link rel="stylesheet" href="https://zhen.wang/style.css">
+    
+<link rel="stylesheet" href="https://zhen.wang/article_content.css">
+<link rel="stylesheet" href="https://zhen.wang/article_markdown.css">
+
+</head>
+<body>
+
+<div id="article">
+    <header class="article-header">
+        
+<div class="base-title">
+    <a href="#" onclick="history.length > 1 ? history.back() : location.href = '/'; return false;">&LeftArrow; Back</a>
+    <h1>
+        使用CEF（五）— 在QT中集成CEF（2）基于CLion与CMake搭建环境
+    </h1>
+</div>
+
+    </header>
+    <p class="article-date">2022-09-12</p>
+    
+    <!-- toc -->
+    <div class="article-toc">
+        <label class="toc-title" for="toc-trigger">目录</label>
+        <input id="toc-trigger" type="checkbox" checked/>
+        <div class="toc-content">
+            <ol class="toc">
+                
+                <li class="toc-item toc-level-1">
+                    <a class="toc-link" href="https://zhen.wang/article/使用CEF（五）— 在QT中集成CEF（2）基于CLion与CMake搭建环境/#ji-chu-huan-jing">基础环境</a>
+                    
+                </li>
+                
+                <li class="toc-item toc-level-1">
+                    <a class="toc-link" href="https://zhen.wang/article/使用CEF（五）— 在QT中集成CEF（2）基于CLion与CMake搭建环境/#gong-cheng-da-jian">工程搭建</a>
+                    
+                    <ol class="toc-child">
+                        
+                        <li class="toc-item toc-level-2">
+                            <a href="https://zhen.wang/article/使用CEF（五）— 在QT中集成CEF（2）基于CLion与CMake搭建环境/#cmakelists-txt">CMakeLists.txt</a>
+                        </li>
+                        
+                    </ol>
+                    
+                </li>
+                
+                <li class="toc-item toc-level-1">
+                    <a class="toc-link" href="https://zhen.wang/article/使用CEF（五）— 在QT中集成CEF（2）基于CLion与CMake搭建环境/#yi-chang-chu-li">异常处理</a>
+                    
+                    <ol class="toc-child">
+                        
+                        <li class="toc-item toc-level-2">
+                            <a href="https://zhen.wang/article/使用CEF（五）— 在QT中集成CEF（2）基于CLion与CMake搭建环境/#error-c3646-override-wei-zhi-zhong-xie-shuo-ming-fu">error C3646: “OVERRIDE”: 未知重写说明符</a>
+                        </li>
+                        
+                        <li class="toc-item toc-level-2">
+                            <a href="https://zhen.wang/article/使用CEF（五）— 在QT中集成CEF（2）基于CLion与CMake搭建环境/#error-c2039-bind-bu-shi-base-de-cheng-yuan">error C2039: &quot;Bind&quot;: 不是 &quot;base&quot; 的成员</a>
+                        </li>
+                        
+                        <li class="toc-item toc-level-2">
+                            <a href="https://zhen.wang/article/使用CEF（五）— 在QT中集成CEF（2）基于CLion与CMake搭建环境/#warning-c4819-gai-wen-jian-bao-han-bu-neng-zai-dang-qian-dai-ma-ye-936-zhong-biao-shi-de-zi-fu-qing-jiang-gai-wen-jian-bao-cun-wei-unicode-ge-shi-yi-fang-zhi-shu-ju-diu-shi">warning C4819: 该文件包含不能在当前代码页(936)中表示的字符。请将该文件保存为 Unicode 格式以防止数据丢失</a>
+                        </li>
+                        
+                        <li class="toc-item toc-level-2">
+                            <a href="https://zhen.wang/article/使用CEF（五）— 在QT中集成CEF（2）基于CLion与CMake搭建环境/#error-c2664-void-cefwindowinfo-setaschild-hwnd-const-cefrect-wu-fa-jiang-can-shu-2-cong-rect-zhuan-huan-wei-const-cefrect">error C2664: “void CefWindowInfo::SetAsChild(HWND,const CefRect &amp;)”: 无法将参数 2 从“RECT”转换为“const CefRect &amp;”</a>
+                        </li>
+                        
+                        <li class="toc-item toc-level-2">
+                            <a href="https://zhen.wang/article/使用CEF（五）— 在QT中集成CEF（2）基于CLion与CMake搭建环境/#libcef-dll-wrapper-lib-libcef-dll-wrapper-obj-error-lnk2038-jian-ce-dao-iterator-debug-level-de-bu-pi-pei-xiang-zhi-0-bu-pi-pei-zhi-2-mocs-compilation-cpp-obj-zhong">libcef_dll_wrapper.lib(libcef_dll_wrapper.obj) : error LNK2038: 检测到“_ITERATOR_DEBUG_LEVEL”的不匹配项: 值“0”不匹配值“2”(mocs_compilation.cpp.obj 中)</a>
+                        </li>
+                        
+                        <li class="toc-item toc-level-2">
+                            <a href="https://zhen.wang/article/使用CEF（五）— 在QT中集成CEF（2）基于CLion与CMake搭建环境/#process-finished-with-exit-code-1073740791-0xc0000409">Process finished with exit code -1073740791 (0xC0000409)</a>
+                        </li>
+                        
+                        <li class="toc-item toc-level-2">
+                            <a href="https://zhen.wang/article/使用CEF（五）— 在QT中集成CEF（2）基于CLion与CMake搭建环境/#invalid-com-thread-model-change-huo-yun-xing-hou-yi-chang-tui-chu-bao-cuo-exception-0x80000003-encountered-at-address-0x7ffbc43e9f3c">&quot;Invalid COM thread model change&quot; 或 运行后异常退出报错Exception 0x80000003 encountered at address 0x7ffbc43e9f3c</a>
+                        </li>
+                        
+                    </ol>
+                    
+                </li>
+                
+                <li class="toc-item toc-level-1">
+                    <a class="toc-link" href="https://zhen.wang/article/使用CEF（五）— 在QT中集成CEF（2）基于CLion与CMake搭建环境/#xiao-guo-yan-shi-yu-dai-ma-ku">效果演示与代码库</a>
+                    
+                </li>
+                
+            </ol>
+        </div>
+    </div>
+    
+    <!-- real content -->
+    <div class="article-content markdown-content">
+        <p>在前文《使用CEF（四）— 在QT中集成CEF（1）：基本集成》中，我们使用VS+QT的插件搭建了一个基于QT+CEF的项目。时过境迁，笔者目前用的最多的就是CLion+CMake搭建C/C++项目，并且CLion提供了对C/C++强大的开发环境。此外，也想将CMake搭建QT项目作为一次实践，故由此文。</p>
+<span id="continue-reading"></span>
+<h1 id="ji-chu-huan-jing">基础环境</h1>
+<ul>
+<li>QT 5.14.2</li>
+<li>CEF 105.3.33以及对应版本wrapper（<strong>特别注意，wrapper以动态库（MD）版本进行编译</strong>。为了方便更多的开发者了解如何编译，我做了一个<a rel="noopener" target="_blank" href="https://www.bilibili.com/video/BV1GV4y1u7KM">视频</a>，视频是MT版本，请读者自行修改配置。）</li>
+<li>CMake 3.24-rc5</li>
+<li>VS2019</li>
+</ul>
+<h1 id="gong-cheng-da-jian">工程搭建</h1>
+<p>创建<code>QtCefCMakeDemo</code>文件夹，将基础环境提到的CEF的wrapper编译产物（<code>libcef_dll_wrapper</code>）+CEF相关库文件（<code>libcef</code>）、资源文件（<code>*.pak</code>）放置于<code>QtCefCMakeDemo/CefFiles</code>中：</p>
+<pre style="background-color:#2b303b;color:#c0c5ce;"><code><span>QtCefCMakeDemo
+</span><span> └─ CefFiles
+</span><span>    ├─bin
+</span><span>    │  ├─Debug
+</span><span>    │  │  │  ...
+</span><span>    │  │  │  libcef.dll
+</span><span>    │  │  │  libcef.lib
+</span><span>    │  │  │  libcef_dll_wrapper.lib
+</span><span>    │  │  │  ...
+</span><span>    │  │  │
+</span><span>    │  │  └─swiftshader
+</span><span>    │  │          ...
+</span><span>    │  │
+</span><span>    │  └─Release
+</span><span>    │      │  ...
+</span><span>    │      │  libcef.dll
+</span><span>    │      │  libcef.lib
+</span><span>    │      │  libcef_dll_wrapper.lib
+</span><span>    │      │  ...
+</span><span>    │      │  
+</span><span>    │      └─swiftshader
+</span><span>    │              ...
+</span><span>    │
+</span><span>    ├─include
+</span><span>    │  各种.h头文件
+</span><span>    │  ...
+</span><span>    └─Resources
+</span><span>        │  cef.pak
+</span><span>        │  ..
+</span><span>        └─locales
+</span><span>                ...
+</span><span>                zh-CN.pak
+</span><span>                zh-TW.pak
+</span></code></pre>
+<p>并且在<code>QtCefCMakeDemo</code>目录下创建一个<code>src</code>目录，用以存放cpp代码。将咱们在《在QT中集成CEF（1）》中编写的相关代码存放于该目录下（<a rel="noopener" target="_blank" href="https://github.com/w4ngzhen/QtCefDemo/tree/main/QtCefDemo">QtCefDemo/QtCefDemo at main · w4ngzhen/QtCefDemo (github.com)</a>）：</p>
+<pre style="background-color:#2b303b;color:#c0c5ce;"><code><span>QtCefCMakeDemo
+</span><span> ├─ CefFiles
+</span><span> └─ src
+</span><span>      app.manifest
+</span><span>      main.cpp
+</span><span>      qtcefwindow.cpp
+</span><span>      qtcefwindow.h
+</span><span>      qtcefwindow.qrc
+</span><span>      qtcefwindow.ui
+</span><span>      simple_app.cpp
+</span><span>      simple_app.h
+</span><span>      simple_handler.cpp
+</span><span>      simple_handler.h
+</span><span>      stdafx.cpp
+</span><span>      stdafx.h
+</span><span>  ... ...
+</span></code></pre>
+<p><strong>请注意，这份代码已经已经有些许过时了，该份代码是基于cef_binary_87.1.13版本，而我们本文是基于cef_binary_105.3.33。所以使用新的cef、cef wrapper，但使用旧的应用层代码，势必会有问题。但是我们目前先不处理，后文会逐一列举并修改。</strong></p>
+<h2 id="cmakelists-txt">CMakeLists.txt</h2>
+<p>使用CMake来搭建QT+CEF项目，最核心的就是CMakeLists.txt文件内容：</p>
+<pre data-lang="cmake" style="background-color:#2b303b;color:#c0c5ce;" class="language-cmake "><code class="language-cmake" data-lang="cmake"><span style="color:#96b5b4;">CMAKE_MINIMUM_REQUIRED</span><span>(</span><span style="color:#bf616a;">VERSION </span><span>3.5)
+</span><span>
+</span><span style="color:#96b5b4;">PROJECT</span><span>(QtCefCMakeDemo </span><span style="color:#bf616a;">LANGUAGES </span><span>CXX)
+</span><span style="color:#96b5b4;">SET</span><span>(</span><span style="color:#bf616a;">CMAKE_BUILD_TYPE </span><span>DEBUG)
+</span><span style="color:#96b5b4;">SET</span><span>(</span><span style="color:#bf616a;">CMAKE_CXX_STANDARD </span><span>11)
+</span><span style="color:#96b5b4;">SET</span><span>(</span><span style="color:#bf616a;">CMAKE_CXX_STANDARD_REQUIRED </span><span>ON)
+</span><span style="color:#96b5b4;">SET</span><span>(</span><span style="color:#bf616a;">CMAKE_INCLUDE_CURRENT_DIR </span><span>ON)
+</span><span>
+</span><span style="color:#65737e;"># 【QT】CMAKE_PREFIX_PATH 实际值为本地安装的QT中的对应编译环境的目录
+</span><span style="color:#96b5b4;">SET</span><span>(</span><span style="color:#bf616a;">CMAKE_PREFIX_PATH </span><span>&quot;</span><span style="color:#a3be8c;">D:</span><span style="color:#96b5b4;">\\</span><span style="color:#a3be8c;">Programs</span><span style="color:#96b5b4;">\\</span><span style="color:#a3be8c;">Qt</span><span style="color:#96b5b4;">\\</span><span style="color:#a3be8c;">Qt5.14.2</span><span style="color:#96b5b4;">\\</span><span style="color:#a3be8c;">5.14.2</span><span style="color:#96b5b4;">\\</span><span style="color:#a3be8c;">msvc2017_64</span><span>&quot;)
+</span><span style="color:#65737e;"># 配置了上述后，可以通过find_package来查找QT相关的cmake文件
+</span><span>
+</span><span style="color:#65737e;"># 【QT】UIC、MOC、RCC启用
+</span><span style="color:#65737e;"># 引入的QT模块则会对.ui文件、.qtc文件以及QT中的元信息机制自动进行处理
+</span><span style="color:#96b5b4;">SET</span><span>(</span><span style="color:#bf616a;">CMAKE_AUTOUIC </span><span>ON)
+</span><span style="color:#96b5b4;">SET</span><span>(</span><span style="color:#bf616a;">CMAKE_AUTOMOC </span><span>ON)
+</span><span style="color:#96b5b4;">SET</span><span>(</span><span style="color:#bf616a;">CMAKE_AUTORCC </span><span>ON)
+</span><span>
+</span><span style="color:#65737e;"># 【QT】通过FIND_PACKAGE，CMake会查找QT相关模块cmake文件，
+</span><span style="color:#65737e;"># 这些cmake文件自动处理了头文件的查找等，
+</span><span style="color:#65737e;"># 不需要像配置CEF的头文件查找一样来配置QT的头文件引入
+</span><span style="color:#96b5b4;">FIND_PACKAGE</span><span>(Qt5 </span><span style="color:#bf616a;">COMPONENTS </span><span>Widgets </span><span style="color:#bf616a;">REQUIRED</span><span>)
+</span><span style="color:#65737e;"># 【CEF】CEF相关头文件的引入
+</span><span style="color:#96b5b4;">INCLUDE_DIRECTORIES</span><span>(&quot;$</span><span style="color:#a3be8c;">{</span><span style="color:#bf616a;">CMAKE_SOURCE_DIR</span><span style="color:#a3be8c;">}/CefFiles</span><span>&quot;)
+</span><span style="color:#96b5b4;">INCLUDE_DIRECTORIES</span><span>(&quot;$</span><span style="color:#a3be8c;">{</span><span style="color:#bf616a;">CMAKE_SOURCE_DIR</span><span style="color:#a3be8c;">}/CefFiles/include</span><span>&quot;)
+</span><span>
+</span><span style="color:#65737e;"># 添加项目所有的文件：
+</span><span style="color:#65737e;"># 头文件、源文件、ui文件、qrc资源文件
+</span><span style="color:#65737e;"># 特别的，在Windows下VS下，还需要manifest文件，并且该文件在cmake3.4以后就能够自动是被并被引入
+</span><span style="color:#96b5b4;">ADD_EXECUTABLE</span><span>(qt-cef
+</span><span>        </span><span style="color:#bf616a;">WIN32
+</span><span>        src/qtcefwindow.h
+</span><span>        src/simple_app.h
+</span><span>        src/simple_handler.h
+</span><span>        src/main.cpp
+</span><span>        src/qtcefwindow.cpp
+</span><span>        src/simple_app.cpp
+</span><span>        src/simple_handler.cpp
+</span><span>        src/qtcefwindow.ui
+</span><span>        src/qtcefwindow.qrc
+</span><span>        src/app.manifest
+</span><span>        )
+</span><span>
+</span><span style="color:#65737e;"># QT库链接
+</span><span style="color:#96b5b4;">TARGET_LINK_LIBRARIES</span><span>(qt-cef
+</span><span>        </span><span style="color:#bf616a;">PRIVATE
+</span><span>        </span><span style="color:#65737e;"># 【QT】QT库链接
+</span><span>        Qt5::Widgets
+</span><span>        </span><span style="color:#65737e;"># 【CEF】cef相关库链接
+</span><span>        &quot;$</span><span style="color:#a3be8c;">{</span><span style="color:#bf616a;">CMAKE_SOURCE_DIR</span><span style="color:#a3be8c;">}/CefFiles/bin/Debug/libcef.lib</span><span>&quot;
+</span><span>        &quot;$</span><span style="color:#a3be8c;">{</span><span style="color:#bf616a;">CMAKE_SOURCE_DIR</span><span style="color:#a3be8c;">}/CefFiles/bin/Debug/libcef_dll_wrapper.lib</span><span>&quot;
+</span><span>        )
+</span></code></pre>
+<p>CMake的基础配置请各位读者自行了解。关于QT的配置，我都在CMakeLists.txt中以<code>【QT】</code>标识出；关于CEF的配置部分，我都在配置文件中以<code>【CEF】</code>标识出。</p>
+<h1 id="yi-chang-chu-li">异常处理</h1>
+<p>此时，我们尝试编译整个项目的时候，会发现有一些编译/链接的错误，相关的错误大多数来源于CEF的头文件升级，接下来我将一一列举并处理。</p>
+<h2 id="error-c3646-override-wei-zhi-zhong-xie-shuo-ming-fu">error C3646: “OVERRIDE”: 未知重写说明符</h2>
+<p>出现点：simple_app.h、simple_handler.h</p>
+<p>原因以及解决方案：实际上在87版本中这个<code>OVERRIDE</code>是一个宏，指代的就是关键字：<code>override</code>，不过在105版本中已经不存在了，所以手动修改为c++标准关键词即可。所以解决方案就是将所有出现<code>OVERRIDE</code>的地方改为关键词<code>override</code>。</p>
+<h2 id="error-c2039-bind-bu-shi-base-de-cheng-yuan">error C2039: "Bind": 不是 "base" 的成员</h2>
+<p>出现点：simple_handler.cpp</p>
+<p>原因以及解决方案：cef团队移除了该API（<a rel="noopener" target="_blank" href="https://github.com/chromiumembedded/cef/commit/07bc800f0080f62e0d299d3e1a878510085bebc3">Remove deprecated base::Bind APIs (see issue #3140)</a>），而是要求使用BindOnce，且该BindOnce所在定义的头文件由原来的<code>#include "include/base/cef_bind.h"</code>变为<code>#include "include/base/cef_callback.h"</code>。所以解决方案就是将头文件<code>include/base/cef_bind.h</code>改为引入<code>include/base/cef_callback.h</code>，且将base::Bind改为base::BindOnce。</p>
+<h2 id="warning-c4819-gai-wen-jian-bao-han-bu-neng-zai-dang-qian-dai-ma-ye-936-zhong-biao-shi-de-zi-fu-qing-jiang-gai-wen-jian-bao-cun-wei-unicode-ge-shi-yi-fang-zhi-shu-ju-diu-shi">warning C4819: 该文件包含不能在当前代码页(936)中表示的字符。请将该文件保存为 Unicode 格式以防止数据丢失</h2>
+<p>出现点：只要不是UTF-8 with BOM的文件，都可能出现这个警告</p>
+<p>原因以及解决方案：CLion 默认使用 UTF-8 编码，MSVC 除非明确指定否则就使用 UTF-8 with BOM 或者当前代码页（详情可以参考这篇博文：<a rel="noopener" target="_blank" href="https://www.cnblogs.com/Chary/p/13608011.html">解决 CLion + MSVC 下的字符编码问题)</a>），所以在CMakeLists.txt中，<strong>在ADD_EXECUTABLE之前加上</strong>：</p>
+<pre data-lang="cmake" style="background-color:#2b303b;color:#c0c5ce;" class="language-cmake "><code class="language-cmake" data-lang="cmake"><span style="color:#65737e;"># 解决warning C4819
+</span><span style="color:#96b5b4;">ADD_COMPILE_OPTIONS</span><span>(&quot;$</span><span style="color:#a3be8c;">&lt;</span><span>$</span><span style="color:#a3be8c;">&lt;</span><span style="color:#bf616a;">C_COMPILER_ID</span><span style="color:#a3be8c;">:</span><span style="color:#bf616a;">MSVC</span><span style="color:#a3be8c;">&gt;:/</span><span style="color:#bf616a;">utf</span><span style="color:#a3be8c;">-8&gt;</span><span>&quot;)
+</span><span style="color:#96b5b4;">ADD_COMPILE_OPTIONS</span><span>(&quot;$</span><span style="color:#a3be8c;">&lt;</span><span>$</span><span style="color:#a3be8c;">&lt;</span><span style="color:#bf616a;">CXX_COMPILER_ID</span><span style="color:#a3be8c;">:</span><span style="color:#bf616a;">MSVC</span><span style="color:#a3be8c;">&gt;:/</span><span style="color:#bf616a;">utf</span><span style="color:#a3be8c;">-8&gt;</span><span>&quot;)
+</span></code></pre>
+<h2 id="error-c2664-void-cefwindowinfo-setaschild-hwnd-const-cefrect-wu-fa-jiang-can-shu-2-cong-rect-zhuan-huan-wei-const-cefrect">error C2664: “void CefWindowInfo::SetAsChild(HWND,const CefRect &amp;)”: 无法将参数 2 从“RECT”转换为“const CefRect &amp;”</h2>
+<p>出现点：qtcefwindow.cpp</p>
+<p>原因以及解决方案：void CefWindowInfo::SetAsChild(HWND parent, const CefRect &amp;windowBounds)，第二个参数类型由原来的windef.h中定义的RECT结构体，调整为<code>CefRect</code>类，即：</p>
+<pre data-lang="diff" style="background-color:#2b303b;color:#c0c5ce;" class="language-diff "><code class="language-diff" data-lang="diff"><span style="color:#bf616a;">-    RECT win_rect;
+</span><span>     QRect rect = this-&gt;geometry();
+</span><span style="color:#bf616a;">-    win_rect.left = rect.left();
+</span><span style="color:#bf616a;">-    win_rect.right = rect.right();
+</span><span style="color:#bf616a;">-    win_rect.top = rect.top();
+</span><span style="color:#bf616a;">-    win_rect.bottom = rect.bottom();
+</span><span style="color:#a3be8c;">+// CEF引入CefRect，而不是windef.h中的RECT
+</span><span style="color:#a3be8c;">+    CefRect win_rect(
+</span><span style="color:#a3be8c;">+            rect.left(),
+</span><span style="color:#a3be8c;">+            rect.top(),
+</span><span style="color:#a3be8c;">+            rect.left() + rect.width() * devicePixelRatio(),
+</span><span style="color:#a3be8c;">+            rect.top() + rect.height() * devicePixelRatio());
+</span></code></pre>
+<h2 id="libcef-dll-wrapper-lib-libcef-dll-wrapper-obj-error-lnk2038-jian-ce-dao-iterator-debug-level-de-bu-pi-pei-xiang-zhi-0-bu-pi-pei-zhi-2-mocs-compilation-cpp-obj-zhong">libcef_dll_wrapper.lib(libcef_dll_wrapper.obj) : error LNK2038: 检测到“_ITERATOR_DEBUG_LEVEL”的不匹配项: 值“0”不匹配值“2”(mocs_compilation.cpp.obj 中)</h2>
+<p>出现点：链接阶段错误</p>
+<p>原因以及解决方案：针对该问题，首先通过网上搜寻的博文了解到是：<code>当前工程是Debug版本，而引用的库文件时Release版本</code>。排查libcef_dll_wrapper.lib，确实使用的Debug版本。从报错了解到与<code>mocs_compilation.cpp.obj</code>的<code>_ITERATOR_DEBUG_LEVEL</code>不一致。但是，这个<code>mocs_compilation.cpp.obj</code>是通过咱们项目生成的，是QT的MetaObject元对象机制下，MOC参与代码生成、编译输出的，其自动生成的代码在<code>cmake-build-debug</code>目录下的<code>qt-cef_autogen</code>中：</p>
+<p><img src="https://static-res.zhen.wang/images/post/2022-09-12/010-autogen-in-cmake.png" alt="010-autogen-in-cmake" /></p>
+<p>该cpp编译单元编译后的产物在<code>项目根目录/cmake-build-debug/CMakeFiles/qt-cef.dir/qt-cef_autogen</code>下：</p>
+<p><img src="https://static-res.zhen.wang/images/post/2022-09-12/020-autogen-obj-in-cmake.png" alt="020-autogen-obj-in-cmake" /></p>
+<p>使用VS的工具（ <a rel="noopener" target="_blank" href="https://docs.microsoft.com/zh-cn/visualstudio/ide/reference/command-prompt-powershell?view=vs-2022">适用于开发人员的命令行 shell 和提示 - Visual Studio (Windows) | Microsoft Docs</a>）中的<strong>dumpbin.exe</strong>工具（<a rel="noopener" target="_blank" href="https://docs.microsoft.com/zh-cn/cpp/build/reference/dumpbin-reference?view=msvc-170">DUMPBIN 参考 | Microsoft Docs</a>），可以查看库文件的<code>_ITERATOR_DEBUG_LEVEL</code>值。操作方式为：</p>
+<ol>
+<li>找到VS开发者工具，方式有几种，主要有：1、<a rel="noopener" target="_blank" href="https://docs.microsoft.com/zh-cn/visualstudio/ide/reference/command-prompt-powershell?view=vs-2022#start-from-windows-menu">从 Windows 菜单中启动</a>；2、<a rel="noopener" target="_blank" href="https://docs.microsoft.com/zh-cn/visualstudio/ide/reference/command-prompt-powershell?view=vs-2022#start-from-file-browser">从文件菜单启动</a>；</li>
+<li>启动后进入命令行，执行命令：</li>
+</ol>
+<pre data-lang="bash" style="background-color:#2b303b;color:#c0c5ce;" class="language-bash "><code class="language-bash" data-lang="bash"><span style="color:#bf616a;">dumpbin</span><span> /directives &quot;</span><span style="color:#a3be8c;">库文件路径</span><span>&quot;
+</span></code></pre>
+<p>mocs_compilation.cpp.obj的_ITERATOR_DEBUG_LEVEL值</p>
+<p><img src="https://static-res.zhen.wang/images/post/2022-09-12/030-dumpbin-mocs-obj.png" alt="030-dumpbin-mocs-obj" /></p>
+<p>libcef_dll_wrapper.lib中一些obj的_ITERATOR_DEBUG_LEVEL值：</p>
+<p><img src="https://static-res.zhen.wang/images/post/2022-09-12/040-dumpbin-libcef_dll_wrapper.png" alt="040-dumpbin-libcef_dll_wrapper" /></p>
+<p>可以看出，两份库代码确实是不一样的。由于libcef_dll_wrapper.lib我们已经完成了编译，这里我们不考虑重新编译该lib库，而是通过配置CMake，让生成的mocs_compilation.cpp.obj等obj的_ITERATOR_DEBUG_LEVEL值为0，来匹配libcef_dll_wrapper.lib。所以，解决方案就是在CMakeLists.txt中，添加配置（<a rel="noopener" target="_blank" href="https://stackoverflow.com/questions/54246427/how-to-add-iterator-debug-level-to-cmake">c++ - How to add _ITERATOR_DEBUG_LEVEL to CMake? - Stack Overflow</a>）：</p>
+<pre data-lang="diff" style="background-color:#2b303b;color:#c0c5ce;" class="language-diff "><code class="language-diff" data-lang="diff"><span># 解决warning C4819，需要在ADD_EXECUTABLE前加上
+</span><span>ADD_COMPILE_OPTIONS(&quot;$&lt;$&lt;C_COMPILER_ID:MSVC&gt;:/utf-8&gt;&quot;)
+</span><span>ADD_COMPILE_OPTIONS(&quot;$&lt;$&lt;CXX_COMPILER_ID:MSVC&gt;:/utf-8&gt;&quot;)
+</span><span style="color:#a3be8c;">+# 控制项目所有编译单元_ITERATOR_DEBUG_LEVEL的值，
+</span><span style="color:#a3be8c;">+# 这里设置为和libcef_dll_wrapper.lib中的obj一致。
+</span><span style="color:#a3be8c;">+ADD_COMPILE_DEFINITIONS($&lt;$&lt;CONFIG:Debug&gt;:_ITERATOR_DEBUG_LEVEL=0&gt;)
+</span><span>
+</span><span># 【QT】CMAKE_PREFIX_PATH 实际值为本地安装的QT中的对应编译环境的目录
+</span><span>SET(CMAKE_PREFIX_PATH &quot;D:\\Programs\\Qt\\Qt5.14.2\\5.14.2\\msvc2017_64&quot;)
+</span></code></pre>
+<p>不出意外，此时我们已经处理了所有的编译和链接过程中的问题。控制台会显示：</p>
+<pre style="background-color:#2b303b;color:#c0c5ce;"><code><span>====================[ Build | qt-cef | Debug ]==================================
+</span><span>D:\Programs\ToolBoxApp\apps\CLion\ch-0\222.3739.54\bin\cmake\win\bin\cmake.exe --build D:\Projects\cpp-projects\qt-projects\qt-cef\QtCefCMakeDemo\cmake-build-debug --target qt-cef -j 12
+</span><span>[1/8] Automatic MOC and UIC for target qt-cef
+</span><span>[2/8] Building CXX object CMakeFiles\qt-cef.dir\qt-cef_autogen\UVLADIE3JM\qrc_qtcefwindow.cpp.obj
+</span><span>[3/8] Building CXX object CMakeFiles\qt-cef.dir\src\simple_app.cpp.obj
+</span><span>[4/8] Building CXX object CMakeFiles\qt-cef.dir\src\simple_handler.cpp.obj
+</span><span>[5/8] Building CXX object CMakeFiles\qt-cef.dir\qt-cef_autogen\mocs_compilation.cpp.obj
+</span><span>[6/8] Building CXX object CMakeFiles\qt-cef.dir\src\qtcefwindow.cpp.obj
+</span><span>[7/8] Building CXX object CMakeFiles\qt-cef.dir\src\main.cpp.obj
+</span><span>[8/8] Linking CXX executable qt-cef.exe
+</span><span>
+</span><span>Build finished
+</span></code></pre>
+<p>但是在运行的过程中理论山还会出现两个问题：</p>
+<h2 id="process-finished-with-exit-code-1073740791-0xc0000409">Process finished with exit code -1073740791 (0xC0000409)</h2>
+<p>出现这个问题的时候，使用CLion的Debug模式进行，会看到错误调用栈：</p>
+<p><img src="https://static-res.zhen.wang/images/post/2022-09-12/050-debug-string-error.png" alt="050-debug-string-error" /></p>
+<p>经过问题排查，主要原因点：</p>
+<p><img src="https://static-res.zhen.wang/images/post/2022-09-12/060-string-error-detail.png" alt="060-string-error-detail" /></p>
+<p>在qtcefwindow构造函数中调用<code>CefBrowserHost::CreateBrowser</code>API，会传入初始要打开的页面地址，然而QString.toStdString得到string有问题（后续排查具体原因）。解决方案就是直接使用std::string变量即可：</p>
+<pre data-lang="diff" style="background-color:#2b303b;color:#c0c5ce;" class="language-diff "><code class="language-diff" data-lang="diff"><span>     // 以下是将 SimpleHandler 与窗体进行关联的代码
+</span><span>     CefWindowInfo cef_wnd_info;
+</span><span style="color:#bf616a;">-    QString str_url = &quot;https://zhen.wang&quot;;
+</span><span style="color:#a3be8c;">+    std::string str_url = &quot;https://zhen.wang&quot;;
+</span><span>     QRect rect = this-&gt;geometry();
+</span><span>     CefRect win_rect(
+</span><span>             rect.left(),
+</span><span>@@ -25,7 +25,7 @@ </span><span style="color:#8fa1b3;">QtCefWindow::QtCefWindow(QWidget* parent)
+</span><span>     simple_handler_ = CefRefPtr&lt;SimpleHandler&gt;(new SimpleHandler());
+</span><span>     CefBrowserHost::CreateBrowser(cef_wnd_info,
+</span><span>         simple_handler_,
+</span><span style="color:#bf616a;">-        str_url.toStdString(),
+</span><span style="color:#a3be8c;">+        str_url,
+</span><span>         cef_browser_settings,
+</span><span>         nullptr,
+</span><span>
+</span></code></pre>
+<h2 id="invalid-com-thread-model-change-huo-yun-xing-hou-yi-chang-tui-chu-bao-cuo-exception-0x80000003-encountered-at-address-0x7ffbc43e9f3c">"Invalid COM thread model change" 或 运行后异常退出报错Exception 0x80000003 encountered at address 0x7ffbc43e9f3c</h2>
+<p>解决掉上述问题以后，笔者的环境下还会出现两种类似的问题：</p>
+<ol>
+<li>"Invalid COM thread model change"（实际上有些同学机器上，这个问题先于上面的字符串问题）</li>
+<li>运行后异常退出报错Exception 0x80000003 encountered at address 0x7ffbc43e9f3c</li>
+</ol>
+<p>这两种情况都是一个解决方案。问题点在于，QT的事件循环在多个进程（浏览器进程、渲染进程）均被初始化。实际上只需要在浏览器进程即可。解决方案就是将main.cpp中的init_for_cef提取到最前：</p>
+<pre data-lang="diff" style="background-color:#2b303b;color:#c0c5ce;" class="language-diff "><code class="language-diff" data-lang="diff"><span style="color:#bf616a;">-    QCoreApplication::setAttribute(Qt::AA_EnableHighDpiScaling);  // 解决高DPI下，界面比例问题
+</span><span style="color:#bf616a;">-    QApplication a(argc, argv);
+</span><span style="color:#a3be8c;">+    // 将init_qt_cef提取到QApplication初始化之前
+</span><span style="color:#a3be8c;">+    // 对于CEF多进程架构模型
+</span><span style="color:#a3be8c;">+    // 因为【渲染进程】启动后，init_qt_cef中执行的CefExecuteProcess会阻塞住，
+</span><span style="color:#a3be8c;">+    // 如果在此之前启动了QT的事件循环，那么会导致QT出现异常
+</span><span style="color:#a3be8c;">+    // 所以，我们将init_qt_cef提前到QApplication初始化之前，
+</span><span style="color:#a3be8c;">+    // 保证无论是浏览器进程还是渲染进程启动，都会进入init_qt_cef，但渲染进程会在里面阻塞，
+</span><span style="color:#a3be8c;">+    // 不会进入后续的QT应用初始化
+</span><span>     const int result = init_qt_cef(argc, argv);
+</span><span>     if (result &gt;= 0)
+</span><span>     {
+</span><span>         return result;
+</span><span>     }
+</span><span>
+</span><span style="color:#a3be8c;">+    QCoreApplication::setAttribute(Qt::AA_EnableHighDpiScaling);  // 解决高DPI下，界面比例问题
+</span><span style="color:#a3be8c;">+    QApplication a(argc, argv);
+</span><span style="color:#a3be8c;">+
+</span><span>     QtCefWindow w;
+</span><span>     w.show();
+</span><span>     a.exec();
+</span></code></pre>
+<p>对于CEF多进程架构模型，因为<strong>渲染进程</strong>启动后，init_qt_cef中执行的CefExecuteProcess会阻塞住，如果在此之前启动了QT的事件循环，那么会导致QT出现异常。 所以，我们将init_qt_cef提前到QApplication初始化之前，保证无论是<strong>浏览器进程</strong>还是<strong>渲染进程</strong>启动后，都会进入init_qt_cef，但渲染进程会在里面阻塞，不会进入后续的QT应用初始化。</p>
+<h1 id="xiao-guo-yan-shi-yu-dai-ma-ku">效果演示与代码库</h1>
+<p><img src="https://static-res.zhen.wang/images/post/2022-09-12/070-show.gif" alt="070-show" /></p>
+<p>与本文相关的代码已经提交至Github，且按照整个文章的编写流程进行提交：</p>
+<p><a rel="noopener" target="_blank" href="https://github.com/w4ngzhen/QtCefCmakeDemo">w4ngzhen/QtCefCmakeDemo (github.com)</a></p>
+<p><img src="https://static-res.zhen.wang/images/post/2022-09-12/080-git-commits.png" alt="080-git-commits" /></p>
+
+    </div>
+</div>
+<script src="https://zhen.wang/libs/viewerjs@1.11.7/viewer.min.js"></script>
+<link rel="stylesheet" href="https://zhen.wang/libs/viewerjs@1.11.7/viewer.min.css"/>
+<script>
+  if (window.Viewer) {
+    document.querySelectorAll('img').forEach(img => {
+      new Viewer(img, {
+        inline: false,
+        navbar: false,
+        toolbar: {
+          zoomIn: 1,
+          zoomOut: 1,
+          reset: 1,
+          rotateLeft: 1,
+          rotateRight: 1,
+        },
+      });
+    });
+  }
+</script>
+
+
+</body>
+</html>

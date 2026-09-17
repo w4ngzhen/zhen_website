@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="utf-8">
+    <meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover"
+          name="viewport">
+    
+    
+    <!-- umami web analysis -->
+    <script defer src="https://zhen.wang/libs/umami/umami.script.js"
+            data-website-id="d66cfe03-f6b3-4aa0-baf8-728700db1b09"></script>
+    
+    
+    
+    <link rel="icon" type="image/png" sizes="16x16" href="https://zhen.wang/images/blog-site-icon.svg">
+    <link rel="icon" type="image/png" sizes="32x32" href="https://zhen.wang/images/blog-site-icon.svg">
+    <title>zhen&#x27;s everything</title>
+    <link rel="stylesheet" href="https://zhen.wang/style.css">
+    
+<link rel="stylesheet" href="https://zhen.wang/article_content.css">
+<link rel="stylesheet" href="https://zhen.wang/article_markdown.css">
+
+</head>
+<body>
+
+<div id="article">
+    <header class="article-header">
+        
+<div class="base-title">
+    <a href="#" onclick="history.length > 1 ? history.back() : location.href = '/'; return false;">&LeftArrow; Back</a>
+    <h1>
+        Electron加Vue加ElementUI开发环境搭建
+    </h1>
+</div>
+
+    </header>
+    <p class="article-date">2020-08-08</p>
+    
+    <!-- toc -->
+    <div class="article-toc">
+        <label class="toc-title" for="toc-trigger">目录</label>
+        <input id="toc-trigger" type="checkbox" checked/>
+        <div class="toc-content">
+            <ol class="toc">
+                
+                <li class="toc-item toc-level-1">
+                    <a class="toc-link" href="https://zhen.wang/article/Electron加Vue加ElementUI开发环境搭建/#nodehuan-jing-da-jian">Node环境搭建</a>
+                    
+                </li>
+                
+                <li class="toc-item toc-level-1">
+                    <a class="toc-link" href="https://zhen.wang/article/Electron加Vue加ElementUI开发环境搭建/#vuejiao-shou-jia-an-zhuang">vue脚手架安装</a>
+                    
+                </li>
+                
+                <li class="toc-item toc-level-1">
+                    <a class="toc-link" href="https://zhen.wang/article/Electron加Vue加ElementUI开发环境搭建/#chu-shi-hua-electronxiang-mu-jie-gou">初始化Electron项目结构</a>
+                    
+                </li>
+                
+                <li class="toc-item toc-level-1">
+                    <a class="toc-link" href="https://zhen.wang/article/Electron加Vue加ElementUI开发环境搭建/#yun-xing-electron-vueshi-li">运行Electron-Vue示例</a>
+                    
+                </li>
+                
+                <li class="toc-item toc-level-1">
+                    <a class="toc-link" href="https://zhen.wang/article/Electron加Vue加ElementUI开发环境搭建/#yin-ru-elementui">引入ElementUI</a>
+                    
+                </li>
+                
+            </ol>
+        </div>
+    </div>
+    
+    <!-- real content -->
+    <div class="article-content markdown-content">
+        <p>本文将从零开始，进行Electron+Vue+ElementUI的开发环境搭建</p>
+<span id="continue-reading"></span><h2 id="nodehuan-jing-da-jian">Node环境搭建</h2>
+<p>本文假定你完成了nodejs的环境基础搭建：
+镜像配置（暂时只配置node包镜像源，部分包的二进制镜像源后续讨论）、全局以及缓存路径配置，全局路径加入到了环境变量</p>
+<pre data-lang="shell" style="background-color:#2b303b;color:#c0c5ce;" class="language-shell "><code class="language-shell" data-lang="shell"><span> $ node -v
+</span><span> v12.18.1
+</span><span> $ npm -v
+</span><span> 6.14.5
+</span><span> $ yarn -v
+</span><span> 1.22.4
+</span><span> 
+</span><span> $ npm list -g --depth 0
+</span><span> +-- hexo@4.2.1 // 忽略Hexo，本人写博用的
+</span><span>`-- yarn@1.22.4
+</span></code></pre>
+<h2 id="vuejiao-shou-jia-an-zhuang">vue脚手架安装</h2>
+<p>为了更加便捷的创建一个vue项目，我们安装脚手架@vue/cli和@vue/init（vue-cli已经deprecated了）。之所以要安装@vue/init，是因为@vue/cli是3的版本，创建项目使用命令<strong>vue create app-name</strong>，且无法暂时无法使用模板，但是下文要用electron-vue模板进行创建，还是需要vue2的init命令来通过指定模板创建项目，为了兼容vue2的init特性，官方提供@vue/init作为桥接方式。</p>
+<pre data-lang="shell" style="background-color:#2b303b;color:#c0c5ce;" class="language-shell "><code class="language-shell" data-lang="shell"><span>$ npm install -g @vue/cli
+</span><span>$ npm install -g @vue/cli-init
+</span><span>
+</span><span>$ npm list -g --depth 0
+</span><span>+-- @vue/cli@4.4.6
+</span><span>+-- @vue/cli-init@4.4.6
+</span><span>+-- hexo@4.2.1
+</span><span>`-- yarn@1.22.4
+</span><span>
+</span><span>关于init说明：
+</span><span>vue init [options] &lt;template&gt; &lt;app-name&gt;       generate a project from a remote template (legacy API, requires @vue/cli-init)
+</span></code></pre>
+<p>至此，你可以使用如下的形式，利用vue脚手架结合模板（template）来初始化你的vue项目（app-name）结构</p>
+<pre style="background-color:#2b303b;color:#c0c5ce;"><code><span>vue init [options] &lt;template&gt; &lt;app-name&gt;
+</span></code></pre>
+<h2 id="chu-shi-hua-electronxiang-mu-jie-gou">初始化Electron项目结构</h2>
+<p>在指定的目录下，我们使用如下的命令进行electron-vue的项目初始化：</p>
+<pre data-lang="shell" style="background-color:#2b303b;color:#c0c5ce;" class="language-shell "><code class="language-shell" data-lang="shell"><span>$  vue init simulatedgreg/electron-vue electron-vue-demo
+</span></code></pre>
+<p>然而，这个过程很慢，甚至卡住不动。原因是指定模板进行创建时，会拉取github上的仓库进行模板初始化。幸运的是vue提供模板离线初始化的功能。</p>
+<p>下载模板源码</p>
+<p>https://github.com/SimulatedGREG/electron-vue</p>
+<p>下载后解压存放在 <strong>用户目录/.vue-templates/</strong> 下（没有就创建，注意复数s），形成如下的结构：</p>
+<pre style="background-color:#2b303b;color:#c0c5ce;"><code><span>{home目录}/
+</span><span>  .vue-templates/
+</span><span>     electron-vue-master/（目录名随便，但是在待会儿init指定的时候需要一致）
+</span><span>       .github/
+</span><span>       template/
+</span><span>       ....
+</span></code></pre>
+<p>之后就可以使用离线（offline）模式创建：</p>
+<pre data-lang="shell" style="background-color:#2b303b;color:#c0c5ce;" class="language-shell "><code class="language-shell" data-lang="shell"><span> vue init --offline electron-vue-master electron-vue-demo # 名称和上述文件夹名称一致即可
+</span></code></pre>
+<p>之后就是按照向导进行创建工作：</p>
+<pre data-lang="bash" style="background-color:#2b303b;color:#c0c5ce;" class="language-bash "><code class="language-bash" data-lang="bash"><span style="color:#bf616a;">$</span><span> vue init</span><span style="color:#bf616a;"> --offline</span><span> electron-vue-master electron-vue-demo
+</span><span>&gt; Use </span><span style="color:#bf616a;">cached</span><span> template at </span><span style="color:#bf616a;">~</span><span style="color:#96b5b4;">\.</span><span>vue-templates</span><span style="color:#96b5b4;">\e</span><span>lectron-vue-master
+</span><span>
+</span><span style="color:#bf616a;">?</span><span> Application Name electron-vue-demo（项目名）
+</span><span style="color:#bf616a;">?</span><span> Application Id com.compilemind（Id，这里本人使用了自己的域名）
+</span><span style="color:#bf616a;">?</span><span> Application Version 0.0.1（版本）
+</span><span style="color:#bf616a;">?</span><span> Project description electron vue demo（描述）
+</span><span style="color:#bf616a;">?</span><span> Use Sass / Scss? No（是否使用Sass/Scss编译器）
+</span><span style="color:#bf616a;">?</span><span> Select which Vue plugins to install (Press &lt;space&gt; to select, &lt;a&gt; to toggle all, &lt;i&gt; to invert selection)
+</span><span style="color:#bf616a;">axios,</span><span> vue-el, ectron, vue-router, vuex, vuex-electron（插件包）
+</span><span style="color:#bf616a;">?</span><span> Use linting with ESLint? Yes（启用ESlint）
+</span><span style="color:#bf616a;">?</span><span> Which ESLint config would you like to use? Standard（ESLint配置）
+</span><span style="color:#bf616a;">?</span><span> Set up unit testing with Karma + Mocha? No（测试模块）
+</span><span style="color:#bf616a;">?</span><span> Set up end-to-end testing with Spectron + Mocha? No（测试模块）
+</span><span style="color:#bf616a;">?</span><span> What build tool would you like to use? builder </span><span style="color:#65737e;"># 这里我们使用electron-builder构建可执行程序
+</span><span style="color:#bf616a;">?</span><span> author XXX
+</span><span>
+</span><span>   </span><span style="color:#bf616a;">vue-cli</span><span> · Generated &quot;</span><span style="color:#a3be8c;">electron-vue-demo</span><span>&quot;.
+</span></code></pre>
+<h2 id="yun-xing-electron-vueshi-li">运行Electron-Vue示例</h2>
+<pre style="background-color:#2b303b;color:#c0c5ce;"><code><span>  $ cd electron-vue-demo
+</span><span>  $ yarn (or `npm install`)
+</span><span>  $ yarn run dev (or `npm run dev`)
+</span></code></pre>
+<p>在install的过程中，我们会看到如下一段console输出：</p>
+<pre data-lang="shell" style="background-color:#2b303b;color:#c0c5ce;" class="language-shell "><code class="language-shell" data-lang="shell"><span>&gt; electron@2.0.18 postinstall D:\Projects\electron-vue-demo\node_modules\electron
+</span><span>&gt; node install.js
+</span><span>
+</span><span>Downloading electron-v2.0.18-win32-x64.zip
+</span><span>[==========================================&gt;  ] 97.0% of 50.7 MB (2.77 MB/s)
+</span></code></pre>
+<p>可以注意到electron的node包安装完成后，配置了postinstall（安装完成后调用的脚本），该脚本执行其内部install.js脚本后，开始下载electron的二进制的文件。</p>
+<p>首先为什么会有这个额外下载的过程呢？在本人看来，electron是基于Chromium内核的跨平台客户端解决方案（本人另一篇文章正好进行了CefSharp的封装工作），既然涉及到跨平台，而不同平台的底层实现必然有所差异，那么electron项目通过自己去实现跨平台，封装底层逻辑，让我们不关心底层的实现，而是专心于前端的开发，封装成果就是上述的electron-v2.0.18-win32-x64.zip内容。这里因为我们调试和构建的时候，就需要运行时，所以electron根据我们的当前的平台，去下载了对应已经完成针对平台编译封装的二进制内容。</p>
+<p>为什么要下载的问题搞明白了，接下来我们要看看如何去下载。有些朋友可能会发现，自己在进行electron二进制包下载的时候，速度慢的离谱。为什么这么慢？我会过一两天对下载的脚本一探究竟（时间有限，过两天写）</p>
+<p>现阶段我们需要在.npmrc文件中增加一行配置，让electron下载二进制文件的时候从指定的地方下载：</p>
+<pre data-lang="shell" style="background-color:#2b303b;color:#c0c5ce;" class="language-shell "><code class="language-shell" data-lang="shell"><span>ELECTRON_MIRROR=http://npm.taobao.org/mirrors/electron/
+</span></code></pre>
+<p>完成后，我们在install会发现有明显的提升。完成node包的install后，我们运行命令</p>
+<pre data-lang="shell" style="background-color:#2b303b;color:#c0c5ce;" class="language-shell "><code class="language-shell" data-lang="shell"><span>$ npm run dev
+</span></code></pre>
+<p>启动后会发现客户端能够运行起来（即主进程能够运行），但是渲染进程报错：</p>
+<p><strong>Webpack ReferenceError:process is not defined</strong>，官方ISSUE已经存在该条：<a rel="noopener" target="_blank" href="https://github.com/SimulatedGREG/electron-vue/issues/871">ISSUE</a></p>
+<p>解决方案为：移除src\index.ejs中的该段代码，详细原因可以看ISSUE。</p>
+<pre data-lang="js" style="background-color:#2b303b;color:#c0c5ce;" class="language-js "><code class="language-js" data-lang="js"><span style="color:#65737e;">// src\index.ejs
+</span><span>    &lt;% </span><span style="color:#b48ead;">if </span><span>(!process.</span><span style="color:#bf616a;">browser</span><span>) { %&gt;
+</span><span>      &lt;script&gt;
+</span><span>        </span><span style="color:#b48ead;">if </span><span>(process.env.</span><span style="color:#bf616a;">NODE_ENV </span><span>!== &#39;</span><span style="color:#a3be8c;">development</span><span>&#39;) window.</span><span style="color:#bf616a;">__static </span><span>= </span><span style="color:#96b5b4;">require</span><span>(&#39;</span><span style="color:#a3be8c;">path</span><span>&#39;).</span><span style="color:#96b5b4;">join</span><span>(__dirname, &#39;</span><span style="color:#a3be8c;">/static</span><span>&#39;).</span><span style="color:#96b5b4;">replace</span><span>(/</span><span style="color:#96b5b4;">\\</span><span>/</span><span style="color:#b48ead;">g</span><span>, &#39;</span><span style="color:#96b5b4;">\\\\</span><span>&#39;)
+</span><span>      &lt;/</span><span style="color:#bf616a;">script</span><span>&gt;
+</span><span>    &lt;% } %&gt;
+</span></code></pre>
+<p>移除后，再次运行可以看到渲染成功的界面。</p>
+<h2 id="yin-ru-elementui">引入ElementUI</h2>
+<p>引入ElementUI相关包</p>
+<pre data-lang="shell" style="background-color:#2b303b;color:#c0c5ce;" class="language-shell "><code class="language-shell" data-lang="shell"><span>npm install element-ui -S
+</span></code></pre>
+<p>在渲染进程模块的main.js中加入ElementUI组件</p>
+<pre data-lang="js" style="background-color:#2b303b;color:#c0c5ce;" class="language-js "><code class="language-js" data-lang="js"><span style="color:#b48ead;">import </span><span style="color:#bf616a;">ElementUI </span><span style="color:#b48ead;">from </span><span>&#39;</span><span style="color:#a3be8c;">element-ui</span><span>&#39; 
+</span><span style="color:#b48ead;">import </span><span>&#39;</span><span style="color:#a3be8c;">element-ui/lib/theme-chalk/index.css</span><span>&#39; 
+</span><span>...
+</span><span style="color:#bf616a;">Vue</span><span>.</span><span style="color:#8fa1b3;">use</span><span>(</span><span style="color:#bf616a;">ElementUI</span><span>)
+</span></code></pre>
+<p>完成配置以后，我们就可以按照以往的方式进行前端的开发了。</p>
+
+    </div>
+</div>
+<script src="https://zhen.wang/libs/viewerjs@1.11.7/viewer.min.js"></script>
+<link rel="stylesheet" href="https://zhen.wang/libs/viewerjs@1.11.7/viewer.min.css"/>
+<script>
+  if (window.Viewer) {
+    document.querySelectorAll('img').forEach(img => {
+      new Viewer(img, {
+        inline: false,
+        navbar: false,
+        toolbar: {
+          zoomIn: 1,
+          zoomOut: 1,
+          reset: 1,
+          rotateLeft: 1,
+          rotateRight: 1,
+        },
+      });
+    });
+  }
+</script>
+
+
+</body>
+</html>

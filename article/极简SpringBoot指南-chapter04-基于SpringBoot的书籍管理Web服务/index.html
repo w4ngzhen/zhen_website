@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="utf-8">
+    <meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover"
+          name="viewport">
+    
+    
+    <!-- umami web analysis -->
+    <script defer src="https://zhen.wang/libs/umami/umami.script.js"
+            data-website-id="d66cfe03-f6b3-4aa0-baf8-728700db1b09"></script>
+    
+    
+    
+    <link rel="icon" type="image/png" sizes="16x16" href="https://zhen.wang/images/blog-site-icon.svg">
+    <link rel="icon" type="image/png" sizes="32x32" href="https://zhen.wang/images/blog-site-icon.svg">
+    <title>zhen&#x27;s everything</title>
+    <link rel="stylesheet" href="https://zhen.wang/style.css">
+    
+<link rel="stylesheet" href="https://zhen.wang/article_content.css">
+<link rel="stylesheet" href="https://zhen.wang/article_markdown.css">
+
+</head>
+<body>
+
+<div id="article">
+    <header class="article-header">
+        
+<div class="base-title">
+    <a href="#" onclick="history.length > 1 ? history.back() : location.href = '/'; return false;">&LeftArrow; Back</a>
+    <h1>
+        极简SpringBoot指南-Chapter04-基于SpringBoot的书籍管理Web服务
+    </h1>
+</div>
+
+    </header>
+    <p class="article-date">2021-08-10</p>
+    
+    <!-- toc -->
+    <div class="article-toc">
+        <label class="toc-title" for="toc-trigger">目录</label>
+        <input id="toc-trigger" type="checkbox" checked/>
+        <div class="toc-content">
+            <ol class="toc">
+                
+                <li class="toc-item toc-level-1">
+                    <a class="toc-link" href="https://zhen.wang/article/极简SpringBoot指南-chapter04-基于SpringBoot的书籍管理Web服务/#cang-ku-di-zhi">仓库地址</a>
+                    
+                </li>
+                
+                <li class="toc-item toc-level-1">
+                    <a class="toc-link" href="https://zhen.wang/article/极简SpringBoot指南-chapter04-基于SpringBoot的书籍管理Web服务/#chapter04-ji-yu-springbootde-shu-ji-guan-li-webfu-wu">Chapter04-基于SpringBoot的书籍管理Web服务</a>
+                    
+                    <ol class="toc-child">
+                        
+                        <li class="toc-item toc-level-2">
+                            <a href="https://zhen.wang/article/极简SpringBoot指南-chapter04-基于SpringBoot的书籍管理Web服务/#chu-shi-jie-gou">初始结构</a>
+                        </li>
+                        
+                        <li class="toc-item toc-level-2">
+                            <a href="https://zhen.wang/article/极简SpringBoot指南-chapter04-基于SpringBoot的书籍管理Web服务/#booklei">Book类</a>
+                        </li>
+                        
+                        <li class="toc-item toc-level-2">
+                            <a href="https://zhen.wang/article/极简SpringBoot指南-chapter04-基于SpringBoot的书籍管理Web服务/#bookcontrollerlei">BookController类</a>
+                        </li>
+                        
+                        <li class="toc-item toc-level-2">
+                            <a href="https://zhen.wang/article/极简SpringBoot指南-chapter04-基于SpringBoot的书籍管理Web服务/#webying-yong-qi-dong">Web应用启动</a>
+                        </li>
+                        
+                        <li class="toc-item toc-level-2">
+                            <a href="https://zhen.wang/article/极简SpringBoot指南-chapter04-基于SpringBoot的书籍管理Web服务/#gong-neng-yan-zheng">功能验证</a>
+                        </li>
+                        
+                        <li class="toc-item toc-level-2">
+                            <a href="https://zhen.wang/article/极简SpringBoot指南-chapter04-基于SpringBoot的书籍管理Web服务/#cang-ku-di-zhi-1">仓库地址</a>
+                        </li>
+                        
+                    </ol>
+                    
+                </li>
+                
+            </ol>
+        </div>
+    </div>
+    
+    <!-- real content -->
+    <div class="article-content markdown-content">
+        <h2 id="cang-ku-di-zhi">仓库地址</h2>
+<p><a rel="noopener" target="_blank" href="https://github.com/w4ngzhen/springboot-simple-guide">w4ngzhen/springboot-simple-guide: This is a project that guides SpringBoot users to get started quickly through a series of examples (github.com)</a></p>
+<h1 id="chapter04-ji-yu-springbootde-shu-ji-guan-li-webfu-wu">Chapter04-基于SpringBoot的书籍管理Web服务</h1>
+<span id="continue-reading"></span>
+<p>从本章开始，我们将会基于SpringBoot框架，来编写一块书籍管理的应用。为了契合我们的简单教程原则，项目不会出现复杂的结构，只会有一个通用的结构。</p>
+<h2 id="chu-shi-jie-gou">初始结构</h2>
+<p>我们项目的初始结构如下：</p>
+<pre style="background-color:#2b303b;color:#c0c5ce;"><code><span>base-package
+</span><span>    |-- controller
+</span><span>        |-- BookController.class
+</span><span>    |-- model
+</span><span>        |-- Book.class
+</span><span>    BookManagementSystemApp.class
+</span></code></pre>
+<h2 id="booklei">Book类</h2>
+<pre data-lang="java" style="background-color:#2b303b;color:#c0c5ce;" class="language-java "><code class="language-java" data-lang="java"><span style="color:#b48ead;">public class </span><span style="color:#ebcb8b;">Book </span><span style="color:#eff1f5;">{
+</span><span style="color:#eff1f5;">    </span><span style="color:#65737e;">/**
+</span><span style="color:#65737e;">     * 书籍ID
+</span><span style="color:#65737e;">     */
+</span><span style="color:#65737e;">    private String id;
+</span><span style="color:#65737e;">    /**
+</span><span style="color:#65737e;">     * 书籍名称
+</span><span style="color:#65737e;">     */
+</span><span style="color:#65737e;">    private String name;
+</span><span style="color:#65737e;">    /**
+</span><span style="color:#65737e;">     * 书籍价格
+</span><span style="color:#65737e;">     */
+</span><span style="color:#65737e;">    private double price;
+</span><span style="color:#65737e;">
+</span><span style="color:#65737e;">    public String getId() {
+</span><span style="color:#65737e;">        return id;
+</span><span style="color:#65737e;">    }
+</span><span style="color:#65737e;">
+</span><span style="color:#65737e;">    public void setId(String id) {
+</span><span style="color:#65737e;">        this.id = id;
+</span><span style="color:#65737e;">    }
+</span><span style="color:#65737e;">
+</span><span style="color:#65737e;">    public String getName() {
+</span><span style="color:#65737e;">        return name;
+</span><span style="color:#65737e;">    }
+</span><span style="color:#65737e;">
+</span><span style="color:#65737e;">    public void setName(String name) {
+</span><span style="color:#65737e;">        this.name = name;
+</span><span style="color:#65737e;">    }
+</span><span style="color:#65737e;">
+</span><span style="color:#65737e;">    public double getPrice() {
+</span><span style="color:#65737e;">        return price;
+</span><span style="color:#65737e;">    }
+</span><span style="color:#65737e;">
+</span><span style="color:#65737e;">    public void setPrice(double price) {
+</span><span style="color:#65737e;">        this.price = price;
+</span><span style="color:#65737e;">    }
+</span><span style="color:#65737e;">}
+</span><span style="color:#65737e;">
+</span></code></pre>
+<h2 id="bookcontrollerlei">BookController类</h2>
+<pre data-lang="java" style="background-color:#2b303b;color:#c0c5ce;" class="language-java "><code class="language-java" data-lang="java"><span>@</span><span style="color:#bf616a;">RestController
+</span><span>@</span><span style="color:#bf616a;">RequestMapping</span><span>(&quot;</span><span style="color:#a3be8c;">books</span><span>&quot;) </span><span style="color:#65737e;">// url：&quot;books&quot;
+</span><span style="color:#b48ead;">public class </span><span style="color:#ebcb8b;">BookController </span><span style="color:#eff1f5;">{
+</span><span style="color:#eff1f5;">
+</span><span style="color:#eff1f5;">    </span><span style="color:#b48ead;">private final </span><span style="color:#ebcb8b;">List</span><span style="color:#eff1f5;">&lt;</span><span style="color:#ebcb8b;">Book</span><span style="color:#eff1f5;">&gt; bookList;
+</span><span style="color:#eff1f5;">
+</span><span style="color:#eff1f5;">    </span><span style="color:#65737e;">/**
+</span><span style="color:#65737e;">     * 构造函数
+</span><span style="color:#65737e;">     * 内部进行bookList初始化操作，便于下面的测试
+</span><span style="color:#65737e;">     */
+</span><span style="color:#65737e;">    public BookController() {
+</span><span style="color:#65737e;">        int count = 3;
+</span><span style="color:#65737e;">        this.bookList = new ArrayList</span><span style="background-color:#bf616a;color:#2b303b;">&lt;&gt;</span><span style="color:#65737e;">(count);
+</span><span style="color:#65737e;">        Random random = new Random();
+</span><span style="color:#65737e;">        for (int idx = 0; idx &lt; count; idx++) {
+</span><span style="color:#65737e;">
+</span><span style="color:#65737e;">            Book book = new Book();
+</span><span style="color:#65737e;">            book.setId(Integer.toString(idx));
+</span><span style="color:#65737e;">            book.setName(&quot;book@&quot; + idx);
+</span><span style="color:#65737e;">            book.setPrice(random.nextInt(100) + 1);
+</span><span style="color:#65737e;">
+</span><span style="color:#65737e;">            this.bookList.add(book);
+</span><span style="color:#65737e;">        }
+</span><span style="color:#65737e;">    }
+</span><span style="color:#65737e;">
+</span><span style="color:#65737e;">    /**
+</span><span style="color:#65737e;">     * GET /books
+</span><span style="color:#65737e;">     * 返回所有的书籍信息
+</span><span style="color:#65737e;">     */
+</span><span style="color:#65737e;">    @GetMapping
+</span><span style="color:#65737e;">    public List&lt;Book&gt; getBookList() {
+</span><span style="color:#65737e;">        return bookList;
+</span><span style="color:#65737e;">    }
+</span><span style="color:#65737e;">
+</span><span style="color:#65737e;">    /**
+</span><span style="color:#65737e;">     * GET /books/{id}
+</span><span style="color:#65737e;">     * 根据书籍ID，得到对应的书籍信息
+</span><span style="color:#65737e;">     * </span><span style="color:#b48ead;">@param </span><span style="color:#bf616a;">id</span><span style="color:#65737e;"> 书籍ID
+</span><span style="color:#65737e;">     * </span><span style="color:#b48ead;">@return</span><span style="color:#65737e;"> 书籍
+</span><span style="color:#65737e;">     */
+</span><span style="color:#65737e;">    @GetMapping(&quot;{id}&quot;)
+</span><span style="color:#65737e;">    public Book getBookById(@PathVariable(&quot;id&quot;) String id) {
+</span><span style="color:#65737e;">        Optional&lt;Book&gt; first = this.bookList
+</span><span style="color:#65737e;">                .stream()
+</span><span style="color:#65737e;">                .filter(b -&gt; b.getId().equals(id))
+</span><span style="color:#65737e;">                .findFirst();
+</span><span style="color:#65737e;">        return first.orElse(null);
+</span><span style="color:#65737e;">    }
+</span><span style="color:#65737e;">
+</span><span style="color:#65737e;">    /**
+</span><span style="color:#65737e;">     * POST /books
+</span><span style="color:#65737e;">     * 添加书籍信息
+</span><span style="color:#65737e;">     * 需要注意的是，入参Book需要添加注解@RequestBody，才能通过HTTP JSON形式传入
+</span><span style="color:#65737e;">     * </span><span style="color:#b48ead;">@param </span><span style="color:#bf616a;">book</span><span style="color:#65737e;"> 希望新增的书籍信息
+</span><span style="color:#65737e;">     */
+</span><span style="color:#65737e;">    @PostMapping
+</span><span style="color:#65737e;">    public void addBook(@RequestBody Book book) {
+</span><span style="color:#65737e;">        if (book == null) {
+</span><span style="color:#65737e;">            System.out.println(&quot;请求数据book为空，未进行添加&quot;);
+</span><span style="color:#65737e;">            return;
+</span><span style="color:#65737e;">        }
+</span><span style="color:#65737e;">        // 服务端生成ID
+</span><span style="color:#65737e;">        String nextId = Integer.toString(this.bookList.size());
+</span><span style="color:#65737e;">        book.setId(nextId);
+</span><span style="color:#65737e;">        this.bookList.add(book);
+</span><span style="color:#65737e;">    }
+</span><span style="color:#65737e;">
+</span><span style="color:#65737e;">    /**
+</span><span style="color:#65737e;">     * PUT /books/{id}
+</span><span style="color:#65737e;">     * 更新指定ID书籍的信息，
+</span><span style="color:#65737e;">     * 需要注意的是，入参Book需要添加注解@RequestBody，才能通过HTTP JSON形式传入
+</span><span style="color:#65737e;">     * </span><span style="color:#b48ead;">@param </span><span style="color:#bf616a;">id</span><span style="color:#65737e;"> 希望更新的书籍信息
+</span><span style="color:#65737e;">     * </span><span style="color:#b48ead;">@param </span><span style="color:#bf616a;">book</span><span style="color:#65737e;"> 希望更新的书籍信息
+</span><span style="color:#65737e;">     */
+</span><span style="color:#65737e;">    @PutMapping(&quot;{id}&quot;)
+</span><span style="color:#65737e;">    public void updateBook(@PathVariable(&quot;id&quot;) String id, @RequestBody Book book) {
+</span><span style="color:#65737e;">        if (book == null || id == null) {
+</span><span style="color:#65737e;">            System.out.println(&quot;请求数据book为空或指定书籍id为空，终止更新&quot;);
+</span><span style="color:#65737e;">            return;
+</span><span style="color:#65737e;">        }
+</span><span style="color:#65737e;">        Optional&lt;Book&gt; first = this.bookList
+</span><span style="color:#65737e;">                .stream()
+</span><span style="color:#65737e;">                .filter(b -&gt; b.getId().equals(id))
+</span><span style="color:#65737e;">                .findFirst();
+</span><span style="color:#65737e;">        if (first.isPresent()) {
+</span><span style="color:#65737e;">            Book exist = first.get();
+</span><span style="color:#65737e;">            exist.setName(book.getName());
+</span><span style="color:#65737e;">            exist.setPrice(book.getPrice());
+</span><span style="color:#65737e;">        }
+</span><span style="color:#65737e;">    }
+</span><span style="color:#65737e;">    
+</span><span style="color:#65737e;">    /**
+</span><span style="color:#65737e;">     * DELETE /books/{id}
+</span><span style="color:#65737e;">     * 根据书籍ID删除对应的书籍信息
+</span><span style="color:#65737e;">     * </span><span style="color:#b48ead;">@param </span><span style="color:#bf616a;">id</span><span style="color:#65737e;"> 待删除的书籍ID
+</span><span style="color:#65737e;">     */
+</span><span style="color:#65737e;">    @DeleteMapping(&quot;{id}&quot;)
+</span><span style="color:#65737e;">    public void deleteBook(@PathVariable(&quot;id&quot;) String id) {
+</span><span style="color:#65737e;">        if (id == null || id.trim().equals(&quot;&quot;)) {
+</span><span style="color:#65737e;">            return;
+</span><span style="color:#65737e;">        }
+</span><span style="color:#65737e;">        Optional&lt;Book&gt; existBook = this.bookList
+</span><span style="color:#65737e;">                .stream()
+</span><span style="color:#65737e;">                .filter(b -&gt; b.getId().equals(id))
+</span><span style="color:#65737e;">                .findFirst();
+</span><span style="color:#65737e;">        existBook.ifPresent(this.bookList::remove);
+</span><span style="color:#65737e;">    }
+</span><span style="color:#65737e;">}
+</span></code></pre>
+<p>对于该Controller，我们添加了如下的5个API：</p>
+<ul>
+<li>获取所有的书籍信息（GET /books）</li>
+<li>获取指定ID的书籍信息（GET /books/{id}）</li>
+<li>增加书籍信息（POST /books）</li>
+<li>更新书籍信息（PUT /books/{id}）</li>
+<li>删除指定ID书籍信息（DELETE /books/{id}）</li>
+</ul>
+<p>对于URL的定义形式，我们采用了REST ful规范：[<a rel="noopener" target="_blank" href="https://restfulapi.cn/">RESTful API 一种流行的 API 设计风格</a>](http://www.restfulapi.nl/)。</p>
+<h2 id="webying-yong-qi-dong">Web应用启动</h2>
+<p>最后，我们编写一个启动类启动我们的书籍管理Web服务：</p>
+<pre data-lang="java" style="background-color:#2b303b;color:#c0c5ce;" class="language-java "><code class="language-java" data-lang="java"><span>@</span><span style="color:#bf616a;">SpringBootApplication
+</span><span style="color:#b48ead;">public class </span><span style="color:#ebcb8b;">BookManagementSystemApp </span><span style="color:#eff1f5;">{
+</span><span style="color:#eff1f5;">    </span><span style="color:#b48ead;">public static void </span><span style="color:#8fa1b3;">main</span><span style="color:#eff1f5;">(</span><span style="color:#ebcb8b;">String</span><span style="color:#b48ead;">[] </span><span style="color:#bf616a;">args</span><span style="color:#eff1f5;">) {
+</span><span style="color:#eff1f5;">        </span><span style="color:#ebcb8b;">SpringApplication</span><span style="color:#eff1f5;">.</span><span style="color:#bf616a;">run</span><span style="color:#eff1f5;">(</span><span style="color:#ebcb8b;">BookManagementSystemApp</span><span style="color:#eff1f5;">.</span><span style="color:#bf616a;">class</span><span style="color:#eff1f5;">, args);
+</span><span style="color:#eff1f5;">    }
+</span><span style="color:#eff1f5;">}
+</span></code></pre>
+<h2 id="gong-neng-yan-zheng">功能验证</h2>
+<p>通过postman等HTTP API工具，我们可以轻松的验证我们的API的正确性。本人也把该处的postman调用文件导出存放在了项目/guide/postman/目录下，同学可以用postman导入使用。</p>
+<h2 id="cang-ku-di-zhi-1">仓库地址</h2>
+<p><a rel="noopener" target="_blank" href="https://github.com/w4ngzhen/springboot-simple-guide">w4ngzhen/springboot-simple-guide: This is a project that guides SpringBoot users to get started quickly through a series of examples (github.com)</a></p>
+
+    </div>
+</div>
+<script src="https://zhen.wang/libs/viewerjs@1.11.7/viewer.min.js"></script>
+<link rel="stylesheet" href="https://zhen.wang/libs/viewerjs@1.11.7/viewer.min.css"/>
+<script>
+  if (window.Viewer) {
+    document.querySelectorAll('img').forEach(img => {
+      new Viewer(img, {
+        inline: false,
+        navbar: false,
+        toolbar: {
+          zoomIn: 1,
+          zoomOut: 1,
+          reset: 1,
+          rotateLeft: 1,
+          rotateRight: 1,
+        },
+      });
+    });
+  }
+</script>
+
+
+</body>
+</html>

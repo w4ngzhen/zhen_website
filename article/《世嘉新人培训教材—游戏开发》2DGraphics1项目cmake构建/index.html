@@ -1,0 +1,395 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="utf-8">
+    <meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover"
+          name="viewport">
+    
+    
+    <!-- umami web analysis -->
+    <script defer src="https://zhen.wang/libs/umami/umami.script.js"
+            data-website-id="d66cfe03-f6b3-4aa0-baf8-728700db1b09"></script>
+    
+    
+    
+    <link rel="icon" type="image/png" sizes="16x16" href="https://zhen.wang/images/blog-site-icon.svg">
+    <link rel="icon" type="image/png" sizes="32x32" href="https://zhen.wang/images/blog-site-icon.svg">
+    <title>zhen&#x27;s everything</title>
+    <link rel="stylesheet" href="https://zhen.wang/style.css">
+    
+<link rel="stylesheet" href="https://zhen.wang/article_content.css">
+<link rel="stylesheet" href="https://zhen.wang/article_markdown.css">
+
+</head>
+<body>
+
+<div id="article">
+    <header class="article-header">
+        
+<div class="base-title">
+    <a href="#" onclick="history.length > 1 ? history.back() : location.href = '/'; return false;">&LeftArrow; Back</a>
+    <h1>
+        《世嘉新人培训教材—游戏开发》2DGraphics1项目cmake构建
+    </h1>
+</div>
+
+    </header>
+    <p class="article-date">2022-07-22</p>
+    
+    <!-- toc -->
+    <div class="article-toc">
+        <label class="toc-title" for="toc-trigger">目录</label>
+        <input id="toc-trigger" type="checkbox" checked/>
+        <div class="toc-content">
+            <ol class="toc">
+                
+                <li class="toc-item toc-level-1">
+                    <a class="toc-link" href="https://zhen.wang/article/《世嘉新人培训教材—游戏开发》2DGraphics1项目cmake构建/#dui-xian-you-yang-li-xiang-mu-de-ren-shi-yu-gou-jian">对现有样例项目的认识与构建</a>
+                    
+                    <ol class="toc-child">
+                        
+                        <li class="toc-item toc-level-2">
+                            <a href="https://zhen.wang/article/《世嘉新人培训教材—游戏开发》2DGraphics1项目cmake构建/#yang-li-dai-ma-jie-gou">样例代码结构</a>
+                        </li>
+                        
+                        <li class="toc-item toc-level-2">
+                            <a href="https://zhen.wang/article/《世嘉新人培训教材—游戏开发》2DGraphics1项目cmake构建/#shi-yong-vsgou-jian-yang-li-xiang-mu-jing-tai-ku">使用VS构建样例项目静态库</a>
+                        </li>
+                        
+                    </ol>
+                    
+                </li>
+                
+                <li class="toc-item toc-level-1">
+                    <a class="toc-link" href="https://zhen.wang/article/《世嘉新人培训教材—游戏开发》2DGraphics1项目cmake构建/#shi-yong-cmakeda-jian-2dgraphics1xiang-mu">使用cmake搭建2DGraphics1项目</a>
+                    
+                    <ol class="toc-child">
+                        
+                        <li class="toc-item toc-level-2">
+                            <a href="https://zhen.wang/article/《世嘉新人培训教材—游戏开发》2DGraphics1项目cmake构建/#da-jian-chu-shi-xiang-mu">搭建初始项目</a>
+                        </li>
+                        
+                        <li class="toc-item toc-level-2">
+                            <a href="https://zhen.wang/article/《世嘉新人培训教材—游戏开发》2DGraphics1项目cmake构建/#tou-wen-jian-yu-jing-tai-ku-tian-jia">头文件与静态库添加</a>
+                        </li>
+                        
+                        <li class="toc-item toc-level-2">
+                            <a href="https://zhen.wang/article/《世嘉新人培训教材—游戏开发》2DGraphics1项目cmake构建/#pei-zhi-nimotsukunboxxiang-mu">配置NimotsuKunBox项目</a>
+                        </li>
+                        
+                        <li class="toc-item toc-level-2">
+                            <a href="https://zhen.wang/article/《世嘉新人培训教材—游戏开发》2DGraphics1项目cmake构建/#pei-zhi-drawpixelsxiang-mu">配置drawPixels项目</a>
+                        </li>
+                        
+                    </ol>
+                    
+                </li>
+                
+                <li class="toc-item toc-level-1">
+                    <a class="toc-link" href="https://zhen.wang/article/《世嘉新人培训教材—游戏开发》2DGraphics1项目cmake构建/#fu-lu-xiang-mu-di-zhi">附录：项目地址</a>
+                    
+                </li>
+                
+            </ol>
+        </div>
+    </div>
+    
+    <!-- real content -->
+    <div class="article-content markdown-content">
+        <p>《世嘉新人培训教材—游戏开发》作为经典的游戏开发教程，提供了相关样例代码供我们进行开发使用。但是该样例是基于VS进行编写构建的，而本人日常喜欢CLion进行C/C++开发，于是准备使用cmake重新组织该书籍的样例项目：2DGraphics1中的NimotsuKunBox和drawPixels。当然，这个过程不仅是移植，也是对cmake组织项目一个深入的实践。</p>
+<span id="continue-reading"></span>
+<h1 id="dui-xian-you-yang-li-xiang-mu-de-ren-shi-yu-gou-jian">对现有样例项目的认识与构建</h1>
+<h2 id="yang-li-dai-ma-jie-gou">样例代码结构</h2>
+<p>在进行cmake迁移前，有必要对现有的VS体系的代码结构进行了解。</p>
+<h3 id="gamelib-yang-li-gen-mu-lu">GameLib（样例根目录）</h3>
+<p><img src="https://static-res.zhen.wang/images/post/2022-07-22-sega-game-dev/010-root.png" alt="010-root" /></p>
+<p>该目录下主要存放了：</p>
+<ol>
+<li>
+<p><strong>各个样例会使用的工具静态库/头文件</strong>；</p>
+</li>
+<li>
+<p><strong>src</strong>：样例源码；</p>
+</li>
+<li>
+<p><strong>tools</strong>：工具二进制程序。</p>
+</li>
+</ol>
+<h3 id="gamelib-srcmu-lu">GameLib/src目录</h3>
+<p><img src="https://static-res.zhen.wang/images/post/2022-07-22-sega-game-dev/020-root-src.png" alt="020-root-src" /></p>
+<p>该目录下主要存放：</p>
+<ol>
+<li>
+<p><strong>各种数字+下划线开头的文件夹</strong>：书中使用到的各种样例工程；</p>
+</li>
+<li>
+<p><strong>GameLibs文件夹</strong>：生成GameLib根目录中的静态库/头文件的源码。</p>
+</li>
+</ol>
+<h3 id="gamelib-src-gamelibsmu-lu">GameLib/src/GameLibs目录</h3>
+<p><img src="https://static-res.zhen.wang/images/post/2022-07-22-sega-game-dev/030-root-src-GameLibs.png" alt="030-root-src-GameLibs" /></p>
+<p>该目录主要存放：</p>
+<ol>
+<li><strong>GameLib根目录下各个被样例项目使用的静态库/头文件的源码</strong>；</li>
+<li><strong>Modules</strong>：其他静态库项目的依赖静态库。</li>
+</ol>
+<h2 id="shi-yong-vsgou-jian-yang-li-xiang-mu-jing-tai-ku">使用VS构建样例项目静态库</h2>
+<p>在GameLib下，本书的译者已经帮我们编写了一个基本的指南：</p>
+<blockquote>
+<p>编译顺序
+在系统环境变量中添加 GAME_LIB_DIR 值为源码工程的根目录
+注意要重启visual studio</p>
+<p>①先编译类库的Modules
+src\GameLibs\Modules\Modules.sln</p>
+<p>②再编译各个小功能的类库
+比如 src\GameLibs\2DActionGame\GameLib.sln</p>
+<p>③最后编译游戏本身
+比如 src\01_FirstGame\FirstGame.sln</p>
+<p>为什么要按照这样的顺序呢？请看下面这个例子
+譬如对src\02_2DGraphics1\2DGraphics1.sln 来说，
+首先用vs打开它，右键点击 drawPixels查看属性
+在链接器 的附加库目录一栏可以看到  $(GAME_LIB_DIR)\2DGraphics1\lib;%(AdditionalLibraryDirectories)
+这意味着它需要在2DGraphics1\lib中查找某些类库，
+具体要用什么类库呢？可以点击 链接器 -&gt; 输入 ，看到附加依赖项中有 GameLib_d.lib;%(AdditionalDependencies)</p>
+<p>如何才能生成这个 GameLib_d.lib呢?
+打开 src\GameLibs\2DGraphics1\GameLib.sln 编译即可
+但是，通过右键Framework属性， 查看库管理器 的附加依赖项可以看到 Modules_d.lib
+这就要求必须先编译好 Modules工程
+于是打开 src\GameLibs\Modules\Modules.sln 编译即可。</p>
+</blockquote>
+<p>这里有两个关键点需要牢记：</p>
+<ol>
+<li>需要配置环境变量<code>GAME_LIB_DIR</code>，原因在于后续即将编译的各个样例，都会使用<code>$(GAME_LIB_DIR)</code>然后找到对应的类库；</li>
+<li>编译有一个顺序：先核心静态库：Modules；然后各个样例需要的GameLib；最后是样例。</li>
+</ol>
+<h3 id="bian-yi-he-xin-de-modules">编译核心的Modules</h3>
+<p>加载<code>$(GAME_LIB_DIR)\src\GameLibs\Modules\Modules.sln</code>进行构建</p>
+<p>使用vs编译后会生成<code>$(GAME_LIB_DIR)\src\GameLibs\Modules\lib\Modules_d.lib</code>（<code>_d</code>代表Debug的静态库）</p>
+<h3 id="bian-yi-ge-du-li-yang-li-xu-yao-de-gamelib">编译各独立样例需要的GameLib</h3>
+<p>在本文中，我们的目标是构建2DGrphics1-NimotsuKunBox项目，所以我们加载2DGrphics1的GameLib：<code>$(GAME_LIB_DIR)\src\GameLibs\2DGraphics1\GameLib.sln</code>进行构建，通过配置也能看到的确需要<code>Modules_d.lib</code>：</p>
+<p><img src="https://static-res.zhen.wang/images/post/2022-07-22-sega-game-dev/040-gamelib-use-modules.png" alt="040-gamelib-use-modules" /></p>
+<p>该项目构建完成后，会生成：<code>$(GAME_LIB_DIR)\2DGraphics1\lib\GameLib_d.lib</code>，并且会将<code>GameLib_d.lib</code>静态库以及相关头文件都复制到<code>$(GAME_LIB_DIR)\2DGraphics1\中</code>，：</p>
+<pre style="background-color:#2b303b;color:#c0c5ce;"><code><span>$(GAME_LIB_DIR)\2DGraphics1\
+</span><span>├─include
+</span><span>│  └─GameLib
+</span><span>│      │  Framework.h
+</span><span>│      │
+</span><span>│      └─Base
+</span><span>│          DebugStream.h
+</span><span>│
+</span><span>└─lib
+</span><span>        Framework_d.idb
+</span><span>        Framework_d.pdb
+</span><span>        GameLib_d.lib（lib库）
+</span><span>        GameLib_d.pdb
+</span><span>        Modules_d.pdb
+</span></code></pre>
+<p>目前为止，我们生成了如下的两静态库以及头文件：</p>
+<ol>
+<li><code>$(GAME_LIB_DIR)\src\GameLibs\Modules\lib\Modules_d.lib</code></li>
+<li><code>$(GAME_LIB_DIR)\2DGraphics1\lib\GameLib_d.lib</code></li>
+<li><code>$(GAME_LIB_DIR)\2DGraphics1\include（头文件）</code></li>
+</ol>
+<p><strong>当然，因为我们的<code>GameLib_d.lib</code>是使用<code>Modules_d.lib</code>进行构建的，已经将<code>Modules_d.lib</code>链接到了<code>GameLib_d.lib</code>内部了，所以接下来我们的cmake项目不再需要<code>Modules_d.lib</code>了。</strong></p>
+<h3 id="yan-shi-2dgraphics1-nimotsukunboxhe-drawpixelsxiang-mu">演示2DGraphics1-NimotsuKunBox和drawPixels项目</h3>
+<p>使用VS打开<code>$(GAME_LIB_DIR)\src\02_2DGraphics1\2DGraphics1.sln"</code>解决方案，该解决方案中有如下的5个样例：</p>
+<pre style="background-color:#2b303b;color:#c0c5ce;"><code><span>NimotsuKunBox
+</span><span>NimotsuKunBoxWithTermination
+</span><span>NimotsuKunTextOnly
+</span><span>NimotuKunDot
+</span><span>drawPixels
+</span></code></pre>
+<p>将NimotsuKunBox项目作为启动项目，然后运行可以看到如下的界面：</p>
+<p><img src="https://static-res.zhen.wang/images/post/2022-07-22-sega-game-dev/050-NimotsuKunBox-show.png" alt="050-NimotsuKunBox-show" /></p>
+<p>将drawPixels作为启动项，运行可看到如下效果：</p>
+<p><img src="https://static-res.zhen.wang/images/post/2022-07-22-sega-game-dev/060-drawPixels-show.png" alt="060-drawPixels-show" /></p>
+<p>接下来，我们将使用cmake来移植这两个项目。</p>
+<h1 id="shi-yong-cmakeda-jian-2dgraphics1xiang-mu">使用cmake搭建2DGraphics1项目</h1>
+<p>在经过前戏后，我们终于编译出了2DGraphics1所需要的<code>GameLib_d.lib</code>静态库以及相关的头文件，并且，我们还构建了2DGraphics1样例解决方案中的NimotsuKunBox和drawPixels项目。接下来我们将创建一个cmake项目，移植该样例中的两个项目。</p>
+<h2 id="da-jian-chu-shi-xiang-mu">搭建初始项目</h2>
+<p>首先，我们建立一个文件夹2DGraphics1_cmake，在该文件夹中，我们再创建两个文件夹：NimotsuKunBox和：drawPixels，并且这两个文件夹中分别各自创建一个main.cpp文件和CMakeLists.txt，内容如下：</p>
+<p>2DGraphics1_cmake/NimotsuKunBox：</p>
+<pre data-lang="c++" style="background-color:#2b303b;color:#c0c5ce;" class="language-c++ "><code class="language-c++" data-lang="c++"><span style="color:#65737e;">// 2DGraphics1_cmake/NimotsuKunBox/main.cpp
+</span><span style="color:#b48ead;">#include </span><span>&lt;</span><span style="color:#a3be8c;">iostream</span><span>&gt;
+</span><span style="color:#b48ead;">int </span><span style="color:#8fa1b3;">main</span><span>() {
+</span><span>    std::cout &lt;&lt; &quot;</span><span style="color:#a3be8c;">hello, NimotsuKunBox</span><span>&quot; &lt;&lt; std::endl;
+</span><span>}
+</span></code></pre>
+<pre data-lang="cmake" style="background-color:#2b303b;color:#c0c5ce;" class="language-cmake "><code class="language-cmake" data-lang="cmake"><span style="color:#96b5b4;">CMAKE_MINIMUM_REQUIRED</span><span>(</span><span style="color:#bf616a;">VERSION </span><span>3.22)
+</span><span style="color:#96b5b4;">PROJECT</span><span>(NimotsuKunBox)
+</span><span>
+</span><span style="color:#96b5b4;">SET</span><span>(</span><span style="color:#bf616a;">CMAKE_CXX_STANDARD </span><span>11)
+</span><span>
+</span><span style="color:#96b5b4;">ADD_EXECUTABLE</span><span>(NimotsuKunBox main.cpp)
+</span></code></pre>
+<p>2DGraphics1_cmake/drawPixels：</p>
+<pre data-lang="cpp" style="background-color:#2b303b;color:#c0c5ce;" class="language-cpp "><code class="language-cpp" data-lang="cpp"><span style="color:#65737e;">// 2DGraphics1_cmake/drawPixels/main.cpp
+</span><span style="color:#b48ead;">#include </span><span>&lt;</span><span style="color:#a3be8c;">iostream</span><span>&gt;
+</span><span style="color:#b48ead;">int </span><span style="color:#8fa1b3;">main</span><span>() {
+</span><span>    std::cout &lt;&lt; &quot;</span><span style="color:#a3be8c;">hello, drawPixels</span><span>&quot; &lt;&lt; std::endl;
+</span><span>}
+</span></code></pre>
+<pre data-lang="cmake" style="background-color:#2b303b;color:#c0c5ce;" class="language-cmake "><code class="language-cmake" data-lang="cmake"><span style="color:#96b5b4;">CMAKE_MINIMUM_REQUIRED</span><span>(</span><span style="color:#bf616a;">VERSION </span><span>3.22)
+</span><span style="color:#96b5b4;">PROJECT</span><span>(drawPixels)
+</span><span>
+</span><span style="color:#96b5b4;">SET</span><span>(</span><span style="color:#bf616a;">CMAKE_CXX_STANDARD </span><span>11)
+</span><span>
+</span><span style="color:#96b5b4;">ADD_EXECUTABLE</span><span>(drawPixels main.cpp)
+</span></code></pre>
+<p>接着，我们在2DGraphics1_cmake中创建一个CMakeLists.txt来统一管理NimotsuKunBox和drawPixels这两个cmake项目，内容如下：</p>
+<pre data-lang="cmake" style="background-color:#2b303b;color:#c0c5ce;" class="language-cmake "><code class="language-cmake" data-lang="cmake"><span style="color:#96b5b4;">CMAKE_MINIMUM_REQUIRED</span><span>(</span><span style="color:#bf616a;">VERSION </span><span>3.22)
+</span><span style="color:#96b5b4;">PROJECT</span><span>(2DGraphics1_cmake)
+</span><span>
+</span><span style="color:#96b5b4;">SET</span><span>(</span><span style="color:#bf616a;">CMAKE_CXX_STANDARD </span><span>11)
+</span><span>
+</span><span style="color:#65737e;"># cmake子项目，子项目的名称就是子目录下的CMakeLists.txt中的PROJECT一致的名称
+</span><span style="color:#96b5b4;">ADD_SUBDIRECTORY</span><span>(NimotsuKunBox)
+</span><span style="color:#96b5b4;">ADD_SUBDIRECTORY</span><span>(drawPixels)
+</span></code></pre>
+<p>于是，当前整体目录结构如下：</p>
+<pre style="background-color:#2b303b;color:#c0c5ce;"><code><span>2DGraphics1_cmake
+</span><span>├─ CMakeLists.txt
+</span><span>├─ NimotsuKunBox
+</span><span>│    ├─ CMakeLists.txt
+</span><span>│    └─ main.cpp
+</span><span>└─ drawPixels
+</span><span>     ├─ CMakeLists.txt
+</span><span>     └─ main.cpp
+</span></code></pre>
+<blockquote>
+<p>cmake实践点：子项目管理</p>
+<p>父级CMakeLists.txt可以通过ADD_SUBDIRECTORY来添加子CMake项目。这里有一篇特别详细的博文<a rel="noopener" target="_blank" href="https://www.cnblogs.com/juzaizai/p/15069693.html">CMake基础 第13节 构建子项目 - 橘崽崽啊 - 博客园 (cnblogs.com)</a></p>
+</blockquote>
+<h2 id="tou-wen-jian-yu-jing-tai-ku-tian-jia">头文件与静态库添加</h2>
+<p>在前面我们已经编译出了<code>GameLib_d.lib</code>，并且把头文件已经复制到了指定目录。现在，我们在项目根目录中创建一个<code>@lib</code>文件夹，专门放置静态库和头文件，目录状态如下：</p>
+<pre style="background-color:#2b303b;color:#c0c5ce;"><code><span>2DGraphics1_cmake
+</span><span>├─ CMakeLists.txt
+</span><span>├─ NimotsuKunBox
+</span><span>│    └─ // ... ...
+</span><span>├─ drawPixels
+</span><span>│    └─ // ... ...
+</span><span>└─ @lib  // =&gt; 存放要使用的静态库和头文件
+</span><span>    ├─ include
+</span><span>    │    └─ GameLib
+</span><span>    │           ├─ Base
+</span><span>    │           │    └─ DebugStream.h
+</span><span>    │           └─ Framework.h
+</span><span>    └─ lib
+</span><span>           ├─ Framework_d.idb
+</span><span>           ├─ Framework_d.pdb
+</span><span>           ├─ GameLib_d.lib
+</span><span>           ├─ GameLib_d.pdb
+</span><span>           └─ Modules_d.pdb
+</span></code></pre>
+<h2 id="pei-zhi-nimotsukunboxxiang-mu">配置NimotsuKunBox项目</h2>
+<p>为了让NimotsuKunBox项目中的能够使用到根目录下的静态库和头文件，我们需要配置NimotsuKunBox/CMakeLists.txt，添加头文件和静态库：</p>
+<pre data-lang="diff" style="background-color:#2b303b;color:#c0c5ce;" class="language-diff "><code class="language-diff" data-lang="diff"><span>  SET(CMAKE_CXX_STANDARD 11)
+</span><span> 
+</span><span style="color:#a3be8c;">+ MESSAGE(&quot;Current CMakeLists.txt dir:\n${CMAKE_CURRENT_SOURCE_DIR}&quot;)
+</span><span style="color:#a3be8c;">+
+</span><span style="color:#a3be8c;">+ # 配置头文件查找路径
+</span><span style="color:#a3be8c;">+ INCLUDE_DIRECTORIES(${CMAKE_CURRENT_SOURCE_DIR}/../@lib/include)
+</span><span style="color:#a3be8c;">+ # 配置链接库文件查找路径
+</span><span style="color:#a3be8c;">+ LINK_DIRECTORIES(${CMAKE_CURRENT_SOURCE_DIR}/../@lib/lib)
+</span><span style="color:#a3be8c;">+
+</span><span>  ADD_EXECUTABLE(NimotsuKunBox main.cpp)
+</span><span style="color:#a3be8c;">+
+</span><span style="color:#a3be8c;">+ # 实际链接
+</span><span style="color:#a3be8c;">+ TARGET_LINK_LIBRARIES(NimotsuKunBox GameLib_d.lib)
+</span></code></pre>
+<p>之后，我们将在VS中能够运行的NimotsuKunBox项目代码拷贝到当前的main.cpp中，由于篇幅的关系，就不贴出代码本身了，给一个整体的修改：</p>
+<p><img src="https://static-res.zhen.wang/images/post/2022-07-22-sega-game-dev/070-NimotsuKunBox-modified01.png" alt="070-NimotsuKunBox-modified01" /></p>
+<h3 id="bian-yi-wen-ti">编译问题</h3>
+<p>当我们尝试运行该项目的时候，发现至少有以下几个问题：</p>
+<p><strong>问题1：在CLion+msvc编译器下，编码字符报错：warning C4819: 该文件包含不能在当前代码页(936)中表示的字符。请将该文件保存为 Unicode 格式以防止数据丢失。</strong></p>
+<p>该问题原因在于CLion中的文件是默认使用的UTF-8编码，而msvc在不指定的情况默认以当前代码页（936）编码方式读取文件（<em>代码页936（Codepage 936）是Microsoft的简体中文字符集标准，是东亚语文的四种双字节字符集（DBCS）之一。其最初版本和GB 2312一模一样，但在推出Windows 95时扩展成GBK</em>）。</p>
+<p>在CMake中想要给msvc指定文件编码方式，需要在CMakeLists.txt配置如下内容：</p>
+<pre data-lang="cmake" style="background-color:#2b303b;color:#c0c5ce;" class="language-cmake "><code class="language-cmake" data-lang="cmake"><span>... ...
+</span><span style="color:#96b5b4;">SET</span><span>(</span><span style="color:#bf616a;">CMAKE_CXX_STANDARD </span><span>11)
+</span><span>
+</span><span style="color:#65737e;"># 配置编译器以指定编码读取代码源文件
+</span><span style="color:#96b5b4;">ADD_COMPILE_OPTIONS</span><span>(&quot;$</span><span style="color:#a3be8c;">&lt;</span><span>$</span><span style="color:#a3be8c;">&lt;</span><span style="color:#bf616a;">C_COMPILER_ID</span><span style="color:#a3be8c;">:</span><span style="color:#bf616a;">MSVC</span><span style="color:#a3be8c;">&gt;:/</span><span style="color:#bf616a;">utf</span><span style="color:#a3be8c;">-8&gt;</span><span>&quot;)
+</span><span style="color:#96b5b4;">ADD_COMPILE_OPTIONS</span><span>(&quot;$</span><span style="color:#a3be8c;">&lt;</span><span>$</span><span style="color:#a3be8c;">&lt;</span><span style="color:#bf616a;">CXX_COMPILER_ID</span><span style="color:#a3be8c;">:</span><span style="color:#bf616a;">MSVC</span><span style="color:#a3be8c;">&gt;:/</span><span style="color:#bf616a;">utf</span><span style="color:#a3be8c;">-8&gt;</span><span>&quot;)
+</span><span>
+</span><span style="color:#96b5b4;">MESSAGE</span><span>(&quot;</span><span style="color:#a3be8c;">Current CMakeLists.txt dir:</span><span style="color:#96b5b4;">\n</span><span>$</span><span style="color:#a3be8c;">{</span><span style="color:#bf616a;">CMAKE_CURRENT_SOURCE_DIR</span><span style="color:#a3be8c;">}</span><span>&quot;)
+</span><span>... ...
+</span></code></pre>
+<p><strong>问题2：GameLib_d.lib(MemoryManager.obj) : error LNK2038: 检测到“RuntimeLibrary”的不匹配项: 值“MTd_StaticDebug”不匹配值“MDd_DynamicDebug”(main.cpp.obj 中)</strong></p>
+<p>这一类报错通常比较普遍，简单来讲就是：GameLib_d.lib这个库是一个静态库带Debug（MTd_StaticDebug），但是我们的项目链接步骤是以动态库的方式链接这些库文件。对于这个问题，有两种方式来解决，一种就是重新编译GameLib为一个dll（动态链接库）；另一种则是修改当前项目的链接方式为静态库链接。当然，简便起见，我们修改项目的链接形式为静态库链接形式：</p>
+<pre data-lang="diff" style="background-color:#2b303b;color:#c0c5ce;" class="language-diff "><code class="language-diff" data-lang="diff"><span> ... ...
+</span><span> SET(CMAKE_CXX_STANDARD 11)
+</span><span> ADD_COMPILE_OPTIONS(&quot;$&lt;$&lt;C_COMPILER_ID:MSVC&gt;:/utf-8&gt;&quot;)
+</span><span> ADD_COMPILE_OPTIONS(&quot;$&lt;$&lt;CXX_COMPILER_ID:MSVC&gt;:/utf-8&gt;&quot;)
+</span><span> 
+</span><span style="color:#a3be8c;">+# 设置策略CMP0091为NEW，新策略
+</span><span style="color:#a3be8c;">+if (POLICY CMP0091)
+</span><span style="color:#a3be8c;">+    CMAKE_POLICY(SET CMP0091 NEW)
+</span><span style="color:#a3be8c;">+endif (POLICY CMP0091)
+</span><span style="color:#a3be8c;">+
+</span><span> MESSAGE(&quot;Current CMakeLists.txt dir:\n${CMAKE_CURRENT_SOURCE_DIR}&quot;)
+</span><span> 
+</span><span> LINK_DIRECTORIES(${CMAKE_CURRENT_SOURCE_DIR}/../@lib/lib)
+</span><span> 
+</span><span> ADD_EXECUTABLE(NimotsuKunBox main.cpp)
+</span><span> 
+</span><span style="color:#a3be8c;">+# 设置MT/MTd
+</span><span style="color:#a3be8c;">+SET_PROPERTY(
+</span><span style="color:#a3be8c;">+        TARGET NimotsuKunBox
+</span><span style="color:#a3be8c;">+        PROPERTY MSVC_RUNTIME_LIBRARY &quot;MultiThreaded$&lt;$&lt;CONFIG:Debug&gt;:Debug&gt;&quot;)
+</span><span style="color:#a3be8c;">+
+</span><span> # 实际链接
+</span><span> TARGET_LINK_LIBRARIES(NimotsuKunBox GameLib_d.lib)
+</span></code></pre>
+<p>关于这块配置的细节，可以参考这篇文章：<a rel="noopener" target="_blank" href="https://blog.csdn.net/Copperxcx/article/details/123084367">CMake设置MSVC工程MT/MTd/MD/MDd_Copperxcx的博客-CSDN博客_cmake mt</a></p>
+<p><strong>问题3：error LNK2019: 无法解析的外部符号 _main，函数 "int __cdecl invoke_main(void)" (?invoke_main@@YAHXZ) 中引用了该符号</strong></p>
+<p>稍有C/C++开发经验的开发者看到这个报错其实心里还是有底的，应该是没有提供main函数作为函数的入口。但是对于我们的项目，细心的读者发现似乎样例代码中确实是没有提供main入口函数的。那么，为什么vs项目能够正确运行起来呢？观察vs中的项目属性—连接器—系统，会发现子系统（SubSystem）的值是：<code>/SUBSYSTEM:WINDOWS</code></p>
+<p><img src="https://static-res.zhen.wang/images/post/2022-07-22-sega-game-dev/080-subsystem-windows.png" alt="070-subsystem-windows" /></p>
+<p>在cmake项目中，我们可以按照如下的方式进行配置：</p>
+<pre data-lang="diff" style="background-color:#2b303b;color:#c0c5ce;" class="language-diff "><code class="language-diff" data-lang="diff"><span># 设置MT/MTd
+</span><span>SET_PROPERTY(
+</span><span>        TARGET NimotsuKunBox
+</span><span>        PROPERTY MSVC_RUNTIME_LIBRARY &quot;MultiThreaded$&lt;$&lt;CONFIG:Debug&gt;:Debug&gt;&quot;)
+</span><span>
+</span><span style="color:#a3be8c;">+ # 配置 &quot;/SUBSYSTEM:WINDOWS&quot;
+</span><span style="color:#a3be8c;">+ TARGET_LINK_OPTIONS(NimotsuKunBox PRIVATE &quot;/SUBSYSTEM:WINDOWS&quot;)
+</span><span>
+</span><span># 实际链接
+</span><span>TARGET_LINK_LIBRARIES(NimotsuKunBox GameLib_d.lib)
+</span></code></pre>
+<p>实际上，配置成了<code>/SUBSYSTEM:WINDOWS</code>之后也是需要有一个入口函数的，<strong>这个入口函数其实是在Modules那个项目里面定义好了的</strong>，具体可以搜索Modules项目中的<code>int APIENTRY _tWinMain</code>函数实现：</p>
+<pre data-lang="c++" style="background-color:#2b303b;color:#c0c5ce;" class="language-c++ "><code class="language-c++" data-lang="c++"><span style="color:#b48ead;">int </span><span>APIENTRY </span><span style="color:#8fa1b3;">_tWinMain</span><span>(HINSTANCE </span><span style="color:#bf616a;">hInstance</span><span>,
+</span><span>                     HINSTANCE </span><span style="color:#bf616a;">hPrevInstance</span><span>,
+</span><span>                     LPTSTR    </span><span style="color:#bf616a;">lpCmdLine</span><span>,
+</span><span>                     </span><span style="color:#b48ead;">int       </span><span style="color:#bf616a;">nCmdShow</span><span>)
+</span></code></pre>
+<p>上述问题处理完成后，我们通过项目编译</p>
+<h2 id="pei-zhi-drawpixelsxiang-mu">配置drawPixels项目</h2>
+<p>实际上，配置drawPixels项目的CMakeLists.txt和NimotsuKunBox的CMake配置结构上没有区别，只是需要把相关的项目名字等换位drawPixels即可。最终运行的效果和之前的vs下是一致的~</p>
+<h1 id="fu-lu-xiang-mu-di-zhi">附录：项目地址</h1>
+<p>本cmake移植的项目地址在：<a rel="noopener" target="_blank" href="https://github.com/w4ngzhen/2DGraphics1_cmake">w4ngzhen/2DGraphics1_cmake (github.com)</a></p>
+
+    </div>
+</div>
+<script src="https://zhen.wang/libs/viewerjs@1.11.7/viewer.min.js"></script>
+<link rel="stylesheet" href="https://zhen.wang/libs/viewerjs@1.11.7/viewer.min.css"/>
+<script>
+  if (window.Viewer) {
+    document.querySelectorAll('img').forEach(img => {
+      new Viewer(img, {
+        inline: false,
+        navbar: false,
+        toolbar: {
+          zoomIn: 1,
+          zoomOut: 1,
+          reset: 1,
+          rotateLeft: 1,
+          rotateRight: 1,
+        },
+      });
+    });
+  }
+</script>
+
+
+</body>
+</html>

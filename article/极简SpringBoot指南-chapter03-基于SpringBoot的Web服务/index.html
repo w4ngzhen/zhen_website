@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="utf-8">
+    <meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover"
+          name="viewport">
+    
+    
+    <!-- umami web analysis -->
+    <script defer src="https://zhen.wang/libs/umami/umami.script.js"
+            data-website-id="d66cfe03-f6b3-4aa0-baf8-728700db1b09"></script>
+    
+    
+    
+    <link rel="icon" type="image/png" sizes="16x16" href="https://zhen.wang/images/blog-site-icon.svg">
+    <link rel="icon" type="image/png" sizes="32x32" href="https://zhen.wang/images/blog-site-icon.svg">
+    <title>zhen&#x27;s everything</title>
+    <link rel="stylesheet" href="https://zhen.wang/style.css">
+    
+<link rel="stylesheet" href="https://zhen.wang/article_content.css">
+<link rel="stylesheet" href="https://zhen.wang/article_markdown.css">
+
+</head>
+<body>
+
+<div id="article">
+    <header class="article-header">
+        
+<div class="base-title">
+    <a href="#" onclick="history.length > 1 ? history.back() : location.href = '/'; return false;">&LeftArrow; Back</a>
+    <h1>
+        极简SpringBoot指南-Chapter03-基于SpringBoot的Web服务
+    </h1>
+</div>
+
+    </header>
+    <p class="article-date">2021-08-10</p>
+    
+    <!-- toc -->
+    <div class="article-toc">
+        <label class="toc-title" for="toc-trigger">目录</label>
+        <input id="toc-trigger" type="checkbox" checked/>
+        <div class="toc-content">
+            <ol class="toc">
+                
+                <li class="toc-item toc-level-1">
+                    <a class="toc-link" href="https://zhen.wang/article/极简SpringBoot指南-chapter03-基于SpringBoot的Web服务/#cang-ku-di-zhi">仓库地址</a>
+                    
+                </li>
+                
+                <li class="toc-item toc-level-1">
+                    <a class="toc-link" href="https://zhen.wang/article/极简SpringBoot指南-chapter03-基于SpringBoot的Web服务/#chapter03-ji-yu-springbootde-webfu-wu">Chapter03-基于SpringBoot的Web服务</a>
+                    
+                    <ol class="toc-child">
+                        
+                        <li class="toc-item toc-level-2">
+                            <a href="https://zhen.wang/article/极简SpringBoot指南-chapter03-基于SpringBoot的Web服务/#qian-yan">前言</a>
+                        </li>
+                        
+                        <li class="toc-item toc-level-2">
+                            <a href="https://zhen.wang/article/极简SpringBoot指南-chapter03-基于SpringBoot的Web服务/#springbootde-mavenpei-zhi-jie-shao">SpringBoot的maven配置介绍</a>
+                        </li>
+                        
+                        <li class="toc-item toc-level-2">
+                            <a href="https://zhen.wang/article/极简SpringBoot指南-chapter03-基于SpringBoot的Web服务/#yi-ge-jian-dan-de-controller">一个简单的Controller</a>
+                        </li>
+                        
+                        <li class="toc-item toc-level-2">
+                            <a href="https://zhen.wang/article/极简SpringBoot指南-chapter03-基于SpringBoot的Web服务/#guan-yu-controllerxu-yao-zhu-yi-de-dian">关于Controller需要注意的点</a>
+                        </li>
+                        
+                        <li class="toc-item toc-level-2">
+                            <a href="https://zhen.wang/article/极简SpringBoot指南-chapter03-基于SpringBoot的Web服务/#controllerru-he-bei-jia-zai-de">Controller如何被加载的？</a>
+                        </li>
+                        
+                        <li class="toc-item toc-level-2">
+                            <a href="https://zhen.wang/article/极简SpringBoot指南-chapter03-基于SpringBoot的Web服务/#controllerru-he-chu-li-httpqing-qiu-de">Controller如何处理HTTP请求的？</a>
+                        </li>
+                        
+                        <li class="toc-item toc-level-2">
+                            <a href="https://zhen.wang/article/极简SpringBoot指南-chapter03-基于SpringBoot的Web服务/#cang-ku-di-zhi-1">仓库地址</a>
+                        </li>
+                        
+                    </ol>
+                    
+                </li>
+                
+            </ol>
+        </div>
+    </div>
+    
+    <!-- real content -->
+    <div class="article-content markdown-content">
+        <h2 id="cang-ku-di-zhi">仓库地址</h2>
+<p><a rel="noopener" target="_blank" href="https://github.com/w4ngzhen/springboot-simple-guide">w4ngzhen/springboot-simple-guide: This is a project that guides SpringBoot users to get started quickly through a series of examples (github.com)</a></p>
+<h1 id="chapter03-ji-yu-springbootde-webfu-wu">Chapter03-基于SpringBoot的Web服务</h1>
+<span id="continue-reading"></span><h2 id="qian-yan">前言</h2>
+<p>终于，我们的教程来到了SpringBoot核心功能的介绍。对于本章，各位读者至少具备以下的知识：</p>
+<ol>
+<li>maven的使用</li>
+<li>HTTP</li>
+</ol>
+<h2 id="springbootde-mavenpei-zhi-jie-shao">SpringBoot的maven配置介绍</h2>
+<p>对于一个<strong>简单的maven结构</strong>的项目来说，以下结构：</p>
+<pre style="background-color:#2b303b;color:#c0c5ce;"><code><span>${basedir}
+</span><span>    |-- pom.xml
+</span><span>    |-- src
+</span><span>        |-- main
+</span><span>            |-- java
+</span><span>                || com.xxx.xxx 项目源码
+</span><span>            |-- resources
+</span><span>                || 项目配置文件 .xml等
+</span><span>        |-- test
+</span><span>            |-- java
+</span><span>            |-- resources
+</span></code></pre>
+<p>在我们前面的教程中，我们都是在编写着代码，从未关注过maven的pom.xml究竟是如何配置的，因为项目脚手架已经配置完成了，也许有细心的同学已经看过了pom.xml文件的内容了：</p>
+<pre data-lang="xml" style="background-color:#2b303b;color:#c0c5ce;" class="language-xml "><code class="language-xml" data-lang="xml"><span>&lt;?</span><span style="color:#bf616a;">xml </span><span style="color:#d08770;">version</span><span>=&quot;</span><span style="color:#a3be8c;">1.0</span><span>&quot; </span><span style="color:#d08770;">encoding</span><span>=&quot;</span><span style="color:#a3be8c;">UTF-8</span><span>&quot;?&gt;
+</span><span>&lt;</span><span style="color:#bf616a;">project </span><span style="color:#d08770;">xmlns</span><span>=&quot;</span><span style="color:#a3be8c;">http://maven.apache.org/POM/4.0.0</span><span>&quot; </span><span style="color:#d08770;">xmlns:xsi</span><span>=&quot;</span><span style="color:#a3be8c;">http://www.w3.org/2001/XMLSchema-instance</span><span>&quot;
+</span><span>         </span><span style="color:#d08770;">xsi:schemaLocation</span><span>=&quot;</span><span style="color:#a3be8c;">http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd</span><span>&quot;&gt;
+</span><span>
+</span><span>	</span><span style="color:#65737e;">&lt;!-- ... 省略了当前项目本身信息的配置，如有需要，请读者查看源码 --&gt;
+</span><span>    
+</span><span>    </span><span style="color:#65737e;">&lt;!-- 当前pom的父级 --&gt;
+</span><span>    &lt;</span><span style="color:#bf616a;">parent</span><span>&gt;
+</span><span>        &lt;</span><span style="color:#bf616a;">groupId</span><span>&gt;org.springframework.boot&lt;/</span><span style="color:#bf616a;">groupId</span><span>&gt;
+</span><span>        &lt;</span><span style="color:#bf616a;">artifactId</span><span>&gt;spring-boot-starter-parent&lt;/</span><span style="color:#bf616a;">artifactId</span><span>&gt;
+</span><span>        &lt;</span><span style="color:#bf616a;">version</span><span>&gt;2.5.3&lt;/</span><span style="color:#bf616a;">version</span><span>&gt;
+</span><span>        &lt;</span><span style="color:#bf616a;">relativePath</span><span>/&gt; </span><span style="color:#65737e;">&lt;!-- lookup parent from repository --&gt;
+</span><span>    &lt;/</span><span style="color:#bf616a;">parent</span><span>&gt;
+</span><span>    
+</span><span>    &lt;</span><span style="color:#bf616a;">dependencies</span><span>&gt;
+</span><span>		</span><span style="color:#65737e;">&lt;!-- springboot框架web功能starter --&gt;
+</span><span>        &lt;</span><span style="color:#bf616a;">dependency</span><span>&gt;
+</span><span>            &lt;</span><span style="color:#bf616a;">groupId</span><span>&gt;org.springframework.boot&lt;/</span><span style="color:#bf616a;">groupId</span><span>&gt;
+</span><span>            &lt;</span><span style="color:#bf616a;">artifactId</span><span>&gt;spring-boot-starter-web&lt;/</span><span style="color:#bf616a;">artifactId</span><span>&gt;
+</span><span>        &lt;/</span><span style="color:#bf616a;">dependency</span><span>&gt;
+</span><span>		</span><span style="color:#65737e;">&lt;!-- springboot框架的测试依赖starter --&gt;
+</span><span>        &lt;</span><span style="color:#bf616a;">dependency</span><span>&gt;
+</span><span>            &lt;</span><span style="color:#bf616a;">groupId</span><span>&gt;org.springframework.boot&lt;/</span><span style="color:#bf616a;">groupId</span><span>&gt;
+</span><span>            &lt;</span><span style="color:#bf616a;">artifactId</span><span>&gt;spring-boot-starter-test&lt;/</span><span style="color:#bf616a;">artifactId</span><span>&gt;
+</span><span>            &lt;</span><span style="color:#bf616a;">scope</span><span>&gt;test&lt;/</span><span style="color:#bf616a;">scope</span><span>&gt;
+</span><span>        &lt;/</span><span style="color:#bf616a;">dependency</span><span>&gt;
+</span><span>    &lt;/</span><span style="color:#bf616a;">dependencies</span><span>&gt;
+</span><span>
+</span><span>    </span><span style="color:#65737e;">&lt;!-- 构建流程使用SpringBoot的maven插件 --&gt;
+</span><span>    &lt;</span><span style="color:#bf616a;">build</span><span>&gt;
+</span><span>        &lt;</span><span style="color:#bf616a;">plugins</span><span>&gt;
+</span><span>            &lt;</span><span style="color:#bf616a;">plugin</span><span>&gt;
+</span><span>                &lt;</span><span style="color:#bf616a;">groupId</span><span>&gt;org.springframework.boot&lt;/</span><span style="color:#bf616a;">groupId</span><span>&gt;
+</span><span>                &lt;</span><span style="color:#bf616a;">artifactId</span><span>&gt;spring-boot-maven-plugin&lt;/</span><span style="color:#bf616a;">artifactId</span><span>&gt;
+</span><span>            &lt;/</span><span style="color:#bf616a;">plugin</span><span>&gt;
+</span><span>        &lt;/</span><span style="color:#bf616a;">plugins</span><span>&gt;
+</span><span>    &lt;/</span><span style="color:#bf616a;">build</span><span>&gt;
+</span><span>
+</span><span>&lt;/</span><span style="color:#bf616a;">project</span><span>&gt;
+</span><span>
+</span></code></pre>
+<p>对于一个普通的maven项目，其实核心的就是<code>dependencies节点-dependency节点</code>了。通过<code>dependency</code>节点，我们可以GAV坐标（Group-Artifact-Version）引入不同的库jar包，便于我们的项目使用这些库。</p>
+<p>那么为什么在上面的pom出现了一个parent节点呢？实际上，pom允许所谓的继承：我们可以把一堆的pom依赖和配置，放到一个公共的pom里面，然后各个项目通过parent节点去引用这个公共的pom文件。由于SpringBoot并不是一个单一的jar包构成的框架，它的内部其实依赖了下面的核心库：</p>
+<pre style="background-color:#2b303b;color:#c0c5ce;"><code><span>spring-core
+</span><span>spring-beans
+</span><span>spring-context
+</span><span>...还有很多
+</span></code></pre>
+<p>如果手动一项又一项编写dependency来使用Spring框架，不仅仅容易遗漏，而且十分不方便进行这些依赖库的版本管理。基于此，SpringBoot官方提供了父级pom：</p>
+<pre data-lang="xml" style="background-color:#2b303b;color:#c0c5ce;" class="language-xml "><code class="language-xml" data-lang="xml"><span>    &lt;</span><span style="color:#bf616a;">parent</span><span>&gt;
+</span><span>        &lt;</span><span style="color:#bf616a;">groupId</span><span>&gt;org.springframework.boot&lt;/</span><span style="color:#bf616a;">groupId</span><span>&gt;
+</span><span>        &lt;</span><span style="color:#bf616a;">artifactId</span><span>&gt;spring-boot-starter-parent&lt;/</span><span style="color:#bf616a;">artifactId</span><span>&gt;
+</span><span>        &lt;</span><span style="color:#bf616a;">version</span><span>&gt;2.5.3&lt;/</span><span style="color:#bf616a;">version</span><span>&gt; </span><span style="color:#65737e;">&lt;!-- 2021/08/09最新 --&gt;
+</span><span>        &lt;</span><span style="color:#bf616a;">relativePath</span><span>/&gt; </span><span style="color:#65737e;">&lt;!-- lookup parent from repository --&gt;
+</span><span>    &lt;/</span><span style="color:#bf616a;">parent</span><span>&gt;
+</span></code></pre>
+<p>那么再看我们的pom文件中，还依赖了<code>spring-boot-starter-web</code>，这又是什么呢？难道有一个jar包叫做<code>spring-boot-starter-web</code>吗？其实不然。我们上面提到了parent POM，但是Spring框架下的依赖包特别多，并且有些包是核心的包，有些包则是在某些功能需要的情况下才依赖的包。如果一股脑的全部通过parent引入会让你的项目依赖十分臃肿，所以Spring官方再次按照包的功能进行了一定的组合，形成了所谓的starter，如果你只是想做web API的服务开发，用<code>spring-boot-starter-web</code>就可以了，要是需要使用AOP（面向切面编程，作切面开发），加上<code>spring-boot-starter-aop</code>依赖即可。</p>
+<h2 id="yi-ge-jian-dan-de-controller">一个简单的Controller</h2>
+<pre data-lang="java" style="background-color:#2b303b;color:#c0c5ce;" class="language-java "><code class="language-java" data-lang="java"><span style="color:#65737e;">// 使用注解 @RestController，表明当前类是一个基于REST 规范的HTTP API Controller
+</span><span>@</span><span style="color:#bf616a;">RestController 
+</span><span style="color:#65737e;">// @RequestMapping 注解放在Controller上，用于标记 HTTP url的路径入口，
+</span><span style="color:#65737e;">// 例如 http://localhost:8080/hello/xxx 才会进入当前Controller
+</span><span>@</span><span style="color:#bf616a;">RequestMapping</span><span>(&quot;</span><span style="color:#a3be8c;">hello</span><span>&quot;) 
+</span><span style="color:#b48ead;">public class </span><span style="color:#ebcb8b;">HelloController </span><span style="color:#eff1f5;">{
+</span><span style="color:#eff1f5;">
+</span><span style="color:#eff1f5;">    </span><span style="color:#65737e;">// @RequestMapping 注解放在Controller的里面的方法上，
+</span><span style="color:#eff1f5;">    </span><span style="color:#65737e;">// 将会与Controller上的RequestMapping组合成：&quot;/hello/say&quot;
+</span><span style="color:#eff1f5;">    </span><span style="color:#65737e;">// method用于指示通过何种HTTP方法访问
+</span><span style="color:#eff1f5;">    </span><span style="color:#65737e;">// 在程序启动后，我们可以使用GET方法访问：http://localhost:8080/hello/say
+</span><span style="color:#eff1f5;">    @</span><span style="color:#bf616a;">RequestMapping</span><span style="color:#eff1f5;">(</span><span style="color:#bf616a;">value </span><span>= &quot;</span><span style="color:#a3be8c;">say</span><span>&quot;</span><span style="color:#eff1f5;">, </span><span style="color:#bf616a;">method </span><span>= </span><span style="color:#ebcb8b;">RequestMethod</span><span style="color:#eff1f5;">.</span><span style="color:#d08770;">GET</span><span style="color:#eff1f5;">)
+</span><span style="color:#eff1f5;">    </span><span style="color:#b48ead;">public </span><span style="color:#ebcb8b;">String </span><span style="color:#8fa1b3;">say</span><span style="color:#eff1f5;">() {
+</span><span style="color:#eff1f5;">        </span><span style="color:#b48ead;">return </span><span>&quot;</span><span style="color:#a3be8c;">hello, world</span><span>&quot;</span><span style="color:#eff1f5;">;
+</span><span style="color:#eff1f5;">    }
+</span><span style="color:#eff1f5;">
+</span><span style="color:#eff1f5;">}
+</span></code></pre>
+<p>编写启动类，启动我们的SpringBoot程序：</p>
+<pre data-lang="java" style="background-color:#2b303b;color:#c0c5ce;" class="language-java "><code class="language-java" data-lang="java"><span>@</span><span style="color:#bf616a;">SpringBootApplication
+</span><span style="color:#b48ead;">public class </span><span style="color:#ebcb8b;">Chapter03App </span><span style="color:#eff1f5;">{
+</span><span style="color:#eff1f5;">
+</span><span style="color:#eff1f5;">    </span><span style="color:#b48ead;">public static void </span><span style="color:#8fa1b3;">main</span><span style="color:#eff1f5;">(</span><span style="color:#ebcb8b;">String</span><span style="color:#b48ead;">[] </span><span style="color:#bf616a;">args</span><span style="color:#eff1f5;">) {
+</span><span style="color:#eff1f5;">        </span><span style="color:#ebcb8b;">SpringApplication</span><span style="color:#eff1f5;">.</span><span style="color:#bf616a;">run</span><span style="color:#eff1f5;">(</span><span style="color:#ebcb8b;">Chapter03App</span><span style="color:#eff1f5;">.</span><span style="color:#bf616a;">class</span><span style="color:#eff1f5;">, args);
+</span><span style="color:#eff1f5;">    }
+</span><span style="color:#eff1f5;">
+</span><span style="color:#eff1f5;">}
+</span></code></pre>
+<p>启动成功后，通过HTTP访问：</p>
+<pre style="background-color:#2b303b;color:#c0c5ce;"><code><span>http://localhost:8080/hello/say
+</span><span># 输出：hello, world
+</span></code></pre>
+<h2 id="guan-yu-controllerxu-yao-zhu-yi-de-dian">关于Controller需要注意的点</h2>
+<p>上面的例子中，我们使用注解<code>@RestController</code>来标记了我们的Controller类，会有初学者使用<code>@Controller</code>来标记Controller，让我们改成它试试：</p>
+<pre data-lang="java" style="background-color:#2b303b;color:#c0c5ce;" class="language-java "><code class="language-java" data-lang="java"><span>@</span><span style="color:#bf616a;">Controller </span><span style="color:#65737e;">// 改成使用 @Controller注解，其他不变，再次访问，看看有什么问题
+</span><span>@</span><span style="color:#bf616a;">RequestMapping</span><span>(&quot;</span><span style="color:#a3be8c;">hello</span><span>&quot;)
+</span><span style="color:#b48ead;">public class </span><span style="color:#ebcb8b;">HelloController </span><span style="color:#eff1f5;">{
+</span><span style="color:#65737e;">// ...
+</span><span style="color:#eff1f5;">}
+</span></code></pre>
+<p>重启启动应用后再次访问对应地址。如果是在浏览器中，你会看到：</p>
+<pre style="background-color:#2b303b;color:#c0c5ce;"><code><span>Whitelabel Error Page
+</span><span>This application has no explicit mapping for /error, so you are seeing this as a fallback.
+</span><span>
+</span><span>Mon Aug 09 10:16:59 CST 2021
+</span><span>There was an unexpected error (type=Not Found, status=404).
+</span></code></pre>
+<p><code>type=Not Found, status=404</code>，404！为什么会这样呢？</p>
+<ol>
+<li>如果使用<code>@Controller</code>标记，那么将使用SpringMVC架构（自行了解），如果对应的方法返回的是字符串，则这个字符串表明需要查找对应的视图（View）名称，并将对应的视图通过视图解析器（InternalResourceViewResolver）解析修改为前端web页面。</li>
+<li>如果使用<code>@RestController</code>注解Controller，则Controller中的方法无法返回jsp页面，或者html，配置的视图解析器不起作用，返回的内容就是return里的内容。</li>
+</ol>
+<p>针对情况1，解决方法就是在方法的返回上加上注解：<code>@ResponseBody</code>：</p>
+<pre data-lang="java" style="background-color:#2b303b;color:#c0c5ce;" class="language-java "><code class="language-java" data-lang="java"><span>    @</span><span style="color:#bf616a;">ResponseBody </span><span style="color:#65737e;">// 如果当前Controller被@Controller注解，又想返回字符串或其他原始数据
+</span><span>    @</span><span style="color:#bf616a;">RequestMapping</span><span>(</span><span style="color:#bf616a;">value </span><span>= &quot;</span><span style="color:#a3be8c;">say</span><span>&quot;, </span><span style="color:#bf616a;">method </span><span>= </span><span style="color:#ebcb8b;">RequestMethod</span><span>.</span><span style="color:#d08770;">GET</span><span>)
+</span><span>    </span><span style="color:#b48ead;">public </span><span style="color:#ebcb8b;">String </span><span style="color:#bf616a;">say</span><span>() {
+</span><span>        </span><span style="color:#b48ead;">return </span><span>&quot;</span><span style="color:#a3be8c;">hello, world</span><span>&quot;;
+</span><span>    }
+</span></code></pre>
+<h2 id="controllerru-he-bei-jia-zai-de">Controller如何被加载的？</h2>
+<p>在之前的文章，我们已经介绍了SpringBoot是如何初始化Bean并且将其放在IOC容器的。我们提到了三种方式：1、<code>@Component</code>；2、Java配置类；3、XML配置。对于第2、3点，好像目前我们的样例中并没有做手动配置的事情。那么是不是我们的Controller已经被<code>@Component</code>标记了呢？</p>
+<p>查看@RestController的定义：</p>
+<pre data-lang="java" style="background-color:#2b303b;color:#c0c5ce;" class="language-java "><code class="language-java" data-lang="java"><span>@</span><span style="color:#bf616a;">Target</span><span>({</span><span style="color:#ebcb8b;">ElementType</span><span>.</span><span style="color:#d08770;">TYPE</span><span>})
+</span><span>@</span><span style="color:#bf616a;">Retention</span><span>(</span><span style="color:#ebcb8b;">RetentionPolicy</span><span>.</span><span style="color:#d08770;">RUNTIME</span><span>)
+</span><span>@</span><span style="color:#bf616a;">Documented
+</span><span>@</span><span style="color:#bf616a;">Controller </span><span style="color:#65737e;">// 原来你RestController也是一个Controller注解啊！
+</span><span>@</span><span style="color:#bf616a;">ResponseBody </span><span style="color:#65737e;">// 并且，已经添加了@ResponseBody
+</span><span style="color:#b48ead;">public @interface </span><span style="color:#ebcb8b;">RestController </span><span style="color:#eff1f5;">{
+</span><span style="color:#eff1f5;">    @</span><span style="color:#bf616a;">AliasFor</span><span style="color:#eff1f5;">(
+</span><span style="color:#eff1f5;">        </span><span style="color:#bf616a;">annotation </span><span>= </span><span style="color:#ebcb8b;">Controller</span><span style="color:#eff1f5;">.</span><span style="color:#bf616a;">class
+</span><span style="color:#eff1f5;">    )
+</span><span style="color:#eff1f5;">    </span><span style="color:#ebcb8b;">String </span><span style="color:#8fa1b3;">value</span><span style="color:#eff1f5;">() </span><span style="color:#b48ead;">default </span><span>&quot;&quot;</span><span style="color:#eff1f5;">;
+</span><span style="color:#eff1f5;">}
+</span></code></pre>
+<p><code>@RestController</code>其实组合了<code>@Controller</code>和<code>@ResponseBody</code>两个注解了。我们再看看<code>@Controller</code>的定义：</p>
+<pre data-lang="java" style="background-color:#2b303b;color:#c0c5ce;" class="language-java "><code class="language-java" data-lang="java"><span>@</span><span style="color:#bf616a;">Target</span><span>({</span><span style="color:#ebcb8b;">ElementType</span><span>.</span><span style="color:#d08770;">TYPE</span><span>})
+</span><span>@</span><span style="color:#bf616a;">Retention</span><span>(</span><span style="color:#ebcb8b;">RetentionPolicy</span><span>.</span><span style="color:#d08770;">RUNTIME</span><span>)
+</span><span>@</span><span style="color:#bf616a;">Documented
+</span><span>@</span><span style="color:#bf616a;">Component </span><span style="color:#65737e;">// 原来你Controller注解也组合了Component注解
+</span><span style="color:#b48ead;">public @interface </span><span style="color:#ebcb8b;">Controller </span><span style="color:#eff1f5;">{
+</span><span style="color:#eff1f5;">    @</span><span style="color:#bf616a;">AliasFor</span><span style="color:#eff1f5;">(
+</span><span style="color:#eff1f5;">        </span><span style="color:#bf616a;">annotation </span><span>= </span><span style="color:#ebcb8b;">Component</span><span style="color:#eff1f5;">.</span><span style="color:#bf616a;">class
+</span><span style="color:#eff1f5;">    )
+</span><span style="color:#eff1f5;">    </span><span style="color:#ebcb8b;">String </span><span style="color:#8fa1b3;">value</span><span style="color:#eff1f5;">() </span><span style="color:#b48ead;">default </span><span>&quot;&quot;</span><span style="color:#eff1f5;">;
+</span><span style="color:#eff1f5;">}
+</span></code></pre>
+<p>原来<code>@Controller</code>也已经组合了<code>@Component</code>注解啊，难怪我们的定义的Controller能被加载。</p>
+<h2 id="controllerru-he-chu-li-httpqing-qiu-de">Controller如何处理HTTP请求的？</h2>
+<p>要回答这个问题，需要你有一定的关于Java Tomcat Web容器的知识。本系列主要是对SpringBoot的快速入门，不便于讲的过细。简单一点就是：</p>
+<ol>
+<li>Tomcat是一个用Java编写的Web容器，可以接受HTTP请求。</li>
+<li>SpringBoot内置了Tomcat容器，并且对于HTTP请求，转到了内部处理</li>
+<li>对于这些HTTP请求，根据请求的路径等上下文，匹配Bean容器中的Controller进行处理</li>
+</ol>
+<h2 id="cang-ku-di-zhi-1">仓库地址</h2>
+<p><a rel="noopener" target="_blank" href="https://github.com/w4ngzhen/springboot-simple-guide">w4ngzhen/springboot-simple-guide: This is a project that guides SpringBoot users to get started quickly through a series of examples (github.com)</a></p>
+
+    </div>
+</div>
+<script src="https://zhen.wang/libs/viewerjs@1.11.7/viewer.min.js"></script>
+<link rel="stylesheet" href="https://zhen.wang/libs/viewerjs@1.11.7/viewer.min.css"/>
+<script>
+  if (window.Viewer) {
+    document.querySelectorAll('img').forEach(img => {
+      new Viewer(img, {
+        inline: false,
+        navbar: false,
+        toolbar: {
+          zoomIn: 1,
+          zoomOut: 1,
+          reset: 1,
+          rotateLeft: 1,
+          rotateRight: 1,
+        },
+      });
+    });
+  }
+</script>
+
+
+</body>
+</html>

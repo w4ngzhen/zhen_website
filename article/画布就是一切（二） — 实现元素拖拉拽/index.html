@@ -1,0 +1,399 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="utf-8">
+    <meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover"
+          name="viewport">
+    
+    
+    <!-- umami web analysis -->
+    <script defer src="https://zhen.wang/libs/umami/umami.script.js"
+            data-website-id="d66cfe03-f6b3-4aa0-baf8-728700db1b09"></script>
+    
+    
+    
+    <link rel="icon" type="image/png" sizes="16x16" href="https://zhen.wang/images/blog-site-icon.svg">
+    <link rel="icon" type="image/png" sizes="32x32" href="https://zhen.wang/images/blog-site-icon.svg">
+    <title>zhen&#x27;s everything</title>
+    <link rel="stylesheet" href="https://zhen.wang/style.css">
+    
+<link rel="stylesheet" href="https://zhen.wang/article_content.css">
+<link rel="stylesheet" href="https://zhen.wang/article_markdown.css">
+
+</head>
+<body>
+
+<div id="article">
+    <header class="article-header">
+        
+<div class="base-title">
+    <a href="#" onclick="history.length > 1 ? history.back() : location.href = '/'; return false;">&LeftArrow; Back</a>
+    <h1>
+        画布就是一切（二） — 实现元素拖拉拽
+    </h1>
+</div>
+
+    </header>
+    <p class="article-date">2021-11-22</p>
+    
+    <!-- toc -->
+    <div class="article-toc">
+        <label class="toc-title" for="toc-trigger">目录</label>
+        <input id="toc-trigger" type="checkbox" checked/>
+        <div class="toc-content">
+            <ol class="toc">
+                
+                <li class="toc-item toc-level-1">
+                    <a class="toc-link" href="https://zhen.wang/article/画布就是一切（二） — 实现元素拖拉拽/#zhuang-tai">状态</a>
+                    
+                </li>
+                
+                <li class="toc-item toc-level-1">
+                    <a class="toc-link" href="https://zhen.wang/article/画布就是一切（二） — 实现元素拖拉拽/#shu-ru-yu-geng-xin">输入与更新</a>
+                    
+                </li>
+                
+                <li class="toc-item toc-level-1">
+                    <a class="toc-link" href="https://zhen.wang/article/画布就是一切（二） — 实现元素拖拉拽/#xuan-ran">渲染</a>
+                    
+                </li>
+                
+                <li class="toc-item toc-level-1">
+                    <a class="toc-link" href="https://zhen.wang/article/画布就是一切（二） — 实现元素拖拉拽/#liu-cheng-shu-li">流程梳理</a>
+                    
+                </li>
+                
+                <li class="toc-item toc-level-1">
+                    <a class="toc-link" href="https://zhen.wang/article/画布就是一切（二） — 实现元素拖拉拽/#ji-chu-tuo-zhuai-dai-ma-bian-xie-yu-fen-xi">基础拖拽代码编写与分析</a>
+                    
+                    <ol class="toc-child">
+                        
+                        <li class="toc-item toc-level-2">
+                            <a href="https://zhen.wang/article/画布就是一切（二） — 实现元素拖拉拽/#1-gong-ju-fang-fa">1）工具方法</a>
+                        </li>
+                        
+                        <li class="toc-item toc-level-2">
+                            <a href="https://zhen.wang/article/画布就是一切（二） — 实现元素拖拉拽/#2-zhuang-tai-ding-yi">2）状态定义</a>
+                        </li>
+                        
+                        <li class="toc-item toc-level-2">
+                            <a href="https://zhen.wang/article/画布就是一切（二） — 实现元素拖拉拽/#3-huo-qu-canvasyuan-su-dui-xiang">3）获取Canvas元素对象</a>
+                        </li>
+                        
+                        <li class="toc-item toc-level-2">
+                            <a href="https://zhen.wang/article/画布就是一切（二） — 实现元素拖拉拽/#4-shu-biao-an-xia-shi-jian">4）鼠标按下事件</a>
+                        </li>
+                        
+                        <li class="toc-item toc-level-2">
+                            <a href="https://zhen.wang/article/画布就是一切（二） — 实现元素拖拉拽/#5-shu-biao-yi-dong-chu-li">5）鼠标移动处理</a>
+                        </li>
+                        
+                        <li class="toc-item toc-level-2">
+                            <a href="https://zhen.wang/article/画布就是一切（二） — 实现元素拖拉拽/#6-shu-biao-an-jian-tai-qi-shi-jian">6）鼠标按键抬起事件</a>
+                        </li>
+                        
+                        <li class="toc-item toc-level-2">
+                            <a href="https://zhen.wang/article/画布就是一切（二） — 实现元素拖拉拽/#7-xuan-ran-chu-li">7）渲染处理</a>
+                        </li>
+                        
+                        <li class="toc-item toc-level-2">
+                            <a href="https://zhen.wang/article/画布就是一切（二） — 实现元素拖拉拽/#tuo-zhuai-xiao-guo-yan-shi">拖拽效果演示</a>
+                        </li>
+                        
+                    </ol>
+                    
+                </li>
+                
+                <li class="toc-item toc-level-1">
+                    <a class="toc-link" href="https://zhen.wang/article/画布就是一切（二） — 实现元素拖拉拽/#xiao-guo-ti-sheng">效果提升</a>
+                    
+                </li>
+                
+                <li class="toc-item toc-level-1">
+                    <a class="toc-link" href="https://zhen.wang/article/画布就是一切（二） — 实现元素拖拉拽/#zheng-ti-yan-shi">整体演示</a>
+                    
+                </li>
+                
+                <li class="toc-item toc-level-1">
+                    <a class="toc-link" href="https://zhen.wang/article/画布就是一切（二） — 实现元素拖拉拽/#dai-ma-cang-ku-yu-shuo-ming">代码仓库与说明</a>
+                    
+                </li>
+                
+            </ol>
+        </div>
+    </div>
+    
+    <!-- real content -->
+    <div class="article-content markdown-content">
+        <p>在《画布就是一切（一） — 基础入门》中，我们介绍了利用画布进行UI编程的基本模式，分析了如何实现鼠标悬浮在元素上，元素变色的功能。在本文中，我们依然利用画布编程的基本模式进行编程，但这一次我们将会提升一定的难度，实现元素拖拉拽的效果。</p>
+<span id="continue-reading"></span>
+<p>使用过流程图或是图形绘制软件的同学都见到过这样的场景对于矩形拖拉拽的场景：</p>
+<p><img src="https://static-res.zhen.wang/images/post/2021-11-22/010-rect-drag.gif" alt="010-rect-drag" /></p>
+<p>本文将以上述的场景为需求，结合画布编程的基本模式来复现一个类似的效果。本文的代码已经提交至GitHub仓库，在<strong>仓库根目录/02_drag目录</strong>中。</p>
+<p><a rel="noopener" target="_blank" href="https://github.com/w4ngzhen/canvas-is-everything/tree/main/02_drag">canvas-is-everything/02_drag at main · w4ngzhen/canvas-is-everything (github.com)</a></p>
+<h1 id="zhuang-tai">状态</h1>
+<p>我们首先分析这个场景下的状态有哪些。鼠标在矩形元素上按下后，鼠标可以拖动矩形元素，鼠标松开后，矩形不再跟随鼠标移动。那么对于UI来说，最基本的就是矩形的位置和大小，同时我们还需要一个状态来表示矩形元素是否被选中：</p>
+<ul>
+<li>矩形位置position</li>
+<li>矩形大小size</li>
+<li>矩形是否被选中selected</li>
+</ul>
+<h1 id="shu-ru-yu-geng-xin">输入与更新</h1>
+<p>在这个场景中，更新点主要在于当鼠标点击在元素上时，矩形selected会修改为true；当鼠标移动的时候，只要<strong>有元素被选中且鼠标的左键处于点击</strong>的状态，那么就会修改矩形元素的position。而造成更新的原因就是鼠标的行为输入（点击以及移动）。</p>
+<h1 id="xuan-ran">渲染</h1>
+<p>实际上，在该场景下，渲染是最简单的部分，根据上一篇文章的介绍，我们只需要canvas的context不断的画矩形即可。</p>
+<h1 id="liu-cheng-shu-li">流程梳理</h1>
+<p>让我们再次对流程进行梳理。初始情况下，鼠标在画布上移动进而产生移动事件。我们引入一个辅助变量<code>lastMousePosition</code>（默认值为null），来表示<strong>上一次</strong>鼠标移动事件的所在位置。在鼠标移动事件触发中，我们得到此刻鼠标的位置，并与上一次鼠标位置做向量差，进而得到位移差<code>offset</code>。对于<code>offset</code>我们将其应用在矩形的移动上。此外，当鼠标<strong>按下</strong>的时候，我们判断是否选中矩形，进而将矩形的selected置为true或false。当鼠标<strong>抬起</strong>的时候，我们直接设置矩形selected为false即可。</p>
+<h1 id="ji-chu-tuo-zhuai-dai-ma-bian-xie-yu-fen-xi">基础拖拽代码编写与分析</h1>
+<h2 id="1-gong-ju-fang-fa">1）工具方法</h2>
+<p>定义常用的工具方法：</p>
+<ul>
+<li>
+<p>获取鼠标在canvas上的位置。</p>
+</li>
+<li>
+<p>检查某个点是否位于某个矩形中。</p>
+</li>
+</ul>
+<pre data-lang="js" style="background-color:#2b303b;color:#c0c5ce;" class="language-js "><code class="language-js" data-lang="js"><span style="color:#65737e;">// 1 定义常用工具方法
+</span><span style="color:#b48ead;">const </span><span style="color:#bf616a;">utils </span><span>= {
+</span><span>
+</span><span>  </span><span style="color:#65737e;">/**
+</span><span style="color:#65737e;">   * 工具方法：获取鼠标在画布上的position
+</span><span style="color:#65737e;">   */
+</span><span>  </span><span style="color:#8fa1b3;">getMousePositionInCanvas</span><span>: (</span><span style="color:#bf616a;">event</span><span>, </span><span style="color:#bf616a;">canvasEle</span><span>) </span><span style="color:#b48ead;">=&gt; </span><span>{
+</span><span>    </span><span style="color:#65737e;">// 移动事件对象，从中解构clientX和clientY
+</span><span>    </span><span style="color:#b48ead;">let </span><span>{</span><span style="color:#bf616a;">clientX</span><span>, </span><span style="color:#bf616a;">clientY</span><span>} = event;
+</span><span>    </span><span style="color:#65737e;">// 解构canvas的boundingClientRect中的left和top
+</span><span>    </span><span style="color:#b48ead;">let </span><span>{</span><span style="color:#bf616a;">left</span><span>, </span><span style="color:#bf616a;">top</span><span>} = </span><span style="color:#bf616a;">canvasEle</span><span>.</span><span style="color:#96b5b4;">getBoundingClientRect</span><span>();
+</span><span>    </span><span style="color:#65737e;">// 计算得到鼠标在canvas上的坐标
+</span><span>    </span><span style="color:#b48ead;">return </span><span>{
+</span><span>      x: </span><span style="color:#bf616a;">clientX </span><span>- </span><span style="color:#bf616a;">left</span><span>,
+</span><span>      y: </span><span style="color:#bf616a;">clientY </span><span>- </span><span style="color:#bf616a;">top
+</span><span>    };
+</span><span>  },
+</span><span>
+</span><span>  </span><span style="color:#65737e;">/**
+</span><span style="color:#65737e;">   * 工具方法：检查点point是否在矩形内
+</span><span style="color:#65737e;">   */
+</span><span>  </span><span style="color:#8fa1b3;">isPointInRect</span><span>: (</span><span style="color:#bf616a;">rect</span><span>, </span><span style="color:#bf616a;">point</span><span>) </span><span style="color:#b48ead;">=&gt; </span><span>{
+</span><span>    </span><span style="color:#b48ead;">let </span><span>{</span><span style="color:#bf616a;">x</span><span>: </span><span style="color:#bf616a;">rectX</span><span>, </span><span style="color:#bf616a;">y</span><span>: </span><span style="color:#bf616a;">rectY</span><span>, </span><span style="color:#bf616a;">width</span><span>, </span><span style="color:#bf616a;">height</span><span>} = </span><span style="color:#bf616a;">rect</span><span>;
+</span><span>    </span><span style="color:#b48ead;">let </span><span>{</span><span style="color:#bf616a;">x</span><span>: </span><span style="color:#bf616a;">pX</span><span>, </span><span style="color:#bf616a;">y</span><span>: </span><span style="color:#bf616a;">pY</span><span>} = </span><span style="color:#bf616a;">point</span><span>;
+</span><span>    </span><span style="color:#b48ead;">return </span><span>(</span><span style="color:#bf616a;">rectX </span><span>&lt;= </span><span style="color:#bf616a;">pX </span><span>&amp;&amp; </span><span style="color:#bf616a;">pX </span><span>&lt;= </span><span style="color:#bf616a;">rectX </span><span>+ </span><span style="color:#bf616a;">width</span><span>) &amp;&amp; (</span><span style="color:#bf616a;">rectY </span><span>&lt;= </span><span style="color:#bf616a;">pY </span><span>&amp;&amp; </span><span style="color:#bf616a;">pY </span><span>&lt;= </span><span style="color:#bf616a;">rectY </span><span>+ </span><span style="color:#bf616a;">height</span><span>);
+</span><span>  },
+</span><span>
+</span><span>};
+</span></code></pre>
+<h2 id="2-zhuang-tai-ding-yi">2）状态定义</h2>
+<pre data-lang="js" style="background-color:#2b303b;color:#c0c5ce;" class="language-js "><code class="language-js" data-lang="js"><span style="color:#65737e;">// 2 定义状态
+</span><span style="color:#b48ead;">let </span><span style="color:#bf616a;">rect </span><span>= {
+</span><span>  x: </span><span style="color:#d08770;">10</span><span>,
+</span><span>  y: </span><span style="color:#d08770;">10</span><span>,
+</span><span>  width: </span><span style="color:#d08770;">80</span><span>,
+</span><span>  height: </span><span style="color:#d08770;">60</span><span>,
+</span><span>  selected: </span><span style="color:#d08770;">false
+</span><span>};
+</span></code></pre>
+<p>根据前文，在矩形一般的属性上位置和大小上，我们还新增了属性<code>selected</code>，用于表示矩形是否被选中。</p>
+<h2 id="3-huo-qu-canvasyuan-su-dui-xiang">3）获取Canvas元素对象</h2>
+<pre data-lang="JS" style="background-color:#2b303b;color:#c0c5ce;" class="language-JS "><code class="language-JS" data-lang="JS"><span style="color:#65737e;">// 3 获取canvas元素，准备在步骤
+</span><span style="color:#b48ead;">let </span><span style="color:#bf616a;">canvasEle </span><span>= document.</span><span style="color:#bf616a;">querySelector</span><span>(&#39;</span><span style="color:#a3be8c;">#myCanvas</span><span>&#39;);
+</span></code></pre>
+<p>调用API，获取Canvas元素对象，用于后续的事件监听。</p>
+<h2 id="4-shu-biao-an-xia-shi-jian">4）鼠标按下事件</h2>
+<pre data-lang="js" style="background-color:#2b303b;color:#c0c5ce;" class="language-js "><code class="language-js" data-lang="js"><span style="color:#65737e;">// 4 鼠标按下事件
+</span><span style="color:#bf616a;">canvasEle</span><span>.</span><span style="color:#96b5b4;">addEventListener</span><span>(&#39;</span><span style="color:#a3be8c;">mousedown</span><span>&#39;, </span><span style="color:#bf616a;">event </span><span style="color:#b48ead;">=&gt; </span><span>{
+</span><span>  </span><span style="color:#65737e;">// 获取鼠标按下时位置
+</span><span>  </span><span style="color:#b48ead;">let </span><span>{</span><span style="color:#bf616a;">x</span><span>, </span><span style="color:#bf616a;">y</span><span>} = </span><span style="color:#bf616a;">utils</span><span>.</span><span style="color:#8fa1b3;">getMousePositionInCanvas</span><span>(event, </span><span style="color:#bf616a;">canvasEle</span><span>);
+</span><span>  </span><span style="color:#65737e;">// 矩形是否被选中取决于点击时候的鼠标是否在矩形内部
+</span><span>  </span><span style="color:#bf616a;">rect</span><span>.selected = </span><span style="color:#bf616a;">utils</span><span>.</span><span style="color:#8fa1b3;">isPointInRect</span><span>(</span><span style="color:#bf616a;">rect</span><span>, {</span><span style="color:#bf616a;">x</span><span>, </span><span style="color:#bf616a;">y</span><span>});
+</span><span>});
+</span></code></pre>
+<p>获取当前鼠标按下的位置，并通过工具函数来判断是否需要将矩形选中（selected置为true/false）。</p>
+<h2 id="5-shu-biao-yi-dong-chu-li">5）鼠标移动处理</h2>
+<pre data-lang="js" style="background-color:#2b303b;color:#c0c5ce;" class="language-js "><code class="language-js" data-lang="js"><span style="color:#65737e;">// 5 鼠标移动处理
+</span><span style="color:#65737e;">// 5.1 定义辅助变量，记录每一次移动的位置
+</span><span style="color:#b48ead;">let </span><span style="color:#bf616a;">mousePosition </span><span>= </span><span style="color:#d08770;">null</span><span>;
+</span><span style="color:#bf616a;">canvasEle</span><span>.</span><span style="color:#96b5b4;">addEventListener</span><span>(&#39;</span><span style="color:#a3be8c;">mousemove</span><span>&#39;, </span><span style="color:#bf616a;">event </span><span style="color:#b48ead;">=&gt; </span><span>{
+</span><span>
+</span><span>  </span><span style="color:#65737e;">// 5.2 记录上一次的鼠标位置
+</span><span>  </span><span style="color:#b48ead;">let </span><span style="color:#bf616a;">lastMousePosition </span><span>= </span><span style="color:#bf616a;">mousePosition</span><span>;
+</span><span>
+</span><span>  </span><span style="color:#65737e;">// 5.3 更新当前鼠标位置
+</span><span>  </span><span style="color:#bf616a;">mousePosition </span><span>= </span><span style="color:#bf616a;">utils</span><span>.</span><span style="color:#8fa1b3;">getMousePositionInCanvas</span><span>(event, </span><span style="color:#bf616a;">canvasEle</span><span>);
+</span><span>
+</span><span>  </span><span style="color:#65737e;">// 5.4 判断是否鼠标左键点击且有矩形被选中
+</span><span>  </span><span style="color:#65737e;">// https://developer.mozilla.org/en-US/docs/Web/API/MouseEvent/buttons
+</span><span>  </span><span style="color:#b48ead;">let </span><span style="color:#bf616a;">buttons </span><span>= event.</span><span style="color:#bf616a;">buttons</span><span>;
+</span><span>  </span><span style="color:#b48ead;">if </span><span>(!(</span><span style="color:#bf616a;">buttons </span><span>=== </span><span style="color:#d08770;">1 </span><span>&amp;&amp; </span><span style="color:#bf616a;">rect</span><span>.selected)) {
+</span><span>    </span><span style="color:#65737e;">// 不满足则不处理
+</span><span>    </span><span style="color:#b48ead;">return</span><span>;
+</span><span>  }
+</span><span>
+</span><span>  </span><span style="color:#65737e;">// 5.5 获取鼠标偏移
+</span><span>  </span><span style="color:#b48ead;">let </span><span style="color:#bf616a;">offset</span><span>;
+</span><span>  </span><span style="color:#b48ead;">if </span><span>(</span><span style="color:#bf616a;">lastMousePosition </span><span>=== </span><span style="color:#d08770;">null</span><span>) {
+</span><span>    </span><span style="color:#65737e;">// 首次记录，偏移dx和dy为0
+</span><span>    </span><span style="color:#bf616a;">offset </span><span>= {
+</span><span>      dx: </span><span style="color:#d08770;">0</span><span>,
+</span><span>      dy: </span><span style="color:#d08770;">0
+</span><span>    };
+</span><span>  } </span><span style="color:#b48ead;">else </span><span>{
+</span><span>    </span><span style="color:#65737e;">// 曾经已经记录了位置，则偏移则为当前位置和上一次位置做向量差
+</span><span>    </span><span style="color:#bf616a;">offset </span><span>= {
+</span><span>      dx: </span><span style="color:#bf616a;">mousePosition</span><span>.x - </span><span style="color:#bf616a;">lastMousePosition</span><span>.x,
+</span><span>      dy: </span><span style="color:#bf616a;">mousePosition</span><span>.y - </span><span style="color:#bf616a;">lastMousePosition</span><span>.y
+</span><span>    };
+</span><span>  }
+</span><span>
+</span><span>  </span><span style="color:#65737e;">// 5.6 改动rect位置
+</span><span>  </span><span style="color:#bf616a;">rect</span><span>.x = </span><span style="color:#bf616a;">rect</span><span>.x + </span><span style="color:#bf616a;">offset</span><span>.</span><span style="color:#bf616a;">dx</span><span>;
+</span><span>  </span><span style="color:#bf616a;">rect</span><span>.y = </span><span style="color:#bf616a;">rect</span><span>.y + </span><span style="color:#bf616a;">offset</span><span>.</span><span style="color:#bf616a;">dy</span><span>;
+</span><span>
+</span><span>});
+</span></code></pre>
+<p>这一部分的代码略长。但是逻辑并不难理解。</p>
+<p>**5.1 定义辅助变量<code>mousePosition</code>。**使用该变量记录鼠标在每一次移动过程中的位置。</p>
+<p>**5.2 记录临时变量<code>lastMousePosition</code>。**将上一次事件记录的<code>mousePosition</code>赋给该变量，用于后续进行偏移offset计算。</p>
+<p><strong>5.3 更新<code>mousePosition</code>。</strong></p>
+<p><strong>5.4 判断是否鼠标左键点击且有矩形被选中。<strong>在鼠标移动的过程中，我们是可以通过事件对象中的<code>button</code>或<code>buttons</code>属性的数值来判断当前鼠标的点击情况（<a rel="noopener" target="_blank" href="https://developer.mozilla.org/en-US/docs/Web/API/MouseEvent/buttons">MDN</a>）。当<code>buttons</code>或<code>button</code>为1的时候，表示移动的过程中</strong>鼠标左键</strong>是按下的状态。通过判断鼠标左键是否被按下来表示是否处于拖拽中，但是拖拽并不意味就选中了矩形在拖拽，还需要确定当前的矩形是否选中，所以需要（<code>buttons === 1</code>和<code>rect.selected === true</code>）两个条件共同决定。</p>
+<p>**5.5 获取鼠标偏移。**这一部分需要解释一下什么是鼠标偏移（offset）。在鼠标移动的每时每刻都会有一个位置，我们利用<code>mousePosition</code>记录了该位置。然后利用<code>lastMousePosition</code>和<code>mousePosition</code>，我们将此刻的位置和上一次位置的x和y对应进行差（向量差），进而得到鼠标一小段的偏移量。但需要注意的是，如果是首次的移动事件，那么上一次的位置是<code>lastMousePosition</code>是null，那么我们认为这个偏移0。</p>
+<p><img src="https://static-res.zhen.wang/images/post/2021-11-22/020-mouse-offset-desc.jpg" alt="020-mouse-offset-desc" /></p>
+<p>**5.6 改动矩形位置。**将鼠标偏移值应用到矩形的位置上，让矩形也位移对应的距离。</p>
+<p>在鼠标移动的处理中，我们完成了由鼠标移动offset作为输入，修改了被点中的矩形的位置。</p>
+<h2 id="6-shu-biao-an-jian-tai-qi-shi-jian">6）鼠标按键抬起事件</h2>
+<pre data-lang="js" style="background-color:#2b303b;color:#c0c5ce;" class="language-js "><code class="language-js" data-lang="js"><span style="color:#65737e;">// 6 鼠标抬起事件
+</span><span style="color:#bf616a;">canvasEle</span><span>.</span><span style="color:#96b5b4;">addEventListener</span><span>(&#39;</span><span style="color:#a3be8c;">mouseup</span><span>&#39;, () </span><span style="color:#b48ead;">=&gt; </span><span>{
+</span><span>  </span><span style="color:#65737e;">// 鼠标抬起时，矩形就未被选中了
+</span><span>  </span><span style="color:#bf616a;">rect</span><span>.selected = </span><span style="color:#d08770;">false</span><span>;
+</span><span>});
+</span></code></pre>
+<p>鼠标按键的抬起后，我们认为不再需要对矩形进行推拽，所以将矩形的selected置为false。</p>
+<h2 id="7-xuan-ran-chu-li">7）渲染处理</h2>
+<pre data-lang="js" style="background-color:#2b303b;color:#c0c5ce;" class="language-js "><code class="language-js" data-lang="js"><span style="color:#65737e;">// 7 渲染
+</span><span style="color:#65737e;">// 7.1 从Canvas元素上获取context
+</span><span style="color:#b48ead;">let </span><span style="color:#bf616a;">ctx </span><span>= </span><span style="color:#bf616a;">canvasEle</span><span>.</span><span style="color:#96b5b4;">getContext</span><span>(&#39;</span><span style="color:#a3be8c;">2d</span><span>&#39;);
+</span><span>(</span><span style="color:#b48ead;">function </span><span style="color:#8fa1b3;">doRender</span><span>() {
+</span><span>  </span><span style="color:#8fa1b3;">requestAnimationFrame</span><span>(() </span><span style="color:#b48ead;">=&gt; </span><span>{
+</span><span>
+</span><span>    </span><span style="color:#65737e;">// 7.2 处理渲染
+</span><span>    (</span><span style="color:#b48ead;">function </span><span style="color:#8fa1b3;">render</span><span>() {
+</span><span>      </span><span style="color:#65737e;">// 先清空画布
+</span><span>      </span><span style="color:#bf616a;">ctx</span><span>.</span><span style="color:#8fa1b3;">clearRect</span><span>(</span><span style="color:#d08770;">0</span><span>, </span><span style="color:#d08770;">0</span><span>, </span><span style="color:#bf616a;">canvasEle</span><span>.width, </span><span style="color:#bf616a;">canvasEle</span><span>.height);
+</span><span>      </span><span style="color:#65737e;">// 暂存当前ctx的状态
+</span><span>      </span><span style="color:#bf616a;">ctx</span><span>.</span><span style="color:#8fa1b3;">save</span><span>();
+</span><span>      </span><span style="color:#65737e;">// 设置画笔颜色：黑色
+</span><span>      </span><span style="color:#bf616a;">ctx</span><span>.</span><span style="color:#bf616a;">strokeStyle </span><span>= </span><span style="color:#bf616a;">rect</span><span>.selected ? &#39;</span><span style="color:#a3be8c;">#F00</span><span>&#39; : &#39;</span><span style="color:#a3be8c;">#000</span><span>&#39;;
+</span><span>      </span><span style="color:#65737e;">// 矩形所在位置画一个黑色框的矩形
+</span><span>      </span><span style="color:#bf616a;">ctx</span><span>.</span><span style="color:#8fa1b3;">strokeRect</span><span>(</span><span style="color:#bf616a;">rect</span><span>.x - </span><span style="color:#d08770;">0.5</span><span>, </span><span style="color:#bf616a;">rect</span><span>.y - </span><span style="color:#d08770;">0.5</span><span>, </span><span style="color:#bf616a;">rect</span><span>.width, </span><span style="color:#bf616a;">rect</span><span>.height);
+</span><span>      </span><span style="color:#65737e;">// 恢复ctx的状态
+</span><span>      </span><span style="color:#bf616a;">ctx</span><span>.</span><span style="color:#8fa1b3;">restore</span><span>();
+</span><span>    })();
+</span><span>
+</span><span>    </span><span style="color:#65737e;">// 7.3 递归调用
+</span><span>    </span><span style="color:#8fa1b3;">doRender</span><span>();
+</span><span>
+</span><span>  });
+</span><span>})();
+</span></code></pre>
+<p>渲染部分的代码，总的来说就是三个要点：</p>
+<ol>
+<li>获取Canvas元素的context对象。</li>
+<li>使用<code>requestAnimationFrame</code>API并构造递归结构来让浏览器调度渲染流程。</li>
+<li>在渲染流程编写画布操作的代码（清空、绘制）。</li>
+</ol>
+<h2 id="tuo-zhuai-xiao-guo-yan-shi">拖拽效果演示</h2>
+<p>至此，我们已经实现了元素拖动的样例，效果如下：</p>
+<p><img src="https://static-res.zhen.wang/images/post/2021-11-22/030-drag-show-case.gif" alt="030-drag-show-case" /></p>
+<p>对于当前效果的完整代码在<strong>项目根目录/02_drag目录</strong>中，对应git提交为：<code>02_drag: 01_基础效果</code>。</p>
+<h1 id="xiao-guo-ti-sheng">效果提升</h1>
+<p>对于上述效果，其实还是不完美的。因为当鼠标悬浮在矩形上的时候，并没有任何UI上的信息，点击的矩形进行拖拽的时候，鼠标指针也是普通的。于是我们优化代码，将鼠标悬浮的呈现的效果以及拖拽时候的鼠标指针效果做出来。</p>
+<p>我们设定，当鼠标悬浮在矩形上的时候，矩形会改变对应的颜色为带有50%透明的红色（<code>rgba(255, 0, 0, 0.5)</code>，并且鼠标的指针修改为<code>pointer</code>。那么首先需要给矩形加上我们在第一章中提到的属性<code>hover</code>：</p>
+<pre data-lang="js" style="background-color:#2b303b;color:#c0c5ce;" class="language-js "><code class="language-js" data-lang="js"><span style="color:#b48ead;">let </span><span style="color:#bf616a;">rect </span><span>= {
+</span><span>  x: </span><span style="color:#d08770;">10</span><span>,
+</span><span>  y: </span><span style="color:#d08770;">10</span><span>,
+</span><span>  width: </span><span style="color:#d08770;">80</span><span>,
+</span><span>  height: </span><span style="color:#d08770;">60</span><span>,
+</span><span>  selected: </span><span style="color:#d08770;">false</span><span>,
+</span><span>  </span><span style="color:#65737e;">// hover效果
+</span><span>  hover: </span><span style="color:#d08770;">false</span><span>,
+</span><span>};
+</span></code></pre>
+<p>在渲染中，我们不再像上一节中进行简单的处理，而是需要对selected、hover以及一般状态都进行考虑。</p>
+<pre data-lang="js" style="background-color:#2b303b;color:#c0c5ce;" class="language-js "><code class="language-js" data-lang="js"><span>    </span><span style="color:#65737e;">// 7.2 处理渲染
+</span><span>    (</span><span style="color:#b48ead;">function </span><span style="color:#8fa1b3;">render</span><span>() {
+</span><span>        
+</span><span>	  </span><span style="color:#65737e;">// ...
+</span><span>
+</span><span>      </span><span style="color:#65737e;">// 被点击选中：正红色，指针为 &#39;move&#39;
+</span><span>      </span><span style="color:#65737e;">// 悬浮：带50%透明的正红色，指针为 &#39;pointer&#39;
+</span><span>      </span><span style="color:#65737e;">// 普通下为黑色，指针为 &#39;default&#39;
+</span><span>      </span><span style="color:#b48ead;">if </span><span>(</span><span style="color:#bf616a;">rect</span><span>.selected) {
+</span><span>        </span><span style="color:#bf616a;">ctx</span><span>.</span><span style="color:#bf616a;">strokeStyle </span><span>= &#39;</span><span style="color:#a3be8c;">#FF0000</span><span>&#39;;
+</span><span>        </span><span style="color:#bf616a;">canvasEle</span><span>.style.</span><span style="color:#bf616a;">cursor </span><span>= &#39;</span><span style="color:#a3be8c;">move</span><span>&#39;;
+</span><span>      } </span><span style="color:#b48ead;">else if </span><span>(</span><span style="color:#bf616a;">rect</span><span>.</span><span style="color:#bf616a;">hover</span><span>) {
+</span><span>        </span><span style="color:#bf616a;">ctx</span><span>.</span><span style="color:#bf616a;">strokeStyle </span><span>= &#39;</span><span style="color:#a3be8c;">rgba(255, 0, 0, 0.5)</span><span>&#39;;
+</span><span>        </span><span style="color:#bf616a;">canvasEle</span><span>.style.</span><span style="color:#bf616a;">cursor </span><span>= &#39;</span><span style="color:#a3be8c;">pointer</span><span>&#39;;
+</span><span>      } </span><span style="color:#b48ead;">else </span><span>{
+</span><span>        </span><span style="color:#bf616a;">ctx</span><span>.</span><span style="color:#bf616a;">strokeStyle </span><span>= &#39;</span><span style="color:#a3be8c;">#000</span><span>&#39;;
+</span><span>        </span><span style="color:#bf616a;">canvasEle</span><span>.style.</span><span style="color:#bf616a;">cursor </span><span>= &#39;</span><span style="color:#a3be8c;">default</span><span>&#39;;
+</span><span>      }
+</span><span>
+</span><span>	  </span><span style="color:#65737e;">// ...
+</span><span>        
+</span><span>    })();
+</span></code></pre>
+<p>接下来就是在鼠标移动事件中，修改hover：</p>
+<pre data-lang="js" style="background-color:#2b303b;color:#c0c5ce;" class="language-js "><code class="language-js" data-lang="js"><span style="color:#bf616a;">canvasEle</span><span>.</span><span style="color:#96b5b4;">addEventListener</span><span>(&#39;</span><span style="color:#a3be8c;">mousemove</span><span>&#39;, </span><span style="color:#bf616a;">event </span><span style="color:#b48ead;">=&gt; </span><span>{
+</span><span>
+</span><span>  </span><span style="color:#65737e;">// 5.2 记录上一次的鼠标位置
+</span><span>  </span><span style="color:#65737e;">// ... ...
+</span><span>
+</span><span>  </span><span style="color:#65737e;">// 5.3 更新当前鼠标位置
+</span><span>  </span><span style="color:#bf616a;">mousePosition </span><span>= </span><span style="color:#bf616a;">utils</span><span>.</span><span style="color:#8fa1b3;">getMousePositionInCanvas</span><span>(event, </span><span style="color:#bf616a;">canvasEle</span><span>);
+</span><span>
+</span><span>  </span><span style="color:#65737e;">// 5.3.1 判断鼠标是否悬浮在矩形
+</span><span>  </span><span style="color:#bf616a;">rect</span><span>.</span><span style="color:#bf616a;">hover </span><span>= </span><span style="color:#bf616a;">utils</span><span>.</span><span style="color:#8fa1b3;">isPointInRect</span><span>(</span><span style="color:#bf616a;">rect</span><span>, </span><span style="color:#bf616a;">mousePosition</span><span>);
+</span><span>
+</span><span>  </span><span style="color:#65737e;">// 5.4 判断是否鼠标左键点击且有矩形被选中
+</span><span>  </span><span style="color:#65737e;">// ... ...
+</span><span>
+</span><span>});
+</span></code></pre>
+<h1 id="zheng-ti-yan-shi">整体演示</h1>
+<p>至此，我们丰富了我们的拖拽样例，结果如下：</p>
+<p><img src="https://static-res.zhen.wang/images/post/2021-11-22/040-drag-show-case-perfect.gif" alt="040-drag-show-case-perfect" /></p>
+<h1 id="dai-ma-cang-ku-yu-shuo-ming">代码仓库与说明</h1>
+<p>本文所在的代码仓库地址为：</p>
+<p><a rel="noopener" target="_blank" href="https://github.com/w4ngzhen/canvas-is-everything/tree/main/02_drag">canvas-is-everything/02_drag at main · w4ngzhen/canvas-is-everything (github.com)</a></p>
+<p>两次提交：</p>
+<ol>
+<li>02_drag: 01_基础效果（优化前）</li>
+<li>02_drag: 02_悬浮与点击效果提升（优化后）</li>
+</ol>
+
+    </div>
+</div>
+<script src="https://zhen.wang/libs/viewerjs@1.11.7/viewer.min.js"></script>
+<link rel="stylesheet" href="https://zhen.wang/libs/viewerjs@1.11.7/viewer.min.css"/>
+<script>
+  if (window.Viewer) {
+    document.querySelectorAll('img').forEach(img => {
+      new Viewer(img, {
+        inline: false,
+        navbar: false,
+        toolbar: {
+          zoomIn: 1,
+          zoomOut: 1,
+          reset: 1,
+          rotateLeft: 1,
+          rotateRight: 1,
+        },
+      });
+    });
+  }
+</script>
+
+
+</body>
+</html>

@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="utf-8">
+    <meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover"
+          name="viewport">
+    
+    
+    <!-- umami web analysis -->
+    <script defer src="https://zhen.wang/libs/umami/umami.script.js"
+            data-website-id="d66cfe03-f6b3-4aa0-baf8-728700db1b09"></script>
+    
+    
+    
+    <link rel="icon" type="image/png" sizes="16x16" href="https://zhen.wang/images/blog-site-icon.svg">
+    <link rel="icon" type="image/png" sizes="32x32" href="https://zhen.wang/images/blog-site-icon.svg">
+    <title>zhen&#x27;s everything</title>
+    <link rel="stylesheet" href="https://zhen.wang/style.css">
+    
+<link rel="stylesheet" href="https://zhen.wang/article_content.css">
+<link rel="stylesheet" href="https://zhen.wang/article_markdown.css">
+
+</head>
+<body>
+
+<div id="article">
+    <header class="article-header">
+        
+<div class="base-title">
+    <a href="#" onclick="history.length > 1 ? history.back() : location.href = '/'; return false;">&LeftArrow; Back</a>
+    <h1>
+        Rust工作空间（workspace）实践
+    </h1>
+</div>
+
+    </header>
+    <p class="article-date">2024-05-10</p>
+    
+    <!-- toc -->
+    <div class="article-toc">
+        <label class="toc-title" for="toc-trigger">目录</label>
+        <input id="toc-trigger" type="checkbox" checked/>
+        <div class="toc-content">
+            <ol class="toc">
+                
+                <li class="toc-item toc-level-1">
+                    <a class="toc-link" href="https://zhen.wang/article/Rust工作空间（workspace）实践/#ji-chu-pei-zhi">基础配置</a>
+                    
+                </li>
+                
+                <li class="toc-item toc-level-1">
+                    <a class="toc-link" href="https://zhen.wang/article/Rust工作空间（workspace）实践/#zi-packageyi-lai-pei-zhi">子package依赖配置</a>
+                    
+                </li>
+                
+                <li class="toc-item toc-level-1">
+                    <a class="toc-link" href="https://zhen.wang/article/Rust工作空间（workspace）实践/#workspacegong-xiang-yi-lai">workspace共享依赖</a>
+                    
+                </li>
+                
+                <li class="toc-item toc-level-1">
+                    <a class="toc-link" href="https://zhen.wang/article/Rust工作空间（workspace）实践/#workspacehuan-neng-gong-xiang-shen-me">workspace还能共享什么？</a>
+                    
+                </li>
+                
+                <li class="toc-item toc-level-1">
+                    <a class="toc-link" href="https://zhen.wang/article/Rust工作空间（workspace）实践/#xie-zai-zui-hou">写在最后</a>
+                    
+                </li>
+                
+                <li class="toc-item toc-level-1">
+                    <a class="toc-link" href="https://zhen.wang/article/Rust工作空间（workspace）实践/#can-kao">参考</a>
+                    
+                </li>
+                
+            </ol>
+        </div>
+    </div>
+    
+    <!-- real content -->
+    <div class="article-content markdown-content">
+        <p>本文将介绍如何使用cargo workspace来管理多个package，并通过实践介绍workspace的一些基础场景下的使用、配置方式。</p>
+<span id="continue-reading"></span>
+<p>在rust中编写某些中小型项目时，我们通常不会将一个工程拆分为多个package，而是通过一个package下不同的<strong>目录模块</strong>来实现模块拆分，尽管大部分场景下这种开发方式已经足够，然而一旦项目膨胀或是需要遵循模块化的工程设计，我们就不得不将多个模块拆分为独立的package来维护。维护多个package一般有两种方式：1、将多个package拆分为不同的仓库，独立发布crate；2、将多个package存放在同一仓库下，通过cargo workspace来管理，本文主要介绍后者的使用方式。</p>
+<h1 id="ji-chu-pei-zhi">基础配置</h1>
+<p>假设我们编写了一个rust应用。它分为两个部分：</p>
+<ol>
+<li>应用app本身（my_app）。</li>
+<li>一个独立的库lib（my_lib）。这个独立的库可能是一个提取出来的工具库，它被my_app项目所依赖。</li>
+</ol>
+<p>我们首先创建一个空项目：</p>
+<pre data-lang="shell" style="background-color:#2b303b;color:#c0c5ce;" class="language-shell "><code class="language-shell" data-lang="shell"><span>$ mkdir workspace-demo &amp;&amp; cd workspace-demo
+</span><span>$ cargo init
+</span></code></pre>
+<p>该命令执行完成后，我们会在当前目录下生成一个名为workspace-demo的目录，并在该目录下生成一个名为Cargo.toml的文件，该文件包含了当前工程的基本信息，包括工程名、版本、依赖等：</p>
+<p><img src="https://static-res.zhen.wang/images/post/2024-05-10/010-basic-project.png" alt="010-basic-project" /></p>
+<p>接着，我们在项目根目录执行如下命令，分别创建两个package：</p>
+<pre data-lang="shell" style="background-color:#2b303b;color:#c0c5ce;" class="language-shell "><code class="language-shell" data-lang="shell"><span>$ cargo init my_app --bin
+</span><span>$ cargo init my_lib --lib
+</span></code></pre>
+<p>执行完成以后，cargo帮助我们在项目根目录下创建了两个package：</p>
+<p><img src="https://static-res.zhen.wang/images/post/2024-05-10/020-init-2-packages.png" alt="020-init-2-packages" /></p>
+<p>并且，cargo贴心的帮助我们在项目根目录下的Cargo.toml加入下这段配置：</p>
+<pre data-lang="diff" style="background-color:#2b303b;color:#c0c5ce;" class="language-diff "><code class="language-diff" data-lang="diff"><span style="color:#a3be8c;">+ workspace = { members = [&quot;my_app&quot;, &quot;my_lib&quot;] }
+</span></code></pre>
+<p>这段配置意味着，我们刚刚创建的<code>my_app</code>和<code>my_lib</code>作为了的当前这个项目工作空间的成员（members）。</p>
+<p>接下来，让我们删除项目根目录下的src文件夹，然后使用命令（<code>cargo build</code>）编译项目下的两个package。</p>
+<p>执行命令后会发现一个报错：</p>
+<p><img src="https://static-res.zhen.wang/images/post/2024-05-10/030-no-package-err.png" alt="030-no-package-err" /></p>
+<pre style="background-color:#2b303b;color:#c0c5ce;"><code><span>Caused by:
+</span><span>  no targets specified in the manifest
+</span><span>  either src/lib.rs, src/main.rs, a [lib] section, or [[bin]] section must be present
+</span></code></pre>
+<p>这段报错指出：项目根目录下没有<code>src/lib.rs</code>，或<code>src/main.rs</code>，或者是在Cargo.toml中没有<code>[[bin]]</code>、<code>[[lib]]</code>字段指定当前根目录下的package。</p>
+<p>报错原因在于：首先，项目根目录下的Cargo.toml存在<code>[package]</code>字段：</p>
+<p><img src="https://static-res.zhen.wang/images/post/2024-05-10/040-package-field.png" alt="040-package-field" /></p>
+<p>这个字段的存在意味着根目录包含的内容是一个package包，那么这个目录需要符合rust的package结构：目录下存在<code>src/main.rs</code>（bin类型包），或存在<code>src/lib.rs</code>（lib类型包），或是通过<code>[[bin]]</code>、<code>[[lib]]</code>字段配置指定该package的入口代码文件。</p>
+<p>由于我们已经将<code>src</code>目录删除了，也没有额外的配置，所以rust认为我们的目录结构不合法，于是出现上述报错。</p>
+<p>所以，为了避免上述的报错，我们将这个<code>[package]</code>字段内容移除。</p>
+<pre data-lang="diff" style="background-color:#2b303b;color:#c0c5ce;" class="language-diff "><code class="language-diff" data-lang="diff"><span>workspace = { members = [&quot;my_app&quot;, &quot;my_lib&quot;] }
+</span><span>
+</span><span style="color:#bf616a;">- [package]
+</span><span style="color:#bf616a;">- name = &quot;workspace-demo&quot;
+</span><span style="color:#bf616a;">- version = &quot;0.1.0&quot;
+</span><span style="color:#bf616a;">- edition = &quot;2021&quot;
+</span><span>
+</span><span>[dependencies]
+</span><span>
+</span></code></pre>
+<p>再次进行<code>cargo build</code>，会发现新的报错：</p>
+<p><img src="https://static-res.zhen.wang/images/post/2024-05-10/050-dep-section-err.png" alt="050-dep-section-err" /></p>
+<pre style="background-color:#2b303b;color:#c0c5ce;"><code><span>Caused by:
+</span><span>  this virtual manifest specifies a `dependencies` section, which is not allowed
+</span></code></pre>
+<p>这段报错指出：不允许在虚拟清单类型的工作空间中存在<code>dependencies</code>字段。</p>
+<p>这里我们需要明白什么是<code>virtual manifest</code>？根据<a rel="noopener" target="_blank" href="https://course.rs/cargo/reference/workspaces.html#%E8%99%9A%E6%8B%9F%E6%B8%85%E5%8D%95">rust圣经提到的</a>：</p>
+<blockquote>
+<p>若一个 Cargo.toml 有 <code>[workspace]</code> 但是没有 <code>[package]</code> 部分，则它是虚拟清单类型的工作空间。</p>
+</blockquote>
+<p>这种场景下，我们根目录下的Cargo.toml完全作为整个工作空间下子crate的管理文件，本身并不包含package包。</p>
+<p>在本例中，我们希望整个项目下，所有的package都存放到crates目录下，而根目录下不需要放任何的src文件。所以，我们也需要将根目录下的Cargo.toml中的<code>[dependencies]</code>字段也一并移除。于是，现在的项目状态如下：</p>
+<p><img src="https://static-res.zhen.wang/images/post/2024-05-10/060-simple-virtual-manifest.png" alt="060-simple-virtual-manifest" /></p>
+<p>最后，我们再次执行<code>cargo build</code>，会发现编译成功。</p>
+<h1 id="zi-packageyi-lai-pei-zhi">子package依赖配置</h1>
+<p>当然，目前我们仅仅是创建了两个不相干的package。但是实际的场景下，<code>my_app</code>会依赖<code>my_lib</code>这个crate。为了达到这个目的，我们只需要在<code>my_app</code>下的Cargo.toml按照如下方式来定义对<code>my_lib</code>的依赖：</p>
+<p><img src="https://static-res.zhen.wang/images/post/2024-05-10/070-workspace-lib-dep-path.png" alt="070-workspace-lib-dep-path" /></p>
+<p>为了让子package依赖到工作空间中其他的package，只需要提供一个文件路径即可，该路径是相对于当前package的路径。</p>
+<h1 id="workspacegong-xiang-yi-lai">workspace共享依赖</h1>
+<p>除了workspace内部之间的依赖以外，我们还可能面临这样的场景：<code>my_app</code>和<code>my_lib</code>都用到了一个相同的外部依赖库（例如，<a rel="noopener" target="_blank" href="https://docs.rs/serde/latest/serde/">serde库</a>）。为了让这两个库都能依赖到。一种方式是将<code>my_app</code>和<code>my_lib</code>下的Cargo.toml都按如下方式定义：</p>
+<p><img src="https://static-res.zhen.wang/images/post/2024-05-10/080-simple-dep-serde.png" alt="080-simple-dep-serde" /></p>
+<p>这种方式虽然简单，但是存在一个问题：如果我们将<code>my_lib</code>的<code>serde</code>升级为一个新的版本，那么我们需要将<code>my_app</code>下的<code>serde</code>库也升级为新的版本。随着子package的增多，这样的维护方式心智负担会越来越大。那么有没有更优雅的方式呢？答案是肯定的。workspace为我们提供了依赖共享的能力，具体方式如下：</p>
+<p>首先，我们在项目根目录下Cargo.toml中增加一个名为<code>[workspace.dependencies]</code>的字段，并且在里面定义<code>serde</code>的依赖：</p>
+<pre data-lang="diff" style="background-color:#2b303b;color:#c0c5ce;" class="language-diff "><code class="language-diff" data-lang="diff"><span>[workspace]
+</span><span>members = [&quot;my_app&quot;, &quot;my_lib&quot;]
+</span><span style="color:#a3be8c;">+ [workspace.dependencies]
+</span><span style="color:#a3be8c;">+ serde = { version = &quot;1.0.201&quot; }
+</span></code></pre>
+<p>其次，修改<code>my_app</code>和<code>my_lib</code>下的Cargo.toml的<code>[dependencies]</code>字段中关于<code>serde</code>库的依赖，改为如下定义方式：</p>
+<pre data-lang="diff" style="background-color:#2b303b;color:#c0c5ce;" class="language-diff "><code class="language-diff" data-lang="diff"><span>...
+</span><span>[dependencies]
+</span><span style="color:#bf616a;">- serde = { version = &quot;1.0.201&quot; }
+</span><span style="color:#a3be8c;">+ serde = { workspace = true }
+</span></code></pre>
+<p>整体如下：</p>
+<p><img src="https://static-res.zhen.wang/images/post/2024-05-10/090-workspace-dep.png" alt="090-workspace-dep" /></p>
+<p>按照上述配置以后，<code>my_app</code>和<code>my_lib</code>不仅都依赖到了<code>serde</code>库，而且他们的版本始终保持了一致。如果我们将<code>serde</code>升级为一个新的版本，那么<code>my_app</code>和<code>my_lib</code>都会自动升级。</p>
+<h1 id="workspacehuan-neng-gong-xiang-shen-me">workspace还能共享什么？</h1>
+<p>实际上，除了上述的依赖共享外，还有其他很多的属性可以共享。例如，上述的<code>my_app</code>和<code>my_lib</code>都是各自在维护自己的版本：</p>
+<p><img src="https://static-res.zhen.wang/images/post/2024-05-10/100-independent-version.png" alt="independent-version" /></p>
+<p>有的场景下，我们希望它们的版本能够保持一致。这个时候，我们同样可以在根目录下的Cargo.toml定义工作空间的版本信息：</p>
+<pre data-lang="diff" style="background-color:#2b303b;color:#c0c5ce;" class="language-diff "><code class="language-diff" data-lang="diff"><span>[workspace]
+</span><span>members = [&quot;my_app&quot;, &quot;my_lib&quot;]
+</span><span>
+</span><span style="color:#a3be8c;">+ [workspace.package]
+</span><span style="color:#a3be8c;">+ version = &quot;0.1.0&quot;
+</span><span style="color:#a3be8c;">+ edition = &quot;2021&quot;
+</span><span style="color:#a3be8c;">+ license = &quot;MIT OR Apache-2.0&quot;
+</span><span style="color:#a3be8c;">+ authors = [&quot;w4ngzhen&quot;]
+</span><span>
+</span><span>[workspace.dependencies]
+</span><span>serde = { version = &quot;1.0.201&quot; }
+</span></code></pre>
+<p>然后，在各自的package下的Cargo.toml中，将相关字段做如下修改：</p>
+<pre data-lang="diff" style="background-color:#2b303b;color:#c0c5ce;" class="language-diff "><code class="language-diff" data-lang="diff"><span>[package]
+</span><span>name = &quot;my_lib&quot;
+</span><span>
+</span><span style="color:#bf616a;">- version = &quot;0.1.0&quot;
+</span><span style="color:#a3be8c;">+ version = { workspace = true}
+</span><span style="color:#a3be8c;">+ # 或
+</span><span style="color:#a3be8c;">+ # version.workspace = true
+</span><span style="color:#a3be8c;">+ edition = { workspace = true}
+</span><span style="color:#a3be8c;">+ authors = {workspace = true}
+</span></code></pre>
+<p>整体如下：</p>
+<p><img src="https://static-res.zhen.wang/images/post/2024-05-10/110-share-package-config.png" alt="share-package-config" /></p>
+<h1 id="xie-zai-zui-hou">写在最后</h1>
+<p>本文简单介绍了rust的cargo workspace的使用方式。当然，本文主要是使用虚拟清单类型（virtual manifest）的工作空间，即，根目录下Cargo.toml不指定任何package。当然，还有一种场景则是：根目录下Cargo.toml可以指定当前目录也是一个package包（通常是bin类型的可执行package），然后将该可执行package依赖的各种二方库通过workspace来配置。本文就不再赘述这块的内容，读者可以自行尝试。</p>
+<h1 id="can-kao">参考</h1>
+<p>http://course.rs/cargo/reference/workspaces.html</p>
+
+    </div>
+</div>
+<script src="https://zhen.wang/libs/viewerjs@1.11.7/viewer.min.js"></script>
+<link rel="stylesheet" href="https://zhen.wang/libs/viewerjs@1.11.7/viewer.min.css"/>
+<script>
+  if (window.Viewer) {
+    document.querySelectorAll('img').forEach(img => {
+      new Viewer(img, {
+        inline: false,
+        navbar: false,
+        toolbar: {
+          zoomIn: 1,
+          zoomOut: 1,
+          reset: 1,
+          rotateLeft: 1,
+          rotateRight: 1,
+        },
+      });
+    });
+  }
+</script>
+
+
+</body>
+</html>

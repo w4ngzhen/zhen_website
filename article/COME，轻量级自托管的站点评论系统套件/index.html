@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="utf-8">
+    <meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover"
+          name="viewport">
+    
+    
+    <!-- umami web analysis -->
+    <script defer src="https://zhen.wang/libs/umami/umami.script.js"
+            data-website-id="d66cfe03-f6b3-4aa0-baf8-728700db1b09"></script>
+    
+    
+    
+    <link rel="icon" type="image/png" sizes="16x16" href="https://zhen.wang/images/blog-site-icon.svg">
+    <link rel="icon" type="image/png" sizes="32x32" href="https://zhen.wang/images/blog-site-icon.svg">
+    <title>zhen&#x27;s everything</title>
+    <link rel="stylesheet" href="https://zhen.wang/style.css">
+    
+<link rel="stylesheet" href="https://zhen.wang/article_content.css">
+<link rel="stylesheet" href="https://zhen.wang/article_markdown.css">
+
+</head>
+<body>
+
+<div id="article">
+    <header class="article-header">
+        
+<div class="base-title">
+    <a href="#" onclick="history.length > 1 ? history.back() : location.href = '/'; return false;">&LeftArrow; Back</a>
+    <h1>
+        COME，轻量级自托管的站点评论系统套件
+    </h1>
+</div>
+
+    </header>
+    <p class="article-date">2025-07-31</p>
+    
+    <!-- toc -->
+    <div class="article-toc">
+        <label class="toc-title" for="toc-trigger">目录</label>
+        <input id="toc-trigger" type="checkbox" checked/>
+        <div class="toc-content">
+            <ol class="toc">
+                
+                <li class="toc-item toc-level-1">
+                    <a class="toc-link" href="https://zhen.wang/article/COME，轻量级自托管的站点评论系统套件/#ji-ben-neng-li">基本能力</a>
+                    
+                </li>
+                
+                <li class="toc-item toc-level-1">
+                    <a class="toc-link" href="https://zhen.wang/article/COME，轻量级自托管的站点评论系统套件/#yi-xie-ji-shu-xi-jie">一些技术细节</a>
+                    
+                    <ol class="toc-child">
+                        
+                        <li class="toc-item toc-level-2">
+                            <a href="https://zhen.wang/article/COME，轻量级自托管的站点评论系统套件/#ping-lun-zhe-shen-fen-ren-zheng-wen-ti">评论者身份认证问题</a>
+                        </li>
+                        
+                        <li class="toc-item toc-level-2">
+                            <a href="https://zhen.wang/article/COME，轻量级自托管的站点评论系统套件/#comecang-ku-jie-du">COME仓库解读</a>
+                        </li>
+                        
+                    </ol>
+                    
+                </li>
+                
+                <li class="toc-item toc-level-1">
+                    <a class="toc-link" href="https://zhen.wang/article/COME，轻量级自托管的站点评论系统套件/#geng-duo-nei-rong">更多内容</a>
+                    
+                    <ol class="toc-child">
+                        
+                        <li class="toc-item toc-level-2">
+                            <a href="https://zhen.wang/article/COME，轻量级自托管的站点评论系统套件/#comecang-ku">COME仓库</a>
+                        </li>
+                        
+                    </ol>
+                    
+                </li>
+                
+            </ol>
+        </div>
+    </div>
+    
+    <!-- real content -->
+    <div class="article-content markdown-content">
+        <p>常看笔者博文的读者都知道，笔者的博客站点（https://zhen.wang）为了其简约性，一直以来都未直接集成评论能力，而是通过让读者通过跳转 GitHub 并提交 issue 方式来收集读者反馈。虽然这种方式可行，但实际上一点也不便捷。本月初的时候，收到一名读者的留言，希望对博客留言的方式进行优化。在对各种留言评论系统进行调研以后，笔者还是决定再造一造轮子。于是，笔者花了几天时间开发了 <a rel="noopener" target="_blank" href="https://github.com/w4ngzhen/come">COME</a>，一套能够自托管的，足够轻量的评论系统。</p>
+<h1 id="ji-ben-neng-li">基本能力</h1>
+<p>COME主要有两个特点：</p>
+<ul>
+<li>自托管</li>
+<li>足够轻量</li>
+</ul>
+<p>对于“自托管”来说，本系统主要借助Cloudflare提供的能力/服务，通过免费（一定额度）的 Worker 来承载评论系统的后台服务接口逻辑，通过 Cloudflare D1 轻量级数据库来存储所有的评论数据。</p>
+<p>对于“足够轻量”来说，笔者在设计本系统时，整个系统只使用了<strong>一张</strong>数据库表来存储站点评论数据，不引入其他额外的复杂功能来增加本系统复杂度，以及开发心智负担，我相信任何感兴趣的朋友可以快速理解本系统，并搭建一套属于自己的评论系统。</p>
+<p>就目前而言，本系统包含了以下功能：</p>
+<ol>
+<li>
+<p>一个基于包含preact运行时的轻量级客户端评论展现/提交组件（umd形式提供），<a rel="noopener" target="_blank" href="https://github.com/w4ngzhen/come/tree/main/packages/web-comment-box">ComeCommentBox</a>。该组件使用 TypeScript + preact 进行开发，得益于 preact 的足够轻量级，ComeCommentBox 最终构建后产物（js+css）文件体积在 37 KB左右（包含preact运行时），通过简单的配置，可以轻松的嵌入挂载到任意Web页面上，加载并渲染相关的评论列表。</p>
+</li>
+<li>
+<p>评论后台管理服务（基于Hono开发），以及后台管理Web页面（TypeScript + React + antd@5，<strong>开发中</strong>），用于管理留言评论：</p>
+<ul>
+<li>
+<p>评论审核（默认开启）。开启后，所有来自网友提交评论需管理者主动审核才能展现在客户端页面评论区。</p>
+</li>
+<li>
+<p>评论移除。支持管理者手动删除某些留言评论。</p>
+</li>
+</ul>
+</li>
+</ol>
+<h1 id="yi-xie-ji-shu-xi-jie">一些技术细节</h1>
+<h2 id="ping-lun-zhe-shen-fen-ren-zheng-wen-ti">评论者身份认证问题</h2>
+<p>为了尽可能的轻量，<strong>本系统不支持评论者登录能力</strong>（即没有身份验证）。评论者只需提供邮箱、昵称以及评论内容即可完成评论提交。对于用户邮箱地址隐私问题，后台服务不会存储真实的邮箱地址，而是在处理评论提交请求时，对邮箱地址进行脱敏操作（例如将 <code>"abc@xxx.com"</code> 脱敏为 <code>"a***c@xxx.com"</code>），并只存储脱敏邮箱地址；当然，为了确定用户“唯一性”，后台服务会使用通过MD5算法计算邮箱地址的摘要字符串作为用户id进行存储，以便识别“唯一”用户。至于有心之人冒充评论者的问题（比如用户A从别处知道了用户B的邮箱地址以及其评论昵称，进而在评论区冒充用户B发言），本系统暂不考虑应对措施，可交给使用本系统的开发者用户自行拓展能力。</p>
+<blockquote>
+<p>当然，为了评论区的合法性，笔者强烈建议开启评论审核能力，主动规避剔除一些垃圾评论。</p>
+</blockquote>
+<h2 id="comecang-ku-jie-du">COME仓库解读</h2>
+<p>COME使用pnpm monorepo方式组织管理项目代码。该仓库下主要包含以下几个模块：</p>
+<ol>
+<li>
+<p>公共类型定义（packages/common-types目录）。该模块仅提供TypeScript类型定义，方便后台服务、前端页面组件共享类型定义。</p>
+</li>
+<li>
+<p>评论系统接口服务（packages/server目录）。基于Cloudflare Woker的node服务，使用TypeScript开发，整个服务目前只有3个依赖库：</p>
+<ul>
+<li>Hono：与Cloudflare深度集成的超轻量级 Web 框架。高性能，零依赖。</li>
+<li>drizzle-orm：Cloudflare 生态中用于类型安全数据库操作的轻量级 TypeScript ORM 库，尤其与 Cloudflare D1（边缘 SQLite 数据库）深度集成</li>
+<li>zod：一个高性能，轻量级的校验库。可以方便定义一些数据的字段校验规则。</li>
+</ul>
+</li>
+<li>
+<p>后台服务管理WebUI（packages/web-server-management）。后台服务的Web页面，核心使用React+antd@5开发。通过该Web系统，可以方便的管理站点系统的所有评论留言。</p>
+</li>
+<li>
+<p>客户端评论UI组件 ComeCommentBox（packages/come-comment-box）。TypeScript + preact 进行开发，只依赖preact。</p>
+</li>
+</ol>
+<h1 id="geng-duo-nei-rong">更多内容</h1>
+<p>COME的开发虽然快接近尾声，但由于本月笔者事务繁多，时间有限，COME还在有一些事项未彻底完成。笔者计划8月底之前完成COME系统套件的研发收尾、文档编写（包含功能介绍，开发调试）工作。届时发布相关的动态，以及再次更新本文内容，还请各位读者多多关注！</p>
+<h2 id="comecang-ku">COME仓库</h2>
+<p><a rel="noopener" target="_blank" href="https://github.com/w4ngzhen/come">https://github.com/w4ngzhen/come</a></p>
+
+    </div>
+</div>
+<script src="https://zhen.wang/libs/viewerjs@1.11.7/viewer.min.js"></script>
+<link rel="stylesheet" href="https://zhen.wang/libs/viewerjs@1.11.7/viewer.min.css"/>
+<script>
+  if (window.Viewer) {
+    document.querySelectorAll('img').forEach(img => {
+      new Viewer(img, {
+        inline: false,
+        navbar: false,
+        toolbar: {
+          zoomIn: 1,
+          zoomOut: 1,
+          reset: 1,
+          rotateLeft: 1,
+          rotateRight: 1,
+        },
+      });
+    });
+  }
+</script>
+
+
+</body>
+</html>

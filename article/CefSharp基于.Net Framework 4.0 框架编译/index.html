@@ -1,0 +1,542 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="utf-8">
+    <meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover"
+          name="viewport">
+    
+    
+    <!-- umami web analysis -->
+    <script defer src="https://zhen.wang/libs/umami/umami.script.js"
+            data-website-id="d66cfe03-f6b3-4aa0-baf8-728700db1b09"></script>
+    
+    
+    
+    <link rel="icon" type="image/png" sizes="16x16" href="https://zhen.wang/images/blog-site-icon.svg">
+    <link rel="icon" type="image/png" sizes="32x32" href="https://zhen.wang/images/blog-site-icon.svg">
+    <title>zhen&#x27;s everything</title>
+    <link rel="stylesheet" href="https://zhen.wang/style.css">
+    
+<link rel="stylesheet" href="https://zhen.wang/article_content.css">
+<link rel="stylesheet" href="https://zhen.wang/article_markdown.css">
+
+</head>
+<body>
+
+<div id="article">
+    <header class="article-header">
+        
+<div class="base-title">
+    <a href="#" onclick="history.length > 1 ? history.back() : location.href = '/'; return false;">&LeftArrow; Back</a>
+    <h1>
+        CefSharp基于.Net Framework 4.0 框架编译
+    </h1>
+</div>
+
+    </header>
+    <p class="article-date">2020-06-06</p>
+    
+    <!-- toc -->
+    <div class="article-toc">
+        <label class="toc-title" for="toc-trigger">目录</label>
+        <input id="toc-trigger" type="checkbox" checked/>
+        <div class="toc-content">
+            <ol class="toc">
+                
+                <li class="toc-item toc-level-1">
+                    <a class="toc-link" href="https://zhen.wang/article/CefSharp基于.Net Framework 4.0 框架编译/#zhun-bei">准备</a>
+                    
+                    <ol class="toc-child">
+                        
+                        <li class="toc-item toc-level-2">
+                            <a href="https://zhen.wang/article/CefSharp基于.Net Framework 4.0 框架编译/#ide">IDE</a>
+                        </li>
+                        
+                        <li class="toc-item toc-level-2">
+                            <a href="https://zhen.wang/article/CefSharp基于.Net Framework 4.0 框架编译/#environment">Environment</a>
+                        </li>
+                        
+                        <li class="toc-item toc-level-2">
+                            <a href="https://zhen.wang/article/CefSharp基于.Net Framework 4.0 框架编译/#zu-jian-qing-dan">组件清单</a>
+                        </li>
+                        
+                    </ol>
+                    
+                </li>
+                
+                <li class="toc-item toc-level-1">
+                    <a class="toc-link" href="https://zhen.wang/article/CefSharp基于.Net Framework 4.0 框架编译/#kai-shi">开始</a>
+                    
+                    <ol class="toc-child">
+                        
+                        <li class="toc-item toc-level-2">
+                            <a href="https://zhen.wang/article/CefSharp基于.Net Framework 4.0 框架编译/#cefsharp">CefSharp</a>
+                        </li>
+                        
+                        <li class="toc-item toc-level-2">
+                            <a href="https://zhen.wang/article/CefSharp基于.Net Framework 4.0 框架编译/#cefsharp-core">CefSharp.Core</a>
+                        </li>
+                        
+                        <li class="toc-item toc-level-2">
+                            <a href="https://zhen.wang/article/CefSharp基于.Net Framework 4.0 框架编译/#cefsharp-browsersubprocess-core">CefSharp.BrowserSubprocess.Core</a>
+                        </li>
+                        
+                        <li class="toc-item toc-level-2">
+                            <a href="https://zhen.wang/article/CefSharp基于.Net Framework 4.0 框架编译/#cefsharp-browsersubprocess">CefSharp.BrowserSubprocess</a>
+                        </li>
+                        
+                        <li class="toc-item toc-level-2">
+                            <a href="https://zhen.wang/article/CefSharp基于.Net Framework 4.0 框架编译/#cefsharp-winform">CefSharp.WinForm</a>
+                        </li>
+                        
+                        <li class="toc-item toc-level-2">
+                            <a href="https://zhen.wang/article/CefSharp基于.Net Framework 4.0 框架编译/#cefsharp-example">CefSharp.Example</a>
+                        </li>
+                        
+                        <li class="toc-item toc-level-2">
+                            <a href="https://zhen.wang/article/CefSharp基于.Net Framework 4.0 框架编译/#cefsharp-winform-example">CefSharp.WinForm.Example</a>
+                        </li>
+                        
+                    </ol>
+                    
+                </li>
+                
+                <li class="toc-item toc-level-1">
+                    <a class="toc-link" href="https://zhen.wang/article/CefSharp基于.Net Framework 4.0 框架编译/#zhi-pin-shu-li">制品梳理</a>
+                    
+                </li>
+                
+            </ol>
+        </div>
+    </div>
+    
+    <!-- real content -->
+    <div class="article-content markdown-content">
+        <p>本次源码使用的是Github上CefSharp官方的79版本源码</p>
+<span id="continue-reading"></span><h2 id="zhun-bei">准备</h2>
+<h3 id="ide">IDE</h3>
+<p>Visual Studio 2017 Enterprise</p>
+<h3 id="environment">Environment</h3>
+<p>Windows10 SDK</p>
+<p>VC2013 Redistributale Package x86\x64</p>
+<h3 id="zu-jian-qing-dan">组件清单</h3>
+<p>以下组件按照顺序进行编译最佳</p>
+<h4 id="ji-chu-ceng">基础层</h4>
+<ul>
+<li>CefSharp（C#）</li>
+<li>CefSharp.Core（C++）</li>
+<li>CefSharp.BrowserSubprocess.Core（C++）</li>
+<li>CefSharp.BrowserSubprocess（C#）</li>
+</ul>
+<h4 id="uiceng">UI层</h4>
+<ul>
+<li>CefSharp.WinForms（C#）</li>
+</ul>
+<h4 id="example">Example</h4>
+<ul>
+<li>
+<p>CefSharp.Example</p>
+</li>
+<li>
+<p>CefSharp.WinForms.Example</p>
+</li>
+</ul>
+<h2 id="kai-shi">开始</h2>
+<p>建立一个名为CefSharp-DotNet4.0的空的解决方案（下文简称sln哈），咱们就开始吧！</p>
+<h3 id="cefsharp">CefSharp</h3>
+<p>首先把79版本的源码中的CefSharp库加入到sln中，形成如下的结构：</p>
+<p><img src="https://static-res.zhen.wang/images/post/2020-06-06-build-cefsharp/1.png" alt="" /></p>
+<p>先不将框架切换为4.0尝试编译一下，出现报错提示：</p>
+<pre style="background-color:#2b303b;color:#c0c5ce;"><code><span>1&gt;------ Rebuild All started: Project: CefSharp, Configuration: Debug x64 ------
+</span><span>1&gt;CSC : error CS7027: Error signing output with public key from file &#39;..\CefSharp.snk&#39; -- File not found.
+</span><span>========== Rebuild All: 0 succeeded, 1 failed, 0 skipped ==========
+</span></code></pre>
+<p>检查79版本的源码发现，需要将CefSharp.snk文件放置到sln根目录下，这里照做，然后编译通过。</p>
+<p>接着切换为4.0尝试编译，编译出现大量错误，仔细检查发现有如下几种：</p>
+<p><strong>1、CefSharp.Web.JsonString.FromObject函数的参数DataContractJsonSerializerSettings并不存在</strong></p>
+<p><strong>原因</strong>：4.0还不存在该种形式的调用</p>
+<p><strong>解决办法</strong>：移除该方法的settings参数，移除DataContractJsonSerializerSettings构造函数的settings参数</p>
+<p><strong>2、CefSharp.Internals.ConcurrentMethodRunnerQueue.Enqueue方法中，调用了PropertyInfo.GetValue方法报错</strong></p>
+<p><strong>原因</strong>：该PropertyInfo.GetValue方法在4.5及以上可以不传入第二个参数object[] index</p>
+<p><strong>解决办法</strong>：GetValue函数传入第二个参数为null即可</p>
+<p><strong>3、CefSharp.SchemeHandler.FolderSchemeHandlerFactory.ISchemeHandlerFactory.Create中WebUtility.UrlDecode报错</strong></p>
+<p><strong>原因</strong>：该方法是对一般字符串编码为Url的实现，在4.5及以上中才有</p>
+<p><strong>解决办法</strong>：实现一个相同的功能的方法替换之，因为后续还有些处理转为4.0后的兼容问题的代码，所以本人在CefSharp增加了一个ExHelper命名空间，用于存放后续的扩展处理代码的Helper，这里首先增加一个WebUtilityHelper的处理类，该类有一个静态方法UrlDecode，其实现本人直接拷贝的.NET 4.7.2的实现，代码如下：</p>
+<pre data-lang="c#" style="background-color:#2b303b;color:#c0c5ce;" class="language-c# "><code class="language-c#" data-lang="c#"><span style="color:#b48ead;">namespace </span><span>CefSharp.ExHelper
+</span><span>{
+</span><span>    </span><span style="color:#65737e;">/// &lt;</span><span style="color:#bf616a;">summary</span><span style="color:#65737e;">&gt;
+</span><span style="color:#65737e;">    /// https://referencesource.microsoft.com/#System/net/System/Net/HttpListenerRequest.cs,80a5cbf6a66fa610
+</span><span style="color:#65737e;">    /// &lt;/</span><span style="color:#bf616a;">summary</span><span style="color:#65737e;">&gt;
+</span><span>    </span><span style="color:#b48ead;">public class </span><span style="color:#ebcb8b;">WebUtilityHelper
+</span><span style="color:#eff1f5;">    {
+</span><span style="color:#eff1f5;">        </span><span style="color:#b48ead;">private int </span><span style="color:#bf616a;">_bufferSize</span><span style="color:#eff1f5;">;
+</span><span style="color:#eff1f5;">
+</span><span style="color:#eff1f5;">        </span><span style="color:#65737e;">// Accumulate characters in a special array
+</span><span style="color:#eff1f5;">        </span><span style="color:#b48ead;">private int </span><span style="color:#bf616a;">_numChars</span><span style="color:#eff1f5;">;
+</span><span style="color:#eff1f5;">        </span><span style="color:#b48ead;">private char</span><span style="color:#eff1f5;">[] </span><span style="color:#bf616a;">_charBuffer</span><span style="color:#eff1f5;">;
+</span><span style="color:#eff1f5;">
+</span><span style="color:#eff1f5;">        </span><span style="color:#65737e;">// Accumulate bytes for decoding into characters in a special array
+</span><span style="color:#eff1f5;">        </span><span style="color:#b48ead;">private int </span><span style="color:#bf616a;">_numBytes</span><span style="color:#eff1f5;">;
+</span><span style="color:#eff1f5;">        </span><span style="color:#b48ead;">private byte</span><span style="color:#eff1f5;">[] </span><span style="color:#bf616a;">_byteBuffer</span><span style="color:#eff1f5;">;
+</span><span style="color:#eff1f5;">
+</span><span style="color:#eff1f5;">        </span><span style="color:#65737e;">// Encoding to convert chars to bytes
+</span><span style="color:#eff1f5;">        </span><span style="color:#b48ead;">private </span><span style="color:#eff1f5;">Encoding </span><span style="color:#bf616a;">_encoding</span><span style="color:#eff1f5;">;
+</span><span style="color:#eff1f5;">
+</span><span style="color:#eff1f5;">        </span><span style="color:#b48ead;">internal </span><span style="color:#8fa1b3;">WebUtilityHelper</span><span style="color:#eff1f5;">(</span><span style="color:#b48ead;">int </span><span style="color:#bf616a;">bufferSize</span><span style="color:#eff1f5;">, Encoding </span><span style="color:#bf616a;">encoding</span><span style="color:#eff1f5;">)
+</span><span style="color:#eff1f5;">        {
+</span><span style="color:#eff1f5;">            </span><span style="color:#bf616a;">_bufferSize </span><span>= </span><span style="color:#bf616a;">bufferSize</span><span style="color:#eff1f5;">;
+</span><span style="color:#eff1f5;">            </span><span style="color:#bf616a;">_encoding </span><span>= </span><span style="color:#bf616a;">encoding</span><span style="color:#eff1f5;">;
+</span><span style="color:#eff1f5;">
+</span><span style="color:#eff1f5;">            </span><span style="color:#bf616a;">_charBuffer </span><span>= new </span><span style="color:#b48ead;">char</span><span style="color:#eff1f5;">[</span><span style="color:#bf616a;">bufferSize</span><span style="color:#eff1f5;">];
+</span><span style="color:#eff1f5;">            </span><span style="color:#65737e;">// byte buffer created on demand
+</span><span style="color:#eff1f5;">        }
+</span><span style="color:#eff1f5;">
+</span><span style="color:#eff1f5;">        </span><span style="color:#b48ead;">public static string </span><span style="color:#8fa1b3;">UrlDecode</span><span style="color:#eff1f5;">(</span><span style="color:#b48ead;">string </span><span style="color:#bf616a;">encodedValue</span><span style="color:#eff1f5;">)
+</span><span style="color:#eff1f5;">        {
+</span><span style="color:#eff1f5;">            </span><span style="color:#b48ead;">if </span><span style="color:#eff1f5;">(</span><span style="color:#bf616a;">encodedValue </span><span>== </span><span style="color:#d08770;">null</span><span style="color:#eff1f5;">)
+</span><span style="color:#eff1f5;">                </span><span style="color:#b48ead;">return </span><span style="color:#d08770;">null</span><span style="color:#eff1f5;">;
+</span><span style="color:#eff1f5;">
+</span><span style="color:#eff1f5;">            </span><span style="color:#b48ead;">return </span><span style="color:#bf616a;">UrlDecodeInternal</span><span style="color:#eff1f5;">(</span><span style="color:#bf616a;">encodedValue</span><span style="color:#eff1f5;">, </span><span style="color:#bf616a;">Encoding</span><span style="color:#eff1f5;">.</span><span style="color:#bf616a;">UTF8</span><span style="color:#eff1f5;">);
+</span><span style="color:#eff1f5;">        }
+</span><span style="color:#eff1f5;">
+</span><span style="color:#eff1f5;">        </span><span style="color:#b48ead;">private static string </span><span style="color:#8fa1b3;">UrlDecodeInternal</span><span style="color:#eff1f5;">(</span><span style="color:#b48ead;">string </span><span style="color:#bf616a;">value</span><span style="color:#eff1f5;">, Encoding </span><span style="color:#bf616a;">encoding</span><span style="color:#eff1f5;">)
+</span><span style="color:#eff1f5;">        {
+</span><span style="color:#eff1f5;">            </span><span style="color:#b48ead;">if </span><span style="color:#eff1f5;">(</span><span style="color:#bf616a;">value </span><span>== </span><span style="color:#d08770;">null</span><span style="color:#eff1f5;">)
+</span><span style="color:#eff1f5;">            {
+</span><span style="color:#eff1f5;">                </span><span style="color:#b48ead;">return </span><span style="color:#d08770;">null</span><span style="color:#eff1f5;">;
+</span><span style="color:#eff1f5;">            }
+</span><span style="color:#eff1f5;">
+</span><span style="color:#eff1f5;">            </span><span style="color:#b48ead;">int </span><span style="color:#bf616a;">count </span><span>= </span><span style="color:#bf616a;">value</span><span style="color:#eff1f5;">.</span><span style="color:#bf616a;">Length</span><span style="color:#eff1f5;">;
+</span><span style="color:#eff1f5;">            WebUtilityHelper </span><span style="color:#bf616a;">helper </span><span>= new </span><span style="color:#eff1f5;">WebUtilityHelper(</span><span style="color:#bf616a;">count</span><span style="color:#eff1f5;">, </span><span style="color:#bf616a;">encoding</span><span style="color:#eff1f5;">);
+</span><span style="color:#eff1f5;">
+</span><span style="color:#eff1f5;">            </span><span style="color:#65737e;">// go through the string&#39;s chars collapsing %XX and
+</span><span style="color:#eff1f5;">            </span><span style="color:#65737e;">// appending each char as char, with exception of %XX constructs
+</span><span style="color:#eff1f5;">            </span><span style="color:#65737e;">// that are appended as bytes
+</span><span style="color:#eff1f5;">
+</span><span style="color:#eff1f5;">            </span><span style="color:#b48ead;">for </span><span style="color:#eff1f5;">(</span><span style="color:#b48ead;">int </span><span style="color:#bf616a;">pos </span><span>= </span><span style="color:#d08770;">0</span><span style="color:#eff1f5;">; </span><span style="color:#bf616a;">pos </span><span>&lt; </span><span style="color:#bf616a;">count</span><span style="color:#eff1f5;">; </span><span style="color:#bf616a;">pos</span><span>++</span><span style="color:#eff1f5;">)
+</span><span style="color:#eff1f5;">            {
+</span><span style="color:#eff1f5;">                </span><span style="color:#b48ead;">char </span><span style="color:#bf616a;">ch </span><span>= </span><span style="color:#bf616a;">value</span><span style="color:#eff1f5;">[</span><span style="color:#bf616a;">pos</span><span style="color:#eff1f5;">];
+</span><span style="color:#eff1f5;">
+</span><span style="color:#eff1f5;">                </span><span style="color:#b48ead;">if </span><span style="color:#eff1f5;">(</span><span style="color:#bf616a;">ch </span><span>== </span><span style="color:#d08770;">&#39;+&#39;</span><span style="color:#eff1f5;">)
+</span><span style="color:#eff1f5;">                {
+</span><span style="color:#eff1f5;">                    </span><span style="color:#bf616a;">ch </span><span>= </span><span style="color:#d08770;">&#39; &#39;</span><span style="color:#eff1f5;">;
+</span><span style="color:#eff1f5;">                }
+</span><span style="color:#eff1f5;">                </span><span style="color:#b48ead;">else if </span><span style="color:#eff1f5;">(</span><span style="color:#bf616a;">ch </span><span>== </span><span style="color:#d08770;">&#39;%&#39; </span><span>&amp;&amp; </span><span style="color:#bf616a;">pos </span><span>&lt; </span><span style="color:#bf616a;">count </span><span>- </span><span style="color:#d08770;">2</span><span style="color:#eff1f5;">)
+</span><span style="color:#eff1f5;">                {
+</span><span style="color:#eff1f5;">                    </span><span style="color:#b48ead;">int </span><span style="color:#bf616a;">h1 </span><span>= </span><span style="color:#bf616a;">HexToInt</span><span style="color:#eff1f5;">(</span><span style="color:#bf616a;">value</span><span style="color:#eff1f5;">[</span><span style="color:#bf616a;">pos </span><span>+ </span><span style="color:#d08770;">1</span><span style="color:#eff1f5;">]);
+</span><span style="color:#eff1f5;">                    </span><span style="color:#b48ead;">int </span><span style="color:#bf616a;">h2 </span><span>= </span><span style="color:#bf616a;">HexToInt</span><span style="color:#eff1f5;">(</span><span style="color:#bf616a;">value</span><span style="color:#eff1f5;">[</span><span style="color:#bf616a;">pos </span><span>+ </span><span style="color:#d08770;">2</span><span style="color:#eff1f5;">]);
+</span><span style="color:#eff1f5;">
+</span><span style="color:#eff1f5;">                    </span><span style="color:#b48ead;">if </span><span style="color:#eff1f5;">(</span><span style="color:#bf616a;">h1 </span><span>&gt;= </span><span style="color:#d08770;">0 </span><span>&amp;&amp; </span><span style="color:#bf616a;">h2 </span><span>&gt;= </span><span style="color:#d08770;">0</span><span style="color:#eff1f5;">)
+</span><span style="color:#eff1f5;">                    {     </span><span style="color:#65737e;">// valid 2 hex chars
+</span><span style="color:#eff1f5;">                        </span><span style="color:#b48ead;">byte </span><span style="color:#bf616a;">b </span><span>= </span><span style="color:#eff1f5;">(</span><span style="color:#b48ead;">byte</span><span style="color:#eff1f5;">)((</span><span style="color:#bf616a;">h1 </span><span>&lt;&lt; </span><span style="color:#d08770;">4</span><span style="color:#eff1f5;">) </span><span>| </span><span style="color:#bf616a;">h2</span><span style="color:#eff1f5;">);
+</span><span style="color:#eff1f5;">                        </span><span style="color:#bf616a;">pos </span><span>+= </span><span style="color:#d08770;">2</span><span style="color:#eff1f5;">;
+</span><span style="color:#eff1f5;">
+</span><span style="color:#eff1f5;">                        </span><span style="color:#65737e;">// don&#39;t add as char
+</span><span style="color:#eff1f5;">                        </span><span style="color:#bf616a;">helper</span><span style="color:#eff1f5;">.</span><span style="color:#bf616a;">AddByte</span><span style="color:#eff1f5;">(</span><span style="color:#bf616a;">b</span><span style="color:#eff1f5;">);
+</span><span style="color:#eff1f5;">                        </span><span style="color:#b48ead;">continue</span><span style="color:#eff1f5;">;
+</span><span style="color:#eff1f5;">                    }
+</span><span style="color:#eff1f5;">                }
+</span><span style="color:#eff1f5;">
+</span><span style="color:#eff1f5;">                </span><span style="color:#b48ead;">if </span><span style="color:#eff1f5;">((</span><span style="color:#bf616a;">ch </span><span>&amp; </span><span style="color:#d08770;">0xFF80</span><span style="color:#eff1f5;">) </span><span>== </span><span style="color:#d08770;">0</span><span style="color:#eff1f5;">)
+</span><span style="color:#eff1f5;">                    </span><span style="color:#bf616a;">helper</span><span style="color:#eff1f5;">.</span><span style="color:#bf616a;">AddByte</span><span style="color:#eff1f5;">((</span><span style="color:#b48ead;">byte</span><span style="color:#eff1f5;">)</span><span style="color:#bf616a;">ch</span><span style="color:#eff1f5;">); </span><span style="color:#65737e;">// 7 bit have to go as bytes because of Unicode
+</span><span style="color:#eff1f5;">                </span><span style="color:#b48ead;">else
+</span><span style="color:#eff1f5;">                    </span><span style="color:#bf616a;">helper</span><span style="color:#eff1f5;">.</span><span style="color:#bf616a;">AddChar</span><span style="color:#eff1f5;">(</span><span style="color:#bf616a;">ch</span><span style="color:#eff1f5;">);
+</span><span style="color:#eff1f5;">            }
+</span><span style="color:#eff1f5;">
+</span><span style="color:#eff1f5;">            </span><span style="color:#b48ead;">return </span><span style="color:#bf616a;">helper</span><span style="color:#eff1f5;">.</span><span style="color:#bf616a;">GetString</span><span style="color:#eff1f5;">();
+</span><span style="color:#eff1f5;">        }
+</span><span style="color:#eff1f5;">
+</span><span style="color:#eff1f5;">        </span><span style="color:#b48ead;">private static int </span><span style="color:#8fa1b3;">HexToInt</span><span style="color:#eff1f5;">(</span><span style="color:#b48ead;">char </span><span style="color:#bf616a;">h</span><span style="color:#eff1f5;">)
+</span><span style="color:#eff1f5;">        {
+</span><span style="color:#eff1f5;">            </span><span style="color:#b48ead;">return </span><span style="color:#eff1f5;">(</span><span style="color:#bf616a;">h </span><span>&gt;= </span><span style="color:#d08770;">&#39;0&#39; </span><span>&amp;&amp; </span><span style="color:#bf616a;">h </span><span>&lt;= </span><span style="color:#d08770;">&#39;9&#39;</span><span style="color:#eff1f5;">) </span><span>? </span><span style="color:#bf616a;">h </span><span>- </span><span style="color:#d08770;">&#39;0&#39; </span><span>:
+</span><span style="color:#eff1f5;">            (</span><span style="color:#bf616a;">h </span><span>&gt;= </span><span style="color:#d08770;">&#39;a&#39; </span><span>&amp;&amp; </span><span style="color:#bf616a;">h </span><span>&lt;= </span><span style="color:#d08770;">&#39;f&#39;</span><span style="color:#eff1f5;">) </span><span>? </span><span style="color:#bf616a;">h </span><span>- </span><span style="color:#d08770;">&#39;a&#39; </span><span>+ </span><span style="color:#d08770;">10 </span><span>:
+</span><span style="color:#eff1f5;">            (</span><span style="color:#bf616a;">h </span><span>&gt;= </span><span style="color:#d08770;">&#39;A&#39; </span><span>&amp;&amp; </span><span style="color:#bf616a;">h </span><span>&lt;= </span><span style="color:#d08770;">&#39;F&#39;</span><span style="color:#eff1f5;">) </span><span>? </span><span style="color:#bf616a;">h </span><span>- </span><span style="color:#d08770;">&#39;A&#39; </span><span>+ </span><span style="color:#d08770;">10 </span><span>:
+</span><span style="color:#eff1f5;">            </span><span>-</span><span style="color:#d08770;">1</span><span style="color:#eff1f5;">;
+</span><span style="color:#eff1f5;">        }
+</span><span style="color:#eff1f5;">
+</span><span style="color:#eff1f5;">        </span><span style="color:#b48ead;">private void </span><span style="color:#8fa1b3;">FlushBytes</span><span style="color:#eff1f5;">()
+</span><span style="color:#eff1f5;">        {
+</span><span style="color:#eff1f5;">            </span><span style="color:#b48ead;">if </span><span style="color:#eff1f5;">(</span><span style="color:#bf616a;">_numBytes </span><span>&gt; </span><span style="color:#d08770;">0</span><span style="color:#eff1f5;">)
+</span><span style="color:#eff1f5;">            {
+</span><span style="color:#eff1f5;">                </span><span style="color:#bf616a;">_numChars </span><span>+= </span><span style="color:#bf616a;">_encoding</span><span style="color:#eff1f5;">.</span><span style="color:#bf616a;">GetChars</span><span style="color:#eff1f5;">(</span><span style="color:#bf616a;">_byteBuffer</span><span style="color:#eff1f5;">, </span><span style="color:#d08770;">0</span><span style="color:#eff1f5;">, </span><span style="color:#bf616a;">_numBytes</span><span style="color:#eff1f5;">, </span><span style="color:#bf616a;">_charBuffer</span><span style="color:#eff1f5;">, </span><span style="color:#bf616a;">_numChars</span><span style="color:#eff1f5;">);
+</span><span style="color:#eff1f5;">                </span><span style="color:#bf616a;">_numBytes </span><span>= </span><span style="color:#d08770;">0</span><span style="color:#eff1f5;">;
+</span><span style="color:#eff1f5;">            }
+</span><span style="color:#eff1f5;">        }
+</span><span style="color:#eff1f5;">
+</span><span style="color:#eff1f5;">        </span><span style="color:#b48ead;">internal void </span><span style="color:#8fa1b3;">AddChar</span><span style="color:#eff1f5;">(</span><span style="color:#b48ead;">char </span><span style="color:#bf616a;">ch</span><span style="color:#eff1f5;">)
+</span><span style="color:#eff1f5;">        {
+</span><span style="color:#eff1f5;">            </span><span style="color:#b48ead;">if </span><span style="color:#eff1f5;">(</span><span style="color:#bf616a;">_numBytes </span><span>&gt; </span><span style="color:#d08770;">0</span><span style="color:#eff1f5;">)
+</span><span style="color:#eff1f5;">                </span><span style="color:#bf616a;">FlushBytes</span><span style="color:#eff1f5;">();
+</span><span style="color:#eff1f5;">
+</span><span style="color:#eff1f5;">            </span><span style="color:#bf616a;">_charBuffer</span><span style="color:#eff1f5;">[</span><span style="color:#bf616a;">_numChars</span><span>++</span><span style="color:#eff1f5;">] </span><span>= </span><span style="color:#bf616a;">ch</span><span style="color:#eff1f5;">;
+</span><span style="color:#eff1f5;">        }
+</span><span style="color:#eff1f5;">
+</span><span style="color:#eff1f5;">        </span><span style="color:#b48ead;">internal void </span><span style="color:#8fa1b3;">AddByte</span><span style="color:#eff1f5;">(</span><span style="color:#b48ead;">byte </span><span style="color:#bf616a;">b</span><span style="color:#eff1f5;">)
+</span><span style="color:#eff1f5;">        {
+</span><span style="color:#eff1f5;">            </span><span style="color:#b48ead;">if </span><span style="color:#eff1f5;">(</span><span style="color:#bf616a;">_byteBuffer </span><span>== </span><span style="color:#d08770;">null</span><span style="color:#eff1f5;">)
+</span><span style="color:#eff1f5;">                </span><span style="color:#bf616a;">_byteBuffer </span><span>= new </span><span style="color:#b48ead;">byte</span><span style="color:#eff1f5;">[</span><span style="color:#bf616a;">_bufferSize</span><span style="color:#eff1f5;">];
+</span><span style="color:#eff1f5;">
+</span><span style="color:#eff1f5;">            </span><span style="color:#bf616a;">_byteBuffer</span><span style="color:#eff1f5;">[</span><span style="color:#bf616a;">_numBytes</span><span>++</span><span style="color:#eff1f5;">] </span><span>= </span><span style="color:#bf616a;">b</span><span style="color:#eff1f5;">;
+</span><span style="color:#eff1f5;">        }
+</span><span style="color:#eff1f5;">
+</span><span style="color:#eff1f5;">        </span><span style="color:#b48ead;">internal </span><span style="color:#eff1f5;">String </span><span style="color:#8fa1b3;">GetString</span><span style="color:#eff1f5;">()
+</span><span style="color:#eff1f5;">        {
+</span><span style="color:#eff1f5;">            </span><span style="color:#b48ead;">if </span><span style="color:#eff1f5;">(</span><span style="color:#bf616a;">_numBytes </span><span>&gt; </span><span style="color:#d08770;">0</span><span style="color:#eff1f5;">)
+</span><span style="color:#eff1f5;">                </span><span style="color:#bf616a;">FlushBytes</span><span style="color:#eff1f5;">();
+</span><span style="color:#eff1f5;">
+</span><span style="color:#eff1f5;">            </span><span style="color:#b48ead;">if </span><span style="color:#eff1f5;">(</span><span style="color:#bf616a;">_numChars </span><span>&gt; </span><span style="color:#d08770;">0</span><span style="color:#eff1f5;">)
+</span><span style="color:#eff1f5;">                </span><span style="color:#b48ead;">return </span><span>new </span><span style="color:#eff1f5;">String(</span><span style="color:#bf616a;">_charBuffer</span><span style="color:#eff1f5;">, </span><span style="color:#d08770;">0</span><span style="color:#eff1f5;">, </span><span style="color:#bf616a;">_numChars</span><span style="color:#eff1f5;">);
+</span><span style="color:#eff1f5;">            </span><span style="color:#b48ead;">else
+</span><span style="color:#eff1f5;">                </span><span style="color:#b48ead;">return </span><span style="color:#bf616a;">String</span><span style="color:#eff1f5;">.</span><span style="color:#bf616a;">Empty</span><span style="color:#eff1f5;">;
+</span><span style="color:#eff1f5;">        }
+</span><span style="color:#eff1f5;">    }
+</span><span>
+</span><span>}
+</span></code></pre>
+<p>然后在报错地方进行如下调用：</p>
+<pre data-lang="c#" style="background-color:#2b303b;color:#c0c5ce;" class="language-c# "><code class="language-c#" data-lang="c#"><span style="color:#b48ead;">var </span><span style="color:#bf616a;">filePath </span><span>= </span><span style="color:#bf616a;">ExHelper</span><span>.</span><span style="color:#bf616a;">WebUtilityHelper</span><span>.</span><span style="color:#bf616a;">UrlDecode</span><span>(</span><span style="color:#bf616a;">Path</span><span>.</span><span style="color:#bf616a;">GetFullPath</span><span>(</span><span style="color:#bf616a;">Path</span><span>.</span><span style="color:#bf616a;">Combine</span><span>(</span><span style="color:#bf616a;">rootFolder</span><span>, </span><span style="color:#bf616a;">asbolutePath</span><span>)));
+</span></code></pre>
+<p><strong>4、Type.GetTypeInfo报错</strong></p>
+<p><strong>原因</strong>：4.0中没有将Type的信息（TypeInfo）从Type中抽离，所以4.0种的Type并没有GetTypeInfo的方法</p>
+<p><strong>解决办法</strong>：4.0访问Type的BaseType、IsGenericType等属性，直接从Type对象调用即可，即如下的形式：</p>
+<pre data-lang="C#" style="background-color:#2b303b;color:#c0c5ce;" class="language-C# "><code class="language-C#" data-lang="C#"><span>Type </span><span style="color:#bf616a;">type </span><span>= </span><span style="color:#bf616a;">XXX</span><span>;
+</span><span style="color:#65737e;">// 4.0版本
+</span><span style="color:#b48ead;">bool </span><span style="color:#bf616a;">val </span><span>= </span><span style="color:#bf616a;">type</span><span>.</span><span style="color:#bf616a;">IsGenericType</span><span>;
+</span><span>Type </span><span style="color:#bf616a;">baseType </span><span>= </span><span style="color:#bf616a;">type</span><span>.</span><span style="color:#bf616a;">BaseType</span><span>;
+</span><span style="color:#65737e;">// 4.5以及以上版本
+</span><span style="color:#b48ead;">bool </span><span style="color:#bf616a;">val </span><span>= </span><span style="color:#bf616a;">type</span><span>.</span><span style="color:#bf616a;">GetTypeInfo</span><span>().</span><span style="color:#bf616a;">IsGenericType</span><span>;
+</span><span>Type </span><span style="color:#bf616a;">baseType </span><span>= </span><span style="color:#bf616a;">type</span><span>.</span><span style="color:#bf616a;">GetTypeInfo</span><span>().</span><span style="color:#bf616a;">BaseType</span><span>;
+</span></code></pre>
+<p>这里本人将代码抽离到ExHelper.ReflecionHelper中方便统一调用</p>
+<p><strong>5、Task.Run、Task.FromResult以及Task.Delay报错</strong></p>
+<p><strong>原因</strong>：在4.0中都不支持上述的几种方式进行调用</p>
+<p><strong>解决方案</strong>：通过Nuget加入Microsoft.Bcl、Microsoft.Bcl.Build以及Microsoft.Bcl.Async三个库到本项目中，然后将上述的所有地方的调用都替换为Microsoft.Threading.Tasks.TaskEx，如下：</p>
+<pre data-lang="c#" style="background-color:#2b303b;color:#c0c5ce;" class="language-c# "><code class="language-c#" data-lang="c#"><span style="color:#65737e;">// 4.5之后
+</span><span style="color:#bf616a;">Task</span><span>.</span><span style="color:#bf616a;">Run
+</span><span style="color:#bf616a;">Task</span><span>.</span><span style="color:#bf616a;">FromResult
+</span><span style="color:#bf616a;">Task</span><span>.</span><span style="color:#bf616a;">Delay
+</span><span style="color:#65737e;">// 4.0，加入了Bcl之后
+</span><span style="color:#bf616a;">TaskEx</span><span>.</span><span style="color:#bf616a;">Run
+</span><span style="color:#bf616a;">TaskEx</span><span>.</span><span style="color:#bf616a;">FromResult
+</span><span style="color:#bf616a;">TaskEx</span><span>.</span><span style="color:#bf616a;">Delay
+</span></code></pre>
+<blockquote>
+<p>这里讲一下背景，微软发布了Microsoft.Bcl.Async的最终版本，参看博客<a rel="noopener" target="_blank" href="http://blogs.msdn.com/b/bclteam/archive/2013/04/17/microsoft-bcl-async-is-now-stable.aspx">Microsoft.Bcl.Async is Now Stable</a>。该包允许开发者在.NET 4、Silverlight 4和Windows Phone 7.5使用C# 5和VB中的异步特性。该包由三个库组成：Microsoft.Bcl、Microsoft.Bcl.Async和Microsoft.Bcl.Build。<strong>由于使用了<a rel="noopener" target="_blank" href="http://msdn.microsoft.com/en-us/library/db7849ey.aspx">程序集统一</a>的方式，解决方案中的所有工程都必须引用这三个库</strong>。</p>
+<p>C#发展至今，已经从最初的1.0到了5.0版本：</p>
+<ol>
+<li>1.0版本 - 基本C#语法。</li>
+<li>2.0版本 - 泛型的支持，CLR进行了升级，从根本上支持了运行时泛型。</li>
+<li>3.0版本 - LINQ，添加了<code>from</code> / <code>join</code>等类SQL关键字，添加了扩展函数，添加了编译期动态类型var关键字。</li>
+<li>4.0版本 - dynamic关键字，CLR进行升级，加入DLR，开始对动态进行友好的支持。同时加入动态参数、参数默认值、泛型协变等特性。</li>
+<li>5.0版本 - async/await关键字，将异步变得更为简单。</li>
+</ol>
+<p>async/await 将异步的编程模型统一为同步模型，简化开发复杂度，提升生产效率。微软正式发布了Microsoft.Bcl.Async的最终版本，这让.NET4里头也可以用上async/await，而不需要把项目更改为.net 4.5。</p>
+</blockquote>
+<p>这里为了统一入口，本人把这几个TaskEx的调用收口到ExHelper.TaskHelper中便于查找改动点。</p>
+<p>目前为止，我们应该解决了CefSharp库所有的问题，再次Rebuild该项目，Succeeded！</p>
+<h3 id="cefsharp-core">CefSharp.Core</h3>
+<p>CefSharp.Core是一个C++的库，但是由于该C++库里面调用了一些C#代码，所以跟.Net Framework版本出现了相关性。这里我们同上一样，把79版本的CefSharp.Core源码加入到sln中，右键该项目，打开菜单最下面的properties：</p>
+<p><img src="https://static-res.zhen.wang/images/post/2020-06-06-build-cefsharp/2.png" alt="" /></p>
+<p>这里我们修改3个点：</p>
+<p>1、选择Windows SDK Version。点击Windows SDK Version右边的下拉框，选择我们安装的Windos10 SDK，如果你和我的SDK版本安装的是一样的，应该就是10.0.17763.0，但是理论上Windows8以上的SDK都应该没啥问题；</p>
+<p>2、选择Platform Toolset为我们安装的IDE的版本，这里我的就是Visual Studio 2017；</p>
+<p>3、手动填入.NET Target Framework Version 为："v4.0"。</p>
+<p><img src="https://static-res.zhen.wang/images/post/2020-06-06-build-cefsharp/3.png" alt="" /></p>
+<p>完成上述修改后，我们还需要进行如下的操作：</p>
+<p>拷贝79版本源码解决方案根目录下的CefSharp.props文件到本sln根目录下</p>
+<p>这么做的原因是在CefSharp.Core的vcxproj文件中（VC++项目编译文件），有一处Import（自行搜索）：</p>
+<pre data-lang="xml" style="background-color:#2b303b;color:#c0c5ce;" class="language-xml "><code class="language-xml" data-lang="xml"><span>&lt;</span><span style="color:#bf616a;">Import </span><span style="color:#d08770;">Project</span><span>=&quot;</span><span style="color:#a3be8c;">..\CefSharp.props</span><span>&quot;&gt;
+</span></code></pre>
+<p>然后我们进行编译Rebuild，不出意外应该还是有大量的错误，乍一看出现的错误似乎让人摸不着头脑，什么" 'AssmblyInfo' : is not a class or namesapce name"等C#问题，可是明显在这些.NET 4.0上没有问题。本人突然想起以前在学校学习C/C++的时候，老师告诉我们处理C/C++编译处理一定要从最上面看，仔细看命令行编译最开始的地方有两处warning：</p>
+<pre style="background-color:#2b303b;color:#c0c5ce;"><code><span>warning MSB3268: The primary reference &quot;E:\Projects\CefSharp-DotNet4.0\CefSharp\bin\x64\Debug\CefSharp.dll&quot; could not be resolved because it has an indirect dependency on the framework assembly &quot;System.Runtime, Version=1.5.11.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a&quot; which could not be resolved in the currently targeted framework. &quot;.NETFramework,Version=v4.0&quot;. To resolve this problem, either remove the reference &quot;E:\Projects\CefSharp-DotNet4.0\CefSharp\bin\x64\Debug\CefSharp.dll&quot; or retarget your application to a framework version which contains &quot;System.Runtime, Version=1.5.11.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a&quot;.
+</span><span>
+</span><span>warning MSB3268: The primary reference &quot;E:\Projects\CefSharp-DotNet4.0\CefSharp\bin\x64\Debug\CefSharp.dll&quot; could not be resolved because it has an indirect dependency on the framework assembly &quot;System.Threading.Tasks, Version=1.5.11.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a&quot; which could not be resolved in the currently targeted framework. &quot;.NETFramework,Version=v4.0&quot;. To resolve this problem, either remove the reference &quot;E:\Projects\CefSharp-DotNet4.0\CefSharp\bin\x64\Debug\CefSharp.dll&quot; or retarget your application to a framework version which contains &quot;System.Threading.Tasks, Version=1.5.11.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a&quot;.
+</span></code></pre>
+<p>这两个warning说我们的CefSharp因为Tasks相关动态库的版本不对无法编译，但是我们之前CefSharp已经完成了编译，似乎没有什么问题。实际上，我们CefSharp为了兼容使用了Bcl相关组件，上面我们提到：</p>
+<blockquote>
+<p><strong>由于使用了<a rel="noopener" target="_blank" href="http://msdn.microsoft.com/en-us/library/db7849ey.aspx">程序集统一</a>的方式，解决方案中的所有工程都必须引用这三个库</strong>。</p>
+</blockquote>
+<p>实际上C++的工程代码也不例外，所以我们添加Bcl库代码到工程中，由于nuget似乎无法为C++工程添加包，所以本人采用手工的方式添加：</p>
+<p>1、在vcxproj文件的适当位置添加如下的节点引入Bcl包里面的组件：</p>
+<pre data-lang="xml" style="background-color:#2b303b;color:#c0c5ce;" class="language-xml "><code class="language-xml" data-lang="xml"><span>  &lt;</span><span style="background-color:#bf616a;color:#2b303b;">......</span><span>&gt;
+</span><span>  &lt;</span><span style="color:#bf616a;">Reference </span><span style="color:#d08770;">Include</span><span>=&quot;</span><span style="color:#a3be8c;">System.ServiceModel</span><span>&quot; /&gt;
+</span><span>  &lt;/</span><span style="color:#bf616a;">ItemGroup</span><span>&gt;
+</span><span>  &lt;</span><span style="color:#bf616a;">ItemGroup</span><span>&gt;
+</span><span>    &lt;</span><span style="color:#bf616a;">Reference </span><span style="color:#d08770;">Include</span><span>=&quot;</span><span style="color:#a3be8c;">System.Runtime</span><span>&quot;&gt;
+</span><span>      &lt;</span><span style="color:#bf616a;">HintPath</span><span>&gt;..\packages\Microsoft.Bcl.1.1.10\lib\net40\System.Runtime.dll&lt;/</span><span style="color:#bf616a;">HintPath</span><span>&gt;
+</span><span>    &lt;/</span><span style="color:#bf616a;">Reference</span><span>&gt;
+</span><span>    &lt;</span><span style="color:#bf616a;">Reference </span><span style="color:#d08770;">Include</span><span>=&quot;</span><span style="color:#a3be8c;">System.Threading.Tasks</span><span>&quot;&gt;           	       &lt;</span><span style="color:#bf616a;">HintPath</span><span>&gt;..\packages\Microsoft.Bcl.1.1.10\lib\net40\System.Threading.Tasks.dll&lt;/</span><span style="color:#bf616a;">HintPath</span><span>&gt;
+</span><span>    &lt;/</span><span style="color:#bf616a;">Reference</span><span>&gt;
+</span><span>  &lt;/</span><span style="color:#bf616a;">ItemGroup</span><span>&gt;
+</span><span>  &lt;</span><span style="color:#bf616a;">ItemGroup</span><span>&gt;
+</span><span>    &lt;</span><span style="color:#bf616a;">ClCompile </span><span style="color:#d08770;">Include</span><span>=&quot;</span><span style="color:#a3be8c;">AssemblyInfo.cpp</span><span>&quot; /&gt;
+</span><span>  &lt;</span><span style="background-color:#bf616a;color:#2b303b;">......</span><span>&gt;
+</span></code></pre>
+<p>2、让编译的时候识别到该Nuget包，vcxproj文件末尾添加：</p>
+<pre data-lang="xml" style="background-color:#2b303b;color:#c0c5ce;" class="language-xml "><code class="language-xml" data-lang="xml"><span> &lt;</span><span style="background-color:#bf616a;color:#2b303b;">......</span><span>&gt;
+</span><span> &lt;</span><span style="color:#bf616a;">ImportGroup </span><span style="color:#d08770;">Label</span><span>=&quot;</span><span style="color:#a3be8c;">ExtensionTargets</span><span>&quot;&gt;
+</span><span>    &lt;</span><span style="color:#bf616a;">Import </span><span style="color:#d08770;">Project</span><span>=&quot;</span><span style="color:#a3be8c;">..\packages\Microsoft.Bcl.Build.1.0.21\build\Microsoft.Bcl.Build.targets</span><span>&quot; </span><span style="color:#d08770;">Condition</span><span>=&quot;</span><span style="color:#a3be8c;">Exists(&#39;..\packages\Microsoft.Bcl.Build.1.0.21\build\Microsoft.Bcl.Build.targets&#39;)</span><span>&quot; /&gt;
+</span><span>  &lt;/</span><span style="color:#bf616a;">ImportGroup</span><span>&gt;
+</span><span>  &lt;</span><span style="color:#bf616a;">Target </span><span style="color:#d08770;">Name</span><span>=&quot;</span><span style="color:#a3be8c;">EnsureNuGetPackageBuildImports</span><span>&quot; </span><span style="color:#d08770;">BeforeTargets</span><span>=&quot;</span><span style="color:#a3be8c;">PrepareForBuild</span><span>&quot;&gt;
+</span><span>    &lt;</span><span style="color:#bf616a;">PropertyGroup</span><span>&gt;
+</span><span>      &lt;</span><span style="color:#bf616a;">ErrorText</span><span>&gt;This project references NuGet package(s) that are missing on this computer. Use NuGet Package Restore to download them.  For more information, see http://go.microsoft.com/fwlink/?LinkID=322105. The missing file is {0}.&lt;/</span><span style="color:#bf616a;">ErrorText</span><span>&gt;
+</span><span>    &lt;/</span><span style="color:#bf616a;">PropertyGroup</span><span>&gt;
+</span><span>    &lt;</span><span style="color:#bf616a;">Error </span><span style="color:#d08770;">Condition</span><span>=&quot;</span><span style="color:#a3be8c;">!Exists(&#39;..\packages\Microsoft.Bcl.Build.1.0.21\build\Microsoft.Bcl.Build.targets&#39;)</span><span>&quot; </span><span style="color:#d08770;">Text</span><span>=&quot;</span><span style="color:#a3be8c;">$([System.String]::Format(&#39;$(ErrorText)&#39;, &#39;..\packages\Microsoft.Bcl.Build.1.0.21\build\Microsoft.Bcl.Build.targets&#39;))</span><span>&quot; /&gt;
+</span><span>  &lt;/</span><span style="color:#bf616a;">Target</span><span>&gt;
+</span><span>&lt;/</span><span style="color:#bf616a;">Project</span><span>&gt;
+</span></code></pre>
+<p>3、修改packge.config文件（没有则新增）</p>
+<pre data-lang="xml" style="background-color:#2b303b;color:#c0c5ce;" class="language-xml "><code class="language-xml" data-lang="xml"><span>&lt;?</span><span style="color:#bf616a;">xml </span><span style="color:#d08770;">version</span><span>=&quot;</span><span style="color:#a3be8c;">1.0</span><span>&quot; </span><span style="color:#d08770;">encoding</span><span>=&quot;</span><span style="color:#a3be8c;">utf-8</span><span>&quot;?&gt;
+</span><span>&lt;</span><span style="color:#bf616a;">packages</span><span>&gt;
+</span><span>  </span><span style="color:#65737e;">&lt;!-- cef.sdk是需要的依赖包 --&gt;
+</span><span>  &lt;</span><span style="color:#bf616a;">package </span><span style="color:#d08770;">id</span><span>=&quot;</span><span style="color:#a3be8c;">cef.sdk</span><span>&quot; </span><span style="color:#d08770;">version</span><span>=&quot;</span><span style="color:#a3be8c;">79.1.36</span><span>&quot; </span><span style="color:#d08770;">targetFramework</span><span>=&quot;</span><span style="color:#a3be8c;">native</span><span>&quot; /&gt;
+</span><span>  &lt;</span><span style="color:#bf616a;">package </span><span style="color:#d08770;">id</span><span>=&quot;</span><span style="color:#a3be8c;">Microsoft.Bcl</span><span>&quot; </span><span style="color:#d08770;">version</span><span>=&quot;</span><span style="color:#a3be8c;">1.1.10</span><span>&quot; </span><span style="color:#d08770;">targetFramework</span><span>=&quot;</span><span style="color:#a3be8c;">net40</span><span>&quot; /&gt;
+</span><span>  &lt;</span><span style="color:#bf616a;">package </span><span style="color:#d08770;">id</span><span>=&quot;</span><span style="color:#a3be8c;">Microsoft.Bcl.Async</span><span>&quot; </span><span style="color:#d08770;">version</span><span>=&quot;</span><span style="color:#a3be8c;">1.0.168</span><span>&quot; </span><span style="color:#d08770;">targetFramework</span><span>=&quot;</span><span style="color:#a3be8c;">net40</span><span>&quot; /&gt;
+</span><span>  &lt;</span><span style="color:#bf616a;">package </span><span style="color:#d08770;">id</span><span>=&quot;</span><span style="color:#a3be8c;">Microsoft.Bcl.Build</span><span>&quot; </span><span style="color:#d08770;">version</span><span>=&quot;</span><span style="color:#a3be8c;">1.0.21</span><span>&quot; </span><span style="color:#d08770;">targetFramework</span><span>=&quot;</span><span style="color:#a3be8c;">net40</span><span>&quot; /&gt;
+</span><span>&lt;/</span><span style="color:#bf616a;">packages</span><span>&gt;
+</span></code></pre>
+<p>上述操作完成后需要进行Restore还原一下cef.sdk的NuGet包，然后再次进行编译，发现warning已经消除，但是还是编译失败，还是有很多“报错”，本人一开始找问题也找了很久以为全都是error，后来发现很多都是warning，最后发现2处关键点error（你们可以先自行搜索这两个地方，双击就可以跳转到对应的报错处）：</p>
+<p>**1、**在CefSharp::Internals::Serialization中的SerializeV8SimpleObject有一处GetValue调用报错：</p>
+<pre style="background-color:#2b303b;color:#c0c5ce;"><code><span>error C2661: &#39;System::Reflection::PropertyInfo::GetValue&#39;: no overloaded function takes 1 arguments
+</span></code></pre>
+<p>**2、**在CefSharp::Internals::JavascriptCallbackProxy中的ExecuteWithTimeoutAsync有一处调用报错：</p>
+<pre style="background-color:#2b303b;color:#c0c5ce;"><code><span>error C2039: &#39;FromResult&#39;: is not a member of &#39;System::Threading::Tasks::Task&#39;
+</span></code></pre>
+<p>这两处很明显是使用了C#的代码，且该代码是 .Net4.0不支持的，原因以及解决方法在上面的CefSharp中已经说了。这里我们修改按照C++语法改写下代码：</p>
+<pre data-lang="C++" style="background-color:#2b303b;color:#c0c5ce;" class="language-C++ "><code class="language-C++" data-lang="C++"><span style="color:#d08770;">1</span><span>、
+</span><span style="color:#b48ead;">auto</span><span> propertyValue = properties[i]-&gt;</span><span style="color:#bf616a;">GetValue</span><span>(obj); </span><span style="color:#65737e;">// 4.5.2
+</span><span style="color:#b48ead;">auto</span><span> propertyValue = properties[i]-&gt;</span><span style="color:#bf616a;">GetValue</span><span>(obj, </span><span style="color:#d08770;">nullptr</span><span>); </span><span style="color:#65737e;">// 4.0
+</span><span style="color:#d08770;">2</span><span>、
+</span><span>Task::</span><span style="color:#8fa1b3;">FromResult</span><span>(</span><span style="color:#bf616a;">invalidFrameResponse</span><span>); </span><span style="color:#65737e;">// 4.5.2
+</span><span>ExHelper::TaskHelper::</span><span style="color:#8fa1b3;">FromResult</span><span>(</span><span style="color:#bf616a;">invalidFrameResponse</span><span>); </span><span style="color:#65737e;">// 4.0 命名空间就对应的CefSharp里面的Helper
+</span></code></pre>
+<p>完成操作后，Rebuild sln，Succeeded！</p>
+<h3 id="cefsharp-browsersubprocess-core">CefSharp.BrowserSubprocess.Core</h3>
+<p>同上操作，将4.5.2源码加入到sln中，和上述CefSharp.Core相同方式：</p>
+<p>1、修改properties；</p>
+<p><strong>2、增加Bcl包的依赖到vsxproj中。</strong></p>
+<p>完成操作后，直接进行Rebuild操作，因为该C++库并不涉及到C#的代码，所以只需要做上述增加Bcl库的相关操作，编译成功！</p>
+<h3 id="cefsharp-browsersubprocess">CefSharp.BrowserSubprocess</h3>
+<p>同上操作，将4.5.2源码加入到sln中，然后：**1、切换版本为.NET 4.0；2、增加Bcl相关依赖包。**因为是C#项目我们终于不用手工给csproj添加节点了，可以使用nuget添加Bcl三个包。</p>
+<p>添加完成后我们尝试编译该组件，不知道为什么，在我的机器上编译过程会出现如下的错误：</p>
+<pre style="background-color:#2b303b;color:#c0c5ce;"><code><span>找不到命令的错误提示
+</span></code></pre>
+<p>但是查看编译结果还有输出目录能够看到是编译成功的，我也索性没有继续看下去了</p>
+<h3 id="cefsharp-winform">CefSharp.WinForm</h3>
+<p>终于到我们的UI层了，如上方式添加源码到项目里，然后：<strong>1、切换版本为.NET 4.0；2、增加Bcl相关依赖包。</strong>（如果你切换了框架后，右键该项目-Manage NuGet Packages出现报错nuget is invalid，请尝试关闭解决方案重新打开）。编译该项目，不出意外，编译成功～</p>
+<p>至此，跟.NET Framework绑定的代码已经全部编译通过，本来到此步骤，我们的编译工作已经完成了，但是官方提供了Example让我们可以调用看看样例，本人索性把Example和WinForm.Example两个工程也一并.NET 4.0化了。</p>
+<h3 id="cefsharp-example">CefSharp.Example</h3>
+<p>该组件并非是必须组件，但是后续无论是Wpf还是WinForm的Example运行，都需要该组件，所以我们还是把它也.NET 4.0化。</p>
+<p>还是上述方式，添加到项目，然后：**1、切换版本为.NET 4.0；2、增加Bcl相关依赖包。**最后尝试进行编译，出现编译错误：</p>
+<p><strong>1、在CefSharp.Example.Handlers.DownloadHandler.OnBeforeDownloadFired函数中，定义的Eventhandler的泛型参数DownloadItem并不是EventArgs子类</strong></p>
+<p><strong>原因</strong>：在4.5之后，EventHandler的泛型参数可以不是EventArgs的子类，而在.Net 4.0必须是继承自EventArgs</p>
+<p><strong>解决办法</strong>：因为DownloadItem较为公共，我们不方便将其继承EventArgs，所以我们单独写一个自己的EventHandler，让其泛型参数接收任意类型：</p>
+<pre data-lang="c#" style="background-color:#2b303b;color:#c0c5ce;" class="language-c# "><code class="language-c#" data-lang="c#"><span style="color:#b48ead;">public delegate void </span><span style="color:#bf616a;">DownloadEventHandler</span><span>&lt;</span><span style="color:#b48ead;">in </span><span>T&gt;(</span><span style="color:#b48ead;">object </span><span style="color:#bf616a;">sender</span><span>, T </span><span style="color:#bf616a;">args</span><span>);
+</span><span style="color:#65737e;">// 改成我们的自己的下载事件
+</span><span style="color:#b48ead;">public </span><span>event </span><span style="color:#bf616a;">DownloadEventHandler</span><span>&lt;</span><span style="color:#bf616a;">DownloadItem</span><span>&gt; </span><span style="color:#bf616a;">OnBeforeDownloadFired</span><span>;
+</span><span style="color:#b48ead;">public </span><span>event </span><span style="color:#bf616a;">DownloadEventHandler</span><span>&lt;</span><span style="color:#bf616a;">DownloadItem</span><span>&gt; </span><span style="color:#bf616a;">OnDownloadUpdatedFired</span><span>;
+</span></code></pre>
+<p>再次编译，还会有一些剩下的和Task相关的编译报错问题，上文已经解释了原因和提供了解决方案，Do It！完成修改后，编译成功！</p>
+<h3 id="cefsharp-winform-example">CefSharp.WinForm.Example</h3>
+<p>我们依然如上的方式进行工程的添加，添加的过程会弹出提示框报如下的错误：</p>
+<pre style="background-color:#2b303b;color:#c0c5ce;"><code><span>---------------------------
+</span><span>Microsoft Visual Studio
+</span><span>---------------------------
+</span><span>The imported project &quot;E:\Projects\CefSharp-DotNet4.0\CefSharp.Native.props&quot; was not found. Confirm that the path in the &lt;Import&gt; declaration is correct, and that the file exists on disk.  E:\Projects\CefSharp-DotNet4.0\CefSharp.WinForms.Example\CefSharp.WinForms.Example.csproj
+</span><span>---------------------------
+</span><span>确定   
+</span><span>---------------------------
+</span></code></pre>
+<p>上述提示表明，我们缺少CefSharp.Native.props，在官方源码中的解决方案根目录下找到对应的文件拷贝到我们的目录下。拷贝完成后，<strong>我们先不进行切换Framework和添加Bcl依赖包的操作</strong>，我们首先打开该项目的package.config文件，可以看到有如下的内容：</p>
+<pre data-lang="xml" style="background-color:#2b303b;color:#c0c5ce;" class="language-xml "><code class="language-xml" data-lang="xml"><span>  &lt;</span><span style="color:#bf616a;">package </span><span style="color:#d08770;">id</span><span>=&quot;</span><span style="color:#a3be8c;">cef.redist.x64</span><span>&quot; </span><span style="color:#d08770;">version</span><span>=&quot;</span><span style="color:#a3be8c;">79.1.36</span><span>&quot; </span><span style="color:#d08770;">targetFramework</span><span>=&quot;</span><span style="color:#a3be8c;">net462</span><span>&quot; /&gt;
+</span><span>  &lt;</span><span style="color:#bf616a;">package </span><span style="color:#d08770;">id</span><span>=&quot;</span><span style="color:#a3be8c;">cef.redist.x86</span><span>&quot; </span><span style="color:#d08770;">version</span><span>=&quot;</span><span style="color:#a3be8c;">79.1.36</span><span>&quot; </span><span style="color:#d08770;">targetFramework</span><span>=&quot;</span><span style="color:#a3be8c;">net462</span><span>&quot; /&gt;
+</span><span>  &lt;</span><span style="color:#bf616a;">package </span><span style="color:#d08770;">id</span><span>=&quot;</span><span style="color:#a3be8c;">Microsoft.Net.Compilers</span><span>&quot; </span><span style="color:#d08770;">version</span><span>=&quot;</span><span style="color:#a3be8c;">2.9.0</span><span>&quot; </span><span style="color:#d08770;">targetFramework</span><span>=&quot;</span><span style="color:#a3be8c;">net462</span><span>&quot; </span><span style="color:#d08770;">developmentDependency</span><span>=&quot;</span><span style="color:#a3be8c;">true</span><span>&quot; /&gt;
+</span></code></pre>
+<p>很明显和我们即将要切换的.NET4.0不符合，接下来我们再进行如下操作：</p>
+<p>1、先Restore这些NuGet包，然后卸载掉，最后再切换为4.0；</p>
+<p>2、<strong>只安装Bcl相关组件包，不安装上述卸载的cef.redist和Compiler</strong></p>
+<p>进行编译，不出意外会出现如下的几个编译错误：</p>
+<p><strong>1、error CS0117: 'TaskContinuationOptions' does not contain a definition for 'HideScheduler'</strong></p>
+<p><strong>原因</strong>：Net4.0中没有这个定义</p>
+<p><strong>解决办法</strong>：因为是Demo，我们使用的TaskContinuationOptions.None的枚举暂时避过编译</p>
+<p><strong>2、error CS0103: The name 'AppContext' does not exist in the current context</strong></p>
+<p><strong>原因</strong>：Net4.0中没有这个定义</p>
+<p><strong>解决办法</strong>：这里的目的是获取CefSharp.Example\Extensions里面的文件，我们使用System.AppDomain.CurrentDomain.BaseDirectory即可</p>
+<p>剩下的几个编译问题还是Task的问题，不在赘述。</p>
+<p>完成编译以后，我们尝试运行该WinForm.Example，提示：</p>
+<blockquote>
+<p>未能加载文件或程序集“CefSharp.Core.dll”或它的某一个依赖项。找不到指定的模块</p>
+</blockquote>
+<p>检查Bin目录下的，发现已经有了该dll，那么就是缺少了CefSharp.Core.dll需要的组件。实际上，刚才我们移除了2个NuGet依赖包：</p>
+<p>cef.redist.x64、cef.redist.x86，这里面是Cef的核心资源与类库，就包含了CefSharp.Core所需要的所有资源。</p>
+<p>重新安装这两个组件包，但需要注意的是对应版本一定要对应当前的版本（79.1.36）。安装完成后，我们检查packages里面的cef.redist组件包，可以看到CEF文件夹下面有我们需要的ceflib.dll等类库和资源：</p>
+<pre style="background-color:#2b303b;color:#c0c5ce;"><code><span>locales(dir)
+</span><span>swiftshader(dir)
+</span><span>cef.pak
+</span><span>cef_100_percent.pak
+</span><span>cef_200_percent.pak
+</span><span>cef_extensions.pak
+</span><span>chrome_elf.dll
+</span><span>d3dcompiler_47.dll
+</span><span>devtools_resources.pak
+</span><span>icudtl.dat
+</span><span>libcef.dll
+</span><span>libEGL.dll
+</span><span>libGLESv2.dll
+</span><span>natives_blob.bin
+</span><span>README.txt
+</span><span>snapshot_blob.bin
+</span><span>v8_context_snapshot.bin
+</span></code></pre>
+<p>我们再次运行，终于出现关于WinForm的Example！</p>
+<h2 id="zhi-pin-shu-li">制品梳理</h2>
+<ul>
+<li>NuGet引用Microsoft.Bcl、Microsoft.Bcl.Build以及Microsoft.Bcl.Async</li>
+</ul>
+<p>引入上述3个依赖库组件是因为我们为了将CefSharp代码使用.NET 4.0进行编译，兼容async/await等Task相关的特性而引入的</p>
+<pre style="background-color:#2b303b;color:#c0c5ce;"><code><span>Miscrosoft.Threading.Tasks.dll
+</span><span>Miscrosoft.Threading.Tasks.Extensions.dll
+</span><span>Miscrosoft.Threading.Tasks.Extensions.Desktop.dll
+</span><span>System.IO.dll
+</span><span>System.Runtime.dll
+</span><span>System.Threading.Tasks.dll
+</span></code></pre>
+<ul>
+<li>NuGet引用cef.redist. x86/x64</li>
+</ul>
+<p>该NuGet包中包含Cef原生需要的组件和资源包，包括核心的ceflib.dll，具体内容请查看packages/cef.redist. x86/x64/CEF中的所有。</p>
+<ul>
+<li>基于DotNet 4.0编译的CefSharp核心依赖库</li>
+</ul>
+<pre style="background-color:#2b303b;color:#c0c5ce;"><code><span>CefSharp（C#）
+</span><span>CefSharp.Core（C++）
+</span><span>CefSharp.BrowserSubprocess.Core（C++）
+</span><span>CefSharp.BrowserSubprocess（C#）
+</span><span>CefSharp.WinForms（C#）
+</span></code></pre>
+
+    </div>
+</div>
+<script src="https://zhen.wang/libs/viewerjs@1.11.7/viewer.min.js"></script>
+<link rel="stylesheet" href="https://zhen.wang/libs/viewerjs@1.11.7/viewer.min.css"/>
+<script>
+  if (window.Viewer) {
+    document.querySelectorAll('img').forEach(img => {
+      new Viewer(img, {
+        inline: false,
+        navbar: false,
+        toolbar: {
+          zoomIn: 1,
+          zoomOut: 1,
+          reset: 1,
+          rotateLeft: 1,
+          rotateRight: 1,
+        },
+      });
+    });
+  }
+</script>
+
+
+</body>
+</html>

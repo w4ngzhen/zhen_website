@@ -1,0 +1,334 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="utf-8">
+    <meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover"
+          name="viewport">
+    
+    
+    <!-- umami web analysis -->
+    <script defer src="https://zhen.wang/libs/umami/umami.script.js"
+            data-website-id="d66cfe03-f6b3-4aa0-baf8-728700db1b09"></script>
+    
+    
+    
+    <link rel="icon" type="image/png" sizes="16x16" href="https://zhen.wang/images/blog-site-icon.svg">
+    <link rel="icon" type="image/png" sizes="32x32" href="https://zhen.wang/images/blog-site-icon.svg">
+    <title>zhen&#x27;s everything</title>
+    <link rel="stylesheet" href="https://zhen.wang/style.css">
+    
+<link rel="stylesheet" href="https://zhen.wang/article_content.css">
+<link rel="stylesheet" href="https://zhen.wang/article_markdown.css">
+
+</head>
+<body>
+
+<div id="article">
+    <header class="article-header">
+        
+<div class="base-title">
+    <a href="#" onclick="history.length > 1 ? history.back() : location.href = '/'; return false;">&LeftArrow; Back</a>
+    <h1>
+        低代码平台前端的设计与实现（三）设计态画布DesignCanvas的设计与实现
+    </h1>
+</div>
+
+    </header>
+    <p class="article-date">2023-02-04</p>
+    
+    <!-- toc -->
+    <div class="article-toc">
+        <label class="toc-title" for="toc-trigger">目录</label>
+        <input id="toc-trigger" type="checkbox" checked/>
+        <div class="toc-content">
+            <ol class="toc">
+                
+                <li class="toc-item toc-level-1">
+                    <a class="toc-link" href="https://zhen.wang/article/低代码平台前端的设计与实现（三）设计态画布DesignCanvas的设计与实现/#componentnodedesignwrapper">ComponentNodeDesignWrapper</a>
+                    
+                </li>
+                
+                <li class="toc-item toc-level-1">
+                    <a class="toc-link" href="https://zhen.wang/article/低代码平台前端的设计与实现（三）设计态画布DesignCanvas的设计与实现/#designcanvas">DesignCanvas</a>
+                    
+                </li>
+                
+                <li class="toc-item toc-level-1">
+                    <a class="toc-link" href="https://zhen.wang/article/低代码平台前端的设计与实现（三）设计态画布DesignCanvas的设计与实现/#yang-li">样例</a>
+                    
+                </li>
+                
+                <li class="toc-item toc-level-1">
+                    <a class="toc-link" href="https://zhen.wang/article/低代码平台前端的设计与实现（三）设计态画布DesignCanvas的设计与实现/#fu-lu">附录</a>
+                    
+                </li>
+                
+            </ol>
+        </div>
+    </div>
+    
+    <!-- real content -->
+    <div class="article-content markdown-content">
+        <p>上一篇文章，我们分析并设计了关于构建引擎BuildEngine的切面设计。本文我们将基于BuildEngine所提供的切面处理能力，在CustomCreateElementHandle中通过一些逻辑，来完成一个轻量级的设计器画布。</p>
+<span id="continue-reading"></span>
+<p>这个画布能够实现如下的一个简单的效果。对于所有渲染出来的元素，都会有一个灰色的边框，当我们选中某个元素的时候，就会高亮显示。</p>
+<p><img src="https://static-res.zhen.wang/images/post/2023-02-04/010-wrapper-show.gif" alt="010-wrapper-show" /></p>
+<h1 id="componentnodedesignwrapper">ComponentNodeDesignWrapper</h1>
+<p>要做到上述效果，对于通过ComponentNode创建出来的组件，我们可以使用一个元素来进行包裹，我们暂时对这个组件取名为<code>ComponentNodeDesignWrapper</code>，它的作用就是能够给每一个元素添加边框。</p>
+<p>这个wrapper组件，我们至少会设计以下几个属性：</p>
+<ul>
+<li>nodePath：一个基本信息，作为外部传入；</li>
+<li>isSelected：决定该wrapper是否被选中；</li>
+<li>onClick：wrapper组件被点击时候，触发的onClick事件；</li>
+</ul>
+<p>有了<code>isSelected</code>和<code>onClick</code>以后，我们就可以让上层代码来控制多个元素究竟是哪个元素需要高亮。</p>
+<pre data-lang="typescript" style="background-color:#2b303b;color:#c0c5ce;" class="language-typescript "><code class="language-typescript" data-lang="typescript"><span style="color:#b48ead;">export type </span><span>ComponentNodeDesignWrapperProps = {
+</span><span>    </span><span style="color:#65737e;">/**
+</span><span style="color:#65737e;">     * 标识当前节点path
+</span><span style="color:#65737e;">     */
+</span><span>    </span><span style="color:#bf616a;">nodePath</span><span>: string;
+</span><span>    </span><span style="color:#65737e;">/**
+</span><span style="color:#65737e;">     * 是否被选中
+</span><span style="color:#65737e;">     */
+</span><span>    </span><span style="color:#bf616a;">isSelected</span><span>?: boolean;
+</span><span>    </span><span style="color:#65737e;">/**
+</span><span style="color:#65737e;">     * 点击事件
+</span><span style="color:#65737e;">     */
+</span><span>    </span><span style="color:#8fa1b3;">onClick</span><span>?: () </span><span style="color:#b48ead;">=&gt; </span><span>void;
+</span><span>}
+</span></code></pre>
+<p>对于这个wrapper，我们考虑使用div元素来包裹子元素，也就是说，wrapper的本质是div。这个div元素我们通过isSelected（是否选中）来控制其CSS中的<code>outline</code>样式配置。之所以选择<code>outline</code>，是因为outline在显示的时候，是不会影响元素的位置大小的，但缺点则是无论其元素是什么外形，<code>outline</code>总是矩形。</p>
+<p><img src="https://static-res.zhen.wang/images/post/2023-02-04/020-wrapper-detail.png" alt="020-wrapper-detail" /></p>
+<p>其次，我们还需要考虑这样一种问题，如果wrapper div包裹的实际HTML是<code>&lt;button&gt;</code>、<code>&lt;a&gt;</code>、<code>&lt;span&gt;</code>、<code>&lt;b&gt;</code>以及<code>&lt;i&gt;</code>元素，如果我们不将这个作为wrapper div的display设置为<code>inline-block</code>，那么wrapper div则会变成宽度占据一行的元素，会变成如下效果：</p>
+<p><img src="https://static-res.zhen.wang/images/post/2023-02-04/030-outline-err-display.png" alt="030-outline-err-display" /></p>
+<p>我们需要做的就是，检测wrapper div内部的元素是button、a、span、b或i元素的时候，则将wrapper div的样式中display属性置为<code>inline-block</code>，这样wrapper div就可以贴合这些元素。</p>
+<p>那么，如何检测呢？我们可以采用这样一种方式：通过useRef这个Hook来创建一个ref，交给我们的wrapper div；然后，在useEffect的回调中，拿到类型为HTMLDivElement的ref.current。这个current我们可以通过访问firstChild就是div的唯一一个子元素，也就是wrapper包裹的元素。并且，我们可以访问firstChild.nodeName就能知道wrapper的HTML元素名称。存放到一个名为<code>targetNodeHtmlType</code>的state中；最后，我们按照上面的需求，让wrapper div的样式中的display属性，根据<code>targetNodeHtmlType</code>是否属于button、a、span、b或i元素中的一种来决定是否是<code>inline-block</code>。</p>
+<p><img src="https://static-res.zhen.wang/images/post/2023-02-04/040-wrapper-html-ref-detail.png" alt="040-wrapper-html-ref-detail" /></p>
+<p>最后，我们还需要对wrapper div的onClick事件进行“代理”，并阻止冒泡。</p>
+<p>综合以上的分析，我们Wrapper div最终的样式核心代码：</p>
+<pre data-lang="typescript" style="background-color:#2b303b;color:#c0c5ce;" class="language-typescript "><code class="language-typescript" data-lang="typescript"><span style="color:#b48ead;">export const </span><span style="color:#bf616a;">ComponentNodeDesignWrapper</span><span>: FC&lt;PropsWithChildren&lt;ComponentNodeDesignWrapperProps&gt;&gt; = (</span><span style="color:#bf616a;">props</span><span>) </span><span style="color:#b48ead;">=&gt; </span><span>{
+</span><span>
+</span><span>    </span><span style="color:#b48ead;">const </span><span>{
+</span><span>        </span><span style="color:#bf616a;">nodePath</span><span>,
+</span><span>        </span><span style="color:#bf616a;">isSelected </span><span>= </span><span style="color:#d08770;">false</span><span>,
+</span><span>        </span><span style="color:#bf616a;">children</span><span>,
+</span><span>        </span><span style="color:#bf616a;">onClick </span><span>= () </span><span style="color:#b48ead;">=&gt; </span><span>{
+</span><span>        }
+</span><span>    } = </span><span style="color:#bf616a;">props</span><span>;
+</span><span>
+</span><span>    </span><span style="color:#b48ead;">const </span><span style="color:#bf616a;">ref </span><span>= </span><span style="color:#8fa1b3;">useRef</span><span>&lt;HTMLDivElement | null&gt;(</span><span style="color:#d08770;">null</span><span>);
+</span><span>
+</span><span>    </span><span style="color:#b48ead;">const </span><span>[
+</span><span>        </span><span style="color:#bf616a;">targetNodeHtmlType</span><span>,
+</span><span>        </span><span style="color:#bf616a;">setTargetNodeHtmlType
+</span><span>    ] = </span><span style="color:#8fa1b3;">useState</span><span>&lt;string&gt;();
+</span><span>
+</span><span>    </span><span style="color:#8fa1b3;">useEffect</span><span>(() </span><span style="color:#b48ead;">=&gt; </span><span>{
+</span><span>        </span><span style="color:#b48ead;">if </span><span>(!</span><span style="color:#bf616a;">ref </span><span>|| !</span><span style="color:#bf616a;">ref</span><span>.current) {
+</span><span>            </span><span style="color:#b48ead;">return</span><span>;
+</span><span>        }
+</span><span>        </span><span style="color:#b48ead;">const </span><span style="color:#bf616a;">currentEle</span><span>: HTMLDivElement = </span><span style="color:#bf616a;">ref</span><span>.current;
+</span><span>        </span><span style="color:#b48ead;">const </span><span style="color:#bf616a;">eleNodeName </span><span>= </span><span style="color:#bf616a;">currentEle</span><span>.firstChild.nodeName;
+</span><span>        </span><span style="color:#8fa1b3;">setTargetNodeHtmlType</span><span>(</span><span style="color:#bf616a;">eleNodeName</span><span>);
+</span><span>    });
+</span><span>
+</span><span>    </span><span style="color:#b48ead;">const </span><span style="color:#bf616a;">style</span><span>: CSSProperties = </span><span style="color:#8fa1b3;">useMemo</span><span>(() </span><span style="color:#b48ead;">=&gt; </span><span>{
+</span><span>        </span><span style="color:#65737e;">// Wrapper内部以下实际的HTML元素在展示的过程中，需要使用inline-block
+</span><span>        </span><span style="color:#65737e;">// 否则会显示异常
+</span><span>        </span><span style="color:#b48ead;">const </span><span style="color:#bf616a;">inlineBlockEle </span><span>= [&#39;</span><span style="color:#a3be8c;">A</span><span>&#39;, &#39;</span><span style="color:#a3be8c;">SPAN</span><span>&#39;, &#39;</span><span style="color:#a3be8c;">BUTTON</span><span>&#39;, &#39;</span><span style="color:#a3be8c;">B</span><span>&#39;, &#39;</span><span style="color:#a3be8c;">I</span><span>&#39;];
+</span><span>        </span><span style="color:#b48ead;">return </span><span>{
+</span><span>            boxSizing: &#39;</span><span style="color:#a3be8c;">border-box</span><span>&#39;,
+</span><span>            </span><span style="color:#65737e;">// 元素被选中，则使用蓝色高亮边框，否则使用灰色虚线
+</span><span>            outline: </span><span style="color:#bf616a;">isSelected </span><span>? &#39;</span><span style="color:#a3be8c;">2px solid blue</span><span>&#39; : &#39;</span><span style="color:#a3be8c;">1px dashed gray</span><span>&#39;,
+</span><span>            display: </span><span style="color:#bf616a;">inlineBlockEle</span><span>.</span><span style="color:#8fa1b3;">includes</span><span>(</span><span style="color:#bf616a;">targetNodeHtmlType</span><span>) ? &#39;</span><span style="color:#a3be8c;">inline-block</span><span>&#39; : &#39;&#39;,
+</span><span>            padding: &#39;</span><span style="color:#a3be8c;">3px</span><span>&#39;,
+</span><span>            margin: &#39;</span><span style="color:#a3be8c;">3px</span><span>&#39;
+</span><span>        }
+</span><span>    }, [</span><span style="color:#bf616a;">isSelected</span><span>, </span><span style="color:#bf616a;">targetNodeHtmlType</span><span>]);
+</span><span>
+</span><span>    </span><span style="color:#b48ead;">return </span><span>(
+</span><span>        &lt;</span><span style="color:#bf616a;">div key</span><span>={nodePath + &#39;</span><span style="color:#a3be8c;">_wrapper_key</span><span>&#39;}
+</span><span>             </span><span style="color:#bf616a;">style</span><span>={</span><span style="color:#bf616a;">style</span><span>}
+</span><span>             </span><span style="color:#bf616a;">ref</span><span>={</span><span style="color:#bf616a;">ref</span><span>}
+</span><span>             </span><span style="color:#bf616a;">onClick</span><span>={(event) =&gt; {
+</span><span>                 event.stopPropagation();
+</span><span>                 </span><span style="color:#8fa1b3;">onClick</span><span>();
+</span><span>             }}&gt;
+</span><span>            {</span><span style="color:#bf616a;">children</span><span>}
+</span><span>        &lt;/</span><span style="color:#bf616a;">div</span><span>&gt;
+</span><span>    )
+</span><span>}
+</span></code></pre>
+<h1 id="designcanvas">DesignCanvas</h1>
+<p>接下来，我们开始设计一个名为DesignCanvas的设计态画布，这个画布我们先暂时先不考虑比较复杂的功能，先考虑如何结合上面的Wrapper组件进行基本的效果呈现。考虑到对外屏蔽DesignCanvas的细节，我们只暴露一个属性，就是传入 JSON schema：</p>
+<pre data-lang="typescript" style="background-color:#2b303b;color:#c0c5ce;" class="language-typescript "><code class="language-typescript" data-lang="typescript"><span style="color:#b48ead;">interface </span><span>DesignCanvasProps {
+</span><span>    </span><span style="color:#65737e;">/**
+</span><span style="color:#65737e;">     * 传入的合法 ComponentNode
+</span><span style="color:#65737e;">     */
+</span><span>    </span><span style="color:#bf616a;">componentNode</span><span>: ComponentNode;
+</span><span>}
+</span><span>
+</span><span style="color:#b48ead;">export const </span><span style="color:#8fa1b3;">DesignCanvas </span><span>= (</span><span style="color:#bf616a;">props</span><span>: DesignCanvasProps) </span><span style="color:#b48ead;">=&gt; </span><span>{
+</span><span>    </span><span style="color:#b48ead;">const </span><span>{
+</span><span>        </span><span style="color:#bf616a;">componentNode
+</span><span>    } = </span><span style="color:#bf616a;">props</span><span>;
+</span><span>
+</span><span>    </span><span style="color:#65737e;">// 1. 存储单机选中的path的state
+</span><span>    </span><span style="color:#b48ead;">const </span><span>[</span><span style="color:#bf616a;">selectedNodePath</span><span>, </span><span style="color:#bf616a;">setSelectedNodePath</span><span>] = </span><span style="color:#8fa1b3;">useState</span><span>&lt;string&gt;(&#39;&#39;);
+</span><span>
+</span><span>    </span><span style="color:#65737e;">// 2. 经过切面绑定的buildEngine
+</span><span>    </span><span style="color:#b48ead;">const </span><span style="color:#bf616a;">buildEngine </span><span>= ... ...
+</span><span>
+</span><span>    </span><span style="color:#65737e;">// 3. 经过buildEngine + schema 创建的React组件（已经考虑的基本的异常处理）
+</span><span>    </span><span style="color:#b48ead;">const </span><span style="color:#bf616a;">renderComponent </span><span>= ... ...
+</span><span>
+</span><span>    </span><span style="color:#b48ead;">return </span><span>(
+</span><span>        &lt;</span><span style="color:#bf616a;">div style</span><span>={{
+</span><span>            width: &#39;</span><span style="color:#a3be8c;">100%</span><span>&#39;,
+</span><span>            height: &#39;</span><span style="color:#a3be8c;">100%</span><span>&#39;,
+</span><span>            padding: &#39;</span><span style="color:#a3be8c;">5px</span><span>&#39;
+</span><span>        }}&gt;
+</span><span>            {</span><span style="color:#bf616a;">renderComponent</span><span>}
+</span><span>        &lt;/</span><span style="color:#bf616a;">div</span><span>&gt;
+</span><span>    )
+</span><span>}
+</span></code></pre>
+<p>（1）selectedNodePath用以存储当前选中的path。在后续的切面处理中，构建元素节点的时候，如果切面正在处理的节点path与selectedNodePath一致，则wrapper组件需要高亮，否则虚线。</p>
+<p>（2）buildEngine的代码具体如下：</p>
+<pre data-lang="typescript" style="background-color:#2b303b;color:#c0c5ce;" class="language-typescript "><code class="language-typescript" data-lang="typescript"><span>		</span><span style="color:#65737e;">// 我们用useMemo来缓存一个无状态的BuildEngine
+</span><span>    </span><span style="color:#b48ead;">const </span><span style="color:#bf616a;">buildEngine </span><span>= </span><span style="color:#8fa1b3;">useMemo</span><span>(() </span><span style="color:#b48ead;">=&gt; </span><span>{
+</span><span>        </span><span style="color:#b48ead;">return </span><span>new BuildEngine();
+</span><span>    }, []);
+</span></code></pre>
+<p>（3）renderComponent的实现（<strong>重点</strong>）：</p>
+<pre data-lang="tsx" style="background-color:#2b303b;color:#c0c5ce;" class="language-tsx "><code class="language-tsx" data-lang="tsx"><span>    </span><span style="color:#b48ead;">const </span><span style="color:#bf616a;">renderComponent </span><span>= </span><span style="color:#8fa1b3;">useMemo</span><span>(() </span><span style="color:#b48ead;">=&gt; </span><span>{
+</span><span>        </span><span style="color:#b48ead;">try </span><span>{
+</span><span>            </span><span style="color:#b48ead;">return </span><span style="color:#bf616a;">buildEngine</span><span>.</span><span style="color:#8fa1b3;">build</span><span>(</span><span style="color:#bf616a;">componentNode</span><span>, {
+</span><span>                </span><span style="color:#8fa1b3;">onCustomCreateElement</span><span>: </span><span style="color:#bf616a;">ctx </span><span style="color:#b48ead;">=&gt; </span><span>{
+</span><span>                    </span><span style="color:#b48ead;">const </span><span>{</span><span style="color:#bf616a;">componentNode</span><span>, 
+</span><span>                           </span><span style="color:#bf616a;">path</span><span>, </span><span style="color:#bf616a;">ComponentConstructor</span><span>, </span><span style="color:#bf616a;">props</span><span>, </span><span style="color:#bf616a;">children</span><span>} = </span><span style="color:#bf616a;">ctx</span><span>;
+</span><span>
+</span><span>                    </span><span style="color:#65737e;">// 不加Wrapper的原始构造后的组件
+</span><span>                    </span><span style="color:#b48ead;">const </span><span style="color:#8fa1b3;">originReactComp </span><span>= (
+</span><span>                        &lt;</span><span style="color:#ebcb8b;">ComponentConstructor </span><span style="color:#ab7967;">{</span><span>...</span><span style="color:#bf616a;">props</span><span style="color:#ab7967;">}</span><span>&gt;
+</span><span>                            </span><span style="color:#ab7967;">{</span><span style="color:#bf616a;">children</span><span style="color:#ab7967;">}
+</span><span>                        &lt;/</span><span style="color:#ebcb8b;">ComponentConstructor</span><span>&gt;
+</span><span>                    )
+</span><span>
+</span><span>                    </span><span style="color:#b48ead;">const </span><span style="color:#bf616a;">wrapperProps</span><span>: ComponentNodeDesignWrapperProps = {
+</span><span>                        nodePath: </span><span style="color:#bf616a;">path</span><span>,
+</span><span>                        isSelected: </span><span style="color:#bf616a;">path </span><span>=== </span><span style="color:#bf616a;">selectedNodePath</span><span>,
+</span><span>                        </span><span style="color:#8fa1b3;">onClick</span><span>: () </span><span style="color:#b48ead;">=&gt; </span><span>{
+</span><span>                            </span><span style="color:#ebcb8b;">console</span><span>.</span><span style="color:#96b5b4;">debug</span><span>(&#39;</span><span style="color:#a3be8c;">wrapper onClick</span><span>&#39;)
+</span><span>                            </span><span style="color:#8fa1b3;">setSelectedNodePath</span><span>(</span><span style="color:#bf616a;">path</span><span>)
+</span><span>                        }
+</span><span>                    }
+</span><span>                    </span><span style="color:#b48ead;">return </span><span>(
+</span><span>                        &lt;</span><span style="color:#ebcb8b;">ComponentNodeDesignWrapper </span><span style="color:#ab7967;">{</span><span>...</span><span style="color:#bf616a;">wrapperProps</span><span style="color:#ab7967;">}</span><span>&gt;
+</span><span>                            </span><span style="color:#ab7967;">{</span><span style="color:#bf616a;">originReactComp</span><span style="color:#ab7967;">}
+</span><span>                        &lt;/</span><span style="color:#ebcb8b;">ComponentNodeDesignWrapper</span><span>&gt;
+</span><span>                    )
+</span><span>                }
+</span><span>            });
+</span><span>        } </span><span style="color:#b48ead;">catch </span><span>(</span><span style="color:#bf616a;">e</span><span>) {
+</span><span>            </span><span style="color:#b48ead;">return </span><span>&lt;</span><span style="color:#bf616a;">div</span><span>&gt;构建出错：</span><span style="color:#ab7967;">{</span><span style="color:#bf616a;">e</span><span>.</span><span style="color:#bf616a;">message</span><span style="color:#ab7967;">}</span><span>&lt;/</span><span style="color:#bf616a;">div</span><span>&gt;
+</span><span>        }
+</span><span>    }, [</span><span style="color:#bf616a;">componentNode</span><span>, </span><span style="color:#bf616a;">selectedNodePath</span><span>]);
+</span></code></pre>
+<p>对于这个渲染React组件，主要是将schema解析为ComponentNode结构，并交给构建引擎build，同时，我们还传入了自定义的创建过程：</p>
+<ol>
+<li>
+<p>isSelected属性来自于当前正处理节点path与第1点DesignCanvas组件存储的path的比对，如果当前正在处理及的几点就是已经选中的节点path，那么这个wrapper组件则被“选中”。</p>
+</li>
+<li>
+<p>onClick属性的实现代码则是当wrapper组件点击后，更新selectedNodePath。</p>
+</li>
+</ol>
+<h1 id="yang-li">样例</h1>
+<p>在编写样例之前，我们先导出DesignCanvas，然后编写一份测试代码DesignCanvasExample：</p>
+<pre data-lang="tsx" style="background-color:#2b303b;color:#c0c5ce;" class="language-tsx "><code class="language-tsx" data-lang="tsx"><span style="color:#b48ead;">import </span><span>{</span><span style="color:#bf616a;">ChangeEvent</span><span>, </span><span style="color:#bf616a;">useMemo</span><span>, </span><span style="color:#bf616a;">useState</span><span>} </span><span style="color:#b48ead;">from </span><span>&quot;</span><span style="color:#a3be8c;">react</span><span>&quot;;
+</span><span style="color:#b48ead;">import </span><span>{</span><span style="color:#bf616a;">Input</span><span>} </span><span style="color:#b48ead;">from </span><span>&#39;</span><span style="color:#a3be8c;">antd</span><span>&#39;;
+</span><span style="color:#b48ead;">import </span><span>{</span><span style="color:#bf616a;">ComponentNode</span><span>, </span><span style="color:#bf616a;">DesignCanvas</span><span>} </span><span style="color:#b48ead;">from </span><span>&quot;</span><span style="color:#a3be8c;">@lite-lc/core</span><span>&quot;;
+</span><span>
+</span><span style="color:#b48ead;">export function </span><span style="color:#8fa1b3;">DesignCanvasExample</span><span>() {
+</span><span>
+</span><span>    </span><span style="color:#65737e;">// 使用state存储一个schema的字符串
+</span><span>    </span><span style="color:#b48ead;">const </span><span>[</span><span style="color:#bf616a;">componentNodeJson</span><span>, </span><span style="color:#bf616a;">setComponentNodeJson</span><span>] = </span><span style="color:#8fa1b3;">useState</span><span>(JSON.</span><span style="color:#96b5b4;">stringify</span><span>({
+</span><span>        &quot;</span><span style="color:#a3be8c;">componentName</span><span>&quot;: &quot;</span><span style="color:#a3be8c;">page</span><span>&quot;,
+</span><span>        &quot;</span><span style="color:#a3be8c;">children</span><span>&quot;: [
+</span><span>            {
+</span><span>                &quot;</span><span style="color:#a3be8c;">componentName</span><span>&quot;: &quot;</span><span style="color:#a3be8c;">button</span><span>&quot;,
+</span><span>                &quot;</span><span style="color:#a3be8c;">props</span><span>&quot;: {
+</span><span>                    &quot;</span><span style="color:#a3be8c;">size</span><span>&quot;: &quot;</span><span style="color:#a3be8c;">small</span><span>&quot;,
+</span><span>                    &quot;</span><span style="color:#a3be8c;">type</span><span>&quot;: &quot;</span><span style="color:#a3be8c;">primary</span><span>&quot;
+</span><span>                },
+</span><span>                &quot;</span><span style="color:#a3be8c;">children</span><span>&quot;: [
+</span><span>                    {
+</span><span>                        &quot;</span><span style="color:#a3be8c;">componentName</span><span>&quot;: &quot;</span><span style="color:#a3be8c;">text</span><span>&quot;,
+</span><span>                        &quot;</span><span style="color:#a3be8c;">props</span><span>&quot;: {
+</span><span>                            &quot;</span><span style="color:#a3be8c;">value</span><span>&quot;: &quot;</span><span style="color:#a3be8c;">hello, my button.</span><span>&quot;
+</span><span>                        }
+</span><span>                    }
+</span><span>                ]
+</span><span>            },
+</span><span>            {
+</span><span>                &quot;</span><span style="color:#a3be8c;">componentName</span><span>&quot;: &quot;</span><span style="color:#a3be8c;">input</span><span>&quot;
+</span><span>            }
+</span><span>        ]
+</span><span>    }, </span><span style="color:#d08770;">null</span><span>, </span><span style="color:#d08770;">2</span><span>))
+</span><span>
+</span><span>    </span><span style="color:#b48ead;">const </span><span style="color:#bf616a;">componentNode </span><span>= </span><span style="color:#8fa1b3;">useMemo</span><span>(() </span><span style="color:#b48ead;">=&gt; </span><span>{
+</span><span>        </span><span style="color:#b48ead;">return </span><span>JSON.</span><span style="color:#96b5b4;">parse</span><span>(</span><span style="color:#bf616a;">componentNodeJson</span><span>) </span><span style="color:#b48ead;">as </span><span>ComponentNode;
+</span><span>    }, [</span><span style="color:#bf616a;">componentNodeJson</span><span>])
+</span><span>
+</span><span>    </span><span style="color:#b48ead;">return </span><span>(
+</span><span>        &lt;</span><span style="color:#bf616a;">div </span><span style="color:#d08770;">style</span><span>=</span><span style="color:#ab7967;">{</span><span>{width: &#39;</span><span style="color:#a3be8c;">100%</span><span>&#39;, height: &#39;</span><span style="color:#a3be8c;">100%</span><span>&#39;, padding: &#39;</span><span style="color:#a3be8c;">10px</span><span>&#39;}</span><span style="color:#ab7967;">}</span><span>&gt;
+</span><span>            &lt;</span><span style="color:#bf616a;">div </span><span style="color:#d08770;">style</span><span>=</span><span style="color:#ab7967;">{</span><span>{width: &#39;</span><span style="color:#a3be8c;">100%</span><span>&#39;, height: &#39;</span><span style="color:#a3be8c;">calc(50%)</span><span>&#39;}</span><span style="color:#ab7967;">}</span><span>&gt;
+</span><span>                &lt;</span><span style="color:#ebcb8b;">Input.TextArea
+</span><span>                    </span><span style="color:#d08770;">autoSize</span><span>=</span><span style="color:#ab7967;">{</span><span>{minRows: </span><span style="color:#d08770;">2</span><span>, maxRows: </span><span style="color:#d08770;">10</span><span>}</span><span style="color:#ab7967;">}
+</span><span>                    </span><span style="color:#d08770;">value</span><span>=</span><span style="color:#ab7967;">{</span><span style="color:#bf616a;">componentNodeJson</span><span style="color:#ab7967;">}
+</span><span>                    </span><span style="color:#d08770;">onChange</span><span>=</span><span style="color:#ab7967;">{</span><span>(</span><span style="color:#bf616a;">e</span><span>: ChangeEvent&lt;HTMLTextAreaElement&gt;) </span><span style="color:#b48ead;">=&gt; </span><span>{
+</span><span>                        </span><span style="color:#b48ead;">const </span><span style="color:#bf616a;">value </span><span>= </span><span style="color:#bf616a;">e</span><span>.target.value;
+</span><span>                        </span><span style="color:#65737e;">// 编辑框发生修改，重新设置JSON
+</span><span>                        </span><span style="color:#8fa1b3;">setComponentNodeJson</span><span>(</span><span style="color:#bf616a;">value</span><span>);
+</span><span>                    }</span><span style="color:#ab7967;">}</span><span>/&gt;
+</span><span>            &lt;/</span><span style="color:#bf616a;">div</span><span>&gt;
+</span><span>            &lt;</span><span style="color:#bf616a;">div </span><span style="color:#d08770;">style</span><span>=</span><span style="color:#ab7967;">{</span><span>{width: &#39;</span><span style="color:#a3be8c;">100%</span><span>&#39;, height: &#39;</span><span style="color:#a3be8c;">calc(50%)</span><span>&#39;, border: &#39;</span><span style="color:#a3be8c;">1px solid gray</span><span>&#39;}</span><span style="color:#ab7967;">}</span><span>&gt;
+</span><span>                &lt;</span><span style="color:#ebcb8b;">DesignCanvas </span><span style="color:#d08770;">componentNode</span><span>=</span><span style="color:#ab7967;">{</span><span style="color:#bf616a;">componentNode</span><span style="color:#ab7967;">}</span><span>/&gt;
+</span><span>            &lt;/</span><span style="color:#bf616a;">div</span><span>&gt;
+</span><span>        &lt;/</span><span style="color:#bf616a;">div</span><span>&gt;
+</span><span>    );
+</span><span>}
+</span></code></pre>
+<p>效果：</p>
+<p><img src="https://static-res.zhen.wang/images/post/2023-02-04/050-DesignCanvasExample-effect.gif" alt="050-DesignCanvasExample-effect" /></p>
+<p>当然，细心的伙伴已经发现了问题了。因为在我们的框架中，文本也是一个ComponentNode，会导致这个文本组件节点也被Wrapper包裹了。这个我们后续会通过对Wrapper进行优化来完成。这里不再赘述。</p>
+<h1 id="fu-lu">附录</h1>
+<p>本次相关代码已经提交至github，对应tag为chapter_03：</p>
+<p><a rel="noopener" target="_blank" href="https://github.com/w4ngzhen/lite-lc/tree/chapter_03">w4ngzhen/lite-lc at chapter_03 (github.com)</a></p>
+
+    </div>
+</div>
+<script src="https://zhen.wang/libs/viewerjs@1.11.7/viewer.min.js"></script>
+<link rel="stylesheet" href="https://zhen.wang/libs/viewerjs@1.11.7/viewer.min.css"/>
+<script>
+  if (window.Viewer) {
+    document.querySelectorAll('img').forEach(img => {
+      new Viewer(img, {
+        inline: false,
+        navbar: false,
+        toolbar: {
+          zoomIn: 1,
+          zoomOut: 1,
+          reset: 1,
+          rotateLeft: 1,
+          rotateRight: 1,
+        },
+      });
+    });
+  }
+</script>
+
+
+</body>
+</html>

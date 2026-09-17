@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="utf-8">
+    <meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover"
+          name="viewport">
+    
+    
+    <!-- umami web analysis -->
+    <script defer src="https://zhen.wang/libs/umami/umami.script.js"
+            data-website-id="d66cfe03-f6b3-4aa0-baf8-728700db1b09"></script>
+    
+    
+    
+    <link rel="icon" type="image/png" sizes="16x16" href="https://zhen.wang/images/blog-site-icon.svg">
+    <link rel="icon" type="image/png" sizes="32x32" href="https://zhen.wang/images/blog-site-icon.svg">
+    <title>zhen&#x27;s everything</title>
+    <link rel="stylesheet" href="https://zhen.wang/style.css">
+    
+<link rel="stylesheet" href="https://zhen.wang/article_content.css">
+<link rel="stylesheet" href="https://zhen.wang/article_markdown.css">
+
+</head>
+<body>
+
+<div id="article">
+    <header class="article-header">
+        
+<div class="base-title">
+    <a href="#" onclick="history.length > 1 ? history.back() : location.href = '/'; return false;">&LeftArrow; Back</a>
+    <h1>
+        S_型文法到q_型文法再到LL(1)型文法演进笔记
+    </h1>
+</div>
+
+    </header>
+    <p class="article-date">2020-08-23</p>
+    
+    <!-- toc -->
+    <div class="article-toc">
+        <label class="toc-title" for="toc-trigger">目录</label>
+        <input id="toc-trigger" type="checkbox" checked/>
+        <div class="toc-content">
+            <ol class="toc">
+                
+                <li class="toc-item toc-level-1">
+                    <a class="toc-link" href="https://zhen.wang/article/S_型文法到q_型文法再到LL(1)型文法演进笔记/#s-xing-wen-fa-dao-q-xing-wen-fa-zai-dao-ll-1-xing-wen-fa-yan-jin-bi-ji">S_型文法到q_型文法再到LL(1)型文法演进笔记</a>
+                    
+                    <ol class="toc-child">
+                        
+                        <li class="toc-item toc-level-2">
+                            <a href="https://zhen.wang/article/S_型文法到q_型文法再到LL(1)型文法演进笔记/#s-xing-wen-fa-jian-dan-de-que-ding-xing-wen-fa">S_型文法（简单的确定性文法）</a>
+                        </li>
+                        
+                        <li class="toc-item toc-level-2">
+                            <a href="https://zhen.wang/article/S_型文法到q_型文法再到LL(1)型文法演进笔记/#q-wen-fa">q_文法</a>
+                        </li>
+                        
+                        <li class="toc-item toc-level-2">
+                            <a href="https://zhen.wang/article/S_型文法到q_型文法再到LL(1)型文法演进笔记/#ll-1-xing-wen-fa">LL(1)型文法</a>
+                        </li>
+                        
+                    </ol>
+                    
+                </li>
+                
+            </ol>
+        </div>
+    </div>
+    
+    <!-- real content -->
+    <div class="article-content markdown-content">
+        <h1 id="s-xing-wen-fa-dao-q-xing-wen-fa-zai-dao-ll-1-xing-wen-fa-yan-jin-bi-ji">S_型文法到q_型文法再到LL(1)型文法演进笔记</h1>
+<span id="continue-reading"></span><h2 id="s-xing-wen-fa-jian-dan-de-que-ding-xing-wen-fa">S_型文法（简单的确定性文法）</h2>
+<ul>
+<li>
+<p>每个产生式的右部都以<strong>终结符</strong>开始</p>
+</li>
+<li>
+<p>同一非终结符的各个候选式的<strong>首终结符</strong>都不同</p>
+</li>
+</ul>
+<p>针对第一条的理解是，只要右部都是终结符开始，那么对于串当前的读入字符，我们可以很容易的直接根据右部开头的终结符来进行判断匹配，而无需进行产生式的推导；针对第二条的理解是，因为首终结符都不一样，所以根据当前串读入的字符，我们只会匹配到一个确定的产生式。</p>
+<p>举例，现有文法如下：</p>
+<p>$$
+\begin{aligned}
+&amp;1. \quad S \rightarrow aBC\
+&amp;2. \quad B \rightarrow b\<br />
+&amp;3. \quad C \rightarrow c\<br />
+\end{aligned}
+$$</p>
+<p>现有字符串$abc$，我们从左部第一个字符开始输入，因为字符$a$能够被产生式1匹配，因此我们首先选择产生式$1. \quad S \rightarrow aBC$；接下来输入第二个字符$b$，于是我们从产生式1到3种进行匹配判断，找到左部非终结符为$B$（找$B$的原因是上一步我们已经匹配到了产生式1，产生式1的右部现在已经匹配上了$a$字符，我们接下来需要推导$B$，所以要找左部为非终结符$B$的产生式)，右部首终结符为$b$的产生式，于是找到产生式2。以此类推，我们最后能够如下的推导：</p>
+<p>$$
+S \rightarrow aBC \rightarrow abC \rightarrow abc
+$$</p>
+<p>个人理解觉得，针对S_型文法的特征是：<strong>我们总是能够根据读入的字符，直接匹配找到一个确定的产生式</strong>。</p>
+<p>然而，该文法的局限性非常的大，最基本的一点就是该文法<strong>不包含$\varepsilon$的产生式</strong>。例如，现有下列文法：</p>
+<p>$$
+\begin{aligned}
+&amp;1. \quad S \rightarrow aBC \
+&amp;2. \quad B \rightarrow bC \
+&amp;3. \quad B \rightarrow dB \
+&amp;4. \quad B \rightarrow \varepsilon \
+&amp;5. \quad C \rightarrow c \
+&amp;6. \quad C \rightarrow a \
+&amp;7. \quad D \rightarrow e \
+\end{aligned}
+$$</p>
+<p>对于字符串$ade$，首先还是产生式1没得说；接下来，我们需要寻找的是左部为$B$，右部首终结符为$d$的产生式，于是我们选择产生式3，此时产生式推到得到：</p>
+<p>$$
+\begin{aligned}
+&amp; 1. \Rightarrow a，选择产生式1，得到 aBC \
+&amp; 2. \Rightarrow d，选择产生式3，得到 adBC \
+&amp; 3. \Rightarrow e，因为产生式2、3的首位非终结符不是e，这里选择\varepsilon，即选择产生式4，得到 adC \
+\end{aligned}
+$$</p>
+<p>因为此时输入字符为$e$，且当前推导的式子中还存在非终结符$C$，于是我们继续应用上述规则进行匹配选择（即，我们结束第3轮，进入第4轮准备开始查找），然而我们无法找到形如$C \rightarrow e...$的产生式，此时报错。</p>
+<p>尽管最终报错了，但是当前的文法存在这样一个问题：因为$\varepsilon$产生式的存在，本该在第3轮中就该发现的再无匹配的问题，在第4轮的检查过程中才被发现。为什么说第3轮就该发现呢？我们回到第3轮的检查中，上面说“因为产生式2、3的首位非终结符不是$e$，我们选择$B \rightarrow \varepsilon$，但是选择这个产生式真的正确吗？事实上，当产生式右部是$\varepsilon$的时候，我们应该要考虑空串之后紧跟着的非终结符是什么，如果我们知道紧跟着的非终结符也和当前的输入符号不匹配的话，我们立刻就能知道选择了空串后的下一步必然是无法匹配的。这里$\varepsilon$后面紧跟的等价于$B$紧跟的，那么通过产生式1我们知道$B$后面紧跟的是$C$，而$C$能够推导出$c$和$a$，故在第3轮中，我们首先知道已经无法选择产生式2和3了，接下来我们判断产生式4是否满足，因为当前的输入$e$依然无法和$c$、$a$匹配，所以在第3轮我们已经无法继续进行下去，就应该报错了。</p>
+<p>而我们上面所说的“紧跟着的...”也就是接下来要引入的一个概念：$FOLLOW$集。</p>
+<h3 id="follow-ji-hou-ji-fu-hao-ji">$FOLLOW 集$（后继符号集）</h3>
+<blockquote>
+<p>非终结符$A$的后继符号集
+可能在某个句型中紧跟在$A$后边的终结符$a$的集合，记为$FOLLOW(A)$</p>
+</blockquote>
+<p>$$
+FOLLOW(A)={a|S \Rightarrow^* \alpha Aa\beta, \quad a \in V_T, \quad \alpha, \beta \in (V_T \cup V_N)^*}
+$$</p>
+<p>有了$FOLLOW集$这个东西之后，再回头看待$\varepsilon$产生式就变得很明朗了。</p>
+<p>如果当前某非终结符$A$的产生式右部的首字符与输入$a$不匹配的时候，若存在$A \rightarrow \varepsilon$，则我们检查$a$是否存在于$A$的后继符号集$FOLLOW(A)$中，若在其中，则匹配继续，否则程序报错。</p>
+<p>于是，对于上面的判断流程的第3步中，$FOLLOW(B) = {a, c}$，而当前我们遇到的符号是$e$，不在对应的集中，于是该步骤已经结束。</p>
+<h3 id="select-ji-chan-sheng-shi-ke-xuan-ji">$SELECT 集$（产生式可选集）</h3>
+<p>我们综合上述的对于非$\varepsilon$产生式和$\varepsilon$产生式，可以定义产生式的可选集这一概念。</p>
+<p>产生式$A \rightarrow \beta$的可选集是指可以选用该产生式进行推导时对应的输入符号的集合，记为$SELECT(A \rightarrow \beta)$。例如：</p>
+<p>$SELECT(A \rightarrow \alpha\beta) = {\alpha}$</p>
+<p>$SELECT(A \rightarrow \varepsilon) = FOLLOW(A)$</p>
+<h2 id="q-wen-fa">q_文法</h2>
+<blockquote>
+<p>每个产生式的右部或为$\varepsilon$或以终结符开始</p>
+</blockquote>
+<blockquote>
+<p>具有相同左部的产生式有不可相交的可选集</p>
+</blockquote>
+<p>我们称这样的文法为q_型文法。为什么引入q_型文法，因为前面的$FOLLOW集$概念的引入，解决$\varepsilon$产生式的问题，而这一点可以很好的地对照在q_型文法的第一条定义。尽管它对于S_型文法限制有了略微的放宽，支持了$\varepsilon$的产生式，可是还是有一定的限制：q_文法不含右部以<code>非终结符</code>打头的产生式。</p>
+<p>在前文中，我们总是在限制产生式的右部，要么首字符是一个终结符，要么是$\varepsilon$空串，之所以这样是因为我们总是希望在进行输入的时候右部具有确定的信息（这里就是一个首终结字符）。然而，当右部打头的是非终结符的时候，我们就无从下手了（至少目前是），因为非终结符是不确定的（至少一下子无法知道），它最终能够推导成什么样子的串，似乎变数太多，要是我们事先有一个集合，已经存放好了产生式右部的串(无论它是$\varepsilon$，还是终结符，还是非终结符打头）的首非终结符，每次进行输入匹配的时候，看一下是不是在这里面，问题就迎刃而解了。于是，我们引入概念：串首终结符集。</p>
+<h3 id="chuan-shou-zhong-jie-fu-ji">串首终结符集</h3>
+<p>给定一个文法符号串$\alpha$，$\alpha$的串首终结符集$FIRST(\alpha)$被定义为：可以从$\alpha$推导出的所有串首终结符的集合。此外，如果$\alpha \Rightarrow^* \varepsilon$，那么$\varepsilon \in FIRST(\alpha)$。即：</p>
+<p>$$
+\begin{aligned}
+&amp; 对于 \forall \alpha \in (V_T, V_N)^+，FIRST(\alpha) = { a | a\beta, \quad a \in V_T, \quad \beta \in (V_T \cup V_N)^* } \
+&amp; 如果\alpha \Rightarrow^* \varepsilon，那么\varepsilon \in FIRST(\alpha) \
+\end{aligned}
+$$</p>
+<p>至于这个串首终结符集如何生成，我们在后文再议。</p>
+<p>有了串首终结符集的定义后，我们再次回头看一下产生式$A \rightarrow \alpha$的可选集$SELECT(A \rightarrow \alpha)$。我们先给出定义：</p>
+<p>$$
+\begin{equation*}
+SELECT(A \rightarrow \alpha) = \begin{cases}
+FIRST(\alpha), &amp; \text{if} \quad \varepsilon \notin FIRST(\alpha) \
+(FIRST(\alpha) - {\varepsilon}) \cup FOLLOW(A), &amp; \text{if} \quad \varepsilon \in FIRST(\alpha)
+\end{cases}
+\end{equation*}
+$$</p>
+<p>我们首先解读这个定义，先看第一种情况，因为$\varepsilon \notin FIRST(\alpha)$，即$\alpha$无法通过任意步骤推导得到空串，即产生式$A \rightarrow \alpha$的左部$A$是无法推导得到空串，那么该产生式的可选集是$FIRST(\alpha)$确实是合理的，试想，现在我有个输入字符c，因为我知道$\varepsilon \notin FIRST(\alpha)$，那么我检查字符c是不是在$FIRST(\alpha)$中就可以做出判断报错还是继续，而无需担心因为左部$A$可以产生空串进而还要考虑$A$的后继符号集；</p>
+<p>对于第二种情况，其实就是把空串的情况也考虑了：不仅仅要判断输入字符是不是在右部的串首终结符集中，还因为左部$A$能够推导出空串，而判断是不是在左部的后记符号集中。当然这里排除串首终结符中的空串的含义也是显而易见的，正式因为$A \rightarrow \alpha \Rightarrow^* \varepsilon$，我们才要判断是否在$FOLLOW(A)$中，这里自然要排除空串了。</p>
+<h2 id="ll-1-xing-wen-fa">LL(1)型文法</h2>
+<p>在上述理论基础上，我们现在将产生式的右部已经扩展到了任意形式了。于是，我们引入LL(1)型文法。它的定义如下：</p>
+<p>文法G是LL(1)的，当且仅当G的任意两个具有相同左部的产生式$A \rightarrow \alpha|\beta$满足如下的条件：</p>
+<ol>
+<li>如果$\alpha$和$\beta$均不能推导出$\varepsilon$，则$FIRST(\alpha) \cap FIRST(\beta) = \emptyset$。</li>
+<li>$\alpha$和$\beta$至多有一个能推导出$\varepsilon$。如果$\beta \Rightarrow^* \varepsilon$，则$FIRST(\alpha) \cap FOLLOW(A) = \emptyset$；如果$\alpha \Rightarrow^* \varepsilon$，则$FIRST(\beta) \cap FOLLOW(A) = \emptyset$。</li>
+</ol>
+<p>对于情况1，对于$\alpha$和$\beta$都无法推导出空集的时候，假设两者的串首终结符集的交集不为空，那么对于某个输入字符c，我到底该选择右部为$\alpha$的产生式还是$\beta$的呢？很显然出现了二义性，所以我们有了交集为空集的条件；</p>
+<p>对于情况2，首先解释为什么至多有一个能推到出$\varepsilon$。假设都能推导出空集，根据前面产生式的可选集对于右部推导有空集的情况，可选集会包含左部的后记符号集，在这里也就是说，$SELECT(A \rightarrow \alpha)$和$SELECT(A \rightarrow \beta)$都有$FOLLOW(A)$，当输入字符c属于$FOLLOW(A)$的时候，我们应该选择哪一个产生式呢？于是又出现了二义性。所以我们限定只能至多一个能够推导出$\varepsilon$。再进一步，当其中一个右部（这里以$\beta$为例）能够推导出$\varepsilon$，那么$SELECT(A \rightarrow \beta) = {FIRST(\beta) - {\varepsilon}} \cup FOLLOW(A)$，而$\alpha$无法推导出$\varepsilon$，所以$SELECT(A \rightarrow \alpha) = FIRST(\alpha)$，为了保证不会出现二义性，我们需要$SELECT(A \rightarrow \beta) \cap SELECT(A \rightarrow \alpha) = \emptyset$，这里$FIRST(\alpha)$和$FIRST(\beta)$的交集不为空是一个隐藏的条件，因为是情况1的情形；于是，我们还需要保证$FIRST(\alpha) \cap FOLLOW(A) = \emptyset$。</p>
+
+    </div>
+</div>
+<script src="https://zhen.wang/libs/viewerjs@1.11.7/viewer.min.js"></script>
+<link rel="stylesheet" href="https://zhen.wang/libs/viewerjs@1.11.7/viewer.min.css"/>
+<script>
+  if (window.Viewer) {
+    document.querySelectorAll('img').forEach(img => {
+      new Viewer(img, {
+        inline: false,
+        navbar: false,
+        toolbar: {
+          zoomIn: 1,
+          zoomOut: 1,
+          reset: 1,
+          rotateLeft: 1,
+          rotateRight: 1,
+        },
+      });
+    });
+  }
+</script>
+
+
+</body>
+</html>

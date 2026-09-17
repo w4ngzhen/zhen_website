@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="utf-8">
+    <meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover"
+          name="viewport">
+    
+    
+    <!-- umami web analysis -->
+    <script defer src="https://zhen.wang/libs/umami/umami.script.js"
+            data-website-id="d66cfe03-f6b3-4aa0-baf8-728700db1b09"></script>
+    
+    
+    
+    <link rel="icon" type="image/png" sizes="16x16" href="https://zhen.wang/images/blog-site-icon.svg">
+    <link rel="icon" type="image/png" sizes="32x32" href="https://zhen.wang/images/blog-site-icon.svg">
+    <title>zhen&#x27;s everything</title>
+    <link rel="stylesheet" href="https://zhen.wang/style.css">
+    
+<link rel="stylesheet" href="https://zhen.wang/article_content.css">
+<link rel="stylesheet" href="https://zhen.wang/article_markdown.css">
+
+</head>
+<body>
+
+<div id="article">
+    <header class="article-header">
+        
+<div class="base-title">
+    <a href="#" onclick="history.length > 1 ? history.back() : location.href = '/'; return false;">&LeftArrow; Back</a>
+    <h1>
+        在macOS上通过虚拟机搭建基础CentOS7系统环境
+    </h1>
+</div>
+
+    </header>
+    <p class="article-date">2018-03-06</p>
+    
+    <!-- toc -->
+    <div class="article-toc">
+        <label class="toc-title" for="toc-trigger">目录</label>
+        <input id="toc-trigger" type="checkbox" checked/>
+        <div class="toc-content">
+            <ol class="toc">
+                
+                <li class="toc-item toc-level-1">
+                    <a class="toc-link" href="https://zhen.wang/article/在macOS上通过虚拟机搭建基础CentOS系统环境/#xu-ni-ji-de-xuan-ze">虚拟机的选择</a>
+                    
+                </li>
+                
+                <li class="toc-item toc-level-1">
+                    <a class="toc-link" href="https://zhen.wang/article/在macOS上通过虚拟机搭建基础CentOS系统环境/#linuxde-xuan-ze">Linux的选择</a>
+                    
+                </li>
+                
+                <li class="toc-item toc-level-1">
+                    <a class="toc-link" href="https://zhen.wang/article/在macOS上通过虚拟机搭建基础CentOS系统环境/#pei-zhi-shuang-wang-qia-shi-xian-xu-ni-ji-yu-zhu-ji-mac-yu-wai-wang-tong-xin">配置双网卡实现虚拟机 与主机（mac）与外网通信</a>
+                    
+                    <ol class="toc-child">
+                        
+                        <li class="toc-item toc-level-2">
+                            <a href="https://zhen.wang/article/在macOS上通过虚拟机搭建基础CentOS系统环境/#pei-zhi-jin-jin-yu-zhu-ji-tong-xin-de-jin-zhu-ji-mo-shi-wang-qia">配置仅仅与主机通信的仅主机模式网卡</a>
+                        </li>
+                        
+                        <li class="toc-item toc-level-2">
+                            <a href="https://zhen.wang/article/在macOS上通过虚拟机搭建基础CentOS系统环境/#pei-zhi-ji-neng-yu-zhu-ji-tong-xin-tong-shi-huan-neng-yu-wai-wang-tong-xin-de-qiao-jie-mo-shi">配置既能与主机通信同时还能与外网通信的桥接模式</a>
+                        </li>
+                        
+                    </ol>
+                    
+                </li>
+                
+                <li class="toc-item toc-level-1">
+                    <a class="toc-link" href="https://zhen.wang/article/在macOS上通过虚拟机搭建基础CentOS系统环境/#an-zhuang-virtaulboxzeng-qiang-gong-ju-bao">安装VirtaulBox增强工具包</a>
+                    
+                    <ol class="toc-child">
+                        
+                        <li class="toc-item toc-level-2">
+                            <a href="https://zhen.wang/article/在macOS上通过虚拟机搭建基础CentOS系统环境/#wei-centosan-zhuang-bi-yao-de-kai-fa-ku-gong-ju-ku">为CentOS安装必要的开发库工具库</a>
+                        </li>
+                        
+                        <li class="toc-item toc-level-2">
+                            <a href="https://zhen.wang/article/在macOS上通过虚拟机搭建基础CentOS系统环境/#gua-zai-zeng-qiang-gong-neng-jing-xiang-wen-jian">挂载增强功能镜像文件</a>
+                        </li>
+                        
+                    </ol>
+                    
+                </li>
+                
+                <li class="toc-item toc-level-1">
+                    <a class="toc-link" href="https://zhen.wang/article/在macOS上通过虚拟机搭建基础CentOS系统环境/#she-zhi-gong-xiang-wen-jian-jia">设置共享文件夹</a>
+                    
+                </li>
+                
+            </ol>
+        </div>
+    </div>
+    
+    <!-- real content -->
+    <div class="article-content markdown-content">
+        <p>尽管从Mac的Terminal可以看出，macOS与UNIX、Linux或多或少都有血缘关系（shell、bash等），但是在mac进行Linux开发，或者把macOS直接当作Linux来使用依然是说不过去的，这其中包括一些命令行的使用，一些基本的文件夹体系等（如，在Linux上的/home目录与在macOS下的/Users）不一致。如果想要在macOS上进行Linux的学习，或者进行Linux开发，最完美的方案自然是安装虚拟机。</p>
+<span id="continue-reading"></span><h3 id="xu-ni-ji-de-xuan-ze">虚拟机的选择</h3>
+<p>mac平台上的主流虚拟机有VMWare Fusion、Parallels Desktop、VrtualBox。前两者均是付费产品，价格虽不是很贵（参考JetBrains、Adobe系列），但是对于只是在Linux上进行学习或者是进行一些简单的开发颇有些大材小用了。所以，本次教程选择免费的VirtualBox进行搭建。</p>
+<p>地址：<a rel="noopener" target="_blank" href="https://www.virtualbox.org/">VirtualBox</a></p>
+<p>下载好以后，打开dmg双击pkg正常安装即可。</p>
+<ul>
+<li>
+<p><strong>注意</strong></p>
+<p>VirtualBox在安装的时候需要安装内核扩展（Kernel extenstion）由于macOS 10.13 High Sierra的新安全特性会阻止外部内核扩展的安装，所以安装总是会被系统拦截，出现安装失败的情况，这时候打开“系统偏好设置 - 安全性与隐私”在界面下方会出现提示“来自Oracle America, Inc....”，点击“允许”再次安装即可。</p>
+</li>
+<li>
+<p><strong>点击“允许”没反应？</strong></p>
+<p>本人安装VBox还有其他软件曾经出现过点击“允许”没有反应的情况，可能是macOS存在的一个BUG。此时首先关闭“安全性与隐私”，进入“系统偏好设置 - 键盘 - 快捷键”，选择“所有控制”，然后在此进入“安全性与隐私”，按tab键移动光标焦点到“允许”按钮处按空格键即可点击成功。</p>
+</li>
+</ul>
+<h3 id="linuxde-xuan-ze">Linux的选择</h3>
+<p>本人选择CentOS 7作为本次的教程的Linux版本。</p>
+<p>官方地址：<a rel="noopener" target="_blank" href="https://www.centos.org/">CentOS</a></p>
+<p>在download界面我们可以看到三种iso镜像：</p>
+<ul>
+<li>DVD.iso 可以用安装程序安装的所有安装包。</li>
+<li>Everything.iso 包含centos7的一套完整的软件包，可以用来安装系统或者填充本地镜像。</li>
+<li>Minimal.iso 最小安装盘，只有必要的软件，自带的软件最少。（<strong>只有命令行界面</strong>）</li>
+</ul>
+<p>这里我们选择minimal，首先因为它是最精炼的一个，其次，一步一步定制我们的系统才能够更好的熟悉Linux系统。
+下载好以后，打开VirtualBox安装CentOS系统。</p>
+<p><strong>开始安装</strong></p>
+<p>打开VirtualBox，点击“新建” - “专家模式”
+按照如下的方式配置
+<img src="https://static-res.zhen.wang/images/post/2018-03-06-Linux/create-v.png" alt="create-v.png" />
+内存大小会使用到你mac的运行时内存，请合理分配，这里我们分配1G内存
+点击创建，进入下一步：
+<img src="https://static-res.zhen.wang/images/post/2018-03-06-Linux/create-v2.png" alt="create-v2.png" />
+创建完成之后界面如下（CentOS7是我们创建的）：
+<img src="https://static-res.zhen.wang/images/post/2018-03-06-Linux/create-v3.png" alt="create-v3.png" />
+由于我们只是为虚拟机分配了相关的空间以及配置，但是并没有将系统挂载，点击“启动”会提示我们选择镜像文件，点击右侧小图标来选择镜像文件：
+<img src="https://static-res.zhen.wang/images/post/2018-03-06-Linux/chooseimg-detail.png" alt="chooseimg-detail" />
+选择完毕，准备启动：
+<img src="https://static-res.zhen.wang/images/post/2018-03-06-Linux/chooseimg.png" alt="chooseimg" />
+接下来点击“start”，经过短暂的等待，我们进入到系统安装界面，我们点击该界面，直接进入虚拟机内部（mac上退出虚拟机操控请按 command 键），此时可以操作方向键来选择我们接下来的步骤，这里我们选择“Install CentOS 7”并回车：
+<img src="https://static-res.zhen.wang/images/post/2018-03-06-Linux/installUI.png" alt="installUI" />
+接下来我们会进入到一个鼠标操控极差的界面来安装我们的系统，这里我们选择中文语言来进行系统安装：
+<img src="https://static-res.zhen.wang/images/post/2018-03-06-Linux/chooseEn.png" alt="chooseCN" />
+选择过语言之后，会看到“安装位置”有红色警告提示是自动分区，这里CentOS已经为我们选择好了“自动分区”
+<img src="https://static-res.zhen.wang/images/post/2018-03-06-Linux/installCentos.png" alt="installCentos" />
+此时只需要点击进去然后在左上角点击“完成”即可，只做一个确认即可：
+<img src="https://static-res.zhen.wang/images/post/2018-03-06-Linux/partition.png" alt="partition" />
+回到主界面我们可以点击“开始安装”进行安装了。这里还要说一下，在安装过程中，就像下面的图示，系统是一直在安装的，但是此时系统中只有一个没有设置密码的root用户，就连管理员用户也没有，这里<strong>需要</strong>你设置root用户密码，可以不配置新的管理员用户：
+<img src="https://static-res.zhen.wang/images/post/2018-03-06-Linux/installing.png" alt="installing" />
+密码设置短一点没有事儿，毕竟是练习机：
+<img src="https://static-res.zhen.wang/images/post/2018-03-06-Linux/setpasswd.png" alt="setpasswd" />
+然后完成配置
+<img src="https://static-res.zhen.wang/images/post/2018-03-06-Linux/completeInstall.png" alt="completeInstall" />
+之后等待最后的收尾工作结束，点击“重启”，进入命令行界面（选择的minimal，只有命令行界面），选择第一个系统，登陆root用户：
+<img src="https://static-res.zhen.wang/images/post/2018-03-06-Linux/chooseFirst.png" alt="chooseFirst" />
+<img src="https://static-res.zhen.wang/images/post/2018-03-06-Linux/login.png" alt="login" />
+至此，虚拟机下Linux基本配置完成。</p>
+<h3 id="pei-zhi-shuang-wang-qia-shi-xian-xu-ni-ji-yu-zhu-ji-mac-yu-wai-wang-tong-xin">配置双网卡实现虚拟机 与主机（mac）与外网通信</h3>
+<p>在上面的配置中，我们已经搭建好了一个最基本的，不具备网络通信的CentOS7操作系统，但是不能与外网通信，我们不能通过在线安装我们需要的软件，这样的单机操作系统用处是不大的。接下来我将介绍如何通过双网卡的方式来实现实现虚拟机 与主机（mac）与外网通信。</p>
+<h4 id="pei-zhi-jin-jin-yu-zhu-ji-tong-xin-de-jin-zhu-ji-mo-shi-wang-qia">配置仅仅与主机通信的仅主机模式网卡</h4>
+<p>以下配置方式是不能与外网通信的，仅仅与主机通信，但好处在于我们可以使用静态IP地址，避免IP地址的变动。如果你没有这方面的需求，可以直接进入下一节。</p>
+<p>无论是哪一台计算机，要进行网络通信，都必须要至少有一块网卡来进行通信，当然，我们可以通过软件来虚拟出网卡，让这个虚拟的网卡获取IP来通信，更多的细节需要你有计算机网络的相关知识来支撑，这里不多提。这里既然我们需要让虚拟机中的系统来与我们的主机（mac）来通信，自然而然，需要让我们mac有一块网卡，虚拟机有一块网卡，让它们处于同一网段，这样一来，我们自然就实现了虚拟机与主机（mac）之间的通信。主机上怎么创建一块虚拟网卡呢？这里VirtualBox就可以帮我们实现。</p>
+<p>点击主界面上的“全局工具” - “主机网络管理器”，进入后点击“创建”（<strong>注意</strong>：这里可能会存在显示BUG，导致你点击创建之后没反应，<strong>请不要</strong>连续点击创建，点了一次之后切换一下画面），之后你就会在主机上（mac）创建一块用于和VirtualBox中的虚拟机进行通信的虚拟网卡：
+<img src="https://static-res.zhen.wang/images/post/2018-03-06-Linux/createHostNetworkUI.png" alt="createHostNetworkUI" />
+这里VBox自动为我们在mac主机上创建了一块名称为vboxnet0的网卡
+<img src="https://static-res.zhen.wang/images/post/2018-03-06-Linux/createHostNetwork.png" alt="createHostNetwork" />
+我们进入mac终端，显示当前的所有的网卡信息也能看到这块网卡在我们的mac主机上已经创建成功了：</p>
+<pre data-lang="shell" style="background-color:#2b303b;color:#c0c5ce;" class="language-shell "><code class="language-shell" data-lang="shell"><span>$ ifconfig
+</span><span>...
+</span><span>vboxnet0: flags=8943&lt;UP,BROADCAST,RUNNING,PROMISC,SIMPLEX,MULTICAST&gt; mtu 1500
+</span><span>	ether 0a:00:27:00:00:00
+</span><span>	inet 192.168.56.1 netmask 0xffffff00 broadcast 192.168.56.255
+</span><span># 我们看到这块网卡已经有一个IP地址为192.168.56.1
+</span><span># 要让我们的虚拟机与我们的主机通信，只要虚拟机中有一块我们主机在同一网段的网卡就行了
+</span><span>...
+</span></code></pre>
+<p><strong>注意：请明确以上操作是为我们的主机mac，不是为我们的虚拟机创建网卡：）</strong></p>
+<p>接下来，我们可以通过VirtualBox给CentOS配置一块网卡，用于我们的虚拟机中的操作系统与我们的主机（mac）之间的通信，所以首先我们要配置一块“仅主机（Host-Only）网络”：
+<img src="https://static-res.zhen.wang/images/post/2018-03-06-Linux/host-only.png" alt="host-only" />
+我们可以看到，VirtualBox已经很智能的为我们选择了我们刚刚为主机mac创建的网卡。点击“OK”之后，我们虚拟机与主机之间的通信网卡配置完成（<strong>注意</strong>：仅仅是虚拟网卡配置好了，IP地址什么还没有配置）。接下来我们登录我们的虚拟机查看网卡的配置情况。
+进入系统之后，我们使用命令ip addr来查看CentOS下的网卡配置情况（默认是没有ifconfig命令的，我们之后再装）
+<img src="https://static-res.zhen.wang/images/post/2018-03-06-Linux/ip_addr.png" alt="ip_addr" />
+注意查看此处第二块网卡，我们可以看到它的硬件地址是08:00...:3d，和我们上面的配置Host-Only处显示的硬件MAC地址是一样的，同时请记住这块网卡的名称。</p>
+<p><strong>配置网络</strong></p>
+<p>在CentOS7中，我们进入/etc/sysconfig/network-script目录，显示当前目录下的文件：</p>
+<pre data-lang="shell" style="background-color:#2b303b;color:#c0c5ce;" class="language-shell "><code class="language-shell" data-lang="shell"><span>$ cd /etc/sysconfig/network-script
+</span><span>$ ls
+</span><span># 在众多的配置文件中，我们应该是能够找到和我们上面ip addr命令中显示的那块网卡名称一样的带有“ifcfg-”前缀的配置文件
+</span><span>...
+</span><span>ifcfg-enp0s3
+</span><span>...
+</span></code></pre>
+<p><strong>注意</strong>：在CentOS6.x及一下，网卡的命名规则和7不一样，相关的差别请自行搜索。</p>
+<p>接下来我们需要配置网卡的具体信息，由于我们选择的是minimal版本的CentOS，所以使用vi来打开编辑它：</p>
+<pre data-lang="shell" style="background-color:#2b303b;color:#c0c5ce;" class="language-shell "><code class="language-shell" data-lang="shell"><span>$ vi ifcfg-enp0s3
+</span><span># 同时为了配合上面的我们主机的IP网段，我们按照如下的方式来配置
+</span><span>
+</span><span># 类型=以太网
+</span><span>TYPE=Ethernet(默认)
+</span><span># 设备名
+</span><span>DEVICE=enp0s3(默认)
+</span><span>
+</span><span>#BOOTPROTO=dhcp(dhcp为自动分配ip地址,我们把他注释了，在下面另外加)
+</span><span>BOOTPROTO=static(新添加)
+</span><span># IP地址
+</span><span>IPADDR=192.168.56.66(新添加)
+</span><span># 子网掩码
+</span><span>NETMASK=255.255.255.0(新添加)
+</span><span>
+</span><span>ONBOOT=yes(默认为no,修改为yes意为每次启动之后自动启动该网卡)
+</span><span># 以上就是一个最精简的网卡配置文件
+</span></code></pre>
+<p><img src="https://static-res.zhen.wang/images/post/2018-03-06-Linux/ifcfg.png" alt="ifcfg" />
+接下来reboot重启CentOS，重启之后通过ip addr再次查看我们网卡信息，也可以看到其网卡已经配置好了IP地址：
+<img src="https://static-res.zhen.wang/images/post/2018-03-06-Linux/ipaddrNew.png" alt="ipaddrNew" />
+最后来进行测试，由于mac本身的安全防火墙是打开的，所以我们通过虚拟机（ip=192.168.56.66）去ping我们mac主机（ip=192.168.56.1）是ping不通的，我们只有在mac终端下去ping我们的虚拟机，发现已经ping通：
+<img src="https://static-res.zhen.wang/images/post/2018-03-06-Linux/ping.png" alt="ping" /></p>
+<h4 id="pei-zhi-ji-neng-yu-zhu-ji-tong-xin-tong-shi-huan-neng-yu-wai-wang-tong-xin-de-qiao-jie-mo-shi">配置既能与主机通信同时还能与外网通信的桥接模式</h4>
+<p>配置第二块网卡的原理十分简单，就是我们将我们主机的一块能够上网的网卡作为桥接网卡（可以理解为抽象成一台路由器上的网卡），这样，首先毫无疑问，我们的既然都是我们主机上的网卡了，自然主机与虚拟机之间是能够通信的，同时，我们的虚拟机还能够通过这块桥接网卡来与外界通信。</p>
+<p>以上的简略了解以后，我们首先可以知道，我们可以不再需要Host-Only这样的主机模式了。所以我们不再选择主机模式。</p>
+<p>选择桥接模式之前，我们首先查看我们当前能够使用的桥接的网络，在本次实验中，本人mac使用的是无线网卡en0连接的网络本地的局域网：</p>
+<pre data-lang="shell" style="background-color:#2b303b;color:#c0c5ce;" class="language-shell "><code class="language-shell" data-lang="shell"><span>$ ifconfig
+</span><span>...
+</span><span>en0: flags=8863&lt;UP,BROADCAST,SMART,RUNNING,SIMPLEX,MULTICAST&gt; mtu 1500
+</span><span>	...
+</span><span>	inet 172.20.10.12 netmask 0xfffffff0 broadcast 172.20.10.15
+</span><span>	nd6 options=201&lt;PERFORMNUD,DAD&gt;
+</span><span>	media: autoselect
+</span><span>	status: active
+</span><span>...
+</span></code></pre>
+<p>在此基础之上，我们设置虚拟机的网络为桥接模式，取消仅主机模式网络，并且选择我们的无线网卡：
+<img src="https://static-res.zhen.wang/images/post/2018-03-06-Linux/nohostonly.png" alt="nohostonly" />
+<img src="https://static-res.zhen.wang/images/post/2018-03-06-Linux/en0.png" alt="en0" />
+接下来进入系统，验证网卡是否配置成功，之后在测试ping外网：
+<img src="https://static-res.zhen.wang/images/post/2018-03-06-Linux/ipaddrBridgeAndPing.png" alt="ipaddrBridgeAndPing" />
+再使用主机ping我们的虚拟机，发现没有问题
+<img src="https://static-res.zhen.wang/images/post/2018-03-06-Linux/pingVM.png" alt="pingVM" />
+综上，我们的虚拟机 + 网络完全配置完成！</p>
+<h3 id="an-zhuang-virtaulboxzeng-qiang-gong-ju-bao">安装VirtaulBox增强工具包</h3>
+<p>VirtualBox的增强工具包通常不需要我们再去下载，它通常伴随VirtualBox下载好了。一般会存放在对应应用的根目录下（在Windows中就是安装根目录），在mac中我们知道应用的根目录就是当我们安装的应用的包内容中：找到VitualBox应用，右键，“显示包内容”，“Contents”，“MacOS”，可以看到一个名为VBoxGuestAddition.iso镜像文件：
+<img src="https://static-res.zhen.wang/images/post/2018-03-06-Linux/additioniso.png" alt="additioniso" />
+接下来，就需要我们将这个iso镜像文件挂载到我们的Linux系统中。<strong>注意，一定要明确这个增强工具是给我们虚拟机中的Linux系统安装的</strong>。</p>
+<h4 id="wei-centosan-zhuang-bi-yao-de-kai-fa-ku-gong-ju-ku">为CentOS安装必要的开发库工具库</h4>
+<p>进入Linux中，在前面安装配置好网络的基础上，我们使用yum安装如下待会增强功能包需要用到的工具库：</p>
+<pre data-lang="shell" style="background-color:#2b303b;color:#c0c5ce;" class="language-shell "><code class="language-shell" data-lang="shell"><span>$ yum update
+</span><span>$ yum install gcc gcc-c++ make kernel-headers kernel-devel bzip2
+</span><span># 务必注意先安装gcc、gcc-c++、make，这三个工具是后面编译的基础工具
+</span></code></pre>
+<p>安装完成以后，reboot重启。<strong>(务必要重启，为了更新kernel内核系统信息)</strong></p>
+<h4 id="gua-zai-zeng-qiang-gong-neng-jing-xiang-wen-jian">挂载增强功能镜像文件</h4>
+<p>这里必须要提到Linux中的一个概念：<strong>挂载（mount）</strong>。根文件系统之外的其他文件要想能够被访问，都必须通过“关联”至根文件系统上的某个目录来实现，此关联操作即为“挂载”，此目录即为“挂载点”,解除此关联关系的过程称之为“卸载”。实际上，我们Windows上同样也有挂载，比如U盘的插入并读写，新添加的硬盘并读写等等。这一切由于在Windows上已经有对应的驱动程序帮助我们自动的进行了，所以我们不太熟悉这个过程。而在Linux上，特别是在命令行界面下，我们要去读取一些系统以外的文件（就比如上面的U盘，光驱等），就必须要手动的去做这样一个操作。</p>
+<p>挂在的过程我们需要明确最主要的两点：设备以及挂载点。设备其实就是Linux操作系统中/dev/目录下显示那一些设备。挂载点其实就是Linux文件系统中的我们可以自定义的文件夹，在到时候使用挂在命令的时候，将外部文件系统与Linux内部文件系统关联起来的入口。可能还有些模糊，下面安装增强功能包会进一步根据实际来解释的。</p>
+<p>在上面我们已经安装好了开发工具并重启之后，我们首先点击VirtualBox上的“devices”选项，找到“Install Guest Addition CD image”：
+<img src="https://static-res.zhen.wang/images/post/2018-03-06-Linux/installdevices.png" alt="installdevices" />
+找到这一栏以后，我们点击它，现在是没有任何反应的，但是这里VirtualBox已经为我们将CD镜像“连接”到了Linux中了，就好像我们普通电脑装入光驱一个道理。</p>
+<p>补充：VirtualBox上的devices其实就是我们的外设接口一样。我们可以看到devices显示的Optical Drivers、Audio、Network以及USB，实际上就是为我们虚拟化的接口。假设我们想要将U盘数据传到Linux中，就可以现在电脑上插入U盘，然后在USB中找到我们这个插入的U盘对应的驱动选项，VirtualBox就会为我们读入U盘，之后在Linux中我们把对应的设备挂载到某一文件夹就可以读取了。</p>
+<p>继续上面的安装。接下来我们创建一个挂载点，挂载点通常就是创建一个临时的文件夹：</p>
+<pre data-lang="shell" style="background-color:#2b303b;color:#c0c5ce;" class="language-shell "><code class="language-shell" data-lang="shell"><span>$ mkdir tempdir
+</span></code></pre>
+<p>创建完成以后，我们将cd设备挂载到这个文件夹上：</p>
+<pre data-lang="shell" style="background-color:#2b303b;color:#c0c5ce;" class="language-shell "><code class="language-shell" data-lang="shell"><span>$ mount -t auto /dev/cdrom ./tempdir
+</span><span># 完成挂载以后会打印设备的访问权限
+</span></code></pre>
+<p>接下来，我们就可以进入刚刚创建的tempdir，我们可以看到这个文件中，出现了一些新的文件，这些文件其实就是刚刚增强功能包中的文件：
+<img src="https://static-res.zhen.wang/images/post/2018-03-06-Linux/tempdir.png" alt="tempdir" />
+看到这里，读者应该就能对挂载有基本更形象的认识了吧。其实就是将外部文件通过某一个我们内部创建的文件夹（挂载点）连接到我们Linux内部文件系统。
+这个增强包中包含了Linux、Windows以及macOS系统的增强工具包。我们是Linux系统，所以运行VBoxLinuxAdditions.sh即可：</p>
+<pre data-lang="shell" style="background-color:#2b303b;color:#c0c5ce;" class="language-shell "><code class="language-shell" data-lang="shell"><span>$ sh ./VBoxLinuxAdditions.sh
+</span></code></pre>
+<p><img src="https://static-res.zhen.wang/images/post/2018-03-06-Linux/building.png" alt="building" />
+完成以后，我们会发现系统的分辨率发生了变化，并且通过输出也知道增强工具安装成功了。</p>
+<p>最后请类似于像Windows上弹出U盘一样，卸载挂载点</p>
+<pre data-lang="shell" style="background-color:#2b303b;color:#c0c5ce;" class="language-shell "><code class="language-shell" data-lang="shell"><span>$ umount tempdir
+</span></code></pre>
+<h3 id="she-zhi-gong-xiang-wen-jian-jia">设置共享文件夹</h3>
+<p>VirtualBox为我们设计了“共享文件夹”，方便Linux与主机之间的文件传输。这一功能需要增强功能包安装完成了才可以使用。</p>
+<p>这一步其实很简单，同样是在VirtualBox上的devices选项中，我们点击“Shared Folders” - “Shared Folders Settings”，点击新建共享文件夹按钮：
+<img src="https://static-res.zhen.wang/images/post/2018-03-06-Linux/newsf.png" alt="newsf" />
+在弹出来的界面设置在主机上的共享文件夹，这里我在桌面上创建了一个名为“sharefolder”的文件夹，并选择了它，同时为了方便，文件名我设置为了“sf”。下方第一条“只读”按需勾选（以后可以修改），“Auto-mount”自动挂载选上，方便系统中自动挂载读取，“Make Permanet”永久化一般也选上，以后一直用这个文件夹与虚拟机中的Linux进行文件共享。</p>
+<p>回到Linux中，我们为了方便文件的管理，创建一个名为myshare的文件夹作为挂载点。</p>
+<pre data-lang="shell" style="background-color:#2b303b;color:#c0c5ce;" class="language-shell "><code class="language-shell" data-lang="shell"><span>$ mkdir myshare
+</span></code></pre>
+<p>接下来使用如下的命令将主机上的共享文件夹挂载进来：</p>
+<pre data-lang="shell" style="background-color:#2b303b;color:#c0c5ce;" class="language-shell "><code class="language-shell" data-lang="shell"><span>$ mount -t vboxsf sf ./myshare
+</span></code></pre>
+<p>于是，当我们在主机上往共享文件夹中操作文件的时候，刷新Linux中的文件夹，就可以实时的看到（反之亦然）：
+<img src="https://static-res.zhen.wang/images/post/2018-03-06-Linux/sharefile.png" alt="sharefile" />
+<img src="https://static-res.zhen.wang/images/post/2018-03-06-Linux/deleteshare.png" alt="deleteshare" /></p>
+<p>在此基础上，整个使用VirtualBox进行Linux虚拟机的搭建工作完成！</p>
+
+    </div>
+</div>
+<script src="https://zhen.wang/libs/viewerjs@1.11.7/viewer.min.js"></script>
+<link rel="stylesheet" href="https://zhen.wang/libs/viewerjs@1.11.7/viewer.min.css"/>
+<script>
+  if (window.Viewer) {
+    document.querySelectorAll('img').forEach(img => {
+      new Viewer(img, {
+        inline: false,
+        navbar: false,
+        toolbar: {
+          zoomIn: 1,
+          zoomOut: 1,
+          reset: 1,
+          rotateLeft: 1,
+          rotateRight: 1,
+        },
+      });
+    });
+  }
+</script>
+
+
+</body>
+</html>
