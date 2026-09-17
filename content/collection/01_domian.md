@@ -7,7 +7,6 @@ hide_toc = true
 一些纯收藏的域名：
 
 - [zhen.wang](https://zhen.wang)（本人主站）
-- zhen.pro（放置个人项目、一些服务API的域名）
 - wangzhen.net & zhenwang.net（名称域名）
 - semag.games（镜像对称域名）
 - var.cool（有趣的短域名）
