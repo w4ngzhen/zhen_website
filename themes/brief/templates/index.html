@@ -1,14 +1,13 @@
 {% extends "base_layout.html" %}
-{% import "macros/gen_header.html" as gen_header %}
 
 {% block content %}
-{{ gen_header::gen_header()}}
+{{<gen_header config />}}
 {% set article_section = get_section(path="article/_index.md") %}
 <main>
     {% if article_section.pages %}
     <h2>recent posts</h2>
     <ul class="article-list">
-        {% for post in article_section.pages | slice(end=15) %}
+        {% for post in article_section.pages[:15] %}
         <li class="article-item">
             <a href="{{ post.permalink }}">{{ post.title }}</a>
             <span class="article-date">{{post.date}}</span>

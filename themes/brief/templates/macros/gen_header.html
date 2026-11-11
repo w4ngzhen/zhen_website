@@ -1,4 +1,4 @@
-{% macro gen_header() %}
+{% component gen_header(config) %}
 <header>
     <h1>{{ config.title }}</h1>
     {% if config.extra.links %}
@@ -9,4 +9,4 @@
     </nav>
     {% endif %}
 </header>
-{% endmacro gen_header %}
+{% endcomponent gen_header %}

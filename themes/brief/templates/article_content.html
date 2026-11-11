@@ -1,5 +1,4 @@
 {% extends "base_layout.html" %}
-{% import "macros/base_title.html" as base_title %}
 
 {% block extra_head %}
 <link rel="stylesheet" href="{{ get_url(path='article_content.css') }}">
@@ -9,7 +8,7 @@
 {% block content %}
 <div id="article">
     <header class="article-header">
-        {{ base_title::title_with_back(title=page.title)}}
+        {{<title_with_back title={page.title} />}}
     </header>
     <p class="article-date">{{ page.date }}</p>
     {% if not page.extra.hide_toc and page.toc %}

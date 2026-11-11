@@ -1,4 +1,4 @@
-{% macro create_list(description, pages, group_by_year=true) %}
+{% component create_list(description, pages, group_by_year=true) %}
 <!-- extra description -->
 {% if description %}
 <p>{{description}}</p>
@@ -8,7 +8,9 @@
 {% if pages %}
 {% if group_by_year %}
 <!-- post list group by year -->
-{% for year, posts in pages | group_by(attribute="year") %}
+{% set posts_by_year = pages | group_by(attribute="year") %}
+{% for year in posts_by_year | keys | sort | reverse %}
+{% set posts = posts_by_year[year] %}
 <h2>{{ year }}</h2>
 <ul class="article-list">
     {% for post in posts %}
@@ -32,4 +34,4 @@
 {% else %}
 <p>No posts yet.</p>
 {% endif %}
-{% endmacro create_list %}
+{% endcomponent create_list %}
