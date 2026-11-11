@@ -10,7 +10,3 @@ hide_toc = true
 - wangzhen.net & zhenwang.net（名称域名）
 - semag.games（镜像对称域名）
 - var.cool（有趣的短域名）
-
-一些出售中的域名：
-
-- zhenw.com（[阿里云米铺](https://mi.aliyun.com/shop/55642)）
