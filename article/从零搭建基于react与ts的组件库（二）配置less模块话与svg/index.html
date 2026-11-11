@@ -1,0 +1,354 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="utf-8">
+    <meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover"
+          name="viewport">
+    
+    
+    <!-- umami web analysis -->
+    <script defer src="https://zhen.wang/libs/umami/umami.script.js"
+            data-website-id="d66cfe03-f6b3-4aa0-baf8-728700db1b09"></script>
+    
+    
+    
+    <link rel="icon" type="image/png" sizes="16x16" href="https://zhen.wang/images/blog-site-icon.svg">
+    <link rel="icon" type="image/png" sizes="32x32" href="https://zhen.wang/images/blog-site-icon.svg">
+    <title>zhen&#39;s everything</title>
+    <link rel="stylesheet" href="https://zhen.wang/style.css">
+    
+<link rel="stylesheet" href="https://zhen.wang/article_content.css">
+<link rel="stylesheet" href="https://zhen.wang/article_markdown.css">
+
+</head>
+<body>
+
+<div id="article">
+    <header class="article-header">
+        
+<div class="base-title">
+    <a href="#" onclick="history.length > 1 ? history.back() : location.href = '/'; return false;">&LeftArrow; Back</a>
+    <h1>
+        从零搭建react与ts组件库（二）less模块化与svg引入配置
+    </h1>
+</div>
+
+    </header>
+    <p class="article-date">2022-08-11</p>
+    
+    <!-- toc -->
+    <div class="article-toc">
+        <label class="toc-title" for="toc-trigger">目录</label>
+        <input id="toc-trigger" type="checkbox" checked/>
+        <div class="toc-content">
+            <ol class="toc">
+                
+                <li class="toc-item toc-level-1">
+                    <a class="toc-link" href="https://zhen.wang/article/从零搭建基于react与ts的组件库（二）配置less模块话与svg/#zu-jian-gui-hua">组件规划</a>
+                    
+                </li>
+                
+                <li class="toc-item toc-level-1">
+                    <a class="toc-link" href="https://zhen.wang/article/从零搭建基于react与ts的组件库（二）配置less模块话与svg/#lessyang-shi-mo-kuai-hua-pei-zhi">less样式模块化配置</a>
+                    
+                    <ol class="toc-child">
+                        
+                        <li class="toc-item toc-level-2">
+                            <a href="https://zhen.wang/article/从零搭建基于react与ts的组件库（二）配置less模块话与svg/#xiao-guo-yan-shi">效果演示</a>
+                        </li>
+                        
+                    </ol>
+                    
+                </li>
+                
+                <li class="toc-item toc-level-1">
+                    <a class="toc-link" href="https://zhen.wang/article/从零搭建基于react与ts的组件库（二）配置less模块话与svg/#svgyin-ru-pei-zhi">svg引入配置</a>
+                    
+                    <ol class="toc-child">
+                        
+                        <li class="toc-item toc-level-2">
+                            <a href="https://zhen.wang/article/从零搭建基于react与ts的组件库（二）配置less模块话与svg/#jiang-svgzuo-wei-reactzu-jian-lai-shi-yong">将svg作为react组件来使用</a>
+                        </li>
+                        
+                        <li class="toc-item toc-level-2">
+                            <a href="https://zhen.wang/article/从零搭建基于react与ts的组件库（二）配置less模块话与svg/#xiao-guo-yan-shi-1">效果演示</a>
+                        </li>
+                        
+                    </ol>
+                    
+                </li>
+                
+            </ol>
+        </div>
+    </div>
+    
+    <!-- real content -->
+    <div class="article-content markdown-content">
+        <p>在上一篇《从零搭建react+ts组件库（一）项目搭建与封装antd组件》介绍了使用webpack来搭建一个基于antd的组件库的基本框架，但是作为一个组件库，实际上还有很多的都还未引入，本篇将会补充less模块化以及svg引入的基本方式。</p>
+<span id="continue-reading"></span>
+<p>本文所有修改的代码分支为chapter02位于<a rel="noopener external" target="_blank" href="https://github.com/w4ngzhen/r-ui">w4ngzhen/r-ui (github.com)</a>仓库的<code>chapter02_less_and_svg</code>分支，该分支基于上一篇文章的<code>chapter01_init</code>分支而来（main分支总是显示最新的内容）。</p>
+<p>为了讲解如何进行less模块化配置以及如何引入svg作为组件库的一部分，我们设想这样一个需求：一个搜索输入框，左侧是一个svg的icon搜索图标，右侧是输入框。</p>
+<h1 id="zu-jian-gui-hua">组件规划</h1>
+<p>首先考虑组件具备的属性，作为一个简单的搜索框，我们至少有3个属性：</p>
+<ol>
+<li>输入框初始默认值（defaultValue）</li>
+<li>占位提示信息（placeholder）</li>
+<li>输入改变事件（onChange）</li>
+</ol>
+<p>对于UI结构来说，我们可以使用一个div作为整体包裹，然后左侧是图标的区域（使用一个div），右侧是输入框（input）。</p>
+<p>综上，我们的初始代码如下：</p>
+<pre class="giallo" style="color: #E1E4E8; background-color: #24292E;" ><code data-lang="plain"><span class="giallo-l"><span>import * as React from &quot;react&quot;;</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span>interface SearchInputProps {</span></span>
+<span class="giallo-l"><span>    defaultValue?: string;</span></span>
+<span class="giallo-l"><span>    placeholder?: string;</span></span>
+<span class="giallo-l"><span>    onChange?: (value: string, e: React.ChangeEvent&lt;HTMLInputElement&gt;) =&gt; void;</span></span>
+<span class="giallo-l"><span>}</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span>const SearchInput: React.FC&lt;SearchInputProps&gt; = (props) =&gt; {</span></span>
+<span class="giallo-l"><span>    const {</span></span>
+<span class="giallo-l"><span>        defaultValue,</span></span>
+<span class="giallo-l"><span>        placeholder,</span></span>
+<span class="giallo-l"><span>        onChange,</span></span>
+<span class="giallo-l"><span>    } = props;</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span>    const inputOnChange: React.ChangeEventHandler&lt;HTMLInputElement&gt;</span></span>
+<span class="giallo-l"><span>        = (e: React.ChangeEvent&lt;HTMLInputElement&gt;) =&gt; {</span></span>
+<span class="giallo-l"><span>        if (onChange) {</span></span>
+<span class="giallo-l"><span>            onChange(e.target.value, e);</span></span>
+<span class="giallo-l"><span>        }</span></span>
+<span class="giallo-l"><span>    }</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span>    return (</span></span>
+<span class="giallo-l"><span>        // 包裹</span></span>
+<span class="giallo-l"><span>        &lt;div&gt;</span></span>
+<span class="giallo-l"><span>            {/*存放icon*/}</span></span>
+<span class="giallo-l"><span>            &lt;div&gt;&lt;/div&gt;</span></span>
+<span class="giallo-l"><span>            {/* 输入框*/}</span></span>
+<span class="giallo-l"><span>            &lt;input defaultValue={defaultValue}</span></span>
+<span class="giallo-l"><span>                   placeholder={placeholder}</span></span>
+<span class="giallo-l"><span>                   onChange={inputOnChange}&gt;&lt;/input&gt;</span></span>
+<span class="giallo-l"><span>        &lt;/div&gt;</span></span>
+<span class="giallo-l"><span>    );</span></span>
+<span class="giallo-l"><span>}</span></span></code></pre><h1 id="lessyang-shi-mo-kuai-hua-pei-zhi">less样式模块化配置</h1>
+<p>首先我们编写less样式文件，当然，对于该文件我们不赘述实现。</p>
+<pre class="giallo" style="color: #E1E4E8; background-color: #24292E;" ><code data-lang="less"><span class="giallo-l"><span>@</span><span style="color: #79B8FF;">input-size</span><span>:</span><span style="color: #79B8FF;"> 32</span><span style="color: #F97583;">px</span><span>;</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #B392F0;">.centerAll</span><span>() {</span></span>
+<span class="giallo-l"><span style="color: #79B8FF;">  display</span><span>:</span><span style="color: #79B8FF;"> flex</span><span>;</span></span>
+<span class="giallo-l"><span style="color: #79B8FF;">  flex-direction</span><span>:</span><span style="color: #79B8FF;"> row</span><span>;</span></span>
+<span class="giallo-l"><span style="color: #79B8FF;">  justify-content</span><span>:</span><span style="color: #79B8FF;"> center</span><span>;</span></span>
+<span class="giallo-l"><span style="color: #79B8FF;">  align-items</span><span>:</span><span style="color: #79B8FF;"> center</span><span>;</span></span>
+<span class="giallo-l"><span>}</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #B392F0;">.searchInputWrap</span><span> {</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #79B8FF;">  width</span><span>:</span><span style="color: #79B8FF;"> 100</span><span style="color: #F97583;">%</span><span>;</span></span>
+<span class="giallo-l"><span style="color: #79B8FF;">  height</span><span>: @</span><span style="color: #79B8FF;">input-size</span><span>;</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #79B8FF;">  background-color</span><span>:</span><span style="color: #79B8FF;"> #f4f4f4</span><span>;</span></span>
+<span class="giallo-l"><span style="color: #79B8FF;">  border-radius</span><span>:</span><span style="color: #79B8FF;"> 5</span><span style="color: #F97583;">px</span><span>;</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #B392F0;">  .centerAll</span><span>();</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #B392F0;">  .searchInputIconBox</span><span> {</span></span>
+<span class="giallo-l"><span style="color: #79B8FF;">    width</span><span>: @</span><span style="color: #79B8FF;">input-size</span><span>;</span></span>
+<span class="giallo-l"><span style="color: #79B8FF;">    height</span><span>: @</span><span style="color: #79B8FF;">input-size</span><span>;</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #79B8FF;">    background-color</span><span>:</span><span style="color: #79B8FF;"> transparent</span><span>;</span></span>
+<span class="giallo-l"><span style="color: #B392F0;">    .centerAll</span><span>();</span></span>
+<span class="giallo-l"><span>  }</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #B392F0;">  .searchInput</span><span> {</span></span>
+<span class="giallo-l"><span style="color: #79B8FF;">    width</span><span>:</span><span style="color: #79B8FF;"> calc</span><span>(</span><span style="color: #79B8FF;">100</span><span style="color: #F97583;">% -</span><span> @</span><span style="color: #79B8FF;">input-size</span><span>);</span></span>
+<span class="giallo-l"><span style="color: #79B8FF;">    height</span><span>:</span><span style="color: #79B8FF;"> 100</span><span style="color: #F97583;">%</span><span>;</span></span>
+<span class="giallo-l"><span style="color: #79B8FF;">    border</span><span>:</span><span style="color: #79B8FF;"> none</span><span>;</span></span>
+<span class="giallo-l"><span style="color: #79B8FF;">    outline</span><span>:</span><span style="color: #79B8FF;"> none</span><span>;</span></span>
+<span class="giallo-l"><span style="color: #79B8FF;">    background-color</span><span>:</span><span style="color: #79B8FF;"> transparent</span><span>;</span></span>
+<span class="giallo-l"><span>  }</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #B392F0;">  .searchInput</span><span>:</span><span style="color: #B392F0;">focus</span><span> {</span></span>
+<span class="giallo-l"><span style="color: #79B8FF;">    border</span><span>:</span><span style="color: #79B8FF;"> none</span><span>;</span></span>
+<span class="giallo-l"><span style="color: #79B8FF;">    outline</span><span>:</span><span style="color: #79B8FF;"> none</span><span>;</span></span>
+<span class="giallo-l"><span>  }</span></span>
+<span class="giallo-l"><span>}</span></span>
+<span class="giallo-l"></span></code></pre>
+<p>修改组件代码，改动如下：</p>
+<ol>
+<li>以模块化的方式引入less文件</li>
+</ol>
+<pre class="giallo" style="color: #E1E4E8; background-color: #24292E;" ><code data-lang="diff"><span class="giallo-l"><span> import * as React from &quot;react&quot;;</span></span>
+<span class="giallo-l"><span style="color: #85E89D;background-color: #144620;">+import styles from &#39;./index.module.less&#39;;</span></span></code></pre>
+<ol start="2">
+<li>针对每个元素配置其less样式，采用<code>styles.xxx</code>方式使用</li>
+</ol>
+<pre class="giallo" style="color: #E1E4E8; background-color: #24292E;" ><code data-lang="diff"><span class="giallo-l"><span>     return (</span></span>
+<span class="giallo-l"><span>         // 包裹</span></span>
+<span class="giallo-l"><span style="color: #FDAEB7;background-color: #86181D;">-        &lt;div&gt;</span></span>
+<span class="giallo-l"><span style="color: #85E89D;background-color: #144620;">+        &lt;div className={styles.searchInputWrap}&gt;</span></span>
+<span class="giallo-l"><span>             {/*存放icon*/}</span></span>
+<span class="giallo-l"><span style="color: #FDAEB7;background-color: #86181D;">-            &lt;div&gt;&lt;/div&gt;</span></span>
+<span class="giallo-l"><span style="color: #85E89D;background-color: #144620;">+            &lt;div className={styles.searchInputIconBox}&gt;&lt;/div&gt;</span></span>
+<span class="giallo-l"><span>             {/* 输入框*/}</span></span>
+<span class="giallo-l"><span style="color: #FDAEB7;background-color: #86181D;">-            &lt;input defaultValue={defaultValue}</span></span>
+<span class="giallo-l"><span style="color: #85E89D;background-color: #144620;">+            &lt;input className={styles.searchInput}</span></span>
+<span class="giallo-l"><span style="color: #85E89D;background-color: #144620;">+                   defaultValue={defaultValue}</span></span>
+<span class="giallo-l"><span>                    placeholder={placeholder}</span></span>
+<span class="giallo-l"><span>                    onChange={inputOnChange}&gt;&lt;/input&gt;</span></span>
+<span class="giallo-l"><span>         &lt;/div&gt;</span></span>
+<span class="giallo-l"><span>     )</span></span></code></pre>
+<p>webpack对于css-loader需要进行简单的配置：</p>
+<pre class="giallo" style="color: #E1E4E8; background-color: #24292E;" ><code data-lang="diff"><span class="giallo-l"><span>           {</span></span>
+<span class="giallo-l"><span>             loader: MiniCssExtractPlugin.loader,</span></span>
+<span class="giallo-l"><span>           },</span></span>
+<span class="giallo-l"><span style="color: #FDAEB7;background-color: #86181D;">-          &#39;css-loader&#39;,</span></span>
+<span class="giallo-l"><span style="color: #85E89D;background-color: #144620;">+          {</span></span>
+<span class="giallo-l"><span style="color: #85E89D;background-color: #144620;">+            loader: &quot;css-loader&quot;,</span></span>
+<span class="giallo-l"><span style="color: #85E89D;background-color: #144620;">+            options: {</span></span>
+<span class="giallo-l"><span style="color: #85E89D;background-color: #144620;">+              modules: true</span></span>
+<span class="giallo-l"><span style="color: #85E89D;background-color: #144620;">+            }</span></span>
+<span class="giallo-l"><span style="color: #85E89D;background-color: #144620;">+          },</span></span>
+<span class="giallo-l"><span>           &#39;less-loader&#39;</span></span>
+<span class="giallo-l"></span></code></pre>
+<p>对于该处的配置，详细可以查看关于css-loader的文档<a rel="noopener external" target="_blank" href="https://github.com/webpack-contrib/css-loader">webpack-contrib/css-loader: CSS Loader (github.com)</a></p>
+<p>此时，如果有同学在使用IDEA会发现有编译报错。有同学会发现，我们的项目里面没有直接安装typescript，那么为什么IDEA能够检测到我们代码呢？实际上这是IDEA自带的ts在进行类型检测，<strong>仅仅是类型检查</strong>，实际上编译过程我们是调用的babel-loader+preset/typescript这条链路来完成的，所以并不影响编译后的内容。当然，为了能够进行正确的类型检查，我们在项目根目录下添加tsconfig.json：</p>
+<pre class="giallo" style="color: #E1E4E8; background-color: #24292E;" ><code data-lang="json"><span class="giallo-l"><span>{</span></span>
+<span class="giallo-l"><span style="color: #79B8FF;">  &quot;compilerOptions&quot;</span><span>: {</span></span>
+<span class="giallo-l"><span style="color: #79B8FF;">    &quot;noEmit&quot;</span><span>:</span><span style="color: #79B8FF;"> true</span><span>,</span></span>
+<span class="giallo-l"><span style="color: #79B8FF;">    &quot;esModuleInterop&quot;</span><span>:</span><span style="color: #79B8FF;"> true</span><span>,</span></span>
+<span class="giallo-l"><span style="color: #79B8FF;">    &quot;jsx&quot;</span><span>:</span><span style="color: #9ECBFF;"> &quot;react&quot;</span></span>
+<span class="giallo-l"><span>  },</span></span>
+<span class="giallo-l"><span style="color: #79B8FF;">  &quot;include&quot;</span><span>: [</span></span>
+<span class="giallo-l"><span style="color: #9ECBFF;">    &quot;src&quot;</span><span>,</span></span>
+<span class="giallo-l"><span style="color: #9ECBFF;">    &quot;./src/external.d.ts&quot;</span></span>
+<span class="giallo-l"><span>  ]</span></span>
+<span class="giallo-l"><span>}</span></span></code></pre>
+<p>其中，<code>"noEmit": true</code>表明由ts进行类型检查，但是不编译文件。include中的<code>./src/external.d.ts</code>中的内容如下：</p>
+<pre class="giallo" style="color: #E1E4E8; background-color: #24292E;" ><code data-lang="typescript"><span class="giallo-l"><span style="color: #6A737D;">// less模块声明</span></span>
+<span class="giallo-l"><span style="color: #F97583;">declare module</span><span style="color: #9ECBFF;"> &#39;*.module.less&#39;</span><span> {</span></span>
+<span class="giallo-l"><span style="color: #F97583;">    const</span><span style="color: #79B8FF;"> content</span><span style="color: #F97583;">:</span><span> { [</span><span style="color: #FFAB70;">className</span><span style="color: #F97583;">:</span><span style="color: #79B8FF;"> string</span><span>]</span><span style="color: #F97583;">:</span><span style="color: #79B8FF;"> string</span><span> };</span></span>
+<span class="giallo-l"><span style="color: #F97583;">    export =</span><span> content;</span></span>
+<span class="giallo-l"><span>}</span></span></code></pre>
+<p>也就是说，希望IDEA的内置ts读取tsconfig.json，并添加关于import<code>*.module.less</code>时候得到的模块的类型定义。这样，IDEA的ts类型检查在这句话的时候就不会报错了：</p>
+<pre class="giallo" style="color: #E1E4E8; background-color: #24292E;" ><code data-lang="typescript"><span class="giallo-l"><span style="color: #F97583;">import</span><span> styles</span><span style="color: #F97583;"> from</span><span style="color: #9ECBFF;"> &#39;./index.module.less&#39;</span><span>;</span></span></code></pre>
+<p>总结一下，想要在ts+babel-loader项目中使用样式模块化。</p>
+<p>在类型检查阶段，需要：</p>
+<ol>
+<li>单独配置tsconfig.json</li>
+<li>编写d.ts，并被tsconfig.json配置包含在类型定义查找的范围（inlcude）</li>
+</ol>
+<p>在编译阶段，需要只需要配置css-loader的module为true即可。</p>
+<p>这一块我会再写一篇文章来单独讲解webpack+ts+babel的方案。</p>
+<h2 id="xiao-guo-yan-shi">效果演示</h2>
+<p>编写样例html：</p>
+<pre class="giallo" style="color: #E1E4E8; background-color: #24292E;" ><code data-lang="html"><span class="giallo-l"><span>&lt;!</span><span style="color: #85E89D;">DOCTYPE</span><span style="color: #B392F0;"> html</span><span>&gt;</span></span>
+<span class="giallo-l"><span>&lt;</span><span style="color: #85E89D;">html</span><span style="color: #B392F0;"> lang</span><span>=</span><span style="color: #9ECBFF;">&quot;en&quot;</span><span>&gt;</span></span>
+<span class="giallo-l"><span>&lt;</span><span style="color: #85E89D;">head</span><span>&gt;</span></span>
+<span class="giallo-l"><span>    &lt;</span><span style="color: #85E89D;">meta</span><span style="color: #B392F0;"> charset</span><span>=</span><span style="color: #9ECBFF;">&quot;UTF-8&quot;</span><span>&gt;</span></span>
+<span class="giallo-l"><span>    &lt;</span><span style="color: #85E89D;">title</span><span>&gt;r-ui example&lt;/</span><span style="color: #85E89D;">title</span><span>&gt;</span></span>
+<span class="giallo-l"><span>    &lt;</span><span style="color: #85E89D;">script</span><span style="color: #B392F0;"> src</span><span>=</span><span style="color: #9ECBFF;">&quot;https://unpkg.com/react@17/umd/react.development.js&quot;</span><span>&gt;&lt;/</span><span style="color: #85E89D;">script</span><span>&gt;</span></span>
+<span class="giallo-l"><span>    &lt;</span><span style="color: #85E89D;">script</span><span style="color: #B392F0;"> src</span><span>=</span><span style="color: #9ECBFF;">&quot;https://unpkg.com/react-dom@17/umd/react-dom.development.js&quot;</span><span>&gt;&lt;/</span><span style="color: #85E89D;">script</span><span>&gt;</span></span>
+<span class="giallo-l"><span>    &lt;</span><span style="color: #85E89D;">script</span><span style="color: #B392F0;"> src</span><span>=</span><span style="color: #9ECBFF;">&quot;r-ui.umd.js&quot;</span><span>&gt;&lt;/</span><span style="color: #85E89D;">script</span><span>&gt;</span></span>
+<span class="giallo-l"><span>    &lt;</span><span style="color: #85E89D;">link</span><span style="color: #B392F0;"> href</span><span>=</span><span style="color: #9ECBFF;">&quot;r-ui.umd.css&quot;</span><span style="color: #B392F0;"> rel</span><span>=</span><span style="color: #9ECBFF;">&quot;stylesheet&quot;</span><span>/&gt;</span></span>
+<span class="giallo-l"><span>&lt;/</span><span style="color: #85E89D;">head</span><span>&gt;</span></span>
+<span class="giallo-l"><span>&lt;</span><span style="color: #85E89D;">body</span><span>&gt;</span></span>
+<span class="giallo-l"><span>&lt;</span><span style="color: #85E89D;">div</span><span style="color: #B392F0;"> id</span><span>=</span><span style="color: #9ECBFF;">&quot;example&quot;</span><span>&gt;&lt;/</span><span style="color: #85E89D;">div</span><span>&gt;</span></span>
+<span class="giallo-l"><span>&lt;</span><span style="color: #85E89D;">script</span><span>&gt;</span></span>
+<span class="giallo-l"><span style="color: #6A737D;">  // window上存在rui，是因为我们将组件包导出为了umd包，取名为rui</span></span>
+<span class="giallo-l"><span style="color: #F97583;">  const</span><span style="color: #79B8FF;"> button</span><span style="color: #F97583;"> =</span><span> React.</span><span style="color: #B392F0;">createElement</span><span>(rui.SearchInput, {</span></span>
+<span class="giallo-l"><span>    placeholder:</span><span style="color: #9ECBFF;"> &#39;占位符&#39;</span><span>,</span></span>
+<span class="giallo-l"><span>    defaultValue:</span><span style="color: #9ECBFF;"> &#39;hello, world&#39;</span><span>,</span></span>
+<span class="giallo-l"><span style="color: #B392F0;">    onChange</span><span>: (</span><span style="color: #FFAB70;">value</span><span>,</span><span style="color: #FFAB70;"> e</span><span>)</span><span style="color: #F97583;"> =&gt;</span><span> console.</span><span style="color: #B392F0;">log</span><span>(value, e)</span></span>
+<span class="giallo-l"><span>  });</span></span>
+<span class="giallo-l"><span>  ReactDOM.</span><span style="color: #B392F0;">render</span><span>(button, document.</span><span style="color: #B392F0;">getElementById</span><span>(</span><span style="color: #9ECBFF;">&#39;example&#39;</span><span>));</span></span>
+<span class="giallo-l"><span>&lt;/</span><span style="color: #85E89D;">script</span><span>&gt;</span></span>
+<span class="giallo-l"><span>&lt;/</span><span style="color: #85E89D;">body</span><span>&gt;</span></span>
+<span class="giallo-l"><span>&lt;/</span><span style="color: #85E89D;">html</span><span>&gt;</span></span></code></pre>
+<p>编译r-ui后打开样例界面，可以看到如下效果：</p>
+<p><img src="https://static-res.zhen.wang/images/post/2022-08-11/010-less-module.gif" alt="010-less-module" /></p>
+<h1 id="svgyin-ru-pei-zhi">svg引入配置</h1>
+<p>实际上，react中想要使用svg有这很多种方式，像是直接编写react组件，并返回svg代码：</p>
+<pre class="giallo" style="color: #E1E4E8; background-color: #24292E;" ><code data-lang="plain"><span class="giallo-l"><span>import * as React from &quot;react&quot;;</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span>const IconSearch = () =&gt; {</span></span>
+<span class="giallo-l"><span>    return (</span></span>
+<span class="giallo-l"><span>        &lt;svg className=&quot;icon&quot;</span></span>
+<span class="giallo-l"><span>             viewBox=&quot;0 0 1024 1024&quot; version=&quot;1.1&quot; xmlns=&quot;http://www.w3.org/2000/svg&quot;</span></span>
+<span class="giallo-l"><span>             p-id=&quot;4136&quot; width=&quot;25&quot; height=&quot;25&quot;&gt;</span></span>
+<span class="giallo-l"><span>            &lt;path</span></span>
+<span class="giallo-l"><span>                d=&quot;M909.6 854.5L649.9 594.8C690.2 542.7 712 479 712 412c0-80.2-31.3-155.4-87.9-212.1-56.6-56.7-132-87.9-212.1-87.9s-155.5 31.3-212.1 87.9C143.2 256.5 112 331.8 112 412c0 80.1 31.3 155.5 87.9 212.1C256.5 680.8 331.8 712 412 712c67 0 130.6-21.8 182.7-62l259.7 259.6c3.2 3.2 8.4 3.2 11.6 0l43.6-43.5c3.2-3.2 3.2-8.4 0-11.6zM570.4 570.4C528 612.7 471.8 636 412 636s-116-23.3-158.4-65.6C211.3 528 188 471.8 188 412s23.3-116.1 65.6-158.4C296 211.3 352.2 188 412 188s116.1 23.2 158.4 65.6S636 352.2 636 412s-23.3 116.1-65.6 158.4z&quot;</span></span>
+<span class="giallo-l"><span>                p-id=&quot;4137&quot;&gt;&lt;/path&gt;</span></span>
+<span class="giallo-l"><span>        &lt;/svg&gt;</span></span>
+<span class="giallo-l"><span>    );</span></span>
+<span class="giallo-l"><span>}</span></span></code></pre>
+<p>这种方式弊端在于，每次svg有修改的时候，都需要重新复制svg代码对代码文件进行修改，且很多svg的数据较为复杂，容易出错。</p>
+<h2 id="jiang-svgzuo-wei-reactzu-jian-lai-shi-yong">将svg作为react组件来使用</h2>
+<p>我们知道，对于webpack来说，可以将一切的东西都是为模块，对于任何import进来的，webpack都可以通过匹配的规则（rules）调用对应的loader来进行处理。</p>
+<p>那么，是否存在这样一种方式：</p>
+<pre class="giallo" style="color: #E1E4E8; background-color: #24292E;" ><code data-lang="plain"><span class="giallo-l"><span>import IconSearch from &#39;path/to/search.svg&#39;</span></span>
+<span class="giallo-l"><span>// IconSearch是一个React组件，可以在其他组件中使用</span></span></code></pre>
+<p>个人最常使用的方案是<code>svgr/webpack</code>（<a rel="noopener external" target="_blank" href="https://react-svgr.com/docs/webpack/">Webpack - SVGR (react-svgr.com)</a>）</p>
+<p>只需要三个步骤的配置：</p>
+<ol>
+<li>引入@svgr/webpack</li>
+</ol>
+<pre class="giallo" style="color: #E1E4E8; background-color: #24292E;" ><code data-lang="plain"><span class="giallo-l"><span>yarn add -D @svgr/webpack</span></span></code></pre>
+<ol start="2">
+<li>配置webpack，处理svg</li>
+</ol>
+<pre class="giallo" style="color: #E1E4E8; background-color: #24292E;" ><code data-lang="javascript"><span class="giallo-l"><span>      {</span></span>
+<span class="giallo-l"><span style="color: #B392F0;">        test</span><span>:</span><span style="color: #9ECBFF;"> /</span><span style="color: #85E89D;font-weight: bold;">\.</span><span style="color: #DBEDFF;">svg</span><span style="color: #F97583;">$</span><span style="color: #9ECBFF;">/</span><span>,</span></span>
+<span class="giallo-l"><span style="color: #B392F0;">        use</span><span>: [</span><span style="color: #9ECBFF;">&#39;@svgr/webpack&#39;</span><span>],</span></span>
+<span class="giallo-l"><span>      }</span></span></code></pre>
+<ol start="3">
+<li>external.d.ts配置（配置理由和上述less配置一样，为了达到类型检查）</li>
+</ol>
+<pre class="giallo" style="color: #E1E4E8; background-color: #24292E;" ><code data-lang="typescript"><span class="giallo-l"><span style="color: #6A737D;">// svg类型</span></span>
+<span class="giallo-l"><span style="color: #F97583;">declare module</span><span style="color: #9ECBFF;"> &#39;*.svg&#39;</span><span> {</span></span>
+<span class="giallo-l"><span style="color: #F97583;">    const</span><span style="color: #79B8FF;"> content</span><span style="color: #F97583;">:</span><span style="color: #B392F0;"> React</span><span>.</span><span style="color: #B392F0;">FunctionComponent</span><span>&lt;</span><span style="color: #B392F0;">React</span><span>.</span><span style="color: #B392F0;">SVGAttributes</span><span>&lt;</span><span style="color: #B392F0;">React</span><span>.</span><span style="color: #B392F0;">ReactSVGElement</span><span>&gt;&gt;</span></span>
+<span class="giallo-l"><span style="color: #F97583;">    export default</span><span> content</span></span>
+<span class="giallo-l"><span>}</span></span></code></pre>
+<p>完成配置以后，我们就可以通过import XXX from 'path/to/xxx.svg'，来使用SVG组件了：</p>
+<pre class="giallo" style="color: #E1E4E8; background-color: #24292E;" ><code data-lang="diff"><span class="giallo-l"><span> import * as React from &quot;react&quot;;</span></span>
+<span class="giallo-l"><span> import styles from &#39;./index.module.less&#39;;</span></span>
+<span class="giallo-l"><span style="color: #85E89D;background-color: #144620;">+import IconSearch from &quot;../../assets/svg/search.svg&quot;;</span></span>
+<span class="giallo-l"><span> </span></span>
+<span class="giallo-l"><span> interface SearchInputProps {</span></span>
+<span class="giallo-l"><span>     defaultValue?: string;</span></span>
+<span class="giallo-l"><span>     // ... ...</span></span>
+<span class="giallo-l"><span>         // 包裹</span></span>
+<span class="giallo-l"><span>         &lt;div className={styles.searchInputWrap}&gt;</span></span>
+<span class="giallo-l"><span>             {/*存放icon*/}</span></span>
+<span class="giallo-l"><span style="color: #FDAEB7;background-color: #86181D;">-            &lt;div className={styles.searchInputIconBox}&gt;&lt;/div&gt;</span></span>
+<span class="giallo-l"><span style="color: #85E89D;background-color: #144620;">+            &lt;div className={styles.searchInputIconBox}&gt;</span></span>
+<span class="giallo-l"><span style="color: #85E89D;background-color: #144620;">+                &lt;IconSearch width={18} height={18}/&gt;</span></span>
+<span class="giallo-l"><span style="color: #85E89D;background-color: #144620;">+            &lt;/div&gt;</span></span>
+<span class="giallo-l"><span>             {/* 输入框*/}</span></span>
+<span class="giallo-l"></span></code></pre><h2 id="xiao-guo-yan-shi-1">效果演示</h2>
+<p><img src="https://static-res.zhen.wang/images/post/2022-08-11/020-use-svg.png" alt="020-use-svg" /></p>
+
+    </div>
+</div>
+<script src="https://zhen.wang/libs/viewerjs@1.11.7/viewer.min.js"></script>
+<link rel="stylesheet" href="https://zhen.wang/libs/viewerjs@1.11.7/viewer.min.css"/>
+<script>
+  if (window.Viewer) {
+    document.querySelectorAll('img').forEach(img => {
+      new Viewer(img, {
+        inline: false,
+        navbar: false,
+        toolbar: {
+          zoomIn: 1,
+          zoomOut: 1,
+          reset: 1,
+          rotateLeft: 1,
+          rotateRight: 1,
+        },
+      });
+    });
+  }
+</script>
+
+
+</body>
+</html>

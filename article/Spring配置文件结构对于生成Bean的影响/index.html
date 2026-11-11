@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="utf-8">
+    <meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover"
+          name="viewport">
+    
+    
+    <!-- umami web analysis -->
+    <script defer src="https://zhen.wang/libs/umami/umami.script.js"
+            data-website-id="d66cfe03-f6b3-4aa0-baf8-728700db1b09"></script>
+    
+    
+    
+    <link rel="icon" type="image/png" sizes="16x16" href="https://zhen.wang/images/blog-site-icon.svg">
+    <link rel="icon" type="image/png" sizes="32x32" href="https://zhen.wang/images/blog-site-icon.svg">
+    <title>zhen&#39;s everything</title>
+    <link rel="stylesheet" href="https://zhen.wang/style.css">
+    
+<link rel="stylesheet" href="https://zhen.wang/article_content.css">
+<link rel="stylesheet" href="https://zhen.wang/article_markdown.css">
+
+</head>
+<body>
+
+<div id="article">
+    <header class="article-header">
+        
+<div class="base-title">
+    <a href="#" onclick="history.length > 1 ? history.back() : location.href = '/'; return false;">&LeftArrow; Back</a>
+    <h1>
+        Spring配置文件结构对于生成Bean的影响
+    </h1>
+</div>
+
+    </header>
+    <p class="article-date">2018-07-02</p>
+    
+    <!-- toc -->
+    <div class="article-toc">
+        <label class="toc-title" for="toc-trigger">目录</label>
+        <input id="toc-trigger" type="checkbox" checked/>
+        <div class="toc-content">
+            <ol class="toc">
+                
+                <li class="toc-item toc-level-1">
+                    <a class="toc-link" href="https://zhen.wang/article/Spring配置文件结构对于生成Bean的影响/#shou-xian-shi-cdlei-bean">首先是CD类Bean</a>
+                    
+                    <ol class="toc-child">
+                        
+                        <li class="toc-item toc-level-2">
+                            <a href="https://zhen.wang/article/Spring配置文件结构对于生成Bean的影响/#javalei-xing-pei-zhi-wen-jian">Java类型配置文件</a>
+                        </li>
+                        
+                        <li class="toc-item toc-level-2">
+                            <a href="https://zhen.wang/article/Spring配置文件结构对于生成Bean的影响/#xmllei-xing-pei-zhi-wen-jian">xml类型配置文件</a>
+                        </li>
+                        
+                    </ol>
+                    
+                </li>
+                
+                <li class="toc-item toc-level-1">
+                    <a class="toc-link" href="https://zhen.wang/article/Spring配置文件结构对于生成Bean的影响/#cdplayerde-bean">CDPlayer的Bean</a>
+                    
+                    <ol class="toc-child">
+                        
+                        <li class="toc-item toc-level-2">
+                            <a href="https://zhen.wang/article/Spring配置文件结构对于生成Bean的影响/#javalei-xing-pei-zhi-wen-jian-1">Java类型配置文件</a>
+                        </li>
+                        
+                        <li class="toc-item toc-level-2">
+                            <a href="https://zhen.wang/article/Spring配置文件结构对于生成Bean的影响/#xmllei-xing-pei-zhi-wen-jian-1">xml类型配置文件</a>
+                        </li>
+                        
+                    </ol>
+                    
+                </li>
+                
+            </ol>
+        </div>
+    </div>
+    
+    <!-- real content -->
+    <div class="article-content markdown-content">
+        <p>由于前段时间忙于毕设，导致Spring学习的东西忘了很多，所以最近又开始从头看Spring的基础。基础的Bean的装配不再多说了。这一次，主要是深入一点了解Spring配置文件结构搭配对于Bean装配的影响。</p>
+<span id="continue-reading"></span>
+<p>首先，我们设定一个简单的场景：播放器播放歌曲。所以基于此，我们定义两个接口：</p>
+<pre class="giallo" style="color: #E1E4E8; background-color: #24292E;" ><code data-lang="java"><span class="giallo-l"><span style="color: #F97583;">package</span><span> demo;</span></span>
+<span class="giallo-l"><span style="color: #6A737D;">// CD接口</span></span>
+<span class="giallo-l"><span style="color: #F97583;">public interface</span><span style="color: #B392F0;"> CompactDisc</span><span> {</span></span>
+<span class="giallo-l"><span style="color: #F97583;">    void</span><span style="color: #B392F0;"> play</span><span>();</span></span>
+<span class="giallo-l"><span>}</span></span></code></pre><pre class="giallo" style="color: #E1E4E8; background-color: #24292E;" ><code data-lang="java"><span class="giallo-l"><span style="color: #F97583;">package</span><span> demo;</span></span>
+<span class="giallo-l"><span style="color: #6A737D;">// 媒体播放器接口</span></span>
+<span class="giallo-l"><span style="color: #F97583;">public interface</span><span style="color: #B392F0;"> MediaPlayer</span><span> {</span></span>
+<span class="giallo-l"><span style="color: #F97583;">    void</span><span style="color: #B392F0;"> play</span><span>();</span></span>
+<span class="giallo-l"><span>}</span></span></code></pre>
+<p>按照是实际来讲，我们定义一个BlankDisc，空白的唱片，其包含三个属性：title、artist和tracks，分别代表了唱片的标题、歌手以及歌曲目录：</p>
+<pre class="giallo" style="color: #E1E4E8; background-color: #24292E;" ><code data-lang="java"><span class="giallo-l"><span style="color: #F97583;">package</span><span> demo.cd;</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #F97583;">import</span><span> demo.CompactDisc;</span></span>
+<span class="giallo-l"><span style="color: #F97583;">import</span><span> java.util.List;</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #F97583;">public class</span><span style="color: #B392F0;"> BlankDisc</span><span style="color: #F97583;"> implements</span><span style="color: #B392F0;"> CompactDisc</span><span> {</span></span>
+<span class="giallo-l"><span style="color: #F97583;">    private</span><span> String title;</span></span>
+<span class="giallo-l"><span style="color: #F97583;">    private</span><span> String artist;</span></span>
+<span class="giallo-l"><span style="color: #F97583;">    private</span><span> List&lt;</span><span style="color: #F97583;">String</span><span>&gt; tracks;</span><span style="color: #6A737D;"> // 简化结构，只存放歌曲目录名称并保存为List</span></span>
+<span class="giallo-l"><span style="color: #F97583;">    public</span><span style="color: #B392F0;"> BlankDisc</span><span>(String</span><span style="color: #FFAB70;"> title</span><span>, String</span><span style="color: #FFAB70;"> artist</span><span>, List&lt;</span><span style="color: #F97583;">String</span><span>&gt;</span><span style="color: #FFAB70;"> tracks</span><span>) {</span></span>
+<span class="giallo-l"><span style="color: #79B8FF;">        this</span><span>.title</span><span style="color: #F97583;"> =</span><span> title;</span></span>
+<span class="giallo-l"><span style="color: #79B8FF;">        this</span><span>.artist</span><span style="color: #F97583;"> =</span><span> artist;</span></span>
+<span class="giallo-l"><span style="color: #79B8FF;">        this</span><span>.tracks</span><span style="color: #F97583;"> =</span><span> tracks;</span></span>
+<span class="giallo-l"><span>    }</span></span>
+<span class="giallo-l"><span>    @</span><span style="color: #F97583;">Override</span></span>
+<span class="giallo-l"><span style="color: #F97583;">    public void</span><span style="color: #B392F0;"> play</span><span>() {</span></span>
+<span class="giallo-l"><span>        System.out.</span><span style="color: #B392F0;">println</span><span>(</span><span style="color: #9ECBFF;">&quot;Playing &quot;</span><span style="color: #F97583;"> +</span><span> title </span><span style="color: #F97583;">+</span><span style="color: #9ECBFF;"> &quot;</span><span style="color: #79B8FF;"> \n\t</span><span style="color: #9ECBFF;">by &quot;</span><span style="color: #F97583;"> +</span><span> artist);</span></span>
+<span class="giallo-l"><span>        tracks.</span><span style="color: #B392F0;">stream</span><span>().</span><span style="color: #B392F0;">forEach</span><span>(t </span><span style="color: #F97583;">-&gt;</span><span> System.out.</span><span style="color: #B392F0;">println</span><span>(</span><span style="color: #9ECBFF;">&quot;</span><span style="color: #79B8FF;"> \t</span><span style="color: #9ECBFF;">&gt;&gt;&gt; &quot;</span><span style="color: #F97583;"> +</span><span> t));</span></span>
+<span class="giallo-l"><span>    }</span></span>
+<span class="giallo-l"><span>}</span></span></code></pre>
+<p>同样的，实现MediaPlayer接口，定义实际的唱片播放器，能够持有cd的引用，同时，这里我们并没有通过构造器来定义，原因是唱片播放器并非一定放有cd（当然代码没有对null进行约束，这是不好的，实际编写请勿这样编写）：</p>
+<pre class="giallo" style="color: #E1E4E8; background-color: #24292E;" ><code data-lang="java"><span class="giallo-l"><span style="color: #F97583;">package</span><span> demo.player;</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #F97583;">import</span><span> demo.CompactDisc;</span></span>
+<span class="giallo-l"><span style="color: #F97583;">import</span><span> demo.MediaPlayer;</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #F97583;">public class</span><span style="color: #B392F0;"> CDPlayer</span><span style="color: #F97583;"> implements</span><span style="color: #B392F0;"> MediaPlayer</span><span> {</span></span>
+<span class="giallo-l"><span style="color: #F97583;">    private</span><span> CompactDisc cd;</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #F97583;">    public void</span><span style="color: #B392F0;"> setCd</span><span>(CompactDisc</span><span style="color: #FFAB70;"> cd</span><span>) {</span></span>
+<span class="giallo-l"><span style="color: #79B8FF;">            this</span><span>.cd</span><span style="color: #F97583;"> =</span><span> cd;</span></span>
+<span class="giallo-l"><span>    }</span></span>
+<span class="giallo-l"><span>    @</span><span style="color: #F97583;">Override</span></span>
+<span class="giallo-l"><span style="color: #F97583;">    public void</span><span style="color: #B392F0;"> play</span><span>() {</span></span>
+<span class="giallo-l"><span>        System.out.</span><span style="color: #B392F0;">println</span><span>(</span><span style="color: #9ECBFF;">&quot;CDPlayer 开始播放: &quot;</span><span>);</span></span>
+<span class="giallo-l"><span>        cd.</span><span style="color: #B392F0;">play</span><span>();</span></span>
+<span class="giallo-l"><span>    }</span></span>
+<span class="giallo-l"><span>}</span></span></code></pre>
+<p>接下来，要说明的是，Spring支持xml与Java文件同时存在的配置方式，这里我们也会这么做，尽可能的复杂化配置依赖，因为本片文章就是探讨各种配置文件交叉依赖的情形，并理清依赖的思路。</p>
+<p>首先我们将CD类Bean与CDPlayer类Bean分离开来。</p>
+<h4 id="shou-xian-shi-cdlei-bean">首先是CD类Bean</h4>
+<h5 id="javalei-xing-pei-zhi-wen-jian">Java类型配置文件</h5>
+<pre class="giallo" style="color: #E1E4E8; background-color: #24292E;" ><code data-lang="java"><span class="giallo-l"><span style="color: #F97583;">package</span><span> demo.config;</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #F97583;">import</span><span> demo.cd.BlankDisc;</span></span>
+<span class="giallo-l"><span style="color: #F97583;">import</span><span> org.springframework.context.annotation.Bean;</span></span>
+<span class="giallo-l"><span style="color: #F97583;">import</span><span> org.springframework.context.annotation.Configuration;</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #F97583;">import</span><span> java.util.ArrayList;</span></span>
+<span class="giallo-l"><span style="color: #F97583;">import</span><span> java.util.List;</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span>@</span><span style="color: #F97583;">Configuration</span></span>
+<span class="giallo-l"><span style="color: #F97583;">public class</span><span style="color: #B392F0;"> CDConfig</span><span> {</span></span>
+<span class="giallo-l"><span>    @</span><span style="color: #F97583;">Bean</span></span>
+<span class="giallo-l"><span style="color: #F97583;">    public</span><span> BlankDisc</span><span style="color: #B392F0;"> yeHuiMei</span><span>() {</span></span>
+<span class="giallo-l"><span>        List&lt;</span><span style="color: #F97583;">String</span><span>&gt; tracks</span><span style="color: #F97583;"> = new</span><span> ArrayList&lt;&gt;();</span></span>
+<span class="giallo-l"><span>        tracks.</span><span style="color: #B392F0;">add</span><span>(</span><span style="color: #9ECBFF;">&quot;以父之名&quot;</span><span>);</span></span>
+<span class="giallo-l"><span>        tracks.</span><span style="color: #B392F0;">add</span><span>(</span><span style="color: #9ECBFF;">&quot;懦夫&quot;</span><span>);</span></span>
+<span class="giallo-l"><span>        tracks.</span><span style="color: #B392F0;">add</span><span>(</span><span style="color: #9ECBFF;">&quot;晴天&quot;</span><span>);</span></span>
+<span class="giallo-l"><span>        tracks.</span><span style="color: #B392F0;">add</span><span>(</span><span style="color: #9ECBFF;">&quot;...&quot;</span><span>);</span></span>
+<span class="giallo-l"><span style="color: #F97583;">        return new</span><span style="color: #B392F0;"> BlankDisc</span><span>(</span><span style="color: #9ECBFF;">&quot;YeHuiMei&quot;</span><span>,</span><span style="color: #9ECBFF;"> &quot;JayChou&quot;</span><span>, tracks);</span></span>
+<span class="giallo-l"><span>    }</span></span>
+<span class="giallo-l"><span>}</span></span></code></pre>
+<p>在这个配置文件中，只定义了一个Bean，Bean id名称为yeHuiMei（方法名），同时也将相关的属性设置完毕。</p>
+<h5 id="xmllei-xing-pei-zhi-wen-jian">xml类型配置文件</h5>
+<pre class="giallo" style="color: #E1E4E8; background-color: #24292E;" ><code data-lang="xml"><span class="giallo-l"><span>&lt;?</span><span style="color: #85E89D;">xml</span><span style="color: #B392F0;"> version</span><span>=</span><span style="color: #9ECBFF;">&quot;1.0&quot;</span><span style="color: #B392F0;"> encoding</span><span>=</span><span style="color: #9ECBFF;">&quot;UTF-8&quot;</span><span>?&gt;</span></span>
+<span class="giallo-l"><span>&lt;</span><span style="color: #85E89D;">beans</span><span style="color: #B392F0;"> xmlns</span><span>=</span><span style="color: #9ECBFF;">&quot;http://www.springframework.org/schema/beans&quot;</span></span>
+<span class="giallo-l"><span style="color: #B392F0;">       xmlns:xsi</span><span>=</span><span style="color: #9ECBFF;">&quot;http://www.w3.org/2001/XMLSchema-instance&quot;</span></span>
+<span class="giallo-l"><span style="color: #B392F0;">       xsi:schemaLocation</span><span>=</span><span style="color: #9ECBFF;">&quot;http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd&quot;</span><span>&gt;</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span>    &lt;</span><span style="color: #85E89D;">bean</span><span style="color: #B392F0;"> id</span><span>=</span><span style="color: #9ECBFF;">&quot;onTheRun&quot;</span></span>
+<span class="giallo-l"><span style="color: #B392F0;">          class</span><span>=</span><span style="color: #9ECBFF;">&quot;demo.cd.BlankDisc&quot;</span><span>&gt;</span></span>
+<span class="giallo-l"><span>        &lt;</span><span style="color: #85E89D;">constructor-arg</span><span style="color: #B392F0;"> name</span><span>=</span><span style="color: #9ECBFF;">&quot;title&quot;</span><span style="color: #B392F0;"> value</span><span>=</span><span style="color: #9ECBFF;">&quot;On The Run&quot;</span><span>/&gt;</span></span>
+<span class="giallo-l"><span>        &lt;</span><span style="color: #85E89D;">constructor-arg</span><span style="color: #B392F0;"> name</span><span>=</span><span style="color: #9ECBFF;">&quot;artist&quot;</span><span style="color: #B392F0;"> value</span><span>=</span><span style="color: #9ECBFF;">&quot;JayChou&quot;</span><span>/&gt;</span></span>
+<span class="giallo-l"><span>        &lt;</span><span style="color: #85E89D;">constructor-arg</span><span style="color: #B392F0;"> name</span><span>=</span><span style="color: #9ECBFF;">&quot;tracks&quot;</span><span>&gt;</span></span>
+<span class="giallo-l"><span>            &lt;</span><span style="color: #85E89D;">list</span><span>&gt;</span></span>
+<span class="giallo-l"><span>                &lt;</span><span style="color: #85E89D;">value</span><span>&gt;牛仔很忙&lt;/</span><span style="color: #85E89D;">value</span><span>&gt;</span></span>
+<span class="giallo-l"><span>                &lt;</span><span style="color: #85E89D;">value</span><span>&gt;彩虹&lt;/</span><span style="color: #85E89D;">value</span><span>&gt;</span></span>
+<span class="giallo-l"><span>                &lt;</span><span style="color: #85E89D;">value</span><span>&gt;青花瓷&lt;/</span><span style="color: #85E89D;">value</span><span>&gt;</span></span>
+<span class="giallo-l"><span>                &lt;</span><span style="color: #85E89D;">value</span><span>&gt;...&lt;/</span><span style="color: #85E89D;">value</span><span>&gt;</span></span>
+<span class="giallo-l"><span>            &lt;/</span><span style="color: #85E89D;">list</span><span>&gt;</span></span>
+<span class="giallo-l"><span>        &lt;/</span><span style="color: #85E89D;">constructor-arg</span><span>&gt;</span></span>
+<span class="giallo-l"><span>    &lt;/</span><span style="color: #85E89D;">bean</span><span>&gt;</span></span>
+<span class="giallo-l"><span>&lt;/</span><span style="color: #85E89D;">beans</span><span>&gt;</span></span></code></pre>
+<p>在这个xml配置文件中，我定义了一个名为onTheRun的Bean，同时也设置了对应的属性。</p>
+<h4 id="cdplayerde-bean">CDPlayer的Bean</h4>
+<h5 id="javalei-xing-pei-zhi-wen-jian-1">Java类型配置文件</h5>
+<pre class="giallo" style="color: #E1E4E8; background-color: #24292E;" ><code data-lang="java"><span class="giallo-l"><span>@</span><span style="color: #F97583;">Configuration</span></span>
+<span class="giallo-l"><span style="color: #F97583;">public class</span><span style="color: #B392F0;"> CDPlayerConfig</span><span> {</span></span>
+<span class="giallo-l"><span>    @</span><span style="color: #F97583;">Bean</span></span>
+<span class="giallo-l"><span style="color: #F97583;">    public</span><span> CDPlayer</span><span style="color: #B392F0;"> cdPlayerInJava</span><span>(@</span><span style="color: #F97583;">Qualifier</span><span>(</span><span style="color: #9ECBFF;">&quot;onTheRun&quot;</span><span>) CompactDisc</span><span style="color: #FFAB70;"> cd</span><span>) {</span></span>
+<span class="giallo-l"><span>        CDPlayer cdPlayer</span><span style="color: #F97583;"> = new</span><span style="color: #B392F0;"> CDPlayer</span><span>();</span></span>
+<span class="giallo-l"><span>        cdPlayer.</span><span style="color: #B392F0;">setCd</span><span>(cd);</span></span>
+<span class="giallo-l"><span style="color: #F97583;">        return</span><span> cdPlayer;</span></span>
+<span class="giallo-l"><span>    }</span></span>
+<span class="giallo-l"><span>}</span></span></code></pre><h5 id="xmllei-xing-pei-zhi-wen-jian-1">xml类型配置文件</h5>
+<pre class="giallo" style="color: #E1E4E8; background-color: #24292E;" ><code data-lang="xml"><span class="giallo-l"><span>&lt;?</span><span style="color: #85E89D;">xml</span><span style="color: #B392F0;"> version</span><span>=</span><span style="color: #9ECBFF;">&quot;1.0&quot;</span><span style="color: #B392F0;"> encoding</span><span>=</span><span style="color: #9ECBFF;">&quot;UTF-8&quot;</span><span>?&gt;</span></span>
+<span class="giallo-l"><span>&lt;</span><span style="color: #85E89D;">beans</span><span style="color: #B392F0;"> xmlns</span><span>=</span><span style="color: #9ECBFF;">&quot;http://www.springframework.org/schema/beans&quot;</span></span>
+<span class="giallo-l"><span style="color: #B392F0;">       xmlns:xsi</span><span>=</span><span style="color: #9ECBFF;">&quot;http://www.w3.org/2001/XMLSchema-instance&quot;</span></span>
+<span class="giallo-l"><span style="color: #B392F0;">       xsi:schemaLocation</span><span>=</span><span style="color: #9ECBFF;">&quot;http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd&quot;</span><span>&gt;</span></span>
+<span class="giallo-l"><span>    &lt;</span><span style="color: #85E89D;">bean</span><span style="color: #B392F0;"> id</span><span>=</span><span style="color: #9ECBFF;">&quot;cdPlayerInXML&quot;</span><span style="color: #B392F0;"> class</span><span>=</span><span style="color: #9ECBFF;">&quot;demo.player.CDPlayer&quot;</span><span>&gt;</span></span>
+<span class="giallo-l"><span>        &lt;</span><span style="color: #85E89D;">property</span><span style="color: #B392F0;"> name</span><span>=</span><span style="color: #9ECBFF;">&quot;cd&quot;</span><span style="color: #B392F0;"> ref</span><span>=</span><span style="color: #9ECBFF;">&quot;yeHuiMei&quot;</span><span>/&gt;</span></span>
+<span class="giallo-l"><span>    &lt;/</span><span style="color: #85E89D;">bean</span><span>&gt;</span></span>
+<span class="giallo-l"><span>&lt;/</span><span style="color: #85E89D;">beans</span><span>&gt;</span></span></code></pre>
+<p>目前配置文件搞定了，并且我们现在的配置以来结构如下：
+<img src="https://static-res.zhen.wang/images/post/2018-07-02-Spring/dependency.png" alt="dependency" /></p>
+<p>当然，目前还是有一定的问题的，因为很显然，我们的配置文件都独立与彼此。尽管在CDPlayer中的配置文件通过相关的语法制定了CD Bean的选择（@Qualifier和ref），但是我们可以看到文件本身并没有明确的引入另外的配置文件，所以在IDEA中通常会有这样的提示：
+<img src="https://static-res.zhen.wang/images/post/2018-07-02-Spring/norefinjava.png" alt="norefinjava" />
+<img src="https://static-res.zhen.wang/images/post/2018-07-02-Spring/norefinxml.png" alt="norefinxml" />
+同时打开，IDEA的项目结构Project Structs（win默认ctrl+shift+alt+s），点击左侧的Modules，可以看到Spring项目上右下角IDEA提示我们“Unmapped Spring configuration files”并列举除了上述的四个文件。</p>
+<p>我们点击上面的+将所有的配置文件追踪上，刚刚所有的索引问题都OK了。此时，我们任意找到一个xml文件，可以看到左上方有一个小标志，点击并选择第一个：
+<img src="https://static-res.zhen.wang/images/post/2018-07-02-Spring/clickdpdiagram.png" alt="clickdpdiagram" />
+打开之后就能够看到整个项目对于配置文件的依赖：
+<img src="https://static-res.zhen.wang/images/post/2018-07-02-Spring/dpdiagram.png" alt="dpdiagram" />
+可以看到我们的项目（springdemo）具有一个是上下文应用模块，这个应用上下文包含了四份配置文件。但一定要注意，在后续我们加载配置文件的时候，必须要将有依赖关系的配置文件全部加载进来才能够读取到对应的Bean。这里我们进行一个简单的测试：</p>
+<pre class="giallo" style="color: #E1E4E8; background-color: #24292E;" ><code data-lang="java"><span class="giallo-l"><span>@</span><span style="color: #F97583;">RunWith</span><span>(SpringJUnit4ClassRunner.class)</span></span>
+<span class="giallo-l"><span style="color: #6A737D;">// 设置所要加载的配置文件</span></span>
+<span class="giallo-l"><span>@</span><span style="color: #F97583;">ContextConfiguration</span><span>(</span><span style="color: #79B8FF;">locations</span><span style="color: #F97583;"> =</span><span> {</span><span style="color: #9ECBFF;">&quot;classpath:cdconfig.xml&quot;</span><span>})</span></span>
+<span class="giallo-l"><span style="color: #F97583;">public class</span><span style="color: #B392F0;"> CDPlayerTest</span><span> {</span></span>
+<span class="giallo-l"><span>    @</span><span style="color: #F97583;">Autowired</span></span>
+<span class="giallo-l"><span>    @</span><span style="color: #F97583;">Qualifier</span><span>(</span><span style="color: #9ECBFF;">&quot;onTheRun&quot;</span><span>)</span></span>
+<span class="giallo-l"><span style="color: #F97583;">    private</span><span> CompactDisc cd;</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span>    @</span><span style="color: #F97583;">Test</span></span>
+<span class="giallo-l"><span style="color: #F97583;">    public void</span><span style="color: #B392F0;"> cdShouldNotNull</span><span>() {</span></span>
+<span class="giallo-l"><span>        cd.</span><span style="color: #B392F0;">play</span><span>();</span></span>
+<span class="giallo-l"><span style="color: #B392F0;">        assertNotNull</span><span>(cd);</span></span>
+<span class="giallo-l"><span>    }</span></span>
+<span class="giallo-l"><span>}</span></span></code></pre>
+<p>这个测试是可以直接通过的，因为这里我们加载的是cdconfig.xml配置文件，里面我们定义了名为onTheRun的Bean，所以打印还有非空测试也通过：
+<img src="https://static-res.zhen.wang/images/post/2018-07-02-Spring/cdxmltest.png" alt="cdxmltest" />
+然而接下来我们更换配置文件为cdplayerconfig.xml，相关注入如下：</p>
+<pre class="giallo" style="color: #E1E4E8; background-color: #24292E;" ><code data-lang="java"><span class="giallo-l"><span>@</span><span style="color: #F97583;">RunWith</span><span>(SpringJUnit4ClassRunner.class)</span></span>
+<span class="giallo-l"><span>@</span><span style="color: #F97583;">ContextConfiguration</span><span>(</span><span style="color: #79B8FF;">locations</span><span style="color: #F97583;"> =</span><span> {</span><span style="color: #9ECBFF;">&quot;classpath:cdplayerconfig.xml&quot;</span><span>})</span></span>
+<span class="giallo-l"><span style="color: #F97583;">public class</span><span style="color: #B392F0;"> CDPlayerTest</span><span> {</span></span>
+<span class="giallo-l"><span>    @</span><span style="color: #F97583;">Autowired</span></span>
+<span class="giallo-l"><span>    @</span><span style="color: #F97583;">Qualifier</span><span>(</span><span style="color: #9ECBFF;">&quot;cdPlayerInXML&quot;</span><span>)</span></span>
+<span class="giallo-l"><span style="color: #F97583;">    private</span><span> MediaPlayer mp;</span></span>
+<span class="giallo-l"><span>    @</span><span style="color: #F97583;">Test</span></span>
+<span class="giallo-l"><span style="color: #F97583;">    public void</span><span style="color: #B392F0;"> mediaPlayerNotNull</span><span>() {</span></span>
+<span class="giallo-l"><span>        System.out.</span><span style="color: #B392F0;">println</span><span>(mp);</span></span>
+<span class="giallo-l"><span>        mp.</span><span style="color: #B392F0;">play</span><span>();</span></span>
+<span class="giallo-l"><span style="color: #B392F0;">        assertNotNull</span><span>(mp);</span></span>
+<span class="giallo-l"><span>    }</span></span>
+<span class="giallo-l"><span>}</span></span></code></pre>
+<p>这里我们指定注入的就是xml中的CDPlayer Bean，然而，并不能通过测试，在错误提示中，我们可以找到这样一行：</p>
+<pre class="giallo" style="color: #E1E4E8; background-color: #24292E;" ><code data-lang="java"><span class="giallo-l"><span>Cannot resolve reference to bean </span><span style="color: #9ECBFF;">&#39;yeHuiMei&#39;</span><span style="color: #F97583;"> while</span><span> setting bean property </span><span style="color: #9ECBFF;">&#39;cd&#39;</span><span>; nested exception is org.springframework.beans.factory.NoSuchBeanDefinitionException</span><span style="color: #F97583;">:</span><span> No bean named </span><span style="color: #9ECBFF;">&#39;yeHuiMei&#39;</span><span> is defined</span></span>
+<span class="giallo-l"><span>	at org.springframework.beans.factory.support.BeanDefinitionValueResolver.</span><span style="color: #B392F0;">resolveReference</span><span>(BeanDefinitionValueResolver.java</span><span style="color: #F97583;">:</span><span style="color: #79B8FF;">328</span><span>)</span></span></code></pre>
+<p>前面我们知道，cdPlayerInXML这个bean中我们还注入了Java配置文件下的名为yeHuiMei Bean，而在测试的过程中，我们只加载了cdplayerconfig.xml这个配置文件。所以实际上除了这个配置文件意外的其他bean都没有被Spring生成并放入Bean容器中。</p>
+<p>也许会有疑问，在上面的Bean依赖图中，我们看到所有的配置文件都有已经被放入到了Spring Application Context中，为什么不被自动加载呢？道理很简单，这只是IDE的辅助而已。IDEA中的那个部分只是IDEA自身的一些辅助功能比如静态检查，所以需要我们手动的将这些文件给添加进去。当我们还是移除掉刚刚的结构之后，进行第一次的只对没有依赖的CDBean进行测试依然有效。</p>
+<p>一定要明确，Spring的注入是发生在代码中的！不要被IDE遮蔽了双眼！这里何时会被注入呢？当我们配置了Spring的配置文件并将其加载进来了，当Spring遇到@Autowired等注入注解的时候，就会为我们注入Bean。</p>
+<p>通常，当我们有多个配置文件的是，最优的结构思路是将多个配置文件导入到一个专门的独立的配置文件中，就像下面这样，我将开始的四个配置文件全部导入到一个名为AllConfig的Java配置文件：</p>
+<pre class="giallo" style="color: #E1E4E8; background-color: #24292E;" ><code data-lang="java"><span class="giallo-l"><span>@</span><span style="color: #F97583;">Configuration</span></span>
+<span class="giallo-l"><span>@</span><span style="color: #F97583;">Import</span><span>({CDConfig.class, CDPlayerConfig.class})</span></span>
+<span class="giallo-l"><span style="color: #6A737D;">// 一定要注意！！！classpath:后面一定不要带空格！否则会被识别为【[空格]cdconfig.xml】这样的文件名而不被找到，血的教训。</span></span>
+<span class="giallo-l"><span>@</span><span style="color: #F97583;">ImportResource</span><span>({</span><span style="color: #9ECBFF;">&quot;classpath:cdconfig.xml&quot;</span><span>,</span><span style="color: #9ECBFF;"> &quot;classpath:cdplayerconfig.xml&quot;</span><span>})</span></span>
+<span class="giallo-l"><span style="color: #F97583;">public class</span><span style="color: #B392F0;"> AllConfig</span><span> {</span></span>
+<span class="giallo-l"><span>}</span></span></code></pre>
+<p>然后在测试文件中我们将加载配置文件为Java配置文件AllConfig，此时，所有的以来问题全部解决：</p>
+<pre class="giallo" style="color: #E1E4E8; background-color: #24292E;" ><code data-lang="java"><span class="giallo-l"><span>@</span><span style="color: #F97583;">RunWith</span><span>(SpringJUnit4ClassRunner.class)</span></span>
+<span class="giallo-l"><span>@</span><span style="color: #F97583;">ContextConfiguration</span><span>(</span><span style="color: #79B8FF;">classes</span><span style="color: #F97583;"> =</span><span> {AllConfig.class})</span></span>
+<span class="giallo-l"><span style="color: #F97583;">public class</span><span style="color: #B392F0;"> CDPlayerTest</span><span> {</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span>    @</span><span style="color: #F97583;">Autowired</span></span>
+<span class="giallo-l"><span>    @</span><span style="color: #F97583;">Qualifier</span><span>(</span><span style="color: #9ECBFF;">&quot;onTheRun&quot;</span><span>)</span></span>
+<span class="giallo-l"><span style="color: #F97583;">    private</span><span> CompactDisc cd;</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span>    @</span><span style="color: #F97583;">Test</span></span>
+<span class="giallo-l"><span style="color: #F97583;">    public void</span><span style="color: #B392F0;"> cdShouldNotNull</span><span>() {</span></span>
+<span class="giallo-l"><span>        cd.</span><span style="color: #B392F0;">play</span><span>();</span></span>
+<span class="giallo-l"><span style="color: #B392F0;">        assertNotNull</span><span>(cd);</span></span>
+<span class="giallo-l"><span>    }</span></span>
+<span class="giallo-l"><span>    @</span><span style="color: #F97583;">Autowired</span></span>
+<span class="giallo-l"><span>    @</span><span style="color: #F97583;">Qualifier</span><span>(</span><span style="color: #9ECBFF;">&quot;cdPlayerInXML&quot;</span><span>)</span><span style="color: #6A737D;">// 一开始由于配置文件没有引入全导致注入失败</span></span>
+<span class="giallo-l"><span style="color: #F97583;">    private</span><span> MediaPlayer mp;</span></span>
+<span class="giallo-l"><span>    @</span><span style="color: #F97583;">Test</span></span>
+<span class="giallo-l"><span style="color: #F97583;">    public void</span><span style="color: #B392F0;"> mediaPlayerNotNull</span><span>() {</span></span>
+<span class="giallo-l"><span>        System.out.</span><span style="color: #B392F0;">println</span><span>(mp);</span></span>
+<span class="giallo-l"><span>        mp.</span><span style="color: #B392F0;">play</span><span>();</span></span>
+<span class="giallo-l"><span style="color: #B392F0;">        assertNotNull</span><span>(mp);</span></span>
+<span class="giallo-l"><span>    }</span></span>
+<span class="giallo-l"><span>}</span></span></code></pre>
+<p><img src="https://static-res.zhen.wang/images/post/2018-07-02-Spring/passed.png" alt="passed" /></p>
+
+    </div>
+</div>
+<script src="https://zhen.wang/libs/viewerjs@1.11.7/viewer.min.js"></script>
+<link rel="stylesheet" href="https://zhen.wang/libs/viewerjs@1.11.7/viewer.min.css"/>
+<script>
+  if (window.Viewer) {
+    document.querySelectorAll('img').forEach(img => {
+      new Viewer(img, {
+        inline: false,
+        navbar: false,
+        toolbar: {
+          zoomIn: 1,
+          zoomOut: 1,
+          reset: 1,
+          rotateLeft: 1,
+          rotateRight: 1,
+        },
+      });
+    });
+  }
+</script>
+
+
+</body>
+</html>

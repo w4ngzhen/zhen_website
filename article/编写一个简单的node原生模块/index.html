@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="utf-8">
+    <meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover"
+          name="viewport">
+    
+    
+    <!-- umami web analysis -->
+    <script defer src="https://zhen.wang/libs/umami/umami.script.js"
+            data-website-id="d66cfe03-f6b3-4aa0-baf8-728700db1b09"></script>
+    
+    
+    
+    <link rel="icon" type="image/png" sizes="16x16" href="https://zhen.wang/images/blog-site-icon.svg">
+    <link rel="icon" type="image/png" sizes="32x32" href="https://zhen.wang/images/blog-site-icon.svg">
+    <title>zhen&#39;s everything</title>
+    <link rel="stylesheet" href="https://zhen.wang/style.css">
+    
+<link rel="stylesheet" href="https://zhen.wang/article_content.css">
+<link rel="stylesheet" href="https://zhen.wang/article_markdown.css">
+
+</head>
+<body>
+
+<div id="article">
+    <header class="article-header">
+        
+<div class="base-title">
+    <a href="#" onclick="history.length > 1 ? history.back() : location.href = '/'; return false;">&LeftArrow; Back</a>
+    <h1>
+        使用node-gyp编写简单的node原生模块
+    </h1>
+</div>
+
+    </header>
+    <p class="article-date">2021-06-25</p>
+    
+    <!-- toc -->
+    <div class="article-toc">
+        <label class="toc-title" for="toc-trigger">目录</label>
+        <input id="toc-trigger" type="checkbox" checked/>
+        <div class="toc-content">
+            <ol class="toc">
+                
+                <li class="toc-item toc-level-1">
+                    <a class="toc-link" href="https://zhen.wang/article/编写一个简单的node原生模块/#ji-yu-node-addon-api">基于node-addon-api</a>
+                    
+                </li>
+                
+            </ol>
+        </div>
+    </div>
+    
+    <!-- real content -->
+    <div class="article-content markdown-content">
+        <p>通过样例，让我们了解如何编写一个node的原生模块。当然，这篇文章还有一个目的，是为了方便以后编写关于node-gyp的文章，搭建初始环境。</p>
+<span id="continue-reading"></span><h1 id="ji-yu-node-addon-api">基于node-addon-api</h1>
+<p>基于node-addon-api的nodejs插件，使用的是node的头文件：<code>#include &lt;node.h&gt;</code>。</p>
+<p><strong>hello_world.cc</strong></p>
+<pre class="giallo" style="color: #E1E4E8; background-color: #24292E;" ><code data-lang="c"><span class="giallo-l"><span style="color: #F97583;">#include</span><span style="color: #9ECBFF;"> &lt;node.h&gt;</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #F97583;">void</span><span style="color: #B392F0;"> Method</span><span>(</span><span style="color: #F97583;">const</span><span> v8::FunctionCallbackInfo</span><span style="color: #F97583;">&lt;</span><span>v8::Value</span><span style="color: #F97583;">&gt;&amp;</span><span style="color: #FFAB70;"> args</span><span>) {</span></span>
+<span class="giallo-l"><span>  v8::Isolate</span><span style="color: #F97583;">*</span><span> isolate </span><span style="color: #F97583;">=</span><span> args.</span><span style="color: #B392F0;">GetIsolate</span><span>();</span></span>
+<span class="giallo-l"><span>  args.</span><span style="color: #B392F0;">GetReturnValue</span><span>().</span><span style="color: #B392F0;">Set</span><span>(</span><span style="color: #B392F0;">v8::String::NewFromUtf8</span><span>(</span></span>
+<span class="giallo-l"><span>      isolate,</span><span style="color: #9ECBFF;"> &quot;world&quot;</span><span>).</span><span style="color: #B392F0;">ToLocalChecked</span><span>());</span></span>
+<span class="giallo-l"><span>}</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #F97583;">void</span><span style="color: #B392F0;"> Initialize</span><span>(v8::Local</span><span style="color: #F97583;">&lt;</span><span>v8::Object</span><span style="color: #F97583;">&gt;</span><span style="color: #FFAB70;"> exports</span><span>) {</span></span>
+<span class="giallo-l"><span style="color: #B392F0;">  NODE_SET_METHOD</span><span>(exports,</span><span style="color: #9ECBFF;"> &quot;hello&quot;</span><span>, Method);</span></span>
+<span class="giallo-l"><span>}</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #B392F0;">NODE_MODULE</span><span>(NODE_GYP_MODULE_NAME, Initialize)</span></span></code></pre>
+<p><strong>binding.gyp</strong></p>
+<pre class="giallo" style="color: #E1E4E8; background-color: #24292E;" ><code data-lang="plain"><span class="giallo-l"><span>{</span></span>
+<span class="giallo-l"><span>  &quot;targets&quot;: [</span></span>
+<span class="giallo-l"><span>    {</span></span>
+<span class="giallo-l"><span>      &quot;target_name&quot;: &quot;hello_world&quot;,</span></span>
+<span class="giallo-l"><span>      &quot;sources&quot;: [ &quot;hello_world.cc&quot; ]</span></span>
+<span class="giallo-l"><span>    }</span></span>
+<span class="giallo-l"><span>  ]</span></span>
+<span class="giallo-l"><span>}</span></span></code></pre>
+<p><strong>index.js</strong></p>
+<pre class="giallo" style="color: #E1E4E8; background-color: #24292E;" ><code data-lang="javascript"><span class="giallo-l"><span style="color: #F97583;">const</span><span style="color: #79B8FF;"> binding</span><span style="color: #F97583;"> =</span><span style="color: #B392F0;"> require</span><span>(</span><span style="color: #9ECBFF;">&#39;./build/Release/hello_world&#39;</span><span>);</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span>console.</span><span style="color: #B392F0;">log</span><span>(binding.</span><span style="color: #B392F0;">hello</span><span>());</span></span></code></pre>
+<p><strong>package.json</strong></p>
+<pre class="giallo" style="color: #E1E4E8; background-color: #24292E;" ><code data-lang="json"><span class="giallo-l"><span>...  </span></span>
+<span class="giallo-l"><span style="color: #9ECBFF;">  &quot;scripts&quot;</span><span>: {</span></span>
+<span class="giallo-l"><span style="color: #79B8FF;">    &quot;build&quot;</span><span>:</span><span style="color: #9ECBFF;"> &quot;node-gyp configure &amp;&amp; node-gyp build&quot;</span><span>,</span></span>
+<span class="giallo-l"><span style="color: #79B8FF;">    &quot;run:demo&quot;</span><span>:</span><span style="color: #9ECBFF;"> &quot;node index.js&quot;</span></span>
+<span class="giallo-l"><span>  },</span></span>
+<span class="giallo-l"><span>...</span></span></code></pre>
+<p><strong>整体结构</strong></p>
+<p><img src="https://static-res.zhen.wang/images/post/2021-06-25-simple-node-gyp-demo/node-addon-simple-demo-proj-arch.jpg" alt="" /></p>
+<p>按照如下命令依次运行：</p>
+<pre class="giallo" style="color: #E1E4E8; background-color: #24292E;" ><code data-lang="shellscript"><span class="giallo-l"><span style="color: #B392F0;">$</span><span style="color: #9ECBFF;"> npm run build</span></span>
+<span class="giallo-l"><span style="color: #B392F0;">//</span><span style="color: #9ECBFF;"> 使用node-gyp配置并构建</span></span>
+<span class="giallo-l"><span style="color: #B392F0;">$</span><span style="color: #9ECBFF;"> npm run run:demo</span></span>
+<span class="giallo-l"><span style="color: #B392F0;">//</span><span style="color: #9ECBFF;"> 运行Demo</span></span></code></pre>
+<p>输出如下：</p>
+<pre class="giallo" style="color: #E1E4E8; background-color: #24292E;" ><code data-lang="shellscript"><span class="giallo-l"><span style="color: #B392F0;">D:\Projects\node-addon-demo</span><span>&gt;</span><span style="color: #9ECBFF;">npm run run:demo</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #F97583;">&gt;</span><span> node-addon-demo@1.0.0 run:demo</span></span>
+<span class="giallo-l"><span style="color: #F97583;">&gt;</span><span> node index.js</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #B392F0;">world</span></span></code></pre>
+<p>附上GitHub地址：<a rel="noopener external" target="_blank" href="https://github.com/w4ngzhen/node-addon-demo">w4ngzhen/node-addon-demo (github.com)</a>，方便以后快速完成环境搭建。</p>
+
+    </div>
+</div>
+<script src="https://zhen.wang/libs/viewerjs@1.11.7/viewer.min.js"></script>
+<link rel="stylesheet" href="https://zhen.wang/libs/viewerjs@1.11.7/viewer.min.css"/>
+<script>
+  if (window.Viewer) {
+    document.querySelectorAll('img').forEach(img => {
+      new Viewer(img, {
+        inline: false,
+        navbar: false,
+        toolbar: {
+          zoomIn: 1,
+          zoomOut: 1,
+          reset: 1,
+          rotateLeft: 1,
+          rotateRight: 1,
+        },
+      });
+    });
+  }
+</script>
+
+
+</body>
+</html>

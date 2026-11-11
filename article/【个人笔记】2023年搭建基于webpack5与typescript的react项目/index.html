@@ -1,0 +1,368 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="utf-8">
+    <meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover"
+          name="viewport">
+    
+    
+    <!-- umami web analysis -->
+    <script defer src="https://zhen.wang/libs/umami/umami.script.js"
+            data-website-id="d66cfe03-f6b3-4aa0-baf8-728700db1b09"></script>
+    
+    
+    
+    <link rel="icon" type="image/png" sizes="16x16" href="https://zhen.wang/images/blog-site-icon.svg">
+    <link rel="icon" type="image/png" sizes="32x32" href="https://zhen.wang/images/blog-site-icon.svg">
+    <title>zhen&#39;s everything</title>
+    <link rel="stylesheet" href="https://zhen.wang/style.css">
+    
+<link rel="stylesheet" href="https://zhen.wang/article_content.css">
+<link rel="stylesheet" href="https://zhen.wang/article_markdown.css">
+
+</head>
+<body>
+
+<div id="article">
+    <header class="article-header">
+        
+<div class="base-title">
+    <a href="#" onclick="history.length > 1 ? history.back() : location.href = '/'; return false;">&LeftArrow; Back</a>
+    <h1>
+        【个人笔记】2023年搭建基于webpack5与typescript的react项目
+    </h1>
+</div>
+
+    </header>
+    <p class="article-date">2023-01-26</p>
+    
+    <!-- toc -->
+    <div class="article-toc">
+        <label class="toc-title" for="toc-trigger">目录</label>
+        <input id="toc-trigger" type="checkbox" checked/>
+        <div class="toc-content">
+            <ol class="toc">
+                
+                <li class="toc-item toc-level-1">
+                    <a class="toc-link" href="https://zhen.wang/article/【个人笔记】2023年搭建基于webpack5与typescript的react项目/#xie-zai-qian-mian">写在前面</a>
+                    
+                </li>
+                
+                <li class="toc-item toc-level-1">
+                    <a class="toc-link" href="https://zhen.wang/article/【个人笔记】2023年搭建基于webpack5与typescript的react项目/#xiang-mu-chu-shi-hua">项目初始化</a>
+                    
+                </li>
+                
+                <li class="toc-item toc-level-1">
+                    <a class="toc-link" href="https://zhen.wang/article/【个人笔记】2023年搭建基于webpack5与typescript的react项目/#0-npmyi-lai-tian-jia">（0）NPM依赖添加</a>
+                    
+                </li>
+                
+                <li class="toc-item toc-level-1">
+                    <a class="toc-link" href="https://zhen.wang/article/【个人笔记】2023年搭建基于webpack5与typescript的react项目/#1-webpack-config-js">（1）webpack.config.js</a>
+                    
+                </li>
+                
+                <li class="toc-item toc-level-1">
+                    <a class="toc-link" href="https://zhen.wang/article/【个人笔记】2023年搭建基于webpack5与typescript的react项目/#2-babelrc">（2）.babelrc</a>
+                    
+                </li>
+                
+                <li class="toc-item toc-level-1">
+                    <a class="toc-link" href="https://zhen.wang/article/【个人笔记】2023年搭建基于webpack5与typescript的react项目/#3-tsconfig-json">（3）tsconfig.json</a>
+                    
+                </li>
+                
+                <li class="toc-item toc-level-1">
+                    <a class="toc-link" href="https://zhen.wang/article/【个人笔记】2023年搭建基于webpack5与typescript的react项目/#4-xiang-mu-dai-ma">（4）项目代码</a>
+                    
+                    <ol class="toc-child">
+                        
+                        <li class="toc-item toc-level-2">
+                            <a href="https://zhen.wang/article/【个人笔记】2023年搭建基于webpack5与typescript的react项目/#src-index-tsx">src/index.tsx</a>
+                        </li>
+                        
+                        <li class="toc-item toc-level-2">
+                            <a href="https://zhen.wang/article/【个人笔记】2023年搭建基于webpack5与typescript的react项目/#src-index-module-less">src/index.module.less</a>
+                        </li>
+                        
+                        <li class="toc-item toc-level-2">
+                            <a href="https://zhen.wang/article/【个人笔记】2023年搭建基于webpack5与typescript的react项目/#src-react-app-d-ts-te-bie">src/react-app.d.ts（特别）</a>
+                        </li>
+                        
+                        <li class="toc-item toc-level-2">
+                            <a href="https://zhen.wang/article/【个人笔记】2023年搭建基于webpack5与typescript的react项目/#public-index-html">public/index.html</a>
+                        </li>
+                        
+                    </ol>
+                    
+                </li>
+                
+                <li class="toc-item toc-level-1">
+                    <a class="toc-link" href="https://zhen.wang/article/【个人笔记】2023年搭建基于webpack5与typescript的react项目/#yun-xing">运行</a>
+                    
+                </li>
+                
+                <li class="toc-item toc-level-1">
+                    <a class="toc-link" href="https://zhen.wang/article/【个人笔记】2023年搭建基于webpack5与typescript的react项目/#fu-lu">附录</a>
+                    
+                    <ol class="toc-child">
+                        
+                        <li class="toc-item toc-level-2">
+                            <a href="https://zhen.wang/article/【个人笔记】2023年搭建基于webpack5与typescript的react项目/#tu-jie-webpackpei-zhi-yu-npmbao-guan-xi">图解webpack配置与NPM包关系</a>
+                        </li>
+                        
+                        <li class="toc-item toc-level-2">
+                            <a href="https://zhen.wang/article/【个人笔记】2023年搭建基于webpack5与typescript的react项目/#githubcang-ku">github仓库</a>
+                        </li>
+                        
+                    </ol>
+                    
+                </li>
+                
+            </ol>
+        </div>
+    </div>
+    
+    <!-- real content -->
+    <div class="article-content markdown-content">
+        <h1 id="xie-zai-qian-mian">写在前面</h1>
+<p>由于我在另外的一些文章所讨论或分析的内容可能基于一个已经初始化好的项目，为了避免每一个文章都重复的描述如何搭建项目，我在本文会统一记录下来，今后相关的文章直接引用文本，方便读者阅读。此文主要为个人笔记，不会有太多的关于思路的描述；另外，本文仅仅描述如何搭建基础react项目，不涉及图片等资源的加载，关于图片等资源的处理，我会单独编写一期。</p>
+<span id="continue-reading"></span><h1 id="xiang-mu-chu-shi-hua">项目初始化</h1>
+<p>创建一个目录，例如：webpack5-react-demo，然后进入目录执行初始化指令</p>
+<pre class="giallo" style="color: #E1E4E8; background-color: #24292E;" ><code data-lang="shellscript"><span class="giallo-l"><span style="color: #B392F0;">$</span><span style="color: #9ECBFF;"> mkdir webpack5-react-demo</span></span>
+<span class="giallo-l"><span style="color: #B392F0;">$</span><span style="color: #9ECBFF;"> cd webpack5-react-demo</span><span> </span></span>
+<span class="giallo-l"><span style="color: #B392F0;">$</span><span style="color: #9ECBFF;"> yarn init</span></span>
+<span class="giallo-l"><span style="color: #B392F0;">yarn</span><span style="color: #9ECBFF;"> init v1.22.19</span></span>
+<span class="giallo-l"><span style="color: #B392F0;">question</span><span style="color: #9ECBFF;"> name</span><span> (webpack5-react-demo): </span></span>
+<span class="giallo-l"><span style="color: #B392F0;">question</span><span style="color: #9ECBFF;"> version</span><span> (1.0.0): </span></span>
+<span class="giallo-l"><span style="color: #B392F0;">question</span><span style="color: #9ECBFF;"> description:</span><span> </span></span>
+<span class="giallo-l"><span style="color: #B392F0;">question</span><span style="color: #9ECBFF;"> entry point</span><span> (index.js): </span></span>
+<span class="giallo-l"><span style="color: #B392F0;">question</span><span style="color: #9ECBFF;"> repository url:</span><span> </span></span>
+<span class="giallo-l"><span style="color: #B392F0;">question</span><span style="color: #9ECBFF;"> author:</span><span> </span></span>
+<span class="giallo-l"><span style="color: #B392F0;">question</span><span style="color: #9ECBFF;"> license</span><span> (MIT): </span></span>
+<span class="giallo-l"><span style="color: #B392F0;">question</span><span style="color: #9ECBFF;"> private:</span><span> </span></span>
+<span class="giallo-l"><span style="color: #B392F0;">success</span><span style="color: #9ECBFF;"> Saved package.json</span></span>
+<span class="giallo-l"><span style="color: #B392F0;">✨</span><span style="color: #9ECBFF;">  Done in 10.32s.</span></span></code></pre>
+<p>添加gitignore文件，路径为<code>项目根目录/.gitignore</code>：</p>
+<pre class="giallo" style="color: #E1E4E8; background-color: #24292E;" ><code data-lang="plain"><span class="giallo-l"><span>.idea</span></span>
+<span class="giallo-l"><span>.vscode</span></span>
+<span class="giallo-l"><span>node_modules</span></span>
+<span class="giallo-l"><span>dist</span></span></code></pre>
+<p>初始化git仓库：</p>
+<pre class="giallo" style="color: #E1E4E8; background-color: #24292E;" ><code data-lang="shellscript"><span class="giallo-l"><span style="color: #B392F0;">$</span><span style="color: #9ECBFF;"> git init</span></span>
+<span class="giallo-l"><span style="color: #B392F0;">$</span><span style="color: #9ECBFF;"> git add .</span></span>
+<span class="giallo-l"><span style="color: #B392F0;">$</span><span style="color: #9ECBFF;"> git commit</span><span style="color: #79B8FF;"> -m</span><span style="color: #9ECBFF;"> &#39;init&#39;</span></span></code></pre><h1 id="0-npmyi-lai-tian-jia">（0）NPM依赖添加</h1>
+<pre class="giallo" style="color: #E1E4E8; background-color: #24292E;" ><code data-lang="shellscript"><span class="giallo-l"><span style="color: #79B8FF;">echo</span><span style="color: #9ECBFF;"> &#39;【1】基于webpack的项目核心相关内容&#39;</span></span>
+<span class="giallo-l"><span style="color: #79B8FF;">echo</span><span style="color: #9ECBFF;"> &#39;添加webpack基础四件套依赖&#39;</span></span>
+<span class="giallo-l"><span style="color: #B392F0;">yarn</span><span style="color: #9ECBFF;"> add</span><span style="color: #79B8FF;"> -D</span><span style="color: #9ECBFF;"> webpack webpack-cli webpack-dev-server html-webpack-plugin</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #79B8FF;">echo</span><span style="color: #9ECBFF;"> &#39;【2】处理js(x)、ts(x)的相关模块&#39;</span></span>
+<span class="giallo-l"><span style="color: #79B8FF;">echo</span><span style="color: #9ECBFF;"> &#39;添加babel核心模块&#39;</span></span>
+<span class="giallo-l"><span style="color: #B392F0;">yarn</span><span style="color: #9ECBFF;"> add</span><span style="color: #79B8FF;"> -D</span><span style="color: #9ECBFF;"> @babel/core</span></span>
+<span class="giallo-l"><span style="color: #79B8FF;">echo</span><span style="color: #9ECBFF;"> &#39;添加babel相关preset欲集&#39;</span></span>
+<span class="giallo-l"><span style="color: #B392F0;">yarn</span><span style="color: #9ECBFF;"> add</span><span style="color: #79B8FF;"> -D</span><span style="color: #9ECBFF;"> @babel/preset-env @babel/preset-react @babel/preset-typescript</span></span>
+<span class="giallo-l"><span style="color: #79B8FF;">echo</span><span style="color: #9ECBFF;"> &#39;添加babel相关plugin插件&#39;</span></span>
+<span class="giallo-l"><span style="color: #B392F0;">yarn</span><span style="color: #9ECBFF;"> add</span><span style="color: #79B8FF;"> -D</span><span style="color: #9ECBFF;"> @babel/plugin-proposal-class-properties @babel/plugin-proposal-object-rest-spread</span></span>
+<span class="giallo-l"><span style="color: #79B8FF;">echo</span><span style="color: #9ECBFF;"> &#39;添加babel-loader&#39;</span></span>
+<span class="giallo-l"><span style="color: #B392F0;">yarn</span><span style="color: #9ECBFF;"> add</span><span style="color: #79B8FF;"> -D</span><span style="color: #9ECBFF;"> babel-loader</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #79B8FF;">echo</span><span style="color: #9ECBFF;"> &#39;【3】处理style样式的相关模块&#39;</span></span>
+<span class="giallo-l"><span style="color: #79B8FF;">echo</span><span style="color: #9ECBFF;"> &#39;添加css-loader以及MiniCssExtractPlugin&#39;</span></span>
+<span class="giallo-l"><span style="color: #B392F0;">yarn</span><span style="color: #9ECBFF;"> add</span><span style="color: #79B8FF;"> -D</span><span style="color: #9ECBFF;"> css-loader mini-css-extract-plugin</span></span>
+<span class="giallo-l"><span style="color: #B392F0;">yarn</span><span style="color: #9ECBFF;"> add</span><span style="color: #79B8FF;"> -D</span><span style="color: #9ECBFF;"> less less-loader</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #79B8FF;">echo</span><span style="color: #9ECBFF;"> &#39;【4】添加react/react-dom的类型定义以及运行依赖&#39;</span></span>
+<span class="giallo-l"><span style="color: #B392F0;">yarn</span><span style="color: #9ECBFF;"> add react react-dom</span></span>
+<span class="giallo-l"><span style="color: #B392F0;">yarn</span><span style="color: #9ECBFF;"> add</span><span style="color: #79B8FF;"> -D</span><span style="color: #9ECBFF;"> @types/react @types/react-dom</span></span></code></pre><h1 id="1-webpack-config-js">（1）webpack.config.js</h1>
+<p>作用：webpack基本配置，定义入口、各种loader、plugin等。</p>
+<p>路径：项目根目录/webpack.config.js</p>
+<p>内容：</p>
+<pre class="giallo" style="color: #E1E4E8; background-color: #24292E;" ><code data-lang="javascript"><span class="giallo-l"><span style="color: #F97583;">const</span><span> {</span><span style="color: #79B8FF;">resolve</span><span>}</span><span style="color: #F97583;"> =</span><span style="color: #B392F0;"> require</span><span>(</span><span style="color: #9ECBFF;">&#39;path&#39;</span><span>);</span></span>
+<span class="giallo-l"><span style="color: #F97583;">const</span><span style="color: #79B8FF;"> HtmlWebpackPlugin</span><span style="color: #F97583;"> =</span><span style="color: #B392F0;"> require</span><span>(</span><span style="color: #9ECBFF;">&quot;html-webpack-plugin&quot;</span><span>);</span></span>
+<span class="giallo-l"><span style="color: #F97583;">const</span><span style="color: #79B8FF;"> MiniCssExtractPlugin</span><span style="color: #F97583;"> =</span><span style="color: #B392F0;"> require</span><span>(</span><span style="color: #9ECBFF;">&quot;mini-css-extract-plugin&quot;</span><span>);</span></span>
+<span class="giallo-l"><span style="color: #79B8FF;">module</span><span>.</span><span style="color: #79B8FF;">exports</span><span style="color: #F97583;"> =</span><span> {</span></span>
+<span class="giallo-l"><span>    mode:</span><span style="color: #9ECBFF;"> &quot;development&quot;</span><span>,</span></span>
+<span class="giallo-l"><span>    entry: {</span></span>
+<span class="giallo-l"><span>        main:</span><span style="color: #B392F0;"> resolve</span><span>(__dirname,</span><span style="color: #9ECBFF;"> &#39;src&#39;</span><span>,</span><span style="color: #9ECBFF;"> &#39;index.tsx&#39;</span><span>)</span></span>
+<span class="giallo-l"><span>    },</span></span>
+<span class="giallo-l"><span>    output: {</span></span>
+<span class="giallo-l"><span>        filename:</span><span style="color: #9ECBFF;"> &quot;index.js&quot;</span><span>,</span></span>
+<span class="giallo-l"><span>        path:</span><span style="color: #B392F0;"> resolve</span><span>(__dirname,</span><span style="color: #9ECBFF;"> &#39;dist&#39;</span><span>)</span></span>
+<span class="giallo-l"><span>    },</span></span>
+<span class="giallo-l"><span>    resolve: {</span></span>
+<span class="giallo-l"><span style="color: #6A737D;">        // webpack 默认只处理js、jsx等js代码</span></span>
+<span class="giallo-l"><span style="color: #6A737D;">        // 为了防止在import其他ts代码的时候，出现</span></span>
+<span class="giallo-l"><span style="color: #6A737D;">        // &quot; Can&#39;t resolve &#39;xxx&#39; &quot;的错误，需要特别配置</span></span>
+<span class="giallo-l"><span>        extensions: [</span><span style="color: #9ECBFF;">&#39;.js&#39;</span><span>,</span><span style="color: #9ECBFF;"> &#39;.jsx&#39;</span><span>,</span><span style="color: #9ECBFF;"> &#39;.ts&#39;</span><span>,</span><span style="color: #9ECBFF;"> &#39;.tsx&#39;</span><span>]</span></span>
+<span class="giallo-l"><span>    },</span></span>
+<span class="giallo-l"><span>    module: {</span></span>
+<span class="giallo-l"><span>        rules: [</span></span>
+<span class="giallo-l"><span>            {</span></span>
+<span class="giallo-l"><span>                test:</span><span style="color: #9ECBFF;"> /</span><span style="color: #85E89D;font-weight: bold;">\.</span><span style="color: #DBEDFF;">tsx</span><span style="color: #F97583;">?</span><span style="color: #9ECBFF;">/</span><span>,</span></span>
+<span class="giallo-l"><span>                use: [</span></span>
+<span class="giallo-l"><span style="color: #9ECBFF;">                    &#39;babel-loader&#39;</span></span>
+<span class="giallo-l"><span>                ],</span></span>
+<span class="giallo-l"><span>                exclude:</span><span style="color: #9ECBFF;"> /</span><span style="color: #DBEDFF;">node_moudles</span><span style="color: #9ECBFF;">/</span></span>
+<span class="giallo-l"><span>            },</span></span>
+<span class="giallo-l"><span>            {</span></span>
+<span class="giallo-l"><span>                test:</span><span style="color: #9ECBFF;"> /</span><span style="color: #85E89D;font-weight: bold;">\.</span><span style="color: #DBEDFF;">css</span><span style="color: #F97583;">$</span><span style="color: #9ECBFF;">/</span><span>,</span></span>
+<span class="giallo-l"><span>                use: [</span></span>
+<span class="giallo-l"><span>                    MiniCssExtractPlugin.loader,</span></span>
+<span class="giallo-l"><span style="color: #9ECBFF;">                    &#39;css-loader&#39;</span></span>
+<span class="giallo-l"><span>                ]</span></span>
+<span class="giallo-l"><span>            },</span></span>
+<span class="giallo-l"><span>            {</span></span>
+<span class="giallo-l"><span>                test:</span><span style="color: #9ECBFF;"> /</span><span style="color: #85E89D;font-weight: bold;">\.</span><span style="color: #DBEDFF;">less</span><span style="color: #F97583;">$</span><span style="color: #9ECBFF;">/</span><span>,</span></span>
+<span class="giallo-l"><span>                use: [</span></span>
+<span class="giallo-l"><span>                    MiniCssExtractPlugin.loader,</span></span>
+<span class="giallo-l"><span style="color: #9ECBFF;">                    &#39;css-loader&#39;</span><span>,</span></span>
+<span class="giallo-l"><span style="color: #9ECBFF;">                    &#39;less-loader&#39;</span></span>
+<span class="giallo-l"><span>                ]</span></span>
+<span class="giallo-l"><span>            }</span></span>
+<span class="giallo-l"><span>        ]</span></span>
+<span class="giallo-l"><span>    },</span></span>
+<span class="giallo-l"><span>    plugins: [</span></span>
+<span class="giallo-l"><span style="color: #F97583;">        new</span><span style="color: #B392F0;"> HtmlWebpackPlugin</span><span>({</span></span>
+<span class="giallo-l"><span>            template:</span><span style="color: #B392F0;"> resolve</span><span>(__dirname,</span><span style="color: #9ECBFF;"> &#39;public&#39;</span><span>,</span><span style="color: #9ECBFF;"> &#39;index.html&#39;</span><span>),</span></span>
+<span class="giallo-l"><span>            inject:</span><span style="color: #9ECBFF;"> &#39;body&#39;</span></span>
+<span class="giallo-l"><span>        }),</span></span>
+<span class="giallo-l"><span style="color: #F97583;">        new</span><span style="color: #B392F0;"> MiniCssExtractPlugin</span><span>({</span></span>
+<span class="giallo-l"><span>            filename:</span><span style="color: #9ECBFF;"> &#39;app.css&#39;</span></span>
+<span class="giallo-l"><span>        })</span></span>
+<span class="giallo-l"><span>    ],</span></span>
+<span class="giallo-l"><span>    devServer: {</span></span>
+<span class="giallo-l"><span>        port:</span><span style="color: #79B8FF;"> 8080</span></span>
+<span class="giallo-l"><span>    }</span></span>
+<span class="giallo-l"><span>}</span></span></code></pre><h1 id="2-babelrc">（2）.babelrc</h1>
+<p>作用：被@babel/core读取使用，其中定义了@babel/core要用到的preset、plugin等组件，对ts文件进行编译。想要深入理解，可以阅读另一篇文章：<a rel="noopener external" target="_blank" href="https://zhuanlan.zhihu.com/p/561186916">【长文详解】TypeScript与Babel、webpack的关系以及IDE对TS的类型检查 - 知乎 (zhihu.com)</a>。</p>
+<p>路径：项目根目录/.babelrc</p>
+<p>内容：</p>
+<pre class="giallo" style="color: #E1E4E8; background-color: #24292E;" ><code data-lang="json"><span class="giallo-l"><span>{</span></span>
+<span class="giallo-l"><span style="color: #79B8FF;">  &quot;presets&quot;</span><span>: [</span></span>
+<span class="giallo-l"><span style="color: #9ECBFF;">    &quot;@babel/preset-env&quot;</span><span>,</span></span>
+<span class="giallo-l"><span style="color: #9ECBFF;">    &quot;@babel/preset-typescript&quot;</span><span>,</span></span>
+<span class="giallo-l"><span>    [</span><span style="color: #9ECBFF;">&quot;@babel/preset-react&quot;</span><span>, {</span><span style="color: #79B8FF;">&quot;runtime&quot;</span><span>:</span><span style="color: #9ECBFF;"> &quot;automatic&quot;</span><span>}]</span></span>
+<span class="giallo-l"><span>  ],</span></span>
+<span class="giallo-l"><span style="color: #79B8FF;">  &quot;plugins&quot;</span><span>: [</span></span>
+<span class="giallo-l"><span style="color: #9ECBFF;">    &quot;@babel/plugin-proposal-object-rest-spread&quot;</span><span>,</span></span>
+<span class="giallo-l"><span style="color: #9ECBFF;">    &quot;@babel/plugin-proposal-class-properties&quot;</span></span>
+<span class="giallo-l"><span>  ]</span></span>
+<span class="giallo-l"><span>}</span></span></code></pre><h1 id="3-tsconfig-json">（3）tsconfig.json</h1>
+<p>作用：仅作为IDE进行TypeScript类型检查服务的文件，与ts代码编译没有直接关系。可以阅读另一篇文章来了解：<a rel="noopener external" target="_blank" href="https://zhuanlan.zhihu.com/p/561186916">【长文详解】TypeScript与Babel、webpack的关系以及IDE对TS的类型检查 - 知乎 (zhihu.com)</a></p>
+<p>路径：项目根目录/tsconfig.json</p>
+<p>内容：</p>
+<pre class="giallo" style="color: #E1E4E8; background-color: #24292E;" ><code data-lang="json"><span class="giallo-l"><span>{</span></span>
+<span class="giallo-l"><span style="color: #79B8FF;">  &quot;compilerOptions&quot;</span><span>: {</span></span>
+<span class="giallo-l"><span style="color: #79B8FF;">    &quot;module&quot;</span><span>:</span><span style="color: #9ECBFF;"> &quot;commonjs&quot;</span><span>,</span></span>
+<span class="giallo-l"><span style="color: #79B8FF;">    &quot;rootDir&quot;</span><span>:</span><span style="color: #9ECBFF;"> &quot;./src&quot;</span><span>,</span></span>
+<span class="giallo-l"><span style="color: #79B8FF;">    &quot;outDir&quot;</span><span>:</span><span style="color: #9ECBFF;"> &quot;./dist&quot;</span><span>,</span></span>
+<span class="giallo-l"><span style="color: #79B8FF;">    &quot;jsx&quot;</span><span>:</span><span style="color: #9ECBFF;"> &quot;react-jsx&quot;</span></span>
+<span class="giallo-l"><span>  }</span></span>
+<span class="giallo-l"><span>}</span></span></code></pre><h1 id="4-xiang-mu-dai-ma">（4）项目代码</h1>
+<p>src目录下，三个文件：index.tsx、index.module.less、react-app.d.ts。</p>
+<h2 id="src-index-tsx">src/index.tsx</h2>
+<p>路径：项目根目录/src/index.tsx</p>
+<p>内容：</p>
+<pre class="giallo" style="color: #E1E4E8; background-color: #24292E;" ><code data-lang="tsx"><span class="giallo-l"><span style="color: #F97583;">import</span><span> {createRoot}</span><span style="color: #F97583;"> from</span><span style="color: #9ECBFF;"> &quot;react-dom/client&quot;</span><span>;</span></span>
+<span class="giallo-l"><span style="color: #F97583;">import</span><span> styles</span><span style="color: #F97583;"> from</span><span style="color: #9ECBFF;"> &#39;./index.module.less&#39;</span><span>;</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #F97583;">const</span><span style="color: #B392F0;"> App</span><span style="color: #F97583;"> =</span><span> ()</span><span style="color: #F97583;"> =&gt;</span><span> {</span></span>
+<span class="giallo-l"><span style="color: #F97583;">    return</span><span> &lt;</span><span style="color: #85E89D;">div</span><span style="color: #B392F0;"> className</span><span style="color: #F97583;">=</span><span>{styles.app}&gt;Hello, &lt;</span><span style="color: #85E89D;">span</span><span>&gt;App&lt;/</span><span style="color: #85E89D;">span</span><span>&gt;&lt;/</span><span style="color: #85E89D;">div</span><span>&gt;</span></span>
+<span class="giallo-l"><span>}</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #B392F0;">createRoot</span><span>(document.</span><span style="color: #B392F0;">querySelector</span><span>(</span><span style="color: #9ECBFF;">&#39;#app&#39;</span><span>)).</span><span style="color: #B392F0;">render</span><span>(&lt;</span><span style="color: #79B8FF;">App</span><span>/&gt;)</span></span></code></pre><h2 id="src-index-module-less">src/index.module.less</h2>
+<p>路径：项目根目录/src/index.module.less</p>
+<p>内容：</p>
+<pre class="giallo" style="color: #E1E4E8; background-color: #24292E;" ><code data-lang="less"><span class="giallo-l"><span style="color: #85E89D;">html</span><span>,</span><span style="color: #85E89D;"> body</span><span> {</span></span>
+<span class="giallo-l"><span style="color: #79B8FF;">  height</span><span>:</span><span style="color: #79B8FF;"> 100</span><span style="color: #F97583;">%</span><span>;</span></span>
+<span class="giallo-l"><span style="color: #79B8FF;">  width</span><span>:</span><span style="color: #79B8FF;"> 100</span><span style="color: #F97583;">%</span><span>;</span></span>
+<span class="giallo-l"><span style="color: #79B8FF;">  margin</span><span>:</span><span style="color: #79B8FF;"> 0</span><span>;</span></span>
+<span class="giallo-l"><span>}</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #85E89D;">div</span><span> {</span></span>
+<span class="giallo-l"><span style="color: #79B8FF;">  box-sizing</span><span>:</span><span style="color: #79B8FF;"> border</span><span style="color: #F97583;">-</span><span style="color: #79B8FF;">box</span><span>;</span></span>
+<span class="giallo-l"><span>}</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #B392F0;">.app</span><span> {</span></span>
+<span class="giallo-l"><span style="color: #79B8FF;">  height</span><span>:</span><span style="color: #79B8FF;"> 100</span><span style="color: #F97583;">%</span><span>;</span></span>
+<span class="giallo-l"><span style="color: #79B8FF;">  width</span><span>:</span><span style="color: #79B8FF;"> 100</span><span style="color: #F97583;">%</span><span>;</span></span>
+<span class="giallo-l"><span style="color: #79B8FF;">  font-size</span><span>:</span><span style="color: #79B8FF;"> 20</span><span style="color: #F97583;">px</span><span>;</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #85E89D;">  span</span><span> {</span></span>
+<span class="giallo-l"><span style="color: #79B8FF;">    color</span><span>:</span><span style="color: #79B8FF;"> rgb</span><span>(</span><span style="color: #79B8FF;">0</span><span>,</span><span style="color: #79B8FF;"> 111</span><span>,</span><span style="color: #79B8FF;"> 222</span><span>);</span></span>
+<span class="giallo-l"><span style="color: #79B8FF;">    font-size</span><span>:</span><span style="color: #79B8FF;"> 24</span><span style="color: #F97583;">px</span><span>;</span></span>
+<span class="giallo-l"><span>  }</span></span>
+<span class="giallo-l"><span>}</span></span></code></pre><h2 id="src-react-app-d-ts-te-bie">src/react-app.d.ts（特别）</h2>
+<p>作用：<em>仅仅用于类型定义，目前定义的是模块化less文件的结构定义。</em></p>
+<p>路径：项目根目录/src/react-app.d.ts</p>
+<p>内容：</p>
+<pre class="giallo" style="color: #E1E4E8; background-color: #24292E;" ><code data-lang="typescript"><span class="giallo-l"><span style="color: #F97583;">declare module</span><span style="color: #9ECBFF;"> &#39;*.module.less&#39;</span><span> {</span></span>
+<span class="giallo-l"><span style="color: #F97583;">    const</span><span style="color: #79B8FF;"> content</span><span style="color: #F97583;">:</span><span> {</span></span>
+<span class="giallo-l"><span>        [</span><span style="color: #FFAB70;">className</span><span style="color: #F97583;">:</span><span style="color: #79B8FF;"> string</span><span>]</span><span style="color: #F97583;">:</span><span style="color: #79B8FF;"> any</span></span>
+<span class="giallo-l"><span>    }</span></span>
+<span class="giallo-l"><span style="color: #F97583;">    export default</span><span> content;</span></span>
+<span class="giallo-l"><span>}</span></span></code></pre><h2 id="public-index-html">public/index.html</h2>
+<p>作用：指定的html模板，根webpack.config.js里面HtmlWebpackPlugin所制定的模板路径保持一致。</p>
+<p>路径：项目根目录/public/index.html</p>
+<p>内容：</p>
+<pre class="giallo" style="color: #E1E4E8; background-color: #24292E;" ><code data-lang="html"><span class="giallo-l"><span>&lt;!</span><span style="color: #85E89D;">DOCTYPE</span><span style="color: #B392F0;"> html</span><span>&gt;</span></span>
+<span class="giallo-l"><span>&lt;</span><span style="color: #85E89D;">html</span><span style="color: #B392F0;"> lang</span><span>=</span><span style="color: #9ECBFF;">&quot;en&quot;</span><span>&gt;</span></span>
+<span class="giallo-l"><span>&lt;</span><span style="color: #85E89D;">head</span><span>&gt;</span></span>
+<span class="giallo-l"><span>    &lt;</span><span style="color: #85E89D;">meta</span><span style="color: #B392F0;"> charset</span><span>=</span><span style="color: #9ECBFF;">&quot;UTF-8&quot;</span><span>&gt;</span></span>
+<span class="giallo-l"><span>    &lt;</span><span style="color: #85E89D;">title</span><span>&gt;Title&lt;/</span><span style="color: #85E89D;">title</span><span>&gt;</span></span>
+<span class="giallo-l"><span>&lt;/</span><span style="color: #85E89D;">head</span><span>&gt;</span></span>
+<span class="giallo-l"><span>&lt;</span><span style="color: #85E89D;">body</span><span>&gt;</span></span>
+<span class="giallo-l"><span>&lt;</span><span style="color: #85E89D;">div</span><span style="color: #B392F0;"> id</span><span>=</span><span style="color: #9ECBFF;">&quot;app&quot;</span><span>&gt;&lt;/</span><span style="color: #85E89D;">div</span><span>&gt;</span></span>
+<span class="giallo-l"><span>&lt;/</span><span style="color: #85E89D;">body</span><span>&gt;</span></span>
+<span class="giallo-l"><span>&lt;/</span><span style="color: #85E89D;">html</span><span>&gt;</span></span></code></pre><h1 id="yun-xing">运行</h1>
+<p>在package.json中添加运行脚本：</p>
+<pre class="giallo" style="color: #E1E4E8; background-color: #24292E;" ><code data-lang="diff"><span class="giallo-l"><span>{</span></span>
+<span class="giallo-l"><span>  &quot;name&quot;: &quot;webpack5-react-demo&quot;,</span></span>
+<span class="giallo-l"><span>  &quot;version&quot;: &quot;1.0.0&quot;,</span></span>
+<span class="giallo-l"><span>  &quot;main&quot;: &quot;index.js&quot;,</span></span>
+<span class="giallo-l"><span>  &quot;license&quot;: &quot;MIT&quot;,</span></span>
+<span class="giallo-l"><span style="color: #85E89D;background-color: #144620;">+ &quot;scripts&quot;: {</span></span>
+<span class="giallo-l"><span style="color: #85E89D;background-color: #144620;">+  &quot;dev&quot;: &quot;webpack-dev-server --config webpack.config.js&quot;</span></span>
+<span class="giallo-l"><span style="color: #85E89D;background-color: #144620;">+ },</span></span>
+<span class="giallo-l"><span>  &quot;devDependencies&quot;: {</span></span>
+<span class="giallo-l"><span>		... ...</span></span>
+<span class="giallo-l"><span>  },</span></span>
+<span class="giallo-l"><span>  &quot;dependencies&quot;: {</span></span>
+<span class="giallo-l"><span>    ... ...</span></span>
+<span class="giallo-l"><span>  }</span></span>
+<span class="giallo-l"><span>}</span></span>
+<span class="giallo-l"></span></code></pre>
+<p>效果：</p>
+<p><img src="https://static-res.zhen.wang/images/post/2023-01-26/020-run.png" alt="020-run" /></p>
+<h1 id="fu-lu">附录</h1>
+<h2 id="tu-jie-webpackpei-zhi-yu-npmbao-guan-xi">图解webpack配置与NPM包关系</h2>
+<p><img src="https://static-res.zhen.wang/images/post/2023-01-26/010-webpack-config-and-npm.png" alt="010-webpack-config-and-npm" /></p>
+<h2 id="githubcang-ku">github仓库</h2>
+<p><a rel="noopener external" target="_blank" href="https://github.com/w4ngzhen/webpack5-react-demo">w4ngzhen/webpack5-react-demo (github.com)</a></p>
+
+    </div>
+</div>
+<script src="https://zhen.wang/libs/viewerjs@1.11.7/viewer.min.js"></script>
+<link rel="stylesheet" href="https://zhen.wang/libs/viewerjs@1.11.7/viewer.min.css"/>
+<script>
+  if (window.Viewer) {
+    document.querySelectorAll('img').forEach(img => {
+      new Viewer(img, {
+        inline: false,
+        navbar: false,
+        toolbar: {
+          zoomIn: 1,
+          zoomOut: 1,
+          reset: 1,
+          rotateLeft: 1,
+          rotateRight: 1,
+        },
+      });
+    });
+  }
+</script>
+
+
+</body>
+</html>

@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="utf-8">
+    <meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover"
+          name="viewport">
+    
+    
+    <!-- umami web analysis -->
+    <script defer src="https://zhen.wang/libs/umami/umami.script.js"
+            data-website-id="d66cfe03-f6b3-4aa0-baf8-728700db1b09"></script>
+    
+    
+    
+    <link rel="icon" type="image/png" sizes="16x16" href="https://zhen.wang/images/blog-site-icon.svg">
+    <link rel="icon" type="image/png" sizes="32x32" href="https://zhen.wang/images/blog-site-icon.svg">
+    <title>zhen&#39;s everything</title>
+    <link rel="stylesheet" href="https://zhen.wang/style.css">
+    
+<link rel="stylesheet" href="https://zhen.wang/article_content.css">
+<link rel="stylesheet" href="https://zhen.wang/article_markdown.css">
+
+</head>
+<body>
+
+<div id="article">
+    <header class="article-header">
+        
+<div class="base-title">
+    <a href="#" onclick="history.length > 1 ? history.back() : location.href = '/'; return false;">&LeftArrow; Back</a>
+    <h1>
+        【个人笔记】Nestjs使用TypeORM注意点
+    </h1>
+</div>
+
+    </header>
+    <p class="article-date">2022-11-25</p>
+    
+    <!-- toc -->
+    <div class="article-toc">
+        <label class="toc-title" for="toc-trigger">目录</label>
+        <input id="toc-trigger" type="checkbox" checked/>
+        <div class="toc-content">
+            <ol class="toc">
+                
+                <li class="toc-item toc-level-1">
+                    <a class="toc-link" href="https://zhen.wang/article/【个人笔记】Nestjs使用TypeORM注意点/#entitieslu-jing-pei-zhi-zhu-yi-dian">entities路径配置注意点</a>
+                    
+                </li>
+                
+                <li class="toc-item toc-level-1">
+                    <a class="toc-link" href="https://zhen.wang/article/【个人笔记】Nestjs使用TypeORM注意点/#entitylie-pei-zhi-zhu-yi-dian">Entity列配置注意点</a>
+                    
+                </li>
+                
+            </ol>
+        </div>
+    </div>
+    
+    <!-- real content -->
+    <div class="article-content markdown-content">
+        <p>在Nestjs使用TypeORM还是有一些注意点。</p>
+<span id="continue-reading"></span>
+<h1 id="entitieslu-jing-pei-zhi-zhu-yi-dian">entities路径配置注意点</h1>
+<p>在nestjs中使用TypeORM，需要配置数据库连接（以MySQL为例）。需要特别注意的是配置参数里面的entities字段：</p>
+<pre class="giallo" style="color: #E1E4E8; background-color: #24292E;" ><code data-lang="json"><span class="giallo-l"><span>{</span></span>
+<span class="giallo-l"><span style="color: #79B8FF;">    &quot;type&quot;</span><span>:</span><span style="color: #9ECBFF;"> &quot;mysql&quot;</span><span>,</span></span>
+<span class="giallo-l"><span style="color: #79B8FF;">    &quot;host&quot;</span><span>:</span><span style="color: #9ECBFF;"> &quot;localhost&quot;</span><span>,</span></span>
+<span class="giallo-l"><span style="color: #79B8FF;">    &quot;port&quot;</span><span>:</span><span style="color: #79B8FF;"> 3306</span><span>,</span></span>
+<span class="giallo-l"><span style="color: #79B8FF;">    &quot;username&quot;</span><span>:</span><span style="color: #9ECBFF;"> &quot;root&quot;</span><span>,</span></span>
+<span class="giallo-l"><span style="color: #79B8FF;">    &quot;password&quot;</span><span>:</span><span style="color: #9ECBFF;"> &quot;root&quot;</span><span>,</span></span>
+<span class="giallo-l"><span style="color: #79B8FF;">    &quot;database&quot;</span><span>:</span><span style="color: #9ECBFF;"> &quot;zen-im&quot;</span><span>,</span></span>
+<span class="giallo-l"><span style="color: #79B8FF;">    &quot;entities&quot;</span><span>: [</span><span style="color: #9ECBFF;">&quot;**/*.entity.{ts,js}&quot;</span><span>],</span></span>
+<span class="giallo-l"><span style="color: #79B8FF;">    &quot;synchronize&quot;</span><span>:</span><span style="color: #79B8FF;"> true</span></span>
+<span class="giallo-l"><span>}</span></span></code></pre>
+<p>entities字段的作用是根据提供的路径字符串，<strong>在运行的时候</strong>查找对应路径下的entity文件。</p>
+<p>首先，我建议最好直接在使用 <em>TypeORM.forRoot</em> 来引入配置，就像下面一样：</p>
+<pre class="giallo" style="color: #E1E4E8; background-color: #24292E;" ><code data-lang="typescript"><span class="giallo-l"><span style="color: #6A737D;">// app.module.ts</span></span>
+<span class="giallo-l"><span style="color: #F97583;">const</span><span style="color: #79B8FF;"> entitiesPaths</span><span style="color: #F97583;"> =</span><span> [</span><span style="color: #B392F0;">join</span><span>(__dirname,</span><span style="color: #9ECBFF;"> &#39;..&#39;</span><span>,</span><span style="color: #9ECBFF;"> &#39;**&#39;</span><span>,</span><span style="color: #9ECBFF;"> &#39;*.entity.{ts,js}&#39;</span><span>)]</span></span>
+<span class="giallo-l"><span>@</span><span style="color: #B392F0;">Module</span><span>({</span></span>
+<span class="giallo-l"><span>    imports: [</span></span>
+<span class="giallo-l"><span>        TypeOrmModule.</span><span style="color: #B392F0;">forRoot</span><span>({</span></span>
+<span class="giallo-l"><span style="color: #9ECBFF;">                &quot;type&quot;</span><span>:</span><span style="color: #9ECBFF;"> &quot;mysql&quot;</span><span>,</span></span>
+<span class="giallo-l"><span style="color: #9ECBFF;">                &quot;host&quot;</span><span>:</span><span style="color: #9ECBFF;"> &quot;localhost&quot;</span><span>,</span></span>
+<span class="giallo-l"><span style="color: #9ECBFF;">                &quot;port&quot;</span><span>:</span><span style="color: #79B8FF;"> 3306</span><span>,</span></span>
+<span class="giallo-l"><span style="color: #9ECBFF;">                &quot;username&quot;</span><span>:</span><span style="color: #9ECBFF;"> &quot;root&quot;</span><span>,</span></span>
+<span class="giallo-l"><span style="color: #9ECBFF;">                &quot;password&quot;</span><span>:</span><span style="color: #9ECBFF;"> &quot;root&quot;</span><span>,</span></span>
+<span class="giallo-l"><span style="color: #9ECBFF;">                &quot;database&quot;</span><span>:</span><span style="color: #9ECBFF;"> &quot;zen-im&quot;</span><span>,</span></span>
+<span class="giallo-l"><span style="color: #9ECBFF;">                &quot;entities&quot;</span><span>: entitiesPaths,</span></span>
+<span class="giallo-l"><span style="color: #9ECBFF;">                &quot;synchronize&quot;</span><span>:</span><span style="color: #79B8FF;"> true</span></span>
+<span class="giallo-l"><span>            }</span></span>
+<span class="giallo-l"><span>        )],</span></span>
+<span class="giallo-l"><span>    controllers: [AppController],</span></span>
+<span class="giallo-l"><span>    providers: [AppService],</span></span>
+<span class="giallo-l"><span>})</span></span>
+<span class="giallo-l"><span style="color: #F97583;">export class</span><span style="color: #B392F0;"> AppModule</span><span> {</span></span>
+<span class="giallo-l"><span>}</span></span></code></pre>
+<p>这样做的原因在于，能够控制entities的搜索路径。在上面例子中，我控制的路径是当前运行js路径（<code>__dirname</code>）的上一层（<code>..</code>）目录中的任意（<code>**</code>）子目录中，搜索所有的以<code>.entity.js</code>或<code>.entity.ts</code>作为后缀的文件作为扫描为entity文件。</p>
+<p>之所以使用了上一层（<code>..</code>），是因为我的项目中，上面这个<code>app.module.ts</code>放在了<code>src/module</code>目录下，而我的所有entity.ts都在放在<code>src/entity</code>这个目录下：</p>
+<pre class="giallo" style="color: #E1E4E8; background-color: #24292E;" ><code data-lang="plain"><span class="giallo-l"><span>src</span></span>
+<span class="giallo-l"><span> - module</span></span>
+<span class="giallo-l"><span>   - app.module.ts</span></span>
+<span class="giallo-l"><span> - entity</span></span>
+<span class="giallo-l"><span>   - user</span></span>
+<span class="giallo-l"><span>     - user.entity.ts</span></span></code></pre>
+<p>最终生成出来的js代码，会放在<code>项目根目录/dist目录</code>下：</p>
+<pre class="giallo" style="color: #E1E4E8; background-color: #24292E;" ><code data-lang="plain"><span class="giallo-l"><span>dist</span></span>
+<span class="giallo-l"><span> - module</span></span>
+<span class="giallo-l"><span>   - app.module.js</span></span>
+<span class="giallo-l"><span> - entity</span></span>
+<span class="giallo-l"><span>   - user</span></span>
+<span class="giallo-l"><span>     - user.entity.js</span></span></code></pre>
+<p>所以在实际运行中，app.module.js中配置entities这个字段的时候，需要返回上一层（<code>..</code>），才能查找到。如果你的项目中，app.module.ts就在src目录下，entity存放路径就在app.module.ts所在的子目录，就可以直接配置成：</p>
+<pre class="giallo" style="color: #E1E4E8; background-color: #24292E;" ><code data-lang="javascript"><span class="giallo-l"><span style="color: #B392F0;">join</span><span>(__dirname,</span><span style="color: #9ECBFF;"> &#39;**&#39;</span><span>,</span><span style="color: #9ECBFF;"> &quot;*.entity.{js,ts}&quot;</span><span>)</span></span></code></pre>
+<p>如果这个路径配置不一致，运行的时候，会出现以下的错误：</p>
+<ul>
+<li>EntityMetadataNotFoundError: No metadata for "你的Entity" was found.</li>
+</ul>
+<h1 id="entitylie-pei-zhi-zhu-yi-dian">Entity列配置注意点</h1>
+<p>这个地方比较细节，笔者编写代码的时候，按照曾经Java的MyBatis-Plus注解使用，给字段添加列定义的时候。不小心直接把名称字符串作为参数：</p>
+<pre class="giallo" style="color: #E1E4E8; background-color: #24292E;" ><code data-lang="typescript"><span class="giallo-l"><span style="color: #F97583;">import</span><span> {Column, Entity, PrimaryColumn}</span><span style="color: #F97583;"> from</span><span style="color: #9ECBFF;"> &quot;typeorm&quot;</span><span>;</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span>@</span><span style="color: #B392F0;">Entity</span><span>(</span><span style="color: #9ECBFF;">&#39;user&#39;</span><span>)</span></span>
+<span class="giallo-l"><span style="color: #F97583;">export class</span><span style="color: #B392F0;"> UserPo</span><span> {</span></span>
+<span class="giallo-l"><span style="color: #6A737D;">    /**</span></span>
+<span class="giallo-l"><span style="color: #6A737D;">     * 全局唯一ID</span></span>
+<span class="giallo-l"><span style="color: #6A737D;">     */</span></span>
+<span class="giallo-l"><span>    @</span><span style="color: #B392F0;">PrimaryColumn</span><span>(</span><span style="color: #9ECBFF;">&#39;uid&#39;</span><span>)</span></span>
+<span class="giallo-l"><span style="color: #FFAB70;">    uid</span><span style="color: #F97583;">:</span><span style="color: #79B8FF;"> string</span><span>;</span></span>
+<span class="giallo-l"><span style="color: #6A737D;">    /**</span></span>
+<span class="giallo-l"><span style="color: #6A737D;">     * 用户名</span></span>
+<span class="giallo-l"><span style="color: #6A737D;">     */</span></span>
+<span class="giallo-l"><span>    @</span><span style="color: #B392F0;">Column</span><span>(</span><span style="color: #9ECBFF;">&#39;name&#39;</span><span>)</span></span>
+<span class="giallo-l"><span style="color: #FFAB70;">    name</span><span style="color: #F97583;">:</span><span style="color: #79B8FF;"> string</span><span>;</span></span>
+<span class="giallo-l"><span>}</span></span></code></pre>
+<p>运行的时候，就出现了：</p>
+<ul>
+<li>DataTypeNotSupportedError: Data type "uid" in "UserPo.uid" is not supported by "mysql" database.</li>
+</ul>
+<p>原因在于装饰器<code>@PrimaryColumn</code>或者<code>@Column</code>的参数如果是一个字符串，则视为一个数据库的类型！要传一个对象，这个对象有个name字段，来表示列名：</p>
+<pre class="giallo" style="color: #E1E4E8; background-color: #24292E;" ><code data-lang="diff"><span class="giallo-l"><span>import {Column, Entity, PrimaryColumn} from &quot;typeorm&quot;;</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span>@Entity(&#39;user&#39;)</span></span>
+<span class="giallo-l"><span>export class UserPo {</span></span>
+<span class="giallo-l"><span>    /**</span></span>
+<span class="giallo-l"><span>     * 没有业务逻辑含义的全局唯一ID</span></span>
+<span class="giallo-l"><span>     */</span></span>
+<span class="giallo-l"><span style="color: #FDAEB7;background-color: #86181D;">-    @PrimaryColumn(&#39;uid&#39;)</span></span>
+<span class="giallo-l"><span style="color: #85E89D;background-color: #144620;">+    @PrimaryColumn({</span></span>
+<span class="giallo-l"><span style="color: #85E89D;background-color: #144620;">+        name: &#39;uid&#39;</span></span>
+<span class="giallo-l"><span style="color: #85E89D;background-color: #144620;">+    })</span></span>
+<span class="giallo-l"><span>    uid: string;</span></span>
+<span class="giallo-l"><span>    /**</span></span>
+<span class="giallo-l"><span>     * 用户名</span></span>
+<span class="giallo-l"><span>     */</span></span>
+<span class="giallo-l"><span style="color: #FDAEB7;background-color: #86181D;">-    @Column(&#39;name&#39;)</span></span>
+<span class="giallo-l"><span style="color: #85E89D;background-color: #144620;">+    @Column({</span></span>
+<span class="giallo-l"><span style="color: #85E89D;background-color: #144620;">+       name: &#39;name&#39;</span></span>
+<span class="giallo-l"><span style="color: #85E89D;background-color: #144620;">+   })</span></span>
+<span class="giallo-l"><span>    name: string;</span></span>
+<span class="giallo-l"><span>}</span></span>
+<span class="giallo-l"></span></code></pre>
+    </div>
+</div>
+<script src="https://zhen.wang/libs/viewerjs@1.11.7/viewer.min.js"></script>
+<link rel="stylesheet" href="https://zhen.wang/libs/viewerjs@1.11.7/viewer.min.css"/>
+<script>
+  if (window.Viewer) {
+    document.querySelectorAll('img').forEach(img => {
+      new Viewer(img, {
+        inline: false,
+        navbar: false,
+        toolbar: {
+          zoomIn: 1,
+          zoomOut: 1,
+          reset: 1,
+          rotateLeft: 1,
+          rotateRight: 1,
+        },
+      });
+    });
+  }
+</script>
+
+
+</body>
+</html>

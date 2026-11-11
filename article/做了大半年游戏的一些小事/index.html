@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="utf-8">
+    <meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover"
+          name="viewport">
+    
+    
+    <!-- umami web analysis -->
+    <script defer src="https://zhen.wang/libs/umami/umami.script.js"
+            data-website-id="d66cfe03-f6b3-4aa0-baf8-728700db1b09"></script>
+    
+    
+    
+    <link rel="icon" type="image/png" sizes="16x16" href="https://zhen.wang/images/blog-site-icon.svg">
+    <link rel="icon" type="image/png" sizes="32x32" href="https://zhen.wang/images/blog-site-icon.svg">
+    <title>zhen&#39;s everything</title>
+    <link rel="stylesheet" href="https://zhen.wang/style.css">
+    
+<link rel="stylesheet" href="https://zhen.wang/article_content.css">
+<link rel="stylesheet" href="https://zhen.wang/article_markdown.css">
+
+</head>
+<body>
+
+<div id="article">
+    <header class="article-header">
+        
+<div class="base-title">
+    <a href="#" onclick="history.length > 1 ? history.back() : location.href = '/'; return false;">&LeftArrow; Back</a>
+    <h1>
+        做了大半年游戏的一些小事
+    </h1>
+</div>
+
+    </header>
+    <p class="article-date">2026-11-11</p>
+    
+    <!-- real content -->
+    <div class="article-content markdown-content">
+        <p>这个游戏项目已经做了大半年，用的是 Godot 和 C#。大致方向是战队经营加战术比赛模拟：组队、训练、参加比赛，然后看着自己的队员在场上发挥。喜欢这类游戏的人应该能理解，看别人打，有时候比自己打还着急。做下来发现，一些玩游戏时觉得理所当然的东西，真要自己写，还挺麻烦。</p>
+<p>比如地图。摆好墙壁、箱子和出生点，人进去跑一圈，很容易知道哪里能躲、哪个路口危险。程序却需要另一份说明：哪些位置相连，哪里是包点，从哪里能看到哪里。所以开发过程中也折腾了地图编辑工具，给这些地方补上标记和关系。这里还有个小细节：站着能看到的位置，蹲下来未必能看到。一个箱子的高度，就可能改变一条路线的风险。以前玩的时候只觉得“这里蹲一下”，现在得把这个“蹲一下”认真算进去。</p>
+<p>压枪也是类似的问题。玩家知道鼠标往下拉，写成程序就要拆开想：枪往上跳了多少，视角往下转了多少，下一枪到底往哪里打。枪的后坐力和主动瞄准得分开，否则很容易出现一种奇怪的情况——看起来压住了，实际射向却对不上。我还挺在意真人和自动控制之间的关系。无论操作来自鼠标键盘、脚本，还是以后补上的 AI，最后都应该经过同一套移动、开火和装备规则。至少不能因为换成电脑操作，就突然省掉换弹，或者无视当前的动作限制。</p>
+<p>当然，离完整的战队经营游戏还早，AI 的具体战术也还在做。这大半年花了不少时间的，反倒是这些不太适合拿来截图宣传的东西：地图标记、视线、输入、后坐力。但这些细节挺有意思。自己做一次，才发现平时一句“这游戏手感不错”里面，藏了多少需要反复琢磨的地方。等这些东西慢慢接起来，再看场上的队员跑出一个像样的配合，应该会很有成就感。</p>
+
+    </div>
+</div>
+<script src="https://zhen.wang/libs/viewerjs@1.11.7/viewer.min.js"></script>
+<link rel="stylesheet" href="https://zhen.wang/libs/viewerjs@1.11.7/viewer.min.css"/>
+<script>
+  if (window.Viewer) {
+    document.querySelectorAll('img').forEach(img => {
+      new Viewer(img, {
+        inline: false,
+        navbar: false,
+        toolbar: {
+          zoomIn: 1,
+          zoomOut: 1,
+          reset: 1,
+          rotateLeft: 1,
+          rotateRight: 1,
+        },
+      });
+    });
+  }
+</script>
+
+
+</body>
+</html>
